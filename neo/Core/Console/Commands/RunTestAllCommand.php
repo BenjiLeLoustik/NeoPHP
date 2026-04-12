@@ -95,6 +95,7 @@ HELP;
         $cmd = escapeshellarg($phpunitBin);
         $cmd .= ' --configuration ' . escapeshellarg($xmlConfig);
         $cmd .= ' --colors=always';
+        $cmd .= ' --testdox';
 
         if ($stopOnFailure) {
             $cmd .= ' --stop-on-failure';
@@ -127,11 +128,11 @@ HELP;
             $this->generateHtmlSummary($reportsPath, $project, $exitCode, $duration);
         }
 
-        if ($exitCode === 0) {
-            echo "Tous les tests sont passés.\n";
-        } else {
-            echo "Des tests ont échoué (code $exitCode).\n";
-        }
+        echo match(true) {
+            $exitCode === 0 => "Tous les tests sont passés.\n",
+            $exitCode === 1 => "Terminé avec avertissements (warnings/deprecations).\n",
+            default => "Des tests ont échoué (code $exitCode).\n",
+        };
     }
 
     private function generateHtmlSummary(
@@ -156,8 +157,18 @@ HELP;
         $skipped = (int) ($suite['skipped']  ?? 0);
         $passed = $tests - $failures - $errors - $skipped;
 
-        $statusColor = $exitCode === 0 ? '#22c55e' : '#ef4444';
-        $statusLabel = $exitCode === 0 ? 'SUCCÈS' : 'ÉCHEC';
+        $statusColor = match(true) {
+            $exitCode === 0 => '#22c55e',
+            $exitCode === 1 => '#f59e0b',
+            default => '#ef4444',
+        };
+
+        $statusLabel = match(true) {
+            $exitCode === 0 => 'SUCCÈS',
+            $exitCode === 1 => 'AVERTISSEMENTS',
+            default => 'ÉCHEC',
+        };
+
         $date = date('d/m/Y H:i:s');
 
         $failuresList = '';
