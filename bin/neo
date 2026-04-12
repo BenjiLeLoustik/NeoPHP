@@ -1,0 +1,11 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Neo\Core\Console\ConsoleHandler;
+
+define('ROOT_DIR', dirname(__DIR__, 1) . '/');
+
+$console = new ConsoleHandler();
+$console->run($argv);

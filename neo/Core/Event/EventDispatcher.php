@@ -1,0 +1,173 @@
+<?php
+declare(strict_types=1);
+
+namespace Neo\Core\Event;
+
+use Neo\Core\DI\Container;
+use Neo\Core\Error\Exception\FrameworkException;
+use Neo\Core\Event\Attribute\AsListener;
+use Neo\Core\Event\Contract\EventInterface;
+use Neo\Core\Event\Contract\EventSubscriberInterface;
+use Neo\Core\Utils\Config;
+
+class EventDispatcher
+{
+    private array $listeners = [];
+    private Container $container;
+
+    public function __construct(Container $container)
+    {
+        $this->container = $container;
+        $this->scanListeners();
+    }
+
+    private function isDebug(): bool
+    {
+        try {
+            return $this->container->get(Config::class)->from('app')->get('environment') === 'dev';
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    private function scanListeners(): void
+    {
+        $cacheFile = $this->container->get('storagePath') . '/var/cache/events/listeners.php';
+
+        if (!$this->isDebug() && file_exists($cacheFile)) {
+            $this->listeners = unserialize(file_get_contents($cacheFile));
+            return;
+        }
+
+        $listenersPath = $this->container->get('listenersPath');
+
+        if (!is_dir($listenersPath)) {
+            return;
+        }
+
+        $rii = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($listenersPath)
+        );
+
+        foreach ($rii as $file) {
+            if (!$file->isFile() || $file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $filePath = $file->getRealPath();
+            $src      = file_get_contents($filePath);
+            if ($src === false) continue;
+
+            $namespace = '';
+            if (preg_match('/namespace\s+([^;]+);/i', $src, $m)) {
+                $namespace = trim($m[1]);
+            }
+
+            if (!preg_match('/class\s+([A-Za-z0-9_]+)/i', $src, $mClass)) {
+                continue;
+            }
+
+            $fqcn = $namespace !== '' ? $namespace . '\\' . $mClass[1] : $mClass[1];
+
+            require_once $filePath;
+
+            if (!class_exists($fqcn)) continue;
+
+            $ref   = new \ReflectionClass($fqcn);
+            $attrs = $ref->getAttributes(AsListener::class);
+
+            foreach ($attrs as $attr) {
+                $instance = $attr->newInstance();
+                $this->listeners[$instance->event][] = [
+                    'class'    => $fqcn,
+                    'priority' => $instance->priority,
+                ];
+            }
+
+            if ($ref->implementsInterface(EventSubscriberInterface::class)) {
+                foreach ($fqcn::getSubscribedEvents() as $eventClass => $method) {
+                    $this->listeners[$eventClass][] = [
+                        'class'    => $fqcn,
+                        'method'   => $method,
+                        'priority' => 0,
+                    ];
+                }
+            }
+        }
+
+        foreach ($this->listeners as $event => &$list) {
+            usort($list, fn($a, $b) => $b['priority'] <=> $a['priority']);
+        }
+
+        if (!$this->isDebug()) {
+            $cacheDir = dirname($cacheFile);
+            if (!is_dir($cacheDir) && !mkdir($cacheDir, 0777, true) && !is_dir($cacheDir)) {
+                throw new FrameworkException(
+                    title: 'Event Cache Directory Error',
+                    message: "Impossible de créer le répertoire de cache des events '{$cacheDir}'.",
+                    code: 500
+                );
+            }
+            if (file_put_contents($cacheFile, serialize($this->listeners)) === false) {
+                throw new FrameworkException(
+                    title: 'Event Cache Error',
+                    message: "Impossible d'écrire le cache des events '{$cacheFile}'.",
+                    code: 500
+                );
+            }
+        }
+    }
+
+    public function dispatch(EventInterface $event): EventInterface
+    {
+        $eventClass = get_class($event);
+        $listeners  = $this->listeners[$eventClass] ?? [];
+
+        foreach ($listeners as $meta) {
+            if ($event->isPropagationStopped()) {
+                break;
+            }
+
+            $listener = $this->container->get($meta['class']);
+            $method   = $meta['method'] ?? 'handle';
+
+            if (!method_exists($listener, $method)) {
+                throw new FrameworkException(
+                    title: 'Event Listener Error',
+                    message: "La méthode '{$method}' n'existe pas sur le listener '{$meta['class']}'.",
+                    code: 500
+                );
+            }
+
+            $listener->$method($event);
+        }
+
+        return $event;
+    }
+
+    public function addListener(string $eventClass, string $listenerClass, int $priority = 0, string $method = 'handle'): void
+    {
+        $this->listeners[$eventClass][] = [
+            'class'    => $listenerClass,
+            'method'   => $method,
+            'priority' => $priority,
+        ];
+
+        usort($this->listeners[$eventClass], fn($a, $b) => $b['priority'] <=> $a['priority']);
+    }
+
+    public function addSubscriber(EventSubscriberInterface $subscriber): void
+    {
+        foreach ($subscriber::getSubscribedEvents() as $eventClass => $method) {
+            $this->addListener($eventClass, get_class($subscriber), 0, $method);
+        }
+    }
+
+    public function getListeners(?string $eventClass = null): array
+    {
+        if ($eventClass !== null) {
+            return $this->listeners[$eventClass] ?? [];
+        }
+        return $this->listeners;
+    }
+}

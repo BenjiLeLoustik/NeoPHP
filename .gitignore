@@ -1,0 +1,15 @@
+# Dependencies
+/vendor/
+
+# Compiled Assets
+/public/builds/
+
+# Projects
+/src/
+
+# IDE
+/.idea/
+
+# OS
+.DS_Store
+Thumbs.db
