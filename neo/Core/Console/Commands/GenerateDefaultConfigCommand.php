@@ -63,7 +63,6 @@ HELP;
             }
         }
 
-        $projectName = $this->pascalCaseSlug($projectName);
         $projectPath = ROOT_DIR . "/src/{$projectName}";
 
         if (!is_dir($projectPath)) {
