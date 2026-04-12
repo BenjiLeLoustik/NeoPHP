@@ -724,7 +724,7 @@ Configure :
 Depuis un terminal, clonez d'abord le framework :
 
 ```bash
-git clone https://github.com/BenjiLeLoustik/NeoPHP.git NeoPHP
+git clone https://github.com/BenjiLeLoustik/NeoPHP.git
 cd NeoPHP
 composer install
 ```
