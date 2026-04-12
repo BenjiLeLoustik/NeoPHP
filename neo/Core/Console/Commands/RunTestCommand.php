@@ -99,6 +99,7 @@ HELP;
         }
 
         $cmd .= ' --colors=always';
+        $cmd .= ' --testdox';
 
         echo "Lancement du test : $testName\n";
         echo str_repeat('-', 60) . "\n";
@@ -106,7 +107,11 @@ HELP;
         passthru($cmd, $exitCode);
 
         echo str_repeat('-', 60) . "\n";
-        echo $exitCode === 0 ? "Terminé avec succès.\n" : "Des tests ont échoué (code $exitCode).\n";
+        echo match(true) {
+            $exitCode === 0 => "Terminé avec succès.\n",
+            $exitCode === 1 => "Terminé avec avertissements (code 1).\n",
+            default => "Des tests ont échoué (code $exitCode).\n",
+        };
     }
 
     private function findTestFile(string $testsPath, string $testName, ?string $type): ?string
