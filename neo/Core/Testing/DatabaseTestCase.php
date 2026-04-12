@@ -14,6 +14,7 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
     protected Container $container;
     protected PDO $pdo;
     protected static ?App $app = null;
+    private static bool $schemaSynced = false;
 
     protected function setUp(): void
     {
@@ -24,9 +25,13 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
         }
 
         $this->container = static::$app->getContainer();
-
         $this->container->get(DatabaseConnection::class);
         $this->pdo = DatabaseConnection::getPdo();
+
+        if (!self::$schemaSynced) {
+            $this->syncSchema();
+            self::$schemaSynced = true;
+        }
 
         $this->pdo->beginTransaction();
     }
@@ -38,6 +43,40 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
         }
 
         parent::tearDown();
+    }
+
+    private function syncSchema(): void
+    {
+        $configsPath = $this->container->get('configsPath');
+        $devConfig = require $configsPath . '/database.config.php';
+        $useDriver = $devConfig['use'];
+        $connConfig = $devConfig['connections'][$useDriver];
+
+        $devDsn = sprintf(
+            '%s:host=%s;dbname=%s;charset=%s',
+            $connConfig['driver'],
+            $connConfig['host'],
+            $connConfig['dbname'],
+            $connConfig['charset']
+        );
+
+        $devPdo = new PDO(
+            $devDsn,
+            $connConfig['user'],
+            $connConfig['pass'],
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]
+        );
+
+        $tables = $devPdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($tables as $table) {
+            $row = $devPdo->query("SHOW CREATE TABLE `$table`")->fetch(PDO::FETCH_ASSOC);
+            $createSql = $row['Create Table'];
+            $createSql = preg_replace('/^CREATE TABLE (`[^`]+`)/', 'CREATE TABLE IF NOT EXISTS $1', $createSql);
+            $this->pdo->exec($createSql);
+        }
     }
 
     protected function insertFixture(string $table, array $data): int|string
