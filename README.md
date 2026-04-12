@@ -4,6 +4,30 @@ Framework PHP 8 orienté génération de projets, basé sur une CLI interne et u
 
 Le dépôt courant correspond au moteur du framework. Les applications NeoPHP sont générées dans `src/<Projet>` via les commandes CLI, puis chargées dynamiquement par le runtime HTTP.
 
+## Sommaire
+
+- [Vue d'ensemble](#vue-densemble)
+- [Philosophie du framework](#philosophie-du-framework)
+- [Structure du dépôt](#structure-du-dépôt)
+- [Comment NeoPHP choisit le projet courant](#comment-neophp-choisit-le-projet-courant)
+- [Cycle d'exécution HTTP](#cycle-dexécution-http)
+- [Conteneur et injection de dépendances](#conteneur-et-injection-de-dépendances)
+- [Routing](#routing)
+- [Middlewares](#middlewares)
+- [Events](#events)
+- [Vues Twig](#vues-twig)
+- [Assets](#assets)
+- [Base de données, ORM et formulaires](#base-de-données-orm-et-formulaires)
+- [Authentification et sécurité](#authentification-et-sécurité)
+- [Cache, logs, erreurs et environnement](#cache-logs-erreurs-et-environnement)
+- [Commandes CLI](#commandes-cli)
+- [Structure d'un projet généré](#structure-dun-projet-généré)
+- [Configuration d'un projet](#configuration-dun-projet)
+- [Démarrage rapide](#démarrage-rapide)
+- [Versionning Git d'un projet NeoPHP](#versionning-git-dun-projet-neophp)
+- [Dépendances Composer du framework](#dépendances-composer-du-framework)
+- [Points à retenir](#points-à-retenir)
+
 ## Vue d'ensemble
 
 NeoPHP repose sur deux points d'entrée :
@@ -373,6 +397,7 @@ Ce que la commande génère :
 - `Repository`
 - `Storage`
 - `Translations`
+- un `.gitignore` dans le dossier du projet
 
 En mode complet, elle ajoute aussi :
 
@@ -387,6 +412,20 @@ En mode complet, elle ajoute aussi :
 - un `composer update`
 
 Le `app.config.php` généré définit aussi un `access` de type `localhost:8000`, `localhost:8001`, etc. pour éviter les collisions entre projets.
+
+Après la création du projet, lancez aussi :
+
+```bash
+php bin/neo generate:default:config --project=Blog
+```
+
+Cette commande génère les fichiers sensibles du projet :
+
+- `src/Blog/Config/api.config.php`
+- `src/Blog/Config/deploy.config.php`
+- `src/Blog/Config/database.config.php`
+
+Ces fichiers sont ignorés automatiquement par le `.gitignore` du projet.
 
 ### 2. `make:controller`
 
@@ -680,11 +719,72 @@ Configure :
 
 ## Démarrage rapide
 
-### Créer un projet
+### Flux complet
+
+Depuis un terminal, clonez d'abord le framework :
+
+```bash
+git clone https://github.com/BenjiLeLoustik/NeoPHP.git
+cd NeoPHP
+composer install
+```
+
+Créez ensuite le projet depuis la racine du framework :
 
 ```bash
 php bin/neo make:project Blog
+php bin/neo generate:default:config --project=Blog
 ```
+
+Le projet créé contient automatiquement un `.gitignore` local. Il ignore notamment les fichiers sensibles générés ensuite par `generate:default:config`.
+
+Créez maintenant le dépôt Git du projet, cette fois dans le dossier du projet :
+
+```bash
+cd src/Blog
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin <url-du-repo-projet>
+git push -u origin main
+cd ../..
+```
+
+Pour afficher le site, revenez à la racine du framework puis lancez le serveur PHP intégré :
+
+```bash
+php -S localhost:8000 -t public
+```
+
+Ensuite, ouvrez dans le navigateur :
+
+```text
+http://localhost:8000
+```
+
+Important :
+
+- la valeur utilisée dans `php -S <access>:<port> -t public` doit correspondre à l'accès configuré pour le projet
+- le `app.config.php` généré définit un `access` du type `localhost:8000`, `localhost:8001`, etc.
+- si votre projet est configuré avec un autre accès, adaptez la commande en conséquence
+- toutes les commandes NeoPHP se lancent à la racine du framework
+- toutes les commandes Git du projet se lancent dans `src/Blog`
+
+## Versionning Git d'un projet NeoPHP
+
+- le dépôt du framework et le dépôt du projet sont distincts
+- commencez par faire un `git clone` du framework NeoPHP pour pouvoir créer et exécuter un projet
+- toutes les commandes CLI NeoPHP se lancent à la racine du framework
+- toutes les commandes Git du projet se lancent dans le dossier du projet, par exemple `src/Blog`
+- le repository Git du projet ne contient que la structure du projet, pas le coeur du framework
+
+Exemple de flux :
+
+1. Cloner le framework NeoPHP.
+2. Depuis la racine du framework, créer le projet avec `php bin/neo make:project Blog`.
+3. Depuis la racine du framework, générer les configs sensibles avec `php bin/neo generate:default:config --project=Blog`.
+4. Aller dans `src/Blog`, initialiser le dépôt Git du projet, puis faire les commandes `git init`, `git add`, `git commit`, `git remote add`, `git push`, etc.
 
 ### Créer un contrôleur
 
