@@ -236,10 +236,4 @@ PHP;
         return null;
     }
 
-    private function pascalCaseSlug(string $string): string
-    {
-        $string = preg_replace('/[^a-zA-Z0-9]+/', ' ', $string);
-        $string = ucwords(strtolower(trim($string)));
-        return str_replace(' ', '', $string);
-    }
 }
