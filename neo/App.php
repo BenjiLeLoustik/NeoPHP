@@ -104,6 +104,10 @@ class App
         $this->container->set('modelNamespace',      'Neo\\Src\\' . $appName . '\\Model');
         $this->container->set('repositoryNamespace', 'Neo\\Src\\' . $appName . '\\Repository');
         $this->container->set('formNamespace',       'Neo\\Src\\' . $appName . '\\App\\Forms');
+
+        if (!empty($GLOBALS['_NEO_TEST_CONFIGS_PATH'])) {
+            $this->container->set('testConfigsPath', $GLOBALS['_NEO_TEST_CONFIGS_PATH']);
+        }
     }
 
     private function registerCoreServices(): void
