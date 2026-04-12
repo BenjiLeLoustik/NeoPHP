@@ -5,6 +5,7 @@ namespace Neo\Core\Testing;
 
 use Neo\App;
 use Neo\Core\DI\Container;
+use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
@@ -55,10 +56,16 @@ abstract class FeatureTestCase extends PHPUnitTestCase
         $request = $this->buildRequest($method, $uri, $body, $headers);
 
         $this->container->set(Request::class, fn() => $request);
-
         $this->container->set(Response::class, fn() => new Response());
 
-        return static::$app->run();
+        try {
+            return static::$app->run();
+        } catch (FrameworkException $e) {
+            $response = new Response();
+            $response->setStatusCode($e->getCode() ?: 500);
+            $response->setContent($e->getMessage());
+            return $response;
+        }
     }
 
     private function buildRequest(string $method, string $uri, array $body, array $headers): Request
