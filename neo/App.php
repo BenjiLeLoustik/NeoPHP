@@ -66,7 +66,10 @@ class App
         $this->registerTranslationServices();
 
         $request = $this->container->get(Request::class);
-        $request->enablePreviousUrlTracking($this->container->get(Session::class));
+
+        if (php_sapi_name() !== 'cli') {
+            $request->enablePreviousUrlTracking($this->container->get(Session::class));
+        }
 
         date_default_timezone_set($this->container->get(Config::class)->from('app')->get('date.timezone'));
     }
@@ -104,6 +107,10 @@ class App
         $this->container->set('modelNamespace',      'Neo\\Src\\' . $appName . '\\Model');
         $this->container->set('repositoryNamespace', 'Neo\\Src\\' . $appName . '\\Repository');
         $this->container->set('formNamespace',       'Neo\\Src\\' . $appName . '\\App\\Forms');
+
+        if (!empty($GLOBALS['_NEO_TEST_CONFIGS_PATH'])) {
+            $this->container->set('testConfigsPath', $GLOBALS['_NEO_TEST_CONFIGS_PATH']);
+        }
     }
 
     private function registerCoreServices(): void
@@ -153,7 +160,10 @@ class App
     {
         $this->container->set(ErrorHandler::class, fn(Container $c) => new ErrorHandler($c));
         $errorHandler = $this->container->get(ErrorHandler::class);
-        $errorHandler->register();
+
+        if (empty($GLOBALS['_NEO_TEST_PROJECT'])) {
+            $errorHandler->register();
+        }
     }
 
     public function run(): Response
@@ -192,6 +202,12 @@ class App
     private function getCurrentApplication(): void
     {
         if (php_sapi_name() === 'cli') {
+
+            if (!empty($GLOBALS['_NEO_TEST_PROJECT'])) {
+                $this->container->set('application', $GLOBALS['_NEO_TEST_PROJECT']);
+                return;
+            }
+
             global $argv;
             $project = null;
 

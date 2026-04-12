@@ -82,6 +82,24 @@ class Request
         return $path === '/' ? '/' : rtrim($path, '/');
     }
 
+    public static function fromArray(
+        string $method,
+        string $path,
+        array $query = [],
+        array $body = [],
+        array $headers = [],
+        array $server = []
+    ): self {
+        return new self(
+            $method,
+            $path,
+            $query,
+            $body,
+            $headers,
+            $server
+        );
+    }
+
     public function getMethod(): string
     {
         return $this->method;
