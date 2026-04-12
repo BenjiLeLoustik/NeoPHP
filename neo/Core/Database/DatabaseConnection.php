@@ -24,8 +24,8 @@ class DatabaseConnection
             return;
         }
 
-        $dbEnabled   = $this->container->get(Config::class)->from('database')->get('enabled');
-        $dbUse       = $this->container->get(Config::class)->from('database')->get('use');
+        $dbEnabled = $this->container->get(Config::class)->from('database')->get('enabled');
+        $dbUse = $this->container->get(Config::class)->from('database')->get('use');
         $dbUseConfig = $this->container->get(Config::class)->from('database')->get("connections.$dbUse");
 
         if ($dbEnabled === true) {
@@ -63,9 +63,11 @@ class DatabaseConnection
 
         }
 
-        $this->container->get(View::class)->registerTwigFunction('database', function () {
-            return self::$connection ? 'On' : 'Off';
-        });
+        if ($this->container->has(View::class)) {
+            $this->container->get(View::class)->registerTwigFunction('database', function () {
+                return self::$connection ? 'On' : 'Off';
+            });
+        }
     }
 
     public static function getPdo(): PDO
