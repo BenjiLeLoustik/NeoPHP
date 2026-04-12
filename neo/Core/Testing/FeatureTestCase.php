@@ -73,10 +73,10 @@ abstract class FeatureTestCase extends PHPUnitTestCase
 
         $server = [
             'REQUEST_METHOD' => strtoupper($method),
-            'REQUEST_URI'    => $uri,
-            'SERVER_NAME'    => 'localhost',
-            'SERVER_PORT'    => '80',
-            'HTTP_HOST'      => 'localhost',
+            'REQUEST_URI' => $uri,
+            'SERVER_NAME' => 'localhost',
+            'SERVER_PORT' => '80',
+            'HTTP_HOST' => 'localhost',
         ];
 
         foreach ($headers as $name => $value) {
@@ -85,12 +85,12 @@ abstract class FeatureTestCase extends PHPUnitTestCase
         }
 
         return Request::fromArray(
-            method:  strtoupper($method),
-            path:    $path,
-            query:   $query,
-            body:    $body,
+            method: strtoupper($method),
+            path: $path,
+            query: $query,
+            body: $body,
             headers: $headers,
-            server:  $server
+            server: $server
         );
     }
 
