@@ -342,6 +342,44 @@ PHP;
             mkdir("$basePath/Tests", 0777, true);
         }
 
+        $configDir = "$basePath/Tests/Config";
+        if (!is_dir($configDir)) {
+            mkdir($configDir, 0777, true);
+        }
+
+        $dbConfigPath = "$configDir/database.config.test.php";
+        if (!file_exists($dbConfigPath)) {
+            $dbConfigContent = <<<PHP
+<?php
+/**
+ * Configuration de base de données pour les tests — projet : {$project}
+ *
+ * Ce fichier surcharge database.config.php uniquement pendant les tests.
+ * Utilisez une base de données dédiée aux tests pour éviter de polluer
+ * vos données de développement.
+ *
+ * Les transactions sont automatiquement rollbackées après chaque test
+ * (DatabaseTestCase), la base ne sera donc jamais modifiée en permanence.
+ */
+return [
+    'enabled' => true,
+    'use' => 'mysql',
+    'connections' => [
+        'mysql' => [
+            'driver'  => 'mysql',
+            'host'    => '127.0.0.1',
+            'dbname'  => '{$project}_test',
+            'user'    => 'root',
+            'pass'    => '',
+            'charset' => 'utf8mb4',
+        ],
+    ],
+];
+PHP;
+            file_put_contents($dbConfigPath, $dbConfigContent);
+            echo "Fichier généré : src/$project/Tests/Config/database.config.test.php\n";
+        }
+
         $content = <<<PHP
 <?php
 declare(strict_types=1);
@@ -379,6 +417,13 @@ PHP;
     {
         $xmlPath = "$basePath/Tests/phpunit.xml";
 
+        foreach (['Unit', 'Feature', 'Database', 'Middleware'] as $dir) {
+            $dirPath = "$basePath/Tests/$dir";
+            if (!is_dir($dirPath)) {
+                mkdir($dirPath, 0777, true);
+            }
+        }
+
         if (file_exists($xmlPath)) {
             return;
         }
@@ -405,12 +450,15 @@ PHP;
         <report>
             <html outputDirectory="../Storage/reports/coverage"/>
         </report>
+    </coverage>
+
+    <source>
         <include>
             <directory suffix=".php">../App</directory>
             <directory suffix=".php">../Model</directory>
             <directory suffix=".php">../Repository</directory>
         </include>
-    </coverage>
+    </source>
 
     <logging>
         <junit outputFile="../Storage/reports/junit.xml"/>
