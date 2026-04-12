@@ -9,6 +9,7 @@ use Neo\Core\Error\Exception\FrameworkException;
 class Config
 {
     private const CONFIG_EXTENSION = '.config.php';
+    private const CONFIG_TEST_EXTENSION = '.config.test.php';
 
     private array $configs = [];
     private array $current = [];
@@ -18,6 +19,13 @@ class Config
     {
         $this->container = $container;
         $this->loadConfigurations($this->container->get('configsPath'));
+
+        if ($this->container->has('testConfigsPath')) {
+            $testConfigsPath = $this->container->get('testConfigsPath');
+            if (is_string($testConfigsPath) && is_dir($testConfigsPath)) {
+                $this->loadTestConfiguration($testConfigsPath);
+            }
+        }
     }
 
     private function loadConfigurations(string $configDir): void
@@ -40,6 +48,44 @@ class Config
 
             $this->configs[$key] = $data;
         }
+    }
+
+    private function loadTestConfiguration(string $testConfigDir): void
+    {
+        $pattern = rtrim($testConfigDir, '/\\') . DIRECTORY_SEPARATOR . '*' . self::CONFIG_TEST_EXTENSION;
+        $files = glob($pattern) ?: [];
+
+        foreach ($files as $file) {
+            $key = basename($file, self::CONFIG_TEST_EXTENSION);
+            $data = require $file;
+
+            if (!is_array($data)) {
+                throw new FrameworkException(
+                    title: "Invalid Test Config File",
+                    message: "Test config file '{$file}' must return an array.",
+                    code: 500,
+                    context: ['file' => $file]
+                );
+            }
+
+            $this->configs[$key] = $this->deepMerge(
+                $this->configs[$key] ?? [],
+                $data
+            );
+        }
+    }
+
+    private function deepMerge(array $base, array $override): array
+    {
+        foreach ($override as $key => $value) {
+            if (is_array($value) && isset($base[$key]) && is_array($base[$key])) {
+                $base[$key] = $this->deepMerge($base[$key], $value);
+            } else {
+                $base[$key] = $value;
+            }
+        }
+
+        return $base;
     }
 
     public function from(string $key): self
