@@ -8,9 +8,9 @@ Le depot courant contient le moteur du framework. Les applications generees vive
 
 - [Vue d'ensemble](#vue-densemble)
 - [Structure du depot](#structure-du-depot)
-- [Explication rapide du framework](#explication-rapide-du-framework)
-- [Commandes CLI](#commandes-cli)
 - [Demarrage rapide](#demarrage-rapide)
+- [Commandes CLI](#commandes-cli)
+- [Explication rapide du framework](#explication-rapide-du-framework)
 - [Base de donnees, ORM, formulaires, auth et traductions](#base-de-donnees-orm-formulaires-auth-et-traductions)
 - [Gestion des erreurs](#gestion-des-erreurs)
 - [Tests PHPUnit](#tests-phpunit)
@@ -73,74 +73,46 @@ En pratique, NeoPHP se pilote surtout avec `php bin/neo ...`.
 `-- vendor/
 ```
 
-## Explication rapide du framework
+## Demarrage rapide
 
-### Resolution du projet
-
-En HTTP, NeoPHP lit `src/<Projet>/Config/app.config.php` et compare la cle `access` avec `HTTP_HOST` ou `SERVER_NAME`.
-
-En CLI, on cible explicitement un projet :
+### 1. Installer le framework
 
 ```bash
-php bin/neo <commande> --project=Blog
+git clone https://github.com/BenjiLeLoustik/NeoPHP.git
+cd NeoPHP
+composer install
 ```
 
-### Routing
+### 2. Creer un projet
 
-Le routing repose sur des attributs PHP scannes automatiquement dans `src/<Projet>/App/Controllers`.
-
-```php
-#[MainRoute(path: '/posts', name: 'posts')]
-final class PostController extends AbstractController
-{
-    #[Route(path: '/', name: 'index', methods: ['GET'])]
-    public function index(): Response
-    {
-        return $this->render('pages/posts/index.html.twig');
-    }
-}
+```bash
+php bin/neo make:project Blog
+php bin/neo generate:default:config --project=Blog
 ```
 
-Points utiles :
+### 3. Lancer le site
 
-- routes nommees
-- parametres dynamiques `{id}` et optionnels `{slug?}`
-- cache des routes hors environnement `dev`
-- fonctions Twig `path()` et `currentRoute()`
-
-### Middlewares et events
-
-Les middlewares se declarent par attribut, par exemple :
-
-```php
-#[Middleware(use: AuthMiddleware::class, redirect: 'login.index')]
+```bash
+php -S localhost:8000 -t public
 ```
 
-Ou avec rate limit :
+Puis ouvrir :
 
-```php
-#[RateLimit(maxAttempts: 10, decaySeconds: 60)]
+```text
+http://localhost:8000
 ```
 
-Les listeners d'evenements sont scannes dans `src/<Projet>/App/Event/Listener`.
+La valeur de `localhost:8000` doit correspondre a `access` dans `src/Blog/Config/app.config.php`.
 
-### Vues et assets
+### 4. Generer du code
 
-Les vues Twig sont chargees depuis `src/<Projet>/App/Views`.
-
-Fonctions Twig utiles :
-
-- `path()`
-- `asset()`
-- `currentRoute()`
-- `auth_check()`
-- `auth_user()`
-- `auth_has_role()`
-- `csrf_token()`
-- helpers formulaires
-- helpers de traduction via `trans()` et `translate()`
-
-Les assets sont compiles depuis `src/<Projet>/Assets` vers `public/builds/<Projet>/assets`.
+```bash
+php bin/neo make:controller PostController --project=Blog
+php bin/neo make:service Mail --project=Blog
+php bin/neo make:middleware AdminAccess --project=Blog
+php bin/neo make:event UserRegistered --project=Blog
+php bin/neo make:event:listener SendWelcomeEmail --event=UserRegistered --project=Blog
+```
 
 ## Commandes CLI
 
@@ -186,44 +158,218 @@ php bin/neo make:crud User --project=Blog
 php bin/neo cache:clear --project=Blog
 ```
 
-## Demarrage rapide
+## Explication rapide du framework
 
-### 1. Installer le framework
+### Resolution du projet
 
-```bash
-git clone https://github.com/BenjiLeLoustik/NeoPHP.git
-cd NeoPHP
-composer install
-```
+En HTTP, NeoPHP lit `src/<Projet>/Config/app.config.php` et compare la cle `access` avec `HTTP_HOST` ou `SERVER_NAME`.
 
-### 2. Creer un projet
+En CLI, on cible explicitement un projet :
 
 ```bash
-php bin/neo make:project Blog
-php bin/neo generate:default:config --project=Blog
+php bin/neo <commande> --project=Blog
 ```
 
-### 3. Lancer le site
+### Routing
+
+Le routing repose sur des attributs PHP scannes automatiquement dans `src/<Projet>/App/Controllers`.
+
+```php
+#[MainRoute(path: '/posts', name: 'posts')]
+final class PostController extends AbstractController
+{
+    #[Route(path: '/', name: 'index', methods: ['GET'])]
+    public function index(): Response
+    {
+        return $this->render('pages/posts/index.html.twig');
+    }
+}
+```
+
+Points utiles :
+
+- routes nommees
+- parametres dynamiques `{id}` et optionnels `{slug?}`
+- cache des routes hors environnement `dev`
+- fonctions Twig `path()` et `currentRoute()`
+
+### Middlewares
+
+Un middleware implemente `MiddlewareInterface` et sa methode `handle()` retourne un booleen :
+
+- `true` : la requete passe
+- `false` : la requete est bloquee
+- une exception peut aussi etre levee pour renvoyer un code HTTP comme `403` ou `429`
+
+Exemple de creation via la CLI :
 
 ```bash
-php -S localhost:8000 -t public
-```
-
-Puis ouvrir :
-
-```text
-http://localhost:8000
-```
-
-La valeur de `localhost:8000` doit correspondre a `access` dans `src/Blog/Config/app.config.php`.
-
-### 4. Generer du code
-
-```bash
-php bin/neo make:controller PostController --project=Blog
-php bin/neo make:service Mail --project=Blog
 php bin/neo make:middleware AdminAccess --project=Blog
 ```
+
+Exemple genere :
+
+```php
+final class AdminAccessMiddleware implements MiddlewareInterface
+{
+    public function handle(): bool
+    {
+        return false;
+    }
+}
+```
+
+Exemple plus realiste avec l'auth :
+
+```php
+final class AdminAccessMiddleware implements MiddlewareInterface
+{
+    public function __construct(private Container $container)
+    {
+    }
+
+    public function handle(): bool
+    {
+        $auth = $this->container->get(AuthManager::class);
+
+        return $auth->check() && $auth->hasRole('admin');
+    }
+}
+```
+
+Utilisation sur un controleur :
+
+```php
+#[Middleware(use: AuthMiddleware::class, redirect: 'login.index')]
+#[Middleware(use: RoleMiddleware::class, params: ['role' => 'admin'])]
+final class AdminController extends AbstractController
+{
+    #[Route(path: '/', name: 'index', methods: ['GET'])]
+    public function index(): Response
+    {
+        return $this->render('pages/admin/index.html.twig');
+    }
+}
+```
+
+Ou avec rate limit :
+
+```php
+#[RateLimit(maxAttempts: 10, decaySeconds: 60)]
+```
+
+Middlewares fournis par defaut :
+
+- `AuthMiddleware`
+- `GuestMiddleware`
+- `RoleMiddleware`
+- `RateLimitMiddleware`
+
+### Events et listeners
+
+NeoPHP embarque un systeme d'evenements base sur `EventDispatcher`, `AbstractEvent` et l'attribut `#[AsListener]`.
+
+Le framework declenche notamment :
+
+- `RequestEvent`
+- `ResponseEvent`
+- `ExceptionEvent`
+
+Les listeners sont scannes dans `src/<Projet>/App/Event/Listener`.
+
+Exemple de flux simple : un utilisateur s'inscrit, on declenche un event, puis un listener envoie un email de bienvenue.
+
+#### 1. Creer l'event avec la CLI
+
+```bash
+php bin/neo make:event UserRegistered --project=Blog
+```
+
+Cela genere par exemple :
+
+```text
+src/Blog/App/Event/UserRegisteredEvent.php
+```
+
+Exemple d'event :
+
+```php
+final class UserRegisteredEvent extends AbstractEvent
+{
+    public function __construct(public int $userId)
+    {
+    }
+}
+```
+
+#### 2. Creer le listener avec la CLI
+
+```bash
+php bin/neo make:event:listener SendWelcomeEmail --event=UserRegistered --project=Blog
+```
+
+Cela genere par exemple :
+
+```text
+src/Blog/App/Event/Listener/SendWelcomeEmailListener.php
+```
+
+Exemple de listener :
+
+```php
+#[AsListener(event: UserRegisteredEvent::class)]
+final class SendWelcomeEmailListener
+{
+    public function handle(UserRegisteredEvent $event): void
+    {
+        // reaction apres inscription
+        // ex: envoyer un email au user $event->userId
+    }
+}
+```
+
+#### 3. Declencher l'event dans le code
+
+Depuis un controleur ou un service :
+
+```php
+$this->dispatch(new UserRegisteredEvent((int) $user->id));
+```
+
+Exemple plus complet :
+
+```php
+public function register(): Response
+{
+    $user = new User();
+    $user->username = 'johndoe';
+    $user->save();
+
+    $this->dispatch(new UserRegisteredEvent((int) $user->id));
+
+    return $this->json([
+        'success' => true,
+    ]);
+}
+```
+
+### Vues et assets
+
+Les vues Twig sont chargees depuis `src/<Projet>/App/Views`.
+
+Fonctions Twig utiles :
+
+- `path()`
+- `asset()`
+- `currentRoute()`
+- `auth_check()`
+- `auth_user()`
+- `auth_has_role()`
+- `csrf_token()`
+- helpers formulaires
+- helpers de traduction via `trans()` et `translate()`
+
+Les assets sont compiles depuis `src/<Projet>/Assets` vers `public/builds/<Projet>/assets`.
 
 ## Base de donnees, ORM, formulaires, auth et traductions
 
@@ -250,24 +396,81 @@ return [
 ];
 ```
 
-### ORM et repositories
+### ORM et relations
 
 NeoPHP fournit une couche ORM avec modeles, repositories et relations par attributs.
 
-Exemple de repository :
+Exemple de modele `User` avec relations :
+
+```php
+final class User extends AbstractModel
+{
+    #[HasMany(target: Post::class, foreignKey: 'user_id', localKey: 'id')]
+    public array $posts = [];
+
+    #[HasOne(target: Profile::class, foreignKey: 'user_id', localKey: 'id')]
+    public ?Profile $profile = null;
+}
+```
+
+Exemple de modele `Post` :
+
+```php
+final class Post extends AbstractModel
+{
+    #[BelongsTo(target: User::class, foreignKey: 'user_id', ownerKey: 'id')]
+    public ?User $user = null;
+
+    #[BelongsToMany(
+        target: Tag::class,
+        pivotTable: 'post_tag',
+        pivotLocalKey: 'post_id',
+        pivotTargetKey: 'tag_id'
+    )]
+    public array $tags = [];
+}
+```
+
+Exemples d'utilisation des relations :
 
 ```php
 $user = $this->userRepository->find(1);
-$users = $this->userRepository->findAll()->getModels();
+$posts = $user->relation('posts');
+$profile = $user->relation('profile');
+
+$post = $this->postRepository->find(10);
+$author = $post->relation('user');
+$tags = $post->relation('tags');
 ```
 
-Exemple de modele :
+### Repositories et eager loading
+
+L'API `with()` permet de precharger les relations dans un repository.
+
+Exemples :
 
 ```php
-$user = new User();
-$user->username = 'johndoe';
-$user->lastname = 'Doe';
-$user->save();
+$user = $this->userRepository
+    ->with('posts')
+    ->find(1);
+
+$posts = $this->postRepository
+    ->with(['user', 'tags'])
+    ->findAll()
+    ->getModels();
+
+$posts = $this->postRepository
+    ->with('user.profile')
+    ->findAll()
+    ->getModels();
+```
+
+Autres helpers utiles :
+
+```php
+$user = $this->userRepository->findBy('email', 'john@example.com');
+$users = $this->userRepository->findAll()->toArray();
+$page = $this->postRepository->with('user')->findAll()->paginate(10);
 ```
 
 ### Formulaires
@@ -291,13 +494,94 @@ Exemple Twig :
 
 ### Auth
 
-L'authentification est configuree dans `app.config.php` avec les cles `auth.*`.
+L'authentification est pilotee par `app.config.php` avec les cles `auth.*`.
 
-Fonctions Twig utiles :
+Exemple de configuration :
+
+```php
+'auth' => [
+    'enabled' => true,
+    'model' => User::class,
+    'identifier' => 'email',
+    'password' => 'password',
+    'role' => 'roles',
+],
+```
+
+Depuis un controleur, `AbstractController` expose directement `auth()`.
+
+#### Connexion avec `attempt()`
+
+```php
+public function login(): Response
+{
+    $ok = $this->auth()->attempt([
+        'email' => $this->request->body('email'),
+        'password' => $this->request->body('password'),
+    ]);
+
+    if (!$ok) {
+        return $this->jsonError('Identifiants invalides', 401);
+    }
+
+    return $this->redirectToRoute('dashboard.index');
+}
+```
+
+#### Connexion manuelle avec `login()`
+
+```php
+public function forceLogin(User $user): Response
+{
+    $this->auth()->login($user);
+
+    return $this->redirectToRoute('dashboard.index');
+}
+```
+
+#### Deconnexion avec `logout()`
+
+```php
+public function logout(): Response
+{
+    $this->auth()->logout();
+
+    return $this->redirectToRoute('login.index');
+}
+```
+
+#### Recuperer l'utilisateur courant
+
+```php
+public function me(): Response
+{
+    $user = $this->auth()->user();
+
+    if (!$user) {
+        return $this->jsonError('Non authentifie', 401);
+    }
+
+    return $this->jsonSuccess($user->toArray());
+}
+```
+
+#### Verifier un role
+
+```php
+if ($this->auth()->hasRole('admin')) {
+    // acces admin
+}
+```
+
+Twig expose aussi :
 
 ```twig
 {% if auth_check() %}
     Bonjour {{ auth_user().username }}
+{% endif %}
+
+{% if auth_has_role('admin') %}
+    <a href="{{ path('admin.index') }}">Admin</a>
 {% endif %}
 ```
 
@@ -417,6 +701,9 @@ Pour les tests :
 - `src/` contient les projets generes
 - tout se pilote principalement via `php bin/neo`
 - les routes reposent sur des attributs PHP
-- chaque projet possede ses vues, assets, config, stockage et tests
+- les middlewares, events et listeners s'integrent directement au cycle applicatif
+- l'ORM supporte les relations et le eager loading via `with()`
+- `auth()->attempt()`, `auth()->login()` et `auth()->logout()` couvrent le flux d'auth de base
 - `make:test`, `run:test` et `run:test:all` couvrent le flux PHPUnit complet
 - les tests `database` utilisent une config dediee et rollbackent automatiquement
+
