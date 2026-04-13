@@ -367,8 +367,8 @@ return [
     'connections' => [
         'mysql' => [
             'driver'  => 'mysql',
-            'host'    => '127.0.0.1',
-            'dbname'  => '{$project}_test',
+            'host'    => 'localhost',
+            'dbname'  => 'dbName_test',
             'user'    => 'root',
             'pass'    => '',
             'charset' => 'utf8mb4',
