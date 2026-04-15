@@ -11,48 +11,41 @@ class SelectType extends AbstractType
 
     public function render(FormField $field): string
     {
-        $name         = htmlspecialchars($field->getName());
-        $id           = htmlspecialchars($field->getOption('id', $name));
-        $value        = $field->getValue();
-        $default      = $field->getOption('default', null);
-        $choices      = $field->getOption('choices', []);
-        $placeholder  = $field->getOption('placeholder');
-        $autocomplete = htmlspecialchars($field->getOption('autocomplete', 'off'));
+        $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
+        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $autocomplete = htmlspecialchars($field->getOption('autocomplete', 'off'), ENT_QUOTES, 'UTF-8');
 
-        $ignored = ['label', 'value', 'choices', 'placeholder', 'default'];
-        $attrs = '';
-        foreach ($field->getOptions() as $k => $v) {
-            if (!in_array($k, $ignored, true)) {
-                $v = htmlspecialchars((string) $v);
-                $attrs .= " {$k}=\"{$v}\"";
-            }
-        }
+        $value = $field->getValue();
+        $choices = $field->getOption('choices', []);
 
         $currentValue = ($value !== null && $value !== '') ? $value : null;
 
+        $attrs = $this->buildAttributes(
+            $this->collectAttrs($field, ['choices', 'placeholder', 'default'])
+        );
+
         $placeholderOption = '';
+        $placeholder = $field->getOption('placeholder');
         if ($placeholder) {
-            $phEsc = htmlspecialchars($placeholder);
-            $phSelected = $currentValue === null ? 'selected' : '';
-            $placeholderOption = "<option value=\"\" {$phSelected}>{$phEsc}</option>";
+            $phEsc = htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8');
+            $phSelected = $currentValue === null ? ' selected' : '';
+            $placeholderOption = "<option value=\"\"{$phSelected}>{$phEsc}</option>\n";
         }
 
         $optionsHtml = '';
         foreach ($choices as $val => $label) {
-            $valEsc   = htmlspecialchars((string) $val);
-            $labelEsc = htmlspecialchars((string) $label);
-
-            $selected = ($currentValue !== null && (string)$currentValue === (string)$val)
-                ? 'selected'
+            $valEsc = htmlspecialchars((string) $val, ENT_QUOTES, 'UTF-8');
+            $labelEsc = htmlspecialchars((string) $label, ENT_QUOTES, 'UTF-8');
+            $selected = ($currentValue !== null && (string) $currentValue === (string) $val)
+                ? ' selected'
                 : '';
-
-            $optionsHtml .= "<option value=\"{$valEsc}\" {$selected}>{$labelEsc}</option>";
+            $optionsHtml .= "<option value=\"{$valEsc}\"{$selected}>{$labelEsc}</option>\n";
         }
 
-        return "<select name=\"{$name}\" id=\"{$id}\" autocomplete=\"{$autocomplete}\"{$attrs}>
-{$placeholderOption}
-{$optionsHtml}
-</select>";
+        return <<<HTML
+<select name="{$name}" id="{$id}" autocomplete="{$autocomplete}"{$attrs}>
+{$placeholderOption}{$optionsHtml}</select>
+HTML;
     }
 
     public function normalize(mixed $value, ?FormField $field = null): mixed

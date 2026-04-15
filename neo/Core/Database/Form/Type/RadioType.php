@@ -11,17 +11,26 @@ class RadioType extends AbstractType
 
     public function render(FormField $field): string
     {
-        $name = $field->getName();
-        $options = $field->getOption('choices', []);
+        $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
+        $choices = $field->getOption('choices', []);
         $html = '';
 
-        foreach ($options as $value => $labelText) {
-            $id = $name . '_' . $value;
-            $checked = $field->getValue() == $value ? 'checked' : '';
+        foreach ($choices as $value => $labelText) {
+            $id = htmlspecialchars($field->getName() . '_' . $value, ENT_QUOTES, 'UTF-8');
+            $valueSafe = htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+            $labelSafe = htmlspecialchars((string)$labelText, ENT_QUOTES, 'UTF-8');
+            $checked = $field->getValue() == $value ? true : false;
+
+            $attrs = $this->buildAttributes(
+                array_merge(
+                    ['checked' => $checked],
+                    $this->collectAttrs($field, ['choices'])
+                )
+            );
 
             $html .= <<<HTML
-<input type="radio" name="{$name}" id="{$id}" value="{$value}" {$checked} />
-<label for="{$id}">{$labelText}</label>
+<input type="radio" name="{$name}" id="{$id}" value="{$valueSafe}"{$attrs} />
+<label for="{$id}">{$labelSafe}</label>
 HTML;
         }
 

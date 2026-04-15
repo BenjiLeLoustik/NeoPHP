@@ -11,21 +11,14 @@ class SubmitType extends AbstractType
 
     public function render(FormField $field): string
     {
-        $label = $field->getOption('label', 'Submit');
-        $name = $field->getName();
-        $id = $field->getOption('id', $name);
-
-        $attrs = '';
-        foreach ($field->getOptions() as $k => $v) {
-            if (!in_array($k, ['label', 'value'])) {
-                $attrs .= " {$k}='{$v}'";
-            }
-        }
+        $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
+        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $label = htmlspecialchars($field->getOption('label', 'Submit'), ENT_QUOTES, 'UTF-8');
+        $attrs = $this->buildAttributes($this->collectAttrs($field));
 
         return <<<HTML
-<button type='submit' name='{$name}' id='{$id}'{$attrs}>{$label}</button>
+<button type="submit" name="{$name}" id="{$id}"{$attrs}>{$label}</button>
 HTML;
-
     }
 
     public function normalize(mixed $value, ?FormField $field = null): mixed

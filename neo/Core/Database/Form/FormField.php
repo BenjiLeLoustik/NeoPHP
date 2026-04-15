@@ -199,4 +199,12 @@ class FormField
     {
         $this->collectionErrors = [];
     }
+
+    public function setAtrributes(array $attrs): void
+    {
+        $this->options['attrs'] = array_merge(
+            $this->options['attrs'] ?? [],
+            $attrs
+        );
+    }
 }

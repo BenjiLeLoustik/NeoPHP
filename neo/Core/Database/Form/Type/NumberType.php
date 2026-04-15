@@ -11,26 +11,29 @@ class NumberType extends AbstractType
 
     public function render(FormField $field): string
     {
-        $value = htmlspecialchars((string)($field->getValue() ?? ''), ENT_QUOTES);
-        $name  = $field->getName();
-        $id    = $field->getOption('id', $name);
-        $min   = $field->getOption('min', '');
-        $max   = $field->getOption('max', '');
-        $step  = $field->getOption('step', '');
-        $autocomplete = $field->getOption('autocomplete', 'off');
+        $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
+        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $value = htmlspecialchars((string)($field->getValue() ?? ''), ENT_QUOTES, 'UTF-8');
+        $autocomplete = htmlspecialchars($field->getOption('autocomplete', 'off'), ENT_QUOTES, 'UTF-8');
 
-        $attrs = '';
-        foreach ($field->getOptions() as $k => $v) {
-            if (!in_array($k, ['label', 'value', 'min', 'max', 'step', 'id'])) {
-                $attrs .= " {$k}='{$v}'";
+        $explicit = [];
+        foreach (['min', 'max', 'step'] as $key) {
+            $v = $field->getOption($key, '');
+            if ($v !== '') {
+                $explicit[$key] = $v;
             }
         }
 
-        $minAttr = $min !== '' ? " min='{$min}'" : '';
-        $maxAttr = $max !== '' ? " max='{$max}'" : '';
-        $stepAttr = $step !== '' ? " step='{$step}'" : '';
+        $attrs = $this->buildAttributes(
+            array_merge(
+                $explicit,
+                $this->collectAttrs($field, ['min', 'max', 'step', 'cast'])
+            )
+        );
 
-        return "<input type='number' name='{$name}' id='{$id}' value='{$value}' autocomplete='{$autocomplete}'{$minAttr}{$maxAttr}{$stepAttr}{$attrs} />";
+        return <<<HTML
+<input type="number" name="{$name}" id="{$id}" value="{$value}" autocomplete="{$autocomplete}"{$attrs} />
+HTML;
     }
 
     public function normalize(mixed $value, ?FormField $field = null): int|float|null
@@ -39,8 +42,7 @@ class NumberType extends AbstractType
             return null;
         }
 
-        $options = $field?->getOptions() ?? [];
-        $cast = $options['cast'] ?? null;
+        $cast = $field?->getOption('cast');
 
         return match ($cast) {
             'int'   => (int) $value,

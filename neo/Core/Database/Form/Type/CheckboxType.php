@@ -11,21 +11,18 @@ class CheckboxType extends AbstractType
 
     public function render(FormField $field): string
     {
-        $name = $field->getName();
-        $id = $field->getOption('id', $name);
-        $value = $field->getValue() ?? 0;
-        $checked = $value ? 'checked' : '';
+        $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
+        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $checked = (bool)$field->getValue();
 
-        $attrs = '';
-        foreach ($field->getOptions() as $k => $v) {
-            if (!in_array($k, ['label', 'value'])) {
-                $attrs .= " {$k}='{$v}'";
-            }
-        }
+        $attrs = $this->buildAttributes(array_merge(
+            ['checked' => $checked],
+            $this->collectAttrs($field)
+        ));
 
         return <<<HTML
 <input type="hidden" name="{$name}" value="0" />
-<input type="checkbox" name="{$name}" id="{$id}" value="1" {$checked} {$attrs} />
+<input type="checkbox" name="{$name}" id="{$id}" value="1"{$attrs} />
 HTML;
     }
 

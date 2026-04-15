@@ -11,24 +11,15 @@ class TextType extends AbstractType
 
     public function render(FormField $field): string
     {
-        $escape = fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+        $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
+        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $value = htmlspecialchars((string)($field->getValue() ?? ''), ENT_QUOTES, 'UTF-8');
+        $autocomplete = htmlspecialchars($field->getOption('autocomplete', 'off'), ENT_QUOTES, 'UTF-8');
 
-        $name = $escape($field->getName());
-        $id = $escape($field->getOption('id', $field->getName()));
-        $value = $escape($field->getValue() ?? '');
-        $autocomplete = $escape($field->getOption('autocomplete', 'off'));
-
-        $attrs = '';
-        foreach ($field->getOptions() as $k => $v) {
-            if (in_array($k, ['label', 'value', 'id', 'autocomplete'], true)) {
-                continue;
-            }
-
-            $attrs .= ' ' . $escape($k) . '="' . $escape($v) . '"';
-        }
+        $attrs = $this->buildAttributes($this->collectAttrs($field));
 
         return sprintf(
-            '<input type="text" name="%s" id="%s" value="%s" autocomplete="%s"%s>',
+            '<input type="text" name="%s" id="%s" value="%s" autocomplete="%s"%s />',
             $name,
             $id,
             $value,

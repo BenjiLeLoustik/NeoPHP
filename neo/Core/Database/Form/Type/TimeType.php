@@ -11,20 +11,15 @@ class TimeType extends AbstractType
 
     public function render(FormField $field): string
     {
-        $value = htmlspecialchars((string)($field->getValue() ?? ''), ENT_QUOTES);
-        $name  = $field->getName();
-        $id    = $field->getOption('id', $name);
-        $autocomplete = $field->getOption('autocomplete', '');
+        $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
+        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $value = htmlspecialchars((string)($field->getValue() ?? ''), ENT_QUOTES, 'UTF-8');
+        $autocomplete = htmlspecialchars($field->getOption('autocomplete', ''), ENT_QUOTES, 'UTF-8');
 
-        $attrs = '';
-        foreach ($field->getOptions() as $k => $v) {
-            if (!in_array($k, ['label', 'value'])) {
-                $attrs .= " {$k}='{$v}'";
-            }
-        }
+        $attrs = $this->buildAttributes($this->collectAttrs($field));
 
         return <<<HTML
-<input type="time" name="{$name}" id="{$id}" value="{$value}" autocomplete="{$autocomplete}" {$attrs} />
+<input type="time" name="{$name}" id="{$id}" value="{$value}" autocomplete="{$autocomplete}"{$attrs} />
 HTML;
     }
 

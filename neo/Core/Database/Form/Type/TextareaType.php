@@ -11,22 +11,16 @@ class TextareaType extends AbstractType
 
     public function render(FormField $field): string
     {
-        $value = htmlspecialchars((string)($field->getValue() ?? ''), ENT_QUOTES);
-        $name = $field->getName();
-        $id = $field->getOption('id', $name);
-        $rows = $field->getOption('rows', 5);
-        $autocomplete = $field->getOption('autocomplete', 'off');
+        $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
+        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $value = htmlspecialchars((string)($field->getValue() ?? ''), ENT_QUOTES, 'UTF-8');
+        $rows = htmlspecialchars((string)$field->getOption('rows', 5), ENT_QUOTES, 'UTF-8');
+        $autocomplete = htmlspecialchars($field->getOption('autocomplete', 'off'), ENT_QUOTES, 'UTF-8');
 
-        $attrs = '';
-        foreach ($field->getOptions() as $k => $v) {
-            if (!in_array($k, ['label', 'value', 'rows'])) {
-                $attrs .= " {$k}='{$v}'";
-            }
-        }
+        $attrs = $this->buildAttributes($this->collectAttrs($field, ['rows']));
 
         return <<<HTML
-<textarea name='{$name}' id='{$id}' rows='{$rows}' autocomplete='{$autocomplete}'{$attrs}>{$value}</textarea>
+<textarea name="{$name}" id="{$id}" rows="{$rows}" autocomplete="{$autocomplete}"{$attrs}>{$value}</textarea>
 HTML;
-
     }
 }

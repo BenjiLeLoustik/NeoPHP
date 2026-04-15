@@ -22,32 +22,29 @@ class DateType extends AbstractType
             }
         }
 
-        $value = htmlspecialchars($value, ENT_QUOTES);
 
-        $name  = $field->getName();
-        $id    = $field->getOption('id', $name);
+        $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
+        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        $autocomplete = htmlspecialchars($field->getOption('autocomplete', 'off'), ENT_QUOTES, 'UTF-8');
 
-        $autocomplete = $field->getOption('autocomplete', 'off');
-        $min = $field->getOption('min', '');
-        $max = $field->getOption('max', '');
-        $placeholder = $field->getOption('placeholder', '');
-
-        $attrs = '';
-        $excluded = ['label', 'value', 'min', 'max', 'placeholder', 'autocomplete', 'id'];
-
-        foreach ($field->getOptions() as $k => $v) {
-            if (!in_array($k, $excluded, true)) {
-                $safe = htmlspecialchars((string)$v, ENT_QUOTES);
-                $attrs .= " {$k}=\"{$safe}\"";
+        $explicit = [];
+        foreach (['min', 'max', 'placeholder'] as $key) {
+            $v = $field->getOption($key, '');
+            if ($v !== '') {
+                $explicit[$key] = $v;
             }
         }
 
-        $minAttr = $min ? "min=\"{$min}\"" : "";
-        $maxAttr = $max ? "max=\"{$max}\"" : "";
-        $placeholderAttr = $placeholder ? "placeholder=\"{$placeholder}\"" : "";
+        $attrs = $this->buildAttributes(
+            array_merge(
+                $explicit,
+                $this->collectAttrs($field, ['min', 'max', 'placeholder'])
+            )
+        );
 
         return <<<HTML
-<input type="date"" name="{$name}" id="{$id}" value="{$value}" autocomplete="{$autocomplete}" {$minAttr} {$maxAttr} {$placeholderAttr} {$attrs} />
+<input type="date" name="{$name}" id="{$id}" value="{$value}" autocomplete="{$autocomplete}"{$attrs} />
 HTML;
     }
 

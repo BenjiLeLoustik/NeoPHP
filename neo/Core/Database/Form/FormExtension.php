@@ -59,9 +59,19 @@ class FormExtension
         $view->registerTwigFunction('form_end', fn () => '</form>', ['is_safe' => ['html']]);
 
         /* ---------- WIDGET ---------- */
-        $view->registerTwigFunction('form_widget', function (Form $form, string $fieldName) {
+        $view->registerTwigFunction('form_widget', function (Form $form, string $fieldName, array $options = []) {
             $field = $form->getField($fieldName);
-            return $field ? $field->render() : '';
+
+            if (!$field) return '';
+
+            if (isset($options['attr']) && is_array($options['attr'])) {
+                $field->setOption('attrs', array_merge(
+                    $field->getAttributes(),
+                    $options['attr']
+                ));
+            }
+
+            return $field->render();
         }, ['is_safe' => ['html']]);
 
         /* ---------- FIELD ---------- */
