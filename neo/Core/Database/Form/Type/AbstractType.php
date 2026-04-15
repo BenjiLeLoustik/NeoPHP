@@ -18,7 +18,7 @@ abstract class AbstractType
 
     protected function getDefaultIgnored(): array
     {
-        return ['label', 'value', 'id', 'autocomplete'];
+        return ['label', 'value', 'id', 'autocomplete', 'attr', 'attrs'];
     }
 
     protected function collectAttrs(FormField $field, array $extraIgnored = []): array
@@ -30,6 +30,16 @@ abstract class AbstractType
             if (!in_array($k, $ignored, true)) {
                 $attrs[$k] = $v;
             }
+        }
+
+        $storedAttrs = $field->getOption('attrs', []);
+        if (is_array($storedAttrs)) {
+            $attrs = array_merge($attrs, $storedAttrs);
+        }
+
+        $inlineAttrs = $field->getOption('attr', []);
+        if (is_array($inlineAttrs)) {
+            $attrs = array_merge($attrs, $inlineAttrs);
         }
 
         return $attrs;

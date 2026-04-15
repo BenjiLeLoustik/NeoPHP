@@ -227,14 +227,26 @@ class CollectionType extends AbstractType
 
     private function buildExtraAttrs(array $options): string
     {
-        $ignored = ['label', 'value', 'type'];
+        $ignored = ['label', 'value', 'type', 'attr', 'attrs'];
         $booleanAttrs = ['required', 'disabled', 'readonly', 'checked', 'multiple'];
-        $attrs = '';
+        $htmlAttrs = [];
+
+        foreach (['attrs', 'attr'] as $attrKey) {
+            $extraAttrs = $options[$attrKey] ?? [];
+            if (is_array($extraAttrs)) {
+                $htmlAttrs = array_merge($htmlAttrs, $extraAttrs);
+            }
+        }
 
         foreach ($options as $k => $v) {
             if (in_array($k, $ignored, true)) {
                 continue;
             }
+            $htmlAttrs[$k] = $v;
+        }
+
+        $attrs = '';
+        foreach ($htmlAttrs as $k => $v) {
             if (in_array($k, $booleanAttrs, true)) {
                 if ($v) {
                     $attrs .= sprintf(' %s', $k); // <input required />

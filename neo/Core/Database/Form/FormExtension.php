@@ -62,16 +62,11 @@ class FormExtension
         $view->registerTwigFunction('form_widget', function (Form $form, string $fieldName, array $options = []) {
             $field = $form->getField($fieldName);
 
-            if (!$field) return '';
-
-            if (isset($options['attr']) && is_array($options['attr'])) {
-                $field->setOption('attrs', array_merge(
-                    $field->getAttributes(),
-                    $options['attr']
-                ));
+            if (!$field) {
+                return '';
             }
 
-            return $field->render();
+            return $field->withOptions($options)->render();
         }, ['is_safe' => ['html']]);
 
         /* ---------- FIELD ---------- */

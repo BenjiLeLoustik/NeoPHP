@@ -125,6 +125,37 @@ class FormField
         return $this->type->render($this);
     }
 
+    public function withOptions(array $options): self
+    {
+        $clone = clone $this;
+
+        if (isset($options['attrs']) && is_array($options['attrs'])) {
+            $clone->options['attrs'] = array_merge(
+                $clone->getAttributes(),
+                $options['attrs']
+            );
+            unset($options['attrs']);
+        }
+
+        if (isset($options['attr']) && is_array($options['attr'])) {
+            $clone->options['attr'] = array_merge(
+                is_array($clone->getOption('attr', [])) ? $clone->getOption('attr', []) : [],
+                $options['attr']
+            );
+            unset($options['attr']);
+        }
+
+        foreach ($options as $key => $value) {
+            $clone->options[$key] = $value;
+        }
+
+        if (array_key_exists('value', $clone->options)) {
+            $clone->value = $clone->options['value'];
+        }
+
+        return $clone;
+    }
+
     public function setWrapperAttributes(array $attrs): void
     {
         $this->wrapperAttributes = $attrs;
