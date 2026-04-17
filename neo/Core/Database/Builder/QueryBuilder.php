@@ -402,6 +402,13 @@ class QueryBuilder
         }
     }
 
+    public function countBetween(string $column, string $from, string $to): int
+    {
+        return $this->qb()
+            ->between($column, $from, $to)
+            ->count();
+    }
+
     public function toSql(): string
     {
         return $this->buildSelect();
