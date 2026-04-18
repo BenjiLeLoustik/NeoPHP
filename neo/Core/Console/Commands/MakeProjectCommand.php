@@ -327,7 +327,11 @@ return [
         'identifier' => '',    // champ utilisé pour se connecter
         'password'   => '', // champ mot de passe hashé
         'guard'      => 'session',  // session ou token (API)
-        'role'       => '',     // champ du modèle qui contient le/les rôle(s)
+        'role'       => [
+            'model'       => '', // ex: \Neo\Src\{$name}\Model\UserRole::class
+            'foreign_key' => '', // ex: role_id
+            'field'       => ''  // ex: slug
+        ],
         'routes' => [
             'login'    => '',   // route de redirection si non connecté
             'logout'   => '', // route de deconnexion
