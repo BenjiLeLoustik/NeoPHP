@@ -44,7 +44,7 @@ class AuthManager
             $this->config['model'],
             $this->config['identifier'] ?? 'email',
             $this->config['password']   ?? 'password',
-            $this->config['role'] ?? ''
+            $this->config['role'] ?? []
         );
     }
 
