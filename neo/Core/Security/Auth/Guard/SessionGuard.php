@@ -9,37 +9,23 @@ use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Client\Session;
 use Neo\Core\Security\PasswordManager;
 
-class SessionGuard
+final class SessionGuard implements GuardInterface
 {
     private const SESSION_KEY = '_auth_user_id';
 
-    private Session $session;
-    private PasswordManager $passwordManager;
-    private string $model;
-    private string $identifier;
-    private string $password;
-    private array $role;
-
     public function __construct(
-        Session $session,
-        PasswordManager $passwordManager,
-        string $model,
-        string $identifier,
-        string $password,
-        array $role = []
-    ) {
-        $this->session = $session;
-        $this->passwordManager = $passwordManager;
-        $this->model = $model;
-        $this->identifier = $identifier;
-        $this->password = $password;
-        $this->role = $role;
-    }
+        private Session $session,
+        private PasswordManager $passwordManager,
+        private string $model,
+        private string $identifier,
+        private string $password,
+        private array $role = []
+    ) {}
 
     public function attempt(array $credentials): bool
     {
         $identifierField = $this->identifier;
-        $passwordField   = $this->password;
+        $passwordField = $this->password;
 
         if (!isset($credentials[$identifierField], $credentials[$passwordField])) {
             throw new FrameworkException(
@@ -61,10 +47,7 @@ class SessionGuard
             return false;
         }
 
-        if (!$this->passwordManager->verify(
-            $credentials[$passwordField],
-            $hashedPassword
-        )) {
+        if (!$this->passwordManager->verify($credentials[$passwordField], $hashedPassword)) {
             return false;
         }
 
@@ -76,9 +59,7 @@ class SessionGuard
     public function login(AbstractModel $user): void
     {
         $pk = $user::getPrimaryKey();
-
         $this->session->regenerate();
-
         $this->session->set(self::SESSION_KEY, $user->{$pk});
     }
 
@@ -123,11 +104,15 @@ class SessionGuard
 
     public function hasRole(string $role): bool
     {
-        if (empty($this->role)) return false;
+        if (empty($this->role)) {
+            return false;
+        }
 
         $user = $this->user();
 
-        if (!$user) return false;
+        if (!$user) {
+            return false;
+        }
 
         $foreignKey = $this->role['foreign_key'];
         $roleModelClass = $this->role['model'];
@@ -135,15 +120,20 @@ class SessionGuard
 
         $roleId = $user->{$foreignKey} ?? null;
 
-        if (!$roleId) return false;
+        if (!$roleId) {
+            return false;
+        }
 
         $stmt = DatabaseConnection::getPdo()->prepare(
-            "SELECT * FROM {$roleModelClass::getTable()} WHERE {$roleModelClass::getPrimaryKey()} = ? LIMIT 1}"
+            "SELECT * FROM {$roleModelClass::getTable()} WHERE {$roleModelClass::getPrimaryKey()} = ? LIMIT 1"
         );
         $stmt->execute([$roleId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if (!$row) return false;
+        if (!$row) {
+            return false;
+        }
+
         $roleModel = new $roleModelClass($row);
 
         return $roleModel->{$field} === $role;
@@ -153,7 +143,6 @@ class SessionGuard
     {
         $modelClass = $this->model;
         $field = $this->identifier;
-
         $instance = new $modelClass();
 
         if (!empty($instance->fillable) && !in_array($field, $instance->fillable, true)) {
