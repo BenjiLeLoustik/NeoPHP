@@ -18,7 +18,7 @@ class SessionGuard
     private string $model;
     private string $identifier;
     private string $password;
-    private string $role;
+    private array $role;
 
     public function __construct(
         Session $session,
@@ -26,7 +26,7 @@ class SessionGuard
         string $model,
         string $identifier,
         string $password,
-        string $role
+        array $role = []
     ) {
         $this->session = $session;
         $this->passwordManager = $passwordManager;
@@ -123,19 +123,30 @@ class SessionGuard
 
     public function hasRole(string $role): bool
     {
+        if (empty($this->role)) return false;
+
         $user = $this->user();
 
-        if (!$user || empty($this->role)) {
-            return false;
-        }
+        if (!$user) return false;
 
-        $roles = $user->{$this->role} ?? null;
+        $foreignKey = $this->role['foreign_key'];
+        $roleModelClass = $this->role['model'];
+        $field = $this->role['field'];
 
-        if (!$roles) {
-            return false;
-        }
+        $roleId = $user->{$foreignKey} ?? null;
 
-        return in_array($role, (array) $roles, true);
+        if (!$roleId) return false;
+
+        $stmt = DatabaseConnection::getPdo()->prepare(
+            "SELECT * FROM {$roleModelClass::getTable()} WHERE {$roleModelClass::getPrimaryKey()} = ? LIMIT 1}"
+        );
+        $stmt->execute([$roleId]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$row) return false;
+        $roleModel = new $roleModelClass($row);
+
+        return $roleModel->{$field} === $role;
     }
 
     private function findByIdentifier(mixed $value): ?AbstractModel
