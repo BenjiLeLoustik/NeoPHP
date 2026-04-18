@@ -324,14 +324,24 @@ return [
     'auth' => [
         'enabled'    => false,
         'model'      => '', // ex: \Neo\Src\{$name}\Model\UserAccount::class
-        'identifier' => '',    // champ utilisé pour se connecter
+        'identifier' => '', // champ utilisé pour se connecter
         'password'   => '', // champ mot de passe hashé
-        'guard'      => 'session',  // session ou token (API)
-        'role'       => '',     // champ du modèle qui contient le/les rôle(s)
-        'routes' => [
-            'login'    => '',   // route de redirection si non connecté
-            'logout'   => '', // route de deconnexion
-            'home'     => '' // route après connexion réussie
+        'guard'      => 'session', // session ou token
+        'role'       => [
+            'model'       => '', // ex: \Neo\Src\{$name}\Model\UserRole::class
+            'foreign_key' => '', // ex: role_id
+            'field'       => ''  // ex: slug
+        ],
+        'options' => [
+            // Si guard = session
+            'login'      => '', // route de redirection si non connecté
+            'logout'     => '', // route de déconnexion
+            'home'       => '', // route après connexion réussie
+    
+            // Si guard = token
+            'secret'     => '', // clé secrète JWT
+            'expiration' => 3600, // durée de vie du token en secondes
+            'algorithm'  => 'HS256'
         ],
     ],
 

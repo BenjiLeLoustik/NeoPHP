@@ -6,15 +6,17 @@ namespace Neo\Core\Security\Auth\Guard;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Error\Exception\FrameworkException;
-use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\Request;
+use Neo\Core\Security\Auth\JwtManager;
 use Neo\Core\Security\PasswordManager;
 
-final class SessionGuard implements GuardInterface
+final class TokenGuard implements GuardInterface
 {
-    private const SESSION_KEY = '_auth_user_id';
+    private ?array $payload = null;
 
     public function __construct(
-        private Session $session,
+        private Request $request,
+        private JwtManager $jwtManager,
         private PasswordManager $passwordManager,
         private string $model,
         private string $identifier,
@@ -51,26 +53,26 @@ final class SessionGuard implements GuardInterface
             return false;
         }
 
-        $this->login($user);
-
         return true;
     }
 
     public function login(AbstractModel $user): void
-    {
-        $pk = $user::getPrimaryKey();
-        $this->session->regenerate();
-        $this->session->set(self::SESSION_KEY, $user->{$pk});
-    }
+    {}
 
     public function logout(): void
     {
-        $this->session->remove(self::SESSION_KEY);
+        $this->payload = null;
     }
 
     public function check(): bool
     {
-        return $this->session->has(self::SESSION_KEY);
+        $token = $this->extractToken();
+
+        if (!$token) {
+            return false;
+        }
+
+        return $this->jwtManager->isValid($token);
     }
 
     public function user(): ?AbstractModel
@@ -79,23 +81,21 @@ final class SessionGuard implements GuardInterface
             return null;
         }
 
-        $id = $this->session->get(self::SESSION_KEY);
+        $payload = $this->getPayload();
+        $userId = $payload['sub'] ?? null;
         $modelClass = $this->model;
 
-        $user = $modelClass::getIdentity($id);
-
-        if ($user) {
-            return $user;
+        if (!$userId) {
+            return null;
         }
 
         $stmt = DatabaseConnection::getPdo()->prepare(
             "SELECT * FROM {$modelClass::getTable()} WHERE {$modelClass::getPrimaryKey()} = ? LIMIT 1"
         );
-        $stmt->execute([$id]);
+        $stmt->execute([$userId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$row) {
-            $this->logout();
             return null;
         }
 
@@ -137,6 +137,45 @@ final class SessionGuard implements GuardInterface
         $roleModel = new $roleModelClass($row);
 
         return $roleModel->{$field} === $role;
+    }
+
+    public function generateToken(AbstractModel $user): string
+    {
+        $pk = $user::getPrimaryKey();
+
+        return $this->jwtManager->generate([
+            'sub' => $user->{$pk},
+        ]);
+    }
+
+    public function getPayload(): array
+    {
+        if ($this->payload === null) {
+            $token = $this->extractToken();
+
+            if (!$token) {
+                throw new FrameworkException(
+                    title: 'Auth Error',
+                    message: "Aucun token trouvé dans la requête.",
+                    code: 401
+                );
+            }
+
+            $this->payload = $this->jwtManager->decode($token);
+        }
+
+        return $this->payload;
+    }
+
+    private function extractToken(): ?string
+    {
+        $header = $this->request->header('Authorization');
+
+        if (!$header || !str_starts_with($header, 'Bearer ')) {
+            return null;
+        }
+
+        return substr($header, 7);
     }
 
     private function findByIdentifier(mixed $value): ?AbstractModel

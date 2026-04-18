@@ -246,6 +246,24 @@ class QueryBuilder
         return $this;
     }
 
+    public function whereGroup(callable $callback): self
+    {
+        $sub = new self();
+        $callback($sub);
+
+        $conditions = [];
+        foreach ($sub->where as [$logic, $condition]) {
+            $conditions[] = $condition;
+        }
+
+        if (!empty($conditions)) {
+            $this->where[] = ['AND', '(' . implode(' OR ', $conditions) . ')'];
+            $this->params  = array_merge($this->params, $sub->params);
+        }
+
+        return $this;
+    }
+
     public function between(string $column, mixed $from, mixed $to): self
     {
         $column = $this->sanitizeColumn($column);
@@ -400,6 +418,13 @@ class QueryBuilder
                 previous: $e
             );
         }
+    }
+
+    public function countBetween(string $column, string $from, string $to): int
+    {
+        return $this->qb()
+            ->between($column, $from, $to)
+            ->count();
     }
 
     public function toSql(): string

@@ -7,15 +7,17 @@ use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\Request;
+use Neo\Core\Security\Auth\Guard\GuardInterface;
 use Neo\Core\Security\Auth\Guard\SessionGuard;
+use Neo\Core\Security\Auth\Guard\TokenGuard;
 use Neo\Core\Security\PasswordManager;
 use Neo\Core\Utils\Config;
-use Neo\Core\View\View;
 
 class AuthManager
 {
     private Container $container;
-    private ?SessionGuard $guard = null;
+    private ?GuardInterface $guard = null;
     private array $config;
 
     public function __construct(Container $container)
@@ -38,14 +40,7 @@ class AuthManager
             );
         }
 
-        $this->guard = new SessionGuard(
-            $container->get(Session::class),
-            $container->get(PasswordManager::class),
-            $this->config['model'],
-            $this->config['identifier'] ?? 'email',
-            $this->config['password']   ?? 'password',
-            $this->config['role'] ?? ''
-        );
+        $this->guard = $this->resolveGuard();
     }
 
     public function attempt(array $credentials): bool
@@ -82,6 +77,52 @@ class AuthManager
     {
         if ($this->guard === null) return false;
         return $this->guard->hasRole($role);
+    }
+
+    public function generateToken(AbstractModel $user): string
+    {
+        $this->ensureEnabled();
+
+        if (!$this->guard instanceof TokenGuard) {
+            throw new FrameworkException(
+                title: 'Auth Error',
+                message: "generateToken() n'est disponible qu'avec le guard 'token'.",
+                code: 500
+            );
+        }
+
+        return $this->guard->generateToken($user);
+    }
+
+    private function resolveGuard(): GuardInterface
+    {
+        $guardType = $this->config['guard'] ?? 'session';
+        $options = $this->config['options'] ?? [];
+        $role = $this->config['role'] ?? [];
+
+        return match($guardType) {
+            'token' => new TokenGuard(
+                $this->container->get(Request::class),
+                new JwtManager(
+                    $options['secret']     ?? '',
+                    $options['expiration'] ?? 3600,
+                    $options['algorithm']  ?? 'HS256'
+                ),
+                $this->container->get(PasswordManager::class),
+                $this->config['model'],
+                $this->config['identifier'] ?? 'email',
+                $this->config['password']   ?? 'password',
+                $role
+            ),
+            default => new SessionGuard(
+                $this->container->get(Session::class),
+                $this->container->get(PasswordManager::class),
+                $this->config['model'],
+                $this->config['identifier'] ?? 'email',
+                $this->config['password']   ?? 'password',
+                $role
+            ),
+        };
     }
 
     private function ensureEnabled(): void

@@ -235,6 +235,8 @@ abstract class AbstractRepository
             }
         }
 
+        $this->resetState();
+
         return $this;
     }
 
