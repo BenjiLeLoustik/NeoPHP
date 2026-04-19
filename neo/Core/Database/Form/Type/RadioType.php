@@ -16,7 +16,7 @@ class RadioType extends AbstractType
         $html = '';
 
         foreach ($choices as $value => $labelText) {
-            $id = htmlspecialchars($field->getName() . '_' . $value, ENT_QUOTES, 'UTF-8');
+            $id = $this->getId($field);
             $valueSafe = htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
             $labelSafe = htmlspecialchars((string)$labelText, ENT_QUOTES, 'UTF-8');
             $checked = $field->getValue() == $value ? true : false;
