@@ -154,7 +154,7 @@ final class SessionGuard implements GuardInterface
         }
 
         $stmt = DatabaseConnection::getPdo()->prepare(
-            "SELECT * FROM {$modelClass::getTable()} WHERE {$field} = ? LIMIT 1"
+            "SELECT * FROM {$modelClass::getTable()} WHERE {$field} = ? AND deleted_at IS NULL LIMIT 1"
         );
         $stmt->execute([$value]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
