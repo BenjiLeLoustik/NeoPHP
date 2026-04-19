@@ -16,6 +16,11 @@ abstract class AbstractType
         return $value;
     }
 
+    protected function getId(FormField $field): string
+    {
+        return htmlspecialchars($field->getId(), ENT_QUOTES, 'UTF-8');
+    }
+
     protected function getDefaultIgnored(): array
     {
         return ['label', 'value', 'id', 'autocomplete', 'attr', 'attrs'];
