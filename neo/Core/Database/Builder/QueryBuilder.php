@@ -19,6 +19,7 @@ class QueryBuilder
     private ?int $limit = null;
     private ?int $offset = null;
     private array $joins = [];
+    private array $groupBy = [];
     private PDO $pdo;
 
     public function __construct()
@@ -309,6 +310,13 @@ class QueryBuilder
         return $this;
     }
 
+    public function groupBy(string $column): self
+    {
+        $column = $this->sanitizeColumn($column);
+        $this->groupBy[] = $column;
+        return $this;
+    }
+
     public function limit(int $limit): self
     {
         $this->limit = $limit;
@@ -352,6 +360,10 @@ class QueryBuilder
         }
 
         $sql .= $this->buildWhere();
+
+        if ($this->groupBy) {
+            $sql .= ' GROUP BY ' . implode(', ', $this->groupBy);
+        }
 
         if ($this->orderBy) {
             $sql .= ' ORDER BY ' . implode(', ', $this->orderBy);
@@ -559,14 +571,15 @@ class QueryBuilder
 
     public function reset(): self
     {
-        $this->table   = '';
-        $this->select  = [];
-        $this->where   = [];
-        $this->params  = [];
+        $this->table = '';
+        $this->select = [];
+        $this->where = [];
+        $this->params = [];
         $this->orderBy = [];
-        $this->limit   = null;
-        $this->offset  = null;
-        $this->joins   = [];
+        $this->limit = null;
+        $this->offset = null;
+        $this->joins = [];
+        $this->groupBy = [];
         return $this;
     }
 
