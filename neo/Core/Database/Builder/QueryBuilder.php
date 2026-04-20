@@ -317,6 +317,12 @@ class QueryBuilder
         return $this;
     }
 
+    public function selectRaw(string $expression): self
+    {
+        $this->select[] = $expression;
+        return $this;
+    }
+
     public function limit(int $limit): self
     {
         $this->limit = $limit;
