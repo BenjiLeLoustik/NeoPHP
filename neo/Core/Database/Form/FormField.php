@@ -40,6 +40,11 @@ class FormField
         return method_exists($this, 'get' . ucfirst($key)) || isset($this->options[$key]);
     }
 
+    public function getId(): string
+    {
+        return 'field_' . $this->name;
+    }
+
     public function getName(): string
     {
         return $this->name;

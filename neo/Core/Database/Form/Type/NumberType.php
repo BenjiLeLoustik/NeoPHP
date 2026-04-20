@@ -12,7 +12,7 @@ class NumberType extends AbstractType
     public function render(FormField $field): string
     {
         $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
-        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $id = $this->getId($field);
         $value = htmlspecialchars((string)($field->getValue() ?? ''), ENT_QUOTES, 'UTF-8');
         $autocomplete = htmlspecialchars($field->getOption('autocomplete', 'off'), ENT_QUOTES, 'UTF-8');
 

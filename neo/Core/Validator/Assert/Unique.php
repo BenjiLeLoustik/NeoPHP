@@ -13,16 +13,19 @@ class Unique extends Constraint
     private ?string $table;
     private ?string $column;
     private array $conditions;
+    private ?int $excludedId;
 
     public function __construct(
         string $message = '',
         ?string $table = null,
         ?string $column = null,
         array $conditions = [],
+        ?int $excludedId = null
     ) {
         $this->table = $table;
         $this->column = $column;
         $this->conditions = $conditions;
+        $this->excludedId = $excludedId;
         parent::__construct($message);
     }
 
@@ -51,9 +54,11 @@ class Unique extends Constraint
 
         $params = [$value];
 
-        if (property_exists($object, 'id') && $object->id !== null) {
+        $excludedId = $this->excludedId ?? (property_exists($object, 'id') && $object->id !== null ? $object->id : null);
+
+        if ($excludedId !== null) {
             $sql .= " AND id != ?";
-            $params[] = $object->id;
+            $params[] = $excludedId;
         }
 
         foreach ($this->conditions as $col => $val) {

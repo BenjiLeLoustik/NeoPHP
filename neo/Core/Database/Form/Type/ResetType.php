@@ -12,7 +12,7 @@ class ResetType extends AbstractType
     public function render(FormField $field): string
     {
         $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
-        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $id = $this->getId($field);
         $label = htmlspecialchars($field->getOption('label', 'Reset'), ENT_QUOTES, 'UTF-8');
         $attrs = $this->buildAttributes($this->collectAttrs($field));
 

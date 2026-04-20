@@ -17,7 +17,7 @@ class FileType extends AbstractType
     public function render(FormField $field): string
     {
         $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
-        $id = htmlspecialchars($field->getOption('id', $field->getName()), ENT_QUOTES, 'UTF-8');
+        $id = $this->getId($field);
         $attrs = $this->buildAttributes($this->collectAttrs($field));
 
         return <<<HTML
