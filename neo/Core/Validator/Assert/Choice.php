@@ -18,6 +18,13 @@ class Choice extends Constraint
     public function validate(mixed $value, ?object $object = null): bool
     {
         if ($value === null) return true;
-        return in_array($value, $this->choices, true);
+
+        if (array_key_exists($value, $this->choices)) return true;
+
+        if (is_numeric($value) && array_key_exists((int)$value, $this->choices)) return false;
+
+        if (in_array($value, $this->choices, false)) return true;
+
+        return false;
     }
 }
