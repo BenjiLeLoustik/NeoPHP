@@ -19,6 +19,7 @@ class QueryBuilder
     private ?int $limit = null;
     private ?int $offset = null;
     private array $joins = [];
+    private array $groupBy = [];
     private PDO $pdo;
 
     public function __construct()
@@ -309,6 +310,19 @@ class QueryBuilder
         return $this;
     }
 
+    public function groupBy(string $column): self
+    {
+        $column = $this->sanitizeColumn($column);
+        $this->groupBy[] = $column;
+        return $this;
+    }
+
+    public function selectRaw(string $expression): self
+    {
+        $this->select[] = $expression;
+        return $this;
+    }
+
     public function limit(int $limit): self
     {
         $this->limit = $limit;
@@ -352,6 +366,10 @@ class QueryBuilder
         }
 
         $sql .= $this->buildWhere();
+
+        if ($this->groupBy) {
+            $sql .= ' GROUP BY ' . implode(', ', $this->groupBy);
+        }
 
         if ($this->orderBy) {
             $sql .= ' ORDER BY ' . implode(', ', $this->orderBy);
@@ -538,11 +556,35 @@ class QueryBuilder
         }
     }
 
-    public function paginate(int $perPage = 15, ?int $page = null): PaginationBuilder
+    public function countDistinct(string $column): int
     {
-        $page = max(1, $page ?? (int) ($_GET['page'] ?? 1));
+        try {
+            $column = $this->sanitizeColumn($column);
+            $sql = "SELECT COUNT(DISTINCT $column) FROM {$this->table}";
 
-        $total = $this->count();
+            if ($this->joins) {
+                $sql .= ' ' . implode(' ', $this->joins);
+            }
+
+            $sql .= $this->buildWhere();
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($this->params);
+            return (int) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            throw new FrameworkException(
+                title: 'Query Builder Error',
+                message: "Erreur lors du countDistinct : " . $e->getMessage(),
+                code: 500,
+                previous: $e
+            );
+        }
+    }
+
+    public function paginate(int $perPage = 15, ?int $page = null, ?int $total = null): PaginationBuilder
+    {
+        $page  = max(1, $page ?? (int) ($_GET['page'] ?? 1));
+        $total = $total ?? $this->count();
 
         $items = $this
             ->limit($perPage)
@@ -559,14 +601,15 @@ class QueryBuilder
 
     public function reset(): self
     {
-        $this->table   = '';
-        $this->select  = [];
-        $this->where   = [];
-        $this->params  = [];
+        $this->table = '';
+        $this->select = [];
+        $this->where = [];
+        $this->params = [];
         $this->orderBy = [];
-        $this->limit   = null;
-        $this->offset  = null;
-        $this->joins   = [];
+        $this->limit = null;
+        $this->offset = null;
+        $this->joins = [];
+        $this->groupBy = [];
         return $this;
     }
 

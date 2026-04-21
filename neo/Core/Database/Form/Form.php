@@ -24,6 +24,7 @@ class Form
     private $ignoredFields = ['submit', '_csrf', 'csrf_token', 'reset'];
     private array $removedConstraints = [];
     private array $addedConstraints = [];
+    private array $excludedFromPopulate = [];
 
     public function __construct()
     {
@@ -86,11 +87,16 @@ class Form
         return $result;
     }
 
+    public function excludeFromPopulate(array $fields): void
+    {
+        $this->excludedFromPopulate = array_merge($this->excludedFromPopulate, $fields);
+    }
+
     public function populateData(): void
     {
         if (!$this->data instanceof AbstractModel) return;
 
-        $ignoredFields = $this->ignoredFields;
+        $ignoredFields = array_merge($this->ignoredFields, $this->excludedFromPopulate);
 
         foreach ($this->fields as $field) {
             $name = $field->getName();
@@ -255,7 +261,9 @@ class Form
             }
 
             if ($propData !== null) {
-                $ignoredFields = $this->ignoredFields;
+
+                $ignoredFields = array_merge($this->ignoredFields, $this->excludedFromPopulate);
+
                 foreach ($this->fields as $field) {
                     $name = $field->getName();
                     if (in_array($name, $ignoredFields, true)) continue;
