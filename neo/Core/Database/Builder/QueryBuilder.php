@@ -556,11 +556,35 @@ class QueryBuilder
         }
     }
 
-    public function paginate(int $perPage = 15, ?int $page = null): PaginationBuilder
+    public function countDistinct(string $column): int
     {
-        $page = max(1, $page ?? (int) ($_GET['page'] ?? 1));
+        try {
+            $column = $this->sanitizeColumn($column);
+            $sql = "SELECT COUNT(DISTINCT $column) FROM {$this->table}";
 
-        $total = $this->count();
+            if ($this->joins) {
+                $sql .= ' ' . implode(' ', $this->joins);
+            }
+
+            $sql .= $this->buildWhere();
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($this->params);
+            return (int) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            throw new FrameworkException(
+                title: 'Query Builder Error',
+                message: "Erreur lors du countDistinct : " . $e->getMessage(),
+                code: 500,
+                previous: $e
+            );
+        }
+    }
+
+    public function paginate(int $perPage = 15, ?int $page = null, ?int $total = null): PaginationBuilder
+    {
+        $page  = max(1, $page ?? (int) ($_GET['page'] ?? 1));
+        $total = $total ?? $this->count();
 
         $items = $this
             ->limit($perPage)
