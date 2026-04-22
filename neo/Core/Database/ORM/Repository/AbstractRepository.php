@@ -413,7 +413,14 @@ abstract class AbstractRepository
     private function eagerLoadTree(array $models, array $tree): void
     {
         foreach ($tree as $relation => $nested) {
-            AbstractModel::eagerLoad($models, $relation);
+            $options = $this->with[$relation] ?? [];
+
+            AbstractModel::eagerLoad(
+                $models,
+                $relation,
+                $options['withTrashed'] ?? false,
+                $options['onlyTrashed'] ?? false
+            );
 
             $nextModels = [];
             foreach ($models as $model) {
