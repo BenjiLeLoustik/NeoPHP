@@ -6,8 +6,8 @@ parameters:
 
     tmpDir: var/phpstan
 
-    constants:
-        ROOT_DIR: true
+    dynamicConstantNames:
+        - ROOT_DIR
 
     ignoreErrors:
         - '#Call to an undefined method#'
