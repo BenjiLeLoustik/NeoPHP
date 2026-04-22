@@ -58,6 +58,7 @@ abstract class AbstractModel
         }
 
         foreach ($relationsToLoad as $rel) {
+            /** @phpstan-ignore expr.resultUnused */
             $this->$rel;
         }
     }
@@ -213,8 +214,10 @@ abstract class AbstractModel
     {
         return array_values(array_filter($items, function ($item) use ($include, $only) {
             if (!$item instanceof self) return true;
-            if ($only)        return $item->deleted_at !== null;
-            if (!$include)    return $item->deleted_at === null;
+            /** @phpstan-ignore-next-line */
+            if ($only) return $item->deleted_at !== null;
+            /** @phpstan-ignore-next-line */
+            if (!$include) return $item->deleted_at === null;
             return true;
         }));
     }
