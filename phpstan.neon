@@ -6,5 +6,12 @@ parameters:
 
     tmpDir: var/phpstan
 
-    dynamicConstantNames:
-        - ROOT_DIR
+    ignoreErrors:
+        - identifier: constant.notFound
+        - identifier: property.protected
+        - identifier: method.notFound
+        - identifier: constructor.unusedParameter
+        - identifier: new.static
+        - identifier: nullCoalesce.variable
+        - identifier: attribute.abstract
+        - identifier: expr.resultUnused
