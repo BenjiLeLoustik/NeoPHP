@@ -1,42 +1,71 @@
-name: CI
+name: Auto Release
 
 on:
   push:
-    branches: [ "dev", "main" ]
-  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
 
 jobs:
-  test:
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout full history
         uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.2
-          tools: composer:v2
+          fetch-depth: 0
 
-      - name: Cache Composer
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock', 'phpstan.neon') }}
-
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
-
-      - name: Validate Composer
-        run: composer validate
-
-      - name: Dump autoload
-        run: composer dump-autoload --optimize
-
-      - name: Run PHPStan
+      - name: Get latest tag
+        id: tag
         run: |
-          rm -rf var/phpstan
-          vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+          git fetch --tags
+          echo "TAG=$(git describe --tags --abbrev=0 || echo v0.0.0)" >> $GITHUB_OUTPUT
+
+      - name: Compute version bump (PHP)
+        id: version
+        run: |
+          php -r "
+          \$tag = '${{ steps.tag.outputs.TAG }}';
+          \$log = shell_exec('git log ' . \$tag . '..HEAD --pretty=%s');
+
+          preg_match('/v(\d+)\.(\d+)\.(\d+)/', \$tag, \$m);
+
+          \$major = (int)\$m[1];
+          \$minor = (int)\$m[2];
+          \$patch = (int)\$m[3];
+
+          if (str_contains(\$log, 'BREAKING')) {
+              \$major++; \$minor=0; \$patch=0;
+          } elseif (str_contains(\$log, 'feat:')) {
+              \$minor++; \$patch=0;
+          } else {
+              \$patch++;
+          }
+
+          \$new = \"v{\$major}.{\$minor}.{\$patch}\";
+          echo \$new;
+          file_put_contents('version.txt', \$new);
+          " > version.txt
+
+          echo "VERSION=$(cat version.txt)" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        run: |
+          git log ${{ steps.tag.outputs.TAG }}..HEAD --pretty=format:"- %s" > CHANGELOG.md
+
+      - name: Create Git tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag ${{ steps.version.outputs.VERSION }}
+          git push origin ${{ steps.version.outputs.VERSION }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          body_path: CHANGELOG.md
+          generate_release_notes: true
