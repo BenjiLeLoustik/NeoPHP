@@ -1,5 +1,5 @@
 parameters:
-    level: 5
+    level: 3
 
     paths:
         - neo
@@ -8,16 +8,3 @@ parameters:
 
     dynamicConstantNames:
         - ROOT_DIR
-
-    ignoreErrors:
-        - '#Call to an undefined method#'
-        - '#Constant ROOT_DIR not found#'
-        - '#Strict comparison using === between mixed and null will always evaluate to false#'
-        - '#Offset mixed on array\{\} on left side of \?\?= does not exist#'
-        - '#Strict comparison using !== between mixed and null will always evaluate to true#'
-        - '#on left side of \?\? is not nullable#'
-        - '#Unsafe usage of new static\(\)#'
-        - '#of array_values is already a list#'
-        - '#has an unused parameter#'
-        - '#Access to protected property#'
-        - '#is unused#'
