@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock', 'phpstan.neon') }}
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
