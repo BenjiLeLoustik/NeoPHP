@@ -11,8 +11,14 @@ class Length extends Constraint
     public function __construct(
         public ?int $min = null,
         public ?int $max = null,
+        public ?int $exactly = null,
         string $message = ""
     ) {
+        if ($exactly) {
+            $this->min = $exactly;
+            $this->max = $exactly;
+        }
+
         if ($message !== '') {
             $message = str_replace('{%min%}', $this->min !== null ? (string)$this->min : '∞', $message);
             $message = str_replace('{%max%}', $this->max !== null ? (string)$this->max : '∞', $message);
