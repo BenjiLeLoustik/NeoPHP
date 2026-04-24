@@ -16,6 +16,7 @@ use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Http\Client\Cookie;
 use Neo\Core\Http\Client\Flash;
 use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\File\Uploader;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
 use Neo\Core\Routing\Router;
@@ -137,6 +138,8 @@ class App
         $auth = $this->container->get(AuthManager::class);
         $csrf = $this->container->get(CsrfTokenManager::class);
         $view = $this->container->get(View::class);
+
+        $this->container->set(Uploader::class, fn(Container $c) => new Uploader($c));
 
         $view->registerTwigFunction('auth_check', fn() => $auth->check());
         $view->registerTwigFunction('auth_user', fn() => $auth->user());
