@@ -3,8 +3,9 @@ declare(strict_types=1);
 
 namespace Neo\Core\Http;
 
-use Neo\Core\DI\Container;
+
 use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\File\UploadedFile;
 
 class Request
 {
@@ -14,6 +15,7 @@ class Request
     private array $body;
     private array $headers;
     private array $server;
+    private array $files;
     private Session $session;
 
     private function __construct(
@@ -22,7 +24,8 @@ class Request
         array $query,
         array $body,
         array $headers,
-        array $server
+        array $server,
+        array $files = []
     ) {
         $this->method = strtoupper($method);
         $this->path = $this->sanitizePath($path);
@@ -30,6 +33,7 @@ class Request
         $this->body = $body;
         $this->headers = $headers;
         $this->server = $server;
+        $this->files = $files;
     }
 
     public static function fromGlobals(): self
@@ -61,19 +65,23 @@ class Request
                 $headers[$name] = $value;
             }
         }
+
         if (isset($_SERVER['CONTENT_TYPE'])) {
             $headers['Content-Type'] = $_SERVER['CONTENT_TYPE'];
         }
+
         if (isset($_SERVER['CONTENT_LENGTH'])) {
             $headers['Content-Length'] = (string) $_SERVER['CONTENT_LENGTH'];
         }
 
-        return new self($method, $path, $query, $body, $headers, $_SERVER);
+        $files = $_FILES ?? [];
+
+        return new self($method, $path, $query, $body, $headers, $_SERVER, $files);
     }
 
     public static function createEmpty(): self
     {
-        return new self('CLI', '/', [], [], [], []);
+        return new self('CLI', '/', [], [], [], [], []);
     }
 
     private function sanitizePath(string $path): string
@@ -98,6 +106,18 @@ class Request
             $headers,
             $server
         );
+    }
+
+    public function file(string $key): ?UploadedFile
+    {
+        if (!isset($this->files[$key])) return null;
+
+        return new UploadedFile($this->files[$key]);
+    }
+
+    public function allFiles(): array
+    {
+        return $this->files;
     }
 
     public function getMethod(): string

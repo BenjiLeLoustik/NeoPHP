@@ -9,6 +9,7 @@ use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Http\Client\Cookie;
 use Neo\Core\Http\Client\Flash;
 use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\File\Uploader;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\JsonResponse;
 use Neo\Core\Http\Response\RedirectResponse;
@@ -22,6 +23,7 @@ use Neo\Core\Utils\Config;
 use Neo\Core\Utils\Extension\StringExtension;
 use Neo\Core\Utils\Logger;
 use Neo\Core\View\View;
+use RuntimeException;
 
 abstract class AbstractController
 {
@@ -184,5 +186,16 @@ abstract class AbstractController
     protected function getConfig(): Config
     {
         return $this->container->get(Config::class);
+    }
+
+    protected function upload(string $field, string $name, array $extensions, string $directory): string
+    {
+        $uploader = $this->container->get(Uploader::class);
+        $file = $this->request->file($field);
+        if (!$file) {
+            throw new RuntimeException("File field '$field' not found.");
+        }
+
+        return $uploader->upload($file, $name, $extensions, $directory);
     }
 }
