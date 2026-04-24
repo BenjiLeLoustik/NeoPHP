@@ -239,9 +239,9 @@ class MiddlewareHandler
         $response->setStatusCode(503);
 
         if ($rendered !== null) {
-            $response->setBody($rendered)->send();
+            $response->setContent($rendered)->send();
         } else {
-            $response->setBody($maintenance->message)->send();
+            $response->setContent($maintenance->message)->send();
         }
 
         exit;
