@@ -102,6 +102,7 @@ PHP;
     private function convertColumnType(string $sqlType): string
     {
         $sqlType = strtolower($sqlType);
+        if (str_contains($sqlType, 'enum')) return 'string';
         if (str_contains($sqlType, 'point')) return 'string';
         if (str_contains($sqlType, 'int')) return 'int';
         if (str_contains($sqlType, 'float') || str_contains($sqlType, 'double') || str_contains($sqlType, 'decimal')) return 'float';
