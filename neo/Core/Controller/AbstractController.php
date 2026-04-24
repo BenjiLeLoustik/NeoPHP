@@ -3,12 +3,14 @@ declare(strict_types=1);
 
 namespace Neo\Core\Controller;
 
+use _PHPStan_2526f5004\Symfony\Component\String\Exception\RuntimeException;
 use Neo\Core\DI\Container;
 use Neo\Core\Event\Contract\EventInterface;
 use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Http\Client\Cookie;
 use Neo\Core\Http\Client\Flash;
 use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\File\Uploader;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\JsonResponse;
 use Neo\Core\Http\Response\RedirectResponse;
@@ -184,5 +186,16 @@ abstract class AbstractController
     protected function getConfig(): Config
     {
         return $this->container->get(Config::class);
+    }
+
+    protected function upload(string $field, string $name, array $extensions, string $directory): Uploader
+    {
+        $uploader = $this->container->get(Uploader::class);
+        $file = $this->request->file($field);
+        if (!$file) {
+            throw new RuntimeException("File field '$field' not found.");
+        }
+
+        return $uploader->upload($file, $name, $extensions, $directory);
     }
 }
