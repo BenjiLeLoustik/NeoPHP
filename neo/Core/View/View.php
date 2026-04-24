@@ -86,6 +86,15 @@ class View
         }
     }
 
+    public function renderIfExists(string $template, array $params = []): ?string
+    {
+        try {
+            return $this->twig->render($template, $params);
+        } catch (\Twig\Error\LoaderError $e) {
+            return null;
+        }
+    }
+
     public function getTwig(): Environment
     {
         return $this->twig;

@@ -5,6 +5,7 @@ namespace Neo\Core\Security\Middleware;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
+use Neo\Core\Routing\Attribute\Maintenance;
 use Neo\Core\Routing\Attribute\RateLimit;
 use Neo\Core\Security\Middleware\Attribute\Middleware as MiddlewareAttribute;
 use Neo\Core\Security\Middleware\Default\RateLimitMiddleware;
@@ -12,6 +13,7 @@ use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
 use Neo\Core\Http\Client\Flash;
 use Neo\Core\Http\Response\Response;
 use Neo\Core\Routing\Router;
+use Neo\Core\View\View;
 use ReflectionClass;
 use Throwable;
 
@@ -31,21 +33,23 @@ class MiddlewareHandler
     public function run(string $controller, ?string $method = null): void
     {
         $this->lastController = $controller;
-        $this->lastMethod     = $method;
+        $this->lastMethod = $method;
+
+        $this->checkMaintenance($controller, $method);
 
         $middlewares = $this->getMiddlewares($controller, $method);
 
-        $router   = $this->container->get(Router::class);
+        $router = $this->container->get(Router::class);
         $response = $this->container->get(Response::class);
-        $flash    = $this->container->get(Flash::class);
+        $flash = $this->container->get(Flash::class);
 
         foreach ($middlewares as $meta) {
-            $middlewareClass   = $meta['class'];
-            $onError           = $meta['onError'] ?? 'block';
-            $message           = $meta['message'] ?? 'Middleware failed';
-            $redirect          = $meta['redirect'] ?? null;
+            $middlewareClass = $meta['class'];
+            $onError = $meta['onError'] ?? 'block';
+            $message = $meta['message'] ?? 'Middleware failed';
+            $redirect = $meta['redirect'] ?? null;
             $isClassMiddleware = $meta['isClass'] ?? false;
-            $result            = false;
+            $result = false;
 
             if (!class_exists($middlewareClass)) {
                 $this->recordError($middlewareClass, $message, $onError);
@@ -67,7 +71,7 @@ class MiddlewareHandler
                 $result = $middleware->handle() === true;
             } catch (Throwable $e) {
                 $message = $e->getMessage();
-                $result  = false;
+                $result = false;
             }
 
             $this->executed[$middlewareClass][] = $result;
@@ -111,7 +115,7 @@ class MiddlewareHandler
     private function recordError(string $middleware, string $message, string $onError): void
     {
         $controller = $this->lastController ?? 'unknown';
-        $method     = $this->lastMethod     ?? 'unknown';
+        $method = $this->lastMethod ?? 'unknown';
         $this->errors[$controller][$method][$middleware][] = $message;
     }
 
@@ -121,19 +125,19 @@ class MiddlewareHandler
         $ref = new ReflectionClass($controller);
 
         foreach ($ref->getAttributes(MiddlewareAttribute::class) as $attr) {
-            $i     = $attr->newInstance();
+            $i = $attr->newInstance();
             $all[] = [
-                'class'    => $i->use,
-                'message'  => $i->message,
-                'onError'  => $i->onError,
+                'class' => $i->use,
+                'message' => $i->message,
+                'onError' => $i->onError,
                 'redirect' => $i->redirect,
-                'isClass'  => true,
-                'params'   => $i->params,
+                'isClass' => true,
+                'params' => $i->params,
             ];
         }
 
         foreach ($ref->getAttributes(RateLimit::class) as $attr) {
-            $i     = $attr->newInstance();
+            $i = $attr->newInstance();
             $all[] = $this->buildRateLimitMeta($i, true);
         }
 
@@ -141,19 +145,19 @@ class MiddlewareHandler
             $refMethod = $ref->getMethod($method);
 
             foreach ($refMethod->getAttributes(MiddlewareAttribute::class) as $attr) {
-                $i     = $attr->newInstance();
+                $i = $attr->newInstance();
                 $all[] = [
-                    'class'    => $i->use,
-                    'message'  => $i->message,
-                    'onError'  => $i->onError,
+                    'class' => $i->use,
+                    'message' => $i->message,
+                    'onError' => $i->onError,
                     'redirect' => $i->redirect,
-                    'isClass'  => false,
-                    'params'   => $i->params,
+                    'isClass' => false,
+                    'params' => $i->params,
                 ];
             }
 
             foreach ($refMethod->getAttributes(RateLimit::class) as $attr) {
-                $i     = $attr->newInstance();
+                $i = $attr->newInstance();
                 $all[] = $this->buildRateLimitMeta($i, false);
             }
         }
@@ -164,15 +168,15 @@ class MiddlewareHandler
     private function buildRateLimitMeta(RateLimit $attr, bool $isClass): array
     {
         return [
-            'class'    => RateLimitMiddleware::class,
-            'message'  => $attr->message,
-            'onError'  => 'block',
+            'class' => RateLimitMiddleware::class,
+            'message' => $attr->message,
+            'onError' => 'block',
             'redirect' => null,
-            'isClass'  => $isClass,
-            'params'   => [
-                'maxAttempts'  => $attr->maxAttempts,
+            'isClass' => $isClass,
+            'params' => [
+                'maxAttempts' => $attr->maxAttempts,
                 'decaySeconds' => $attr->decaySeconds,
-                'message'      => $attr->message,
+                'message' => $attr->message,
             ],
         ];
     }
@@ -202,5 +206,44 @@ class MiddlewareHandler
     public function getMiddleware(string $middlewareClass): array
     {
         return $this->executed[$middlewareClass] ?? [];
+    }
+
+    private function checkMaintenance(string $controller, ?string $method): void
+    {
+        $ref = new ReflectionClass($controller);
+        $maintenance = null;
+
+        if ($method && $ref->hasMethod($method)) {
+            $attrs = $ref->getMethod($method)->getAttributes(Maintenance::class);
+            if (!empty($attrs)) {
+                $maintenance = $attrs[0]->newInstance();
+            }
+        }
+
+        if ($maintenance === null) {
+            $attrs = $ref->getAttributes(Maintenance::class);
+            if (!empty($attrs)) {
+                $maintenance = $attrs[0]->newInstance();
+            }
+        }
+
+        if ($maintenance === null) return;
+
+        $view = $this->container->get(View::class);
+        $response = $this->container->get(Response::class);
+
+        $rendered = $view->renderIfExists('maintenance.html.twig', [
+            'message' => $maintenance->message,
+        ]);
+
+        $response->setStatusCode(503);
+
+        if ($rendered !== null) {
+            $response->setBody($rendered)->send();
+        } else {
+            $response->setBody($maintenance->message)->send();
+        }
+
+        exit;
     }
 }
