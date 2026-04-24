@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Neo\Core\Controller;
 
-use _PHPStan_2526f5004\Symfony\Component\String\Exception\RuntimeException;
 use Neo\Core\DI\Container;
 use Neo\Core\Event\Contract\EventInterface;
 use Neo\Core\Event\EventDispatcher;
@@ -24,6 +23,7 @@ use Neo\Core\Utils\Config;
 use Neo\Core\Utils\Extension\StringExtension;
 use Neo\Core\Utils\Logger;
 use Neo\Core\View\View;
+use RuntimeException;
 
 abstract class AbstractController
 {
@@ -188,7 +188,7 @@ abstract class AbstractController
         return $this->container->get(Config::class);
     }
 
-    protected function upload(string $field, string $name, array $extensions, string $directory): Uploader
+    protected function upload(string $field, string $name, array $extensions, string $directory): string
     {
         $uploader = $this->container->get(Uploader::class);
         $file = $this->request->file($field);
