@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Neo\Core\Http;
 
-use _PHPStan_2526f5004\GuzzleHttp\Psr7\UploadedFile;
-use Neo\Core\DI\Container;
+
 use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\File\UploadedFile;
 
 class Request
 {
