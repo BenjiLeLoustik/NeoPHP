@@ -9,11 +9,6 @@ class FileType extends AbstractType
 {
     public ?string $type = 'file';
 
-    protected function getDefaultIgnored(): array
-    {
-        return ['label', 'value', 'id'];
-    }
-
     public function render(FormField $field): string
     {
         $name = htmlspecialchars($field->getName(), ENT_QUOTES, 'UTF-8');
