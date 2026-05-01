@@ -56,7 +56,7 @@ PHP;
         }
 
         $defaultMethods = ['find_by_id', 'find_all', 'save', 'delete'];
-        $cases          = !empty($ctx->cases) ? $ctx->cases : $defaultMethods;
+        $cases = !empty($ctx->cases) ? $ctx->cases : $defaultMethods;
 
         foreach ($cases as $case) {
             $fixture = $this->buildFixture($ctx->dataset);
