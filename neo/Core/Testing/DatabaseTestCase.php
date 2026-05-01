@@ -39,6 +39,16 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
         parent::tearDown();
     }
 
+    protected function get(string $id): mixed
+    {
+        return $this->container->get($id);
+    }
+
+    protected function swap(string $id, mixed $value): void
+    {
+        $this->container->set($id, fn() => $value);
+    }
+
     protected function insertFixture(string $table, array $data): int|string
     {
         $columns = implode(', ', array_keys($data));

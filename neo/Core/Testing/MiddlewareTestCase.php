@@ -30,6 +30,16 @@ abstract class MiddlewareTestCase extends PHPUnitTestCase
         parent::tearDown();
     }
 
+    protected function get(string $id): mixed
+    {
+        return $this->container->get($id);
+    }
+
+    protected function swap(string $id, mixed $value): void
+    {
+        $this->container->set($id, fn() => $value);
+    }
+
     protected function makeMiddleware(string $middlewareClass, array $params = []): MiddlewareInterface
     {
         $instance = empty($params)
@@ -73,10 +83,5 @@ abstract class MiddlewareTestCase extends PHPUnitTestCase
                 "Code HTTP attendu : $expectedCode, obtenu : {$e->getCode()}"
             );
         }
-    }
-
-    protected function swap(string $id, mixed $value): void
-    {
-        $this->container->set($id, fn() => $value);
     }
 }
