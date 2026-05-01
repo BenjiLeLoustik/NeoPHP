@@ -441,12 +441,16 @@ if (is_dir(\$testConfigsPath)) {
 
     \$tables = \$devPdo->query("SHOW TABLES")->fetchAll(\\PDO::FETCH_COLUMN);
 
+    \$testPdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+
     foreach (\$tables as \$table) {
-        \$row = \$devPdo->query("SHOW CREATE TABLE `\$table`")->fetch(\\PDO::FETCH_ASSOC);
+        \$row       = \$devPdo->query("SHOW CREATE TABLE `\$table`")->fetch(\\PDO::FETCH_ASSOC);
         \$createSql = \$row['Create Table'];
         \$createSql = preg_replace('/^CREATE TABLE (`[^`]+`)/', 'CREATE TABLE IF NOT EXISTS \$1', \$createSql);
         \$testPdo->exec(\$createSql);
     }
+
+    \$testPdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 })();
 PHP;
 
