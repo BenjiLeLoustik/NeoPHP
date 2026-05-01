@@ -390,6 +390,7 @@ declare(strict_types=1);
  * Chargé automatiquement par PHPUnit avant les tests.
  * Initialise le framework en mode test, injecte le nom du projet
  * et surcharge les configs via Tests/Config/ si ce dossier existe.
+ * Synchronise également le schéma de la BDD dev → BDD test.
  */
 
 define('ROOT_DIR', dirname(__DIR__, 3));
@@ -407,6 +408,46 @@ require_once ROOT_DIR . '/vendor/autoload.php';
 if (is_dir(\$testConfigsPath)) {
     \$GLOBALS['_NEO_TEST_CONFIGS_PATH'] = \$testConfigsPath;
 }
+
+// — Synchronisation du schéma dev → test (une seule fois avant toute la suite) —
+(static function (): void {
+    \$app = new \\Neo\\App();
+    \$container = \$app->getContainer();
+    \$container->get(\\Neo\\Core\\Database\\DatabaseConnection::class);
+    \$testPdo = \\Neo\\Core\\Database\\DatabaseConnection::getPdo();
+
+    \$configsPath = \$container->get('configsPath');
+    \$devConfig = require \$configsPath . '/database.config.php';
+    \$useDriver = \$devConfig['use'];
+    \$connConfig = \$devConfig['connections'][\$useDriver];
+
+    \$devDsn = sprintf(
+        '%s:host=%s;dbname=%s;charset=%s',
+        \$connConfig['driver'],
+        \$connConfig['host'],
+        \$connConfig['dbname'],
+        \$connConfig['charset']
+    );
+
+    \$devPdo = new \\PDO(
+        \$devDsn,
+        \$connConfig['user'],
+        \$connConfig['pass'],
+        [
+            \\PDO::ATTR_ERRMODE => \\PDO::ERRMODE_EXCEPTION,
+            \\PDO::ATTR_DEFAULT_FETCH_MODE => \\PDO::FETCH_ASSOC,
+        ]
+    );
+
+    \$tables = \$devPdo->query("SHOW TABLES")->fetchAll(\\PDO::FETCH_COLUMN);
+
+    foreach (\$tables as \$table) {
+        \$row = \$devPdo->query("SHOW CREATE TABLE `\$table`")->fetch(\\PDO::FETCH_ASSOC);
+        \$createSql = \$row['Create Table'];
+        \$createSql = preg_replace('/^CREATE TABLE (`[^`]+`)/', 'CREATE TABLE IF NOT EXISTS \$1', \$createSql);
+        \$testPdo->exec(\$createSql);
+    }
+})();
 PHP;
 
         file_put_contents($bootstrapPath, $content);
