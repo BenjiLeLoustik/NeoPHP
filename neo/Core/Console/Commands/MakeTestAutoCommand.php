@@ -7,6 +7,7 @@ use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\DI\Container;
 use Neo\Core\Testing\Generator\TestGenerator;
+use Neo\Core\Testing\Scaffold\TestScaffolder;
 
 #[Command(
     name: 'make:test:auto',
@@ -59,6 +60,16 @@ HELP;
             echo "Utilisation : php bin/neo make:test:auto --project=NomDuProjet\n";
             return;
         }
+
+        $basePath = ROOT_DIR . "/src/{$project}";
+
+        if (!is_dir($basePath)) {
+            echo "Le projet '$project' n'existe pas dans ./src/\n";
+            return;
+        }
+
+        (new TestScaffolder())->ensure($basePath, $project);
+
 
         echo "Analyse des attributs #[Test] dans le projet '{$project}'...\n";
         echo str_repeat('=', 60) . "\n";
