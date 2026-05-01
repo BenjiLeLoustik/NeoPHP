@@ -60,8 +60,8 @@ PHP;
             $propName = $prop->getName();
 
             foreach ($constraints as $attrRef) {
-                $constraintShort = class_basename($attrRef->getName());
-                $testName        = 'test_' . $propName . '_fails_' . strtolower($constraintShort);
+                $constraintShort = (new \ReflectionClass($attrRef->getName()))->getShortName();
+                $testName = 'test_' . $propName . '_fails_' . strtolower($constraintShort);
 
                 $lines[] = <<<PHP
     public function {$testName}(): void
