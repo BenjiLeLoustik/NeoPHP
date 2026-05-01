@@ -5,6 +5,7 @@ namespace Neo\Core\Console;
 
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Attribute\Command;
+use Neo\Core\DI\Container;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 use ReflectionClass;
@@ -13,10 +14,8 @@ class ConsoleHandler
 {
     private array $commands = [];
 
-    public function __construct()
-    {
-        $this->loadCommands();
-    }
+    public function __construct(private Container $container)
+    {}
 
     private function loadCommands(): void
     {
@@ -50,7 +49,7 @@ class ConsoleHandler
             }
 
             $attribute = $attributes[0]->newInstance();
-            $instance = new $class();
+            $instance = new $class($this->container);
 
             $name = $attribute->name ?? $instance->getName();
             $description = $attribute->description ?? $instance->getDescription();
@@ -65,6 +64,7 @@ class ConsoleHandler
     public function run(array $argv): void
     {
         array_shift($argv);
+        $this->loadCommands();
 
         $commandName = $argv[0] ?? null;
 
