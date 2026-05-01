@@ -4,8 +4,24 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Neo\Core\Console\ConsoleHandler;
+use Neo\Core\DI\Container;
 
-define('ROOT_DIR', dirname(__DIR__, 1) . '/');
+define('ROOT_DIR', dirname(__DIR__) . '/');
 
-$console = new ConsoleHandler();
+$container = new Container();
+
+global $argv;
+
+foreach ($argv as $arg) {
+    if (str_starts_with($arg, '--project=')) {
+        $container->set('application', substr($arg, 10));
+    }
+}
+
+$basePath = realpath(__DIR__ . '/../');
+
+$container->set('basePath', $basePath);
+$container->set('srcPath', $basePath . '/src');
+
+$console = new ConsoleHandler($container);
 $console->run($argv);
