@@ -13,9 +13,9 @@ class TestClassContext
         public readonly string $namespace,
         public readonly TestType $type,
         public readonly array $methods,
-        public readonly array $cases      = [],
-        public readonly array $dataset    = [],
-        public readonly bool $skip       = false,
+        public readonly array $cases = [],
+        public readonly array $dataset = [],
+        public readonly bool $skip = false,
         public readonly ?string $customExtends = null,
     ){}
 }
