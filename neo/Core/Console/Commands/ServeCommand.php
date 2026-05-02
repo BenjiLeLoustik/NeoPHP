@@ -59,7 +59,6 @@ HELP;
             return;
         }
 
-        // LISTE + CHOIX
         echo "Projets disponibles :\n\n";
 
         $i = 1;
