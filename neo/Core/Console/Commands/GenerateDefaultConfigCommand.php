@@ -5,115 +5,69 @@ namespace Neo\Core\Console\Commands;
 
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Attribute\Command;
+use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Fs;
+use Neo\Core\Console\Helper\Output;
 
 #[Command(
     name: 'generate:default:config',
-    description: 'Générer les fichiers de configuration sensibles d\'un projet (deploy, database, api)'
+    description: 'Generate sensitive config files for a project (deploy, database, api)'
 )]
 final class GenerateDefaultConfigCommand implements CommandInterface
 {
-    public function getName(): string
-    {
-        return 'generate:default:config';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Générer les fichiers de configuration sensibles d\'un projet (deploy, database, api)';
-    }
-
-    public function getHelp(): string
-    {
-        return <<<HELP
-Commande : generate:default:config
-Description : Génère les fichiers de configuration sensibles absents du dépôt Git.
-
-Usage :
-  php bin/neo generate:default:config [--project=NomDuProjet]
-
-Options :
-  --project=NomDuProjet     Nom du projet cible dans ./src/ (optionnel)
-
-Fichiers générés :
-  - Config/deploy.config.php
-  - Config/database.config.php
-  - Config/api.config.php
-
-Exemples :
-  php bin/neo generate:default:config
-    Liste les projets disponibles et demande lequel cibler.
-
-  php bin/neo generate:default:config --project=NeoAdmin
-    Génère les configs manquantes pour le projet NeoAdmin.
-
-Notes :
-- Ces fichiers sont listés dans .gitignore par défaut.
-- Si un fichier existe déjà, une confirmation est demandée avant écrasement.
-HELP;
-    }
-
     public function execute(array $args): void
     {
-        $projectName = $this->extractOption($args, 'project');
+        $projectName = Args::option($args, '--project') ?? $this->pickProjectInteractively();
 
         if (!$projectName) {
-            $projectName = $this->pickProjectInteractively();
-            if (!$projectName) {
-                return;
-            }
-        }
-
-        $projectPath = ROOT_DIR . "/src/{$projectName}";
-
-        if (!is_dir($projectPath)) {
-            echo "Erreur : le projet '{$projectName}' n'existe pas dans ./src/\n";
             return;
         }
 
-        $configPath = "{$projectPath}/Config/";
+        $projectPath = ROOT_DIR . "/src/$projectName";
 
-        if (!is_dir($configPath)) {
-            mkdir($configPath, 0777, true);
+        if (!is_dir($projectPath)) {
+            Output::error("Project '$projectName' does not exist inside ./src/");
+            return;
         }
 
-        echo "\nGénération des configs sensibles pour le projet : {$projectName}\n";
-        echo str_repeat('-', 50) . "\n";
+        $configPath = "$projectPath/Config/";
+        Fs::ensureDir($configPath);
+
+        Output::title("Generating sensitive configs for: $projectName");
 
         $generated = 0;
-        $skipped   = 0;
+        $skipped = 0;
 
         $files = [
             'database.config.php' => fn() => $this->generateDatabaseConfig($configPath, $projectName),
-            'deploy.config.php'   => fn() => $this->generateDeployConfig($configPath, $projectName),
-            'api.config.php'      => fn() => $this->generateAPIConfig($configPath, $projectName),
+            'deploy.config.php' => fn() => $this->generateDeployConfig($configPath, $projectName),
+            'api.config.php' => fn() => $this->generateAPIConfig($configPath, $projectName),
         ];
 
         foreach ($files as $filename => $generator) {
             $filePath = $configPath . $filename;
 
             if (file_exists($filePath)) {
-                echo "[!] {$filename} existe déjà. Écraser ? (o/N) : ";
-                $answer = strtolower(trim(fgets(STDIN)));
-
-                if ($answer !== 'o' && $answer !== 'oui') {
-                    echo "    → Ignoré.\n";
+                if (!Output::confirm("  $filename already exists. Overwrite?", 'o')) {
+                    Output::skip($filename);
                     $skipped++;
                     continue;
                 }
             }
 
             $generator();
-            echo "    [✓] {$filename} généré.\n";
+            Output::success("$filename generated.");
             $generated++;
         }
 
-        echo str_repeat('-', 50) . "\n";
-        echo "Terminé : {$generated} fichier(s) généré(s), {$skipped} ignoré(s).\n\n";
+        Output::separator();
+        Output::info("Done: $generated file(s) generated, $skipped skipped.");
+        Output::newLine();
     }
 
     private function pickProjectInteractively(): ?string
     {
-        $srcDir  = ROOT_DIR . '/src/';
+        $srcDir = ROOT_DIR . '/src/';
         $projects = [];
 
         foreach (glob($srcDir . '*', GLOB_ONLYDIR) as $dir) {
@@ -121,68 +75,61 @@ HELP;
         }
 
         if (empty($projects)) {
-            echo "Aucun projet trouvé dans ./src/\n";
+            Output::error('No projects found in ./src/');
             return null;
         }
 
-        echo "\nProjets disponibles :\n";
+        Output::title('Available projects:');
         foreach ($projects as $i => $project) {
-            echo "  [{$i}] {$project}\n";
+            echo '  ' . Output::colorize("[$i]", 'cyan') . " $project\n";
         }
 
-        echo "\nEntrez le numéro ou le nom du projet : ";
-        $input = trim(fgets(STDIN));
+        $input = Output::prompt("\nEnter number or project name: ");
 
-        if (is_numeric($input) && isset($projects[(int)$input])) {
-            return $projects[(int)$input];
+        if (is_numeric($input) && isset($projects[(int) $input])) {
+            return $projects[(int) $input];
         }
 
         if (in_array($input, $projects, true)) {
             return $input;
         }
 
-        echo "Projet introuvable : '{$input}'\n";
+        Output::error("Project not found: '$input'");
         return null;
     }
 
     private function generateDatabaseConfig(string $path, string $name): void
     {
-        $filename = 'database.config.php';
-        $content  = <<<PHP
+        $content = <<<PHP
 <?php
 declare(strict_types=1);
 
 // ./src/$name/Config/database.config.php
 
 return [
-
     'enabled' => false,
-    'use' => "default",
+    'use'     => "default",
 
     'connections' => [
-
         'default' => [
-            'driver' => "mysql",
-            'host' => "localhost",
-            'port' => 3306,
-            'user' => "",
-            'pass' => "",
-            'dbname' => "",
+            'driver'  => "mysql",
+            'host'    => "localhost",
+            'port'    => 3306,
+            'user'    => "",
+            'pass'    => "",
+            'dbname'  => "",
             'charset' => "utf8mb4",
-            'prefix' => ""
-        ]
-
-    ]
-
+            'prefix'  => "",
+        ],
+    ],
 ];
 PHP;
-        file_put_contents($path . $filename, $content);
+        file_put_contents($path . 'database.config.php', $content);
     }
 
     private function generateDeployConfig(string $path, string $name): void
     {
-        $filename = 'deploy.config.php';
-        $content  = <<<PHP
+        $content = <<<PHP
 <?php
 declare(strict_types=1);
 
@@ -192,48 +139,60 @@ return [
     'ftp' => [
         'host' => '',
         'user' => '',
-        'pass' => ''
+        'pass' => '',
     ],
     'remote' => [
-        'domain' => '', // exemple : your-app.fr
-        'framework_dir' => '', // exemple : domains/your-app.fr/neo/
-        'public_dir' => '' // exemple : domains/your-app.fr/public_html
-    ]
+        'domain'        => '',
+        'framework_dir' => '',
+        'public_dir'    => '',
+    ],
 ];
 PHP;
-        file_put_contents($path . $filename, $content);
+        file_put_contents($path . 'deploy.config.php', $content);
     }
 
     private function generateAPIConfig(string $path, string $name): void
     {
-        $filename = 'api.config.php';
-        $content  = <<<PHP
+        $content = <<<PHP
 <?php
 declare(strict_types=1);
 
 // ./src/$name/Config/api.config.php
 
 return [
-
-    // Exemple :
     // 'stripe' => [
-    //     'key' => '',
-    //     'secret' => ''
+    //     'key'    => '',
+    //     'secret' => '',
     // ],
-
 ];
 PHP;
-        file_put_contents($path . $filename, $content);
+        file_put_contents($path . 'api.config.php', $content);
     }
 
-    private function extractOption(array $args, string $key): ?string
+    public function getName(): string
     {
-        foreach ($args as $arg) {
-            if (str_starts_with($arg, "--{$key}=")) {
-                return substr($arg, strlen("--{$key}="));
-            }
-        }
-        return null;
+        return 'generate:default:config';
     }
 
+    public function getDescription(): string
+    {
+        return 'Generate sensitive config files for a project (deploy, database, api)';
+    }
+
+    public function getHelp(): string
+    {
+        Output::usage('generate:default:config', $this->getDescription());
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive if omitted)');
+        Output::newLine();
+        echo "  Generated files:\n";
+        Output::muted('    Config/deploy.config.php');
+        Output::muted('    Config/database.config.php');
+        Output::muted('    Config/api.config.php');
+        Output::newLine();
+        echo "  Examples:\n";
+        Output::example('php bin/neo generate:default:config');
+        Output::example('php bin/neo generate:default:config --project=NeoAdmin');
+
+        return '';
+    }
 }
