@@ -10,11 +10,11 @@ final class Args
         $count = count($args);
 
         for ($i = 0; $i < $count; $i++) {
-            if (str_starts_with($args[$i], '=')) {
+            if (str_starts_with($args[$i], $option . '=')) {
                 return explode('=', $args[$i], 2)[1];
             }
 
-            if ($args[$i] === $option && isset($args[$i + 1]) && !str_starts_with($args[$i], '-')) {
+            if ($args[$i] === $option && isset($args[$i + 1]) && !str_starts_with($args[$i + 1], '-')) {
                 return $args[$i + 1];
             }
         }
