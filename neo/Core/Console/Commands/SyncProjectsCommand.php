@@ -5,48 +5,23 @@ namespace Neo\Core\Console\Commands;
 
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Attribute\Command;
+use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Output;
 
-#[Command(name: 'sync:projects', description: 'Synchronise le composer.json racine avec tous les projets présents dans ./src/')]
+#[Command(
+    name: 'sync:projects',
+    description: 'Sync root composer.json with all projects present in ./src/'
+)]
 final class SyncProjectsCommand implements CommandInterface
 {
-    public function getName(): string
-    {
-        return 'sync:projects';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Synchronise le composer.json racine avec tous les projets présents dans ./src/';
-    }
-
-    public function getHelp(): string
-    {
-        return <<<HELP
-Commande : sync:projects
-Description : Relit tous les dossiers de ./src/ et s'assure que chacun est
-              bien enregistré dans le composer.json racine (repository path + require @dev).
-              Utile après un git pull qui remet le composer.json racine à zéro.
-
-Usage :
-  php bin/neo sync:projects
-
-Options :
-  --run-composer    Lance automatiquement `composer update` après la synchronisation
-
-Exemples :
-  php bin/neo sync:projects
-  php bin/neo sync:projects --run-composer
-HELP;
-    }
-
     public function execute(array $args): void
     {
-        $runComposer = in_array('--run-composer', $args, true);
+        $runComposer = Args::flag($args, '--run-composer');
         $srcDir = ROOT_DIR . '/src/';
         $rootComposerPath = ROOT_DIR . '/composer.json';
 
         if (!file_exists($rootComposerPath)) {
-            echo "Erreur : composer.json racine introuvable à {$rootComposerPath}\n";
+            Output::error("Root composer.json not found at $rootComposerPath");
             return;
         }
 
@@ -56,7 +31,7 @@ HELP;
         );
 
         if (empty($projects)) {
-            echo "Aucun projet trouvé dans ./src/ (ou aucun ne possède de composer.json).\n";
+            Output::warning('No projects with a composer.json found in ./src/');
             return;
         }
 
@@ -65,39 +40,37 @@ HELP;
 
         foreach ($projects as $projectDir) {
             $name = basename($projectDir);
-
             $result = $this->registerInRootComposer($rootComposerPath, $name);
 
             if ($result) {
-                echo "[OK]      $name ajouté au composer.json racine.\n";
+                Output::success("$name added to root composer.json.");
                 $synced++;
             } else {
-                echo "[SKIP]    $name déjà présent, ignoré.\n";
+                Output::skip("$name already present.");
                 $skipped++;
             }
         }
 
-        echo "\nSync terminé : $synced projet(s) ajouté(s), $skipped déjà présent(s).\n";
+        Output::newLine();
+        Output::info("Sync done: $synced project(s) added, $skipped already present.");
 
         if ($runComposer) {
-            echo "\nLancement de composer update...\n";
+            Output::info('Running composer update…');
             $output = shell_exec('composer update 2>&1');
             echo $output . "\n";
-            echo "Composer update terminé.\n";
+            Output::success('Composer update done.');
         } else {
-            echo "Pensez à lancer : composer update\n";
-            echo "Ou relancez avec : php bin/neo sync:projects --run-composer\n";
+            Output::muted('Remember to run: composer update');
+            Output::muted('Or re-run with: php bin/neo sync:projects --run-composer');
         }
-
     }
 
     private function registerInRootComposer(string $rootComposerPath, string $name): bool
     {
         $packageName = strtolower($name) . '/app';
-
         $rootComposer = json_decode(file_get_contents($rootComposerPath), true);
-
         $repositories = $rootComposer['repositories'] ?? [];
+
         $alreadyExists = array_filter(
             $repositories,
             fn($repo) => ($repo['url'] ?? '') === 'src/' . $name
@@ -109,13 +82,11 @@ HELP;
 
         $rootComposer['minimum-stability'] = 'dev';
         $rootComposer['prefer-stable']     = true;
-
-        $rootComposer['repositories'][] = [
+        $rootComposer['repositories'][]    = [
             'type' => 'path',
             'url' => 'src/' . $name,
             'options' => ['symlink' => false],
         ];
-
         $rootComposer['require'][$packageName] = '@dev';
 
         file_put_contents(
@@ -124,5 +95,29 @@ HELP;
         );
 
         return true;
+    }
+
+    public function getName(): string
+    {
+        return 'sync:projects';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Sync root composer.json with all projects present in ./src/';
+    }
+
+    public function getHelp(): string
+    {
+        Output::usage('sync:projects', $this->getDescription());
+        Output::option('--run-composer', 'Run `composer update` automatically after sync');
+        Output::newLine();
+        Output::muted('  Useful after a git pull that resets the root composer.json.');
+        Output::newLine();
+        echo "  Examples:\n";
+        Output::example('php bin/neo sync:projects');
+        Output::example('php bin/neo sync:projects --run-composer');
+
+        return '';
     }
 }

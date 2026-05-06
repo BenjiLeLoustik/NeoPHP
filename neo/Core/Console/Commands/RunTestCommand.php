@@ -5,56 +5,25 @@ namespace Neo\Core\Console\Commands;
 
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Interface\CommandInterface;
+use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Output;
 
 #[Command(
     name: 'run:test',
-    description: 'Lancer un test PHPUnit ciblé pour un projet'
+    description: 'Run a targeted PHPUnit test for a project'
 )]
 final class RunTestCommand implements CommandInterface
 {
-    public function getName(): string
-    {
-        return 'run:test';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Lancer un test PHPUnit ciblé pour un projet';
-    }
-
-    public function getHelp(): string
-    {
-        return <<<HELP
-Commande : run:test
-Description : Lance un fichier de test PHPUnit précis pour un projet.
-
-Usage :
-  php bin/neo run:test <TestName> --project=NomDuProjet [options]
-
-Arguments :
-  TestName               Nom de la classe de test (ex: UserServiceTest)
-
-Options :
-  --filter=methodName    Filtre sur une méthode précise dans la classe
-  --type=unit            Cherche dans Tests/Unit/ (défaut : cherche dans tous les dossiers)
-  --project=NomDuProjet  Nom du projet dans ./src/
-
-Exemples :
-  php bin/neo run:test UserServiceTest --project=Blog
-  php bin/neo run:test UserServiceTest --filter=test_example --project=Blog
-  php bin/neo run:test UserRepositoryTest --type=database --project=Blog
-HELP;
-    }
-
     public function execute(array $args): void
     {
-        $testName = $args[0] ?? null;
-        $project = $this->getOption($args, '--project');
-        $filter = $this->getOption($args, '--filter');
-        $type = $this->getOption($args, '--type');
+        $testName = Args::positional($args, 0);
+        $project = Args::option($args, '--project');
+        $filter = Args::option($args, '--filter');
+        $type = Args::option($args, '--type');
 
         if (!$testName || !$project) {
-            echo "Usage : php bin/neo run:test <TestName> --project=NomDuProjet\n";
+            Output::error('Missing arguments.');
+            Output::muted('Usage: php bin/neo run:test <TestName> --project=<name>');
             return;
         }
 
@@ -62,12 +31,12 @@ HELP;
         $testsPath = "$basePath/Tests";
 
         if (!is_dir($basePath)) {
-            echo "Le projet '$project' n'existe pas dans ./src/\n";
+            Output::error("Project '$project' does not exist inside ./src/");
             return;
         }
 
         if (!is_dir($testsPath)) {
-            echo "Aucun dossier Tests/ trouvé dans src/$project/. Lancez d'abord make:test.\n";
+            Output::error("No Tests/ folder found in src/$project/. Run make:test first.");
             return;
         }
 
@@ -82,35 +51,30 @@ HELP;
         $testFile = $this->findTestFile($testsPath, $testName, $type);
 
         if ($testFile === null) {
-            echo "Fichier de test '$testName.php' introuvable dans src/$project/Tests/\n";
+            Output::error("Test file '$testName.php' not found in src/$project/Tests/");
             return;
         }
 
         $phpunitBin = ROOT_DIR . '/vendor/bin/phpunit';
         $xmlConfig = "$testsPath/phpunit.xml";
-        $relTestFile = $testFile;
 
         $cmd = escapeshellarg($phpunitBin);
         $cmd .= ' --configuration ' . escapeshellarg($xmlConfig);
-        $cmd .= ' ' . escapeshellarg($relTestFile);
+        $cmd .= ' ' . escapeshellarg($testFile);
+        $cmd .= ' --colors=always --testdox';
 
         if ($filter) {
             $cmd .= ' --filter ' . escapeshellarg($filter);
         }
 
-        $cmd .= ' --colors=always';
-        $cmd .= ' --testdox';
-
-        echo "Lancement du test : $testName\n";
-        echo str_repeat('-', 60) . "\n";
-
+        Output::title("Running test: $testName");
         passthru($cmd, $exitCode);
+        Output::separator();
 
-        echo str_repeat('-', 60) . "\n";
-        echo match(true) {
-            $exitCode === 0 => "Terminé avec succès.\n",
-            $exitCode === 1 => "Terminé avec avertissements (code 1).\n",
-            default => "Des tests ont échoué (code $exitCode).\n",
+        match (true) {
+            $exitCode === 0 => Output::success('All tests passed.'),
+            $exitCode === 1 => Output::warning('Completed with warnings (code 1).'),
+            default => Output::error("Tests failed (code $exitCode)."),
         };
     }
 
@@ -145,32 +109,35 @@ HELP;
         $phpunitBin = ROOT_DIR . '/vendor/bin/phpunit';
 
         if (!file_exists($phpunitBin)) {
-            echo "PHPUnit introuvable. Lancez : composer require --dev phpunit/phpunit\n";
+            Output::error('PHPUnit not found. Run: composer require --dev phpunit/phpunit');
             return false;
         }
 
         return true;
     }
 
-    private function hasFlag(array $args, string $flag): bool
+    public function getName(): string
     {
-        return in_array($flag, $args, true);
+        return 'run:test';
     }
 
-    private function getOption(array $args, string $option): ?string
+    public function getDescription(): string
     {
-        $count = count($args);
+        return 'Run a targeted PHPUnit test for a project';
+    }
 
-        for ($i = 0; $i < $count; $i++) {
-            if (str_starts_with($args[$i], $option . '=')) {
-                return explode('=', $args[$i], 2)[1];
-            }
+    public function getHelp(): string
+    {
+        Output::usage('run:test', $this->getDescription());
+        Output::option('<TestName>',        'Test class name (e.g. UserServiceTest)');
+        Output::option('--project=<name>',  'Target project inside ./src/');
+        Output::option('--filter=<method>', 'Filter on a specific test method');
+        Output::option('--type=<type>',     'Search only inside Tests/<Type>/ (unit|feature|database|middleware)');
+        Output::newLine();
+        echo "  Examples:\n";
+        Output::example('php bin/neo run:test UserServiceTest --project=Blog');
+        Output::example('php bin/neo run:test UserServiceTest --filter=test_example --project=Blog');
 
-            if ($args[$i] === $option && isset($args[$i + 1])) {
-                return $args[$i + 1];
-            }
-        }
-
-        return null;
+        return '';
     }
 }
