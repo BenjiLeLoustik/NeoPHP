@@ -5,52 +5,19 @@ namespace Neo\Core\Console\Commands;
 
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Interface\CommandInterface;
+use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Output;
 
-#[Command(name: 'serve', description: 'Lance un serveur PHP pour un projet NeoPHP')]
+#[Command(name: 'serve', description: 'Start the PHP built-in server for a NeoPHP project')]
 final class ServeCommand implements CommandInterface
 {
-    public function getName(): string
-    {
-        return 'serve';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Lance un serveur PHP pour un projet NeoPHP';
-    }
-
-    public function getHelp(): string
-    {
-        return <<<HELP
-Commande : serve
-Description : Lance un serveur PHP intégré pour un projet NeoPHP.
-
-Usage :
-  php bin/neo serve
-  php bin/neo serve <ProjectName>
-
-Comportement :
-  - Sans argument : affiche la liste des projets disponibles
-  - Avec argument : lance directement le serveur du projet
-
-Pré-requis :
-  - Chaque projet doit contenir : src/<Project>/app.config.php
-  - La clé "access" doit exister dans ce fichier
-
-Exemple app.config.php :
-  return [
-      'access' => '127.0.0.1:8000'
-  ];
-HELP;
-    }
-
     public function execute(array $args): void
     {
-        $projectArg = $args[0] ?? null;
+        $projectArg = Args::positional($args, 0);
         $projects = $this->getProjects();
 
         if (empty($projects)) {
-            echo "Aucun projet trouvé dans ./src/\n";
+            Output::error('No projects found in ./src/');
             return;
         }
 
@@ -59,22 +26,22 @@ HELP;
             return;
         }
 
-        echo "Projets disponibles :\n\n";
+        Output::title('Available projects:');
 
-        $i = 1;
+        $i  = 1;
         $keys = [];
 
         foreach ($projects as $name => $config) {
-            echo "[$i] $name\n";
+            $access = $config['access'] ?? '?';
+            echo '  ' . Output::colorize("[$i]", 'cyan') . " $name " . Output::colorize("→ http://$access", 'dim') . "\n";
             $keys[$i] = $name;
             $i++;
         }
 
-        echo "\nChoisissez un projet : ";
-        $choice = (int) trim(fgets(STDIN));
+        $choice = (int) Output::prompt("\nChoose a project: ");
 
         if (!isset($keys[$choice])) {
-            echo "Choix invalide.\n";
+            Output::error('Invalid choice.');
             return;
         }
 
@@ -84,21 +51,23 @@ HELP;
     private function runProject(string $project, array $projects): void
     {
         if (!isset($projects[$project])) {
-            echo "Projet introuvable : $project\n";
+            Output::error("Project not found: $project");
             return;
         }
 
         $config = $projects[$project];
 
         if (!isset($config['access'])) {
-            echo "Erreur : clé 'access' introuvable dans app.config.php\n";
+            Output::error("Key 'access' missing in app.config.php");
             return;
         }
 
         $access = $config['access'];
 
-        echo "Lancement du serveur pour $project...\n";
-        echo "URL : http://$access\n\n";
+        Output::newLine();
+        Output::success("Starting server for $project");
+        Output::label('URL:', "http://$access");
+        Output::newLine();
 
         passthru("php -S $access -t public");
     }
@@ -107,7 +76,6 @@ HELP;
     {
         $src = ROOT_DIR . 'src/';
         $dirs = glob($src . '*', GLOB_ONLYDIR);
-
         $projects = [];
 
         foreach ($dirs as $dir) {
@@ -128,5 +96,31 @@ HELP;
         }
 
         return $projects;
+    }
+
+    public function getName(): string
+    {
+        return 'serve';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Start the PHP built-in server for a NeoPHP project';
+    }
+
+    public function getHelp(): string
+    {
+        Output::usage('serve', $this->getDescription());
+        Output::option('<ProjectName>', 'Project to serve (interactive selection if omitted)');
+        Output::newLine();
+        echo "  Prerequisites:\n";
+        Output::muted("    Each project must have src/<Project>/Config/app.config.php");
+        Output::muted("    with an 'access' key (e.g. '127.0.0.1:8000').");
+        Output::newLine();
+        echo "  Examples:\n";
+        Output::example('php bin/neo serve');
+        Output::example('php bin/neo serve NeoAdmin');
+
+        return '';
     }
 }
