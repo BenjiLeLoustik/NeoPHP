@@ -19,6 +19,7 @@ use Neo\Core\Http\Client\Session;
 use Neo\Core\Http\File\Uploader;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
+use Neo\Core\Profiler\Collector\AuthCollector;
 use Neo\Core\Profiler\Collector\EventCollector;
 use Neo\Core\Profiler\Collector\LogCollector;
 use Neo\Core\Profiler\Collector\QueryCollector;
@@ -199,6 +200,7 @@ class App
             $profiler->addCollector(new QueryCollector());
             $profiler->addCollector(new EventCollector($dispatcher));
             $profiler->addCollector(new LogCollector());
+            $profiler->addCollector(new AuthCollector($this->container->get(AuthManager::class)));
 
             $toolbar = new Toolbar($profiler);
             $listener = new ProfilerResponseListener($toolbar);
