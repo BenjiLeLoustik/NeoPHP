@@ -5,87 +5,46 @@ namespace Neo\Core\Console\Commands;
 
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Interface\CommandInterface;
+use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Output;
 use Neo\Core\Testing\Scaffold\TestScaffolder;
 
 #[Command(
     name: 'make:test',
-    description: 'Générer un squelette de test PHPUnit pour un projet'
+    description: 'Generate a PHPUnit test skeleton for a project'
 )]
 final class MakeTestCommand implements CommandInterface
 {
     private const VALID_TYPES = ['unit', 'feature', 'database', 'middleware'];
 
-    public function getName(): string
-    {
-        return 'make:test';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Générer un squelette de test PHPUnit pour un projet';
-    }
-
-    public function getHelp(): string
-    {
-        return <<<HELP
-Commande : make:test
-Description : Génère un squelette de test PHPUnit dans le dossier Tests/ du projet.
-
-Usage :
-  php bin/neo make:test <TestName> --type=<type> --project=NomDuProjet
-
-Arguments :
-  TestName               Nom de la classe de test (ex: UserServiceTest)
-
-Options :
-  --type=unit            Teste une classe PHP isolée (service, model...)
-  --type=feature         Teste une route HTTP de bout en bout
-  --type=database        Teste un Repository avec rollback automatique
-  --type=middleware      Teste qu'un middleware bloque ou laisse passer
-  --force                Écraser le fichier existant
-  --project=NomDuProjet  Nom du projet dans ./src/
-
-Exemples :
-  php bin/neo make:test UserServiceTest --type=unit --project=Blog
-  php bin/neo make:test UserControllerTest --type=feature --project=Blog
-  php bin/neo make:test UserRepositoryTest --type=database --project=Blog
-  php bin/neo make:test AuthMiddlewareTest --type=middleware --project=Blog
-
-Notes :
-  - Les tests sont générés dans src/<Projet>/Tests/<Type>/
-  - Un bootstrap.php et un phpunit.xml sont générés automatiquement au premier appel
-  - Pour les tests Database, créez src/<Projet>/Tests/Config/database.config.test.php
-HELP;
-    }
-
     public function execute(array $args): void
     {
-        $testName = $args[0] ?? null;
-        $project = $this->getOption($args, '--project');
-        $type = strtolower($this->getOption($args, '--type') ?? 'unit');
-        $force = $this->hasFlag($args, '--force');
+        $testName = Args::positional($args, 0);
+        $project = Args::option($args, '--project');
+        $type = strtolower(Args::option($args, '--type') ?? 'unit');
+        $force = Args::flag($args, '--force');
 
         if (!$testName || !$project) {
-            echo "Usage : php bin/neo make:test <TestName> --type=<type> --project=NomDuProjet\n";
+            Output::error('Missing arguments.');
+            Output::muted('Usage: php bin/neo make:test <TestName> --type=<type> --project=<name>');
             return;
         }
 
         if (!in_array($type, self::VALID_TYPES, true)) {
-            echo "Type invalide '$type'. Types disponibles : " . implode(', ', self::VALID_TYPES) . "\n";
+            Output::error("Invalid type '$type'. Valid: " . implode(', ', self::VALID_TYPES));
             return;
         }
 
         $basePath = ROOT_DIR . "/src/$project";
 
         if (!is_dir($basePath)) {
-            echo "Le projet '$project' n'existe pas dans ./src/\n";
+            Output::error("Project '$project' does not exist inside ./src/");
             return;
         }
 
         $testName = $this->normalizeTestName($testName);
 
         (new TestScaffolder())->ensure($basePath, $project);
-
         $this->generateTest($basePath, $project, $testName, $type, $force);
     }
 
@@ -96,7 +55,7 @@ HELP;
         string $type,
         bool $force
     ): void {
-        $typeDir   = ucfirst($type);
+        $typeDir = ucfirst($type);
         $targetDir = "$basePath/Tests/$typeDir";
 
         if (!is_dir($targetDir)) {
@@ -106,24 +65,19 @@ HELP;
         $filePath = "$targetDir/{$testName}.php";
 
         if (file_exists($filePath) && !$force) {
-            echo "Le test '$testName' existe déjà (utilise --force pour écraser).\n";
+            Output::warning("Test '$testName' already exists. Use --force to overwrite.");
             return;
         }
 
         $namespace = "Neo\\Src\\$project\\Tests\\$typeDir";
-        $content   = $this->buildTestContent($namespace, $testName, $type, $project);
+        $content = $this->buildTestContent($namespace, $testName, $type, $project);
 
         file_put_contents($filePath, $content);
-
-        echo "Test '$testName' généré : src/$project/Tests/$typeDir/{$testName}.php\n";
+        Output::success("Test '$testName' generated: src/$project/Tests/$typeDir/{$testName}.php");
     }
 
-    private function buildTestContent(
-        string $namespace,
-        string $testName,
-        string $type,
-        string $project
-    ): string {
+    private function buildTestContent(string $namespace, string $testName, string $type, string $project): string
+    {
         return match ($type) {
             'unit' => $this->unitTemplate($namespace, $testName, $project),
             'feature' => $this->featureTemplate($namespace, $testName, $project),
@@ -144,27 +98,21 @@ namespace {$namespace};
 use Neo\Core\Testing\TestCase;
 
 /**
- * Test unitaire : {$testName}
+ * Unit test: {$testName}
+ * Tests an isolated PHP class (Service, Model, Util…).
  *
- * Teste une classe PHP isolée (Service, Model, Util...).
- * Utilisez \$this->get(ServiceClass::class) pour récupérer un service du conteneur.
- * Utilisez \$this->swap(ServiceClass::class, \$mock) pour remplacer un service par un mock.
+ * - \$this->get(ServiceClass::class)    → resolve from container
+ * - \$this->swap(ServiceClass::class, \$mock) → replace with mock
  */
 class {$testName} extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
-        // Initialisation avant chaque test
     }
 
     public function test_example(): void
     {
-        // Exemple : récupérer un service
-        // \$service = \$this->get(\\Neo\\Src\\{$project}\\App\\Services\\ExampleService::class);
-        // \$result  = \$service->doSomething();
-        // \$this->assertSame('expected', \$result);
-
         \$this->assertTrue(true);
     }
 }
@@ -182,11 +130,12 @@ namespace {$namespace};
 use Neo\Core\Testing\FeatureTestCase;
 
 /**
- * Test Feature : {$testName}
+ * Feature test: {$testName}
+ * Tests an HTTP route end-to-end.
  *
- * Teste une route HTTP de bout en bout.
- * Méthodes disponibles : \$this->get(), ->post(), ->put(), ->delete()
- * Assertions : assertStatus(), assertSeeText(), assertJsonKey()
+ * - \$this->get('/path')             → send GET request
+ * - \$this->post('/path', \$data)     → send POST request
+ * - assertStatus(), assertSeeText(), assertJsonKey()
  */
 class {$testName} extends FeatureTestCase
 {
@@ -197,22 +146,6 @@ class {$testName} extends FeatureTestCase
 
     public function test_page_returns_200(): void
     {
-        // Exemple : tester que la page d'accueil répond bien
-        // \$response = \$this->get('/');
-        // \$this->assertStatus(200, \$response);
-
-        \$this->assertTrue(true);
-    }
-
-    public function test_post_endpoint(): void
-    {
-        // Exemple : tester un endpoint POST
-        // \$response = \$this->post('/login', [
-        //     'email'    => 'test@example.com',
-        //     'password' => 'secret',
-        // ]);
-        // \$this->assertStatus(302, \$response);
-
         \$this->assertTrue(true);
     }
 }
@@ -230,19 +163,13 @@ namespace {$namespace};
 use Neo\Core\Testing\DatabaseTestCase;
 
 /**
- * Test Database : {$testName}
+ * Database test: {$testName}
+ * Each test runs inside an auto-rolled-back transaction.
  *
- * Chaque test s'exécute dans une transaction automatiquement rollbackée.
- * La base de données n'est jamais modifiée de façon permanente.
- *
- * Config de test : créez src/{$project}/Tests/Config/database.config.test.php
- * pour surcharger la connexion (ex: base de test dédiée).
- *
- * Méthodes disponibles :
- *   \$this->insertFixture(table, data) : insère une ligne, retourne l'ID
- *   \$this->fetchAll(table, where, bindings) : récupère des lignes
- *   \$this->assertDatabaseHas(table, data) : vérifie qu'une ligne existe
- *   \$this->assertDatabaseMissing(table, data) : vérifie qu'une ligne est absente
+ * - \$this->insertFixture(table, data) → insert a row, returns ID
+ * - \$this->fetchAll(table, where)     → fetch rows
+ * - \$this->assertDatabaseHas(table, data)
+ * - \$this->assertDatabaseMissing(table, data)
  */
 class {$testName} extends DatabaseTestCase
 {
@@ -253,15 +180,6 @@ class {$testName} extends DatabaseTestCase
 
     public function test_insert_and_retrieve(): void
     {
-        // Exemple : insérer une fixture et vérifier en base
-        // \$id = \$this->insertFixture('users', [
-        //     'name'  => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-        //
-        // \$this->assertDatabaseHas('users', ['email' => 'test@example.com']);
-        // \$this->assertIsNumeric(\$id);
-
         \$this->assertTrue(true);
     }
 }
@@ -279,16 +197,13 @@ namespace {$namespace};
 use Neo\Core\Testing\MiddlewareTestCase;
 
 /**
- * Test Middleware : {$testName}
+ * Middleware test: {$testName}
  *
- * Teste qu'un middleware bloque ou laisse passer correctement une requête.
- *
- * Méthodes disponibles :
- *   \$this->makeMiddleware(MiddlewareClass::class) : instancie le middleware
- *   \$this->assertMiddlewarePasses(\$middleware) : vérifie qu'il retourne true
- *   \$this->assertMiddlewareBlocks(\$middleware) : vérifie qu'il retourne false ou lève une exception
- *   \$this->assertMiddlewareBlocksWithCode(\$middleware, 403) : vérifie le code HTTP
- *   \$this->swap(ServiceClass::class, \$mock) : remplace un service (ex: simuler un user connecté)
+ * - \$this->makeMiddleware(MiddlewareClass::class)
+ * - \$this->assertMiddlewarePasses(\$middleware)
+ * - \$this->assertMiddlewareBlocks(\$middleware)
+ * - \$this->assertMiddlewareBlocksWithCode(\$middleware, 403)
+ * - \$this->swap(ServiceClass::class, \$mock)
  */
 class {$testName} extends MiddlewareTestCase
 {
@@ -297,33 +212,13 @@ class {$testName} extends MiddlewareTestCase
         parent::setUp();
     }
 
-    public function test_middleware_passes_when_authenticated(): void
+    public function test_middleware_passes(): void
     {
-        // Exemple : simuler un utilisateur connecté et vérifier que le middleware passe
-        // \$authMock = \$this->createMock(\\Neo\\Core\\Security\\Auth\\AuthManager::class);
-        // \$authMock->method('check')->willReturn(true);
-        // \$this->swap(\\Neo\\Core\\Security\\Auth\\AuthManager::class, \$authMock);
-        //
-        // \$middleware = \$this->makeMiddleware(
-        //     \\Neo\\Src\\{$project}\\App\\Middlewares\\AuthMiddleware::class
-        // );
-        // \$this->assertMiddlewarePasses(\$middleware);
-
         \$this->assertTrue(true);
     }
 
-    public function test_middleware_blocks_when_unauthenticated(): void
+    public function test_middleware_blocks(): void
     {
-        // Exemple : simuler un utilisateur non connecté et vérifier le blocage
-        // \$authMock = \$this->createMock(\\Neo\\Core\\Security\\Auth\\AuthManager::class);
-        // \$authMock->method('check')->willReturn(false);
-        // \$this->swap(\\Neo\\Core\\Security\\Auth\\AuthManager::class, \$authMock);
-        //
-        // \$middleware = \$this->makeMiddleware(
-        //     \\Neo\\Src\\{$project}\\App\\Middlewares\\AuthMiddleware::class
-        // );
-        // \$this->assertMiddlewareBlocksWithCode(\$middleware, 403);
-
         \$this->assertTrue(true);
     }
 }
@@ -342,25 +237,31 @@ PHP;
         return $input;
     }
 
-    private function hasFlag(array $args, string $flag): bool
+    public function getName(): string
     {
-        return in_array($flag, $args, true);
+        return 'make:test';
     }
 
-    private function getOption(array $args, string $option): ?string
+    public function getDescription(): string
     {
-        $count = count($args);
+        return 'Generate a PHPUnit test skeleton for a project';
+    }
 
-        for ($i = 0; $i < $count; $i++) {
-            if (str_starts_with($args[$i], $option . '=')) {
-                return explode('=', $args[$i], 2)[1];
-            }
+    public function getHelp(): string
+    {
+        Output::usage('make:test', $this->getDescription());
+        Output::option('<TestName>',        'Test class name (e.g. UserServiceTest)');
+        Output::option('--project=<name>',  'Target project inside ./src/');
+        Output::option('--type=unit',       'Isolated class test (service, model…)');
+        Output::option('--type=feature',    'End-to-end HTTP route test');
+        Output::option('--type=database',   'Repository test with auto-rollback');
+        Output::option('--type=middleware', 'Middleware pass/block test');
+        Output::option('--force',           'Overwrite existing file');
+        Output::newLine();
+        echo "  Examples:\n";
+        Output::example('php bin/neo make:test UserServiceTest --type=unit --project=Blog');
+        Output::example('php bin/neo make:test UserControllerTest --type=feature --project=Blog');
 
-            if ($args[$i] === $option && isset($args[$i + 1])) {
-                return $args[$i + 1];
-            }
-        }
-
-        return null;
+        return '';
     }
 }

@@ -5,110 +5,72 @@ namespace Neo\Core\Console\Commands;
 
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Attribute\Command;
+use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Fs;
+use Neo\Core\Console\Helper\Output;
 
 #[Command(
     name: 'make:config',
-    description: 'Créer un fichier de configuration pour un projet'
+    description: 'Create an interactive config file for a project'
 )]
 final class MakeConfigCommand implements CommandInterface
 {
-    public function getName(): string
-    {
-        return 'make:config';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Créer un fichier de configuration pour un projet';
-    }
-
-    public function getHelp(): string
-    {
-        return <<<HELP
-Commande : make:config
-Description : Génère un fichier de configuration interactif pour un projet.
-
-Usage :
-  php bin/neo make:config <ConfigName> --project=NomDuProjet
-
-Arguments :
-  ConfigName              Nom du fichier de config à créer (ex: mail → mail.config.php)
-
-Options :
-  --force                  Écraser le fichier existant si présent
-  --project=NomDuProjet    Nom du projet dans ./src/
-
-Exemples :
-  php bin/neo make:config mail --project=NeoAdmin
-    Crée ./src/NeoAdmin/Config/mail.config.php
-
-Notes :
-  - Le fichier sera nommé <ConfigName>.config.php
-  - Les clés et valeurs sont saisies interactivement
-  - Si aucune clé n'est saisie, génère un simple return []
-HELP;
-    }
-
     public function execute(array $args): void
     {
-        $configName = $args[0] ?? null;
-        $project    = $this->getOption($args, '--project');
-        $force      = $this->hasFlag($args, '--force');
+        $configName = Args::positional($args, 0);
+        $project = Args::option($args, '--project');
+        $force = Args::flag($args, '--force');
 
         if (!$configName || !$project) {
-            echo "Usage : php bin/neo make:config <ConfigName> --project=ProjectName\n";
+            Output::error('Missing arguments.');
+            Output::muted('Usage: php bin/neo make:config <ConfigName> --project=<name>');
             return;
         }
 
         $configName = strtolower($configName);
-        $basePath   = ROOT_DIR . "/src/$project";
+        $basePath = ROOT_DIR . "/src/$project";
 
         if (!is_dir($basePath)) {
-            echo "Le projet '$project' n'existe pas dans ./src/\n";
+            Output::error("Project '$project' does not exist inside ./src/");
             return;
         }
 
-        $configDir  = "$basePath/Config";
+        $configDir = "$basePath/Config";
         $configFile = "$configDir/$configName.config.php";
 
         if (file_exists($configFile) && !$force) {
-            echo "Le fichier '$configName.config.php' existe déjà (utilise --force pour écraser).\n";
+            Output::warning("'$configName.config.php' already exists. Use --force to overwrite.");
             return;
         }
 
-        echo "Génération de '$configName.config.php' pour le projet '$project'.\n";
-        echo "Entrez vos clés/valeurs (laissez le nom de la clé vide pour terminer) :\n\n";
+        Output::info("Generating '$configName.config.php' for project '$project'.");
+        Output::muted('  (Dot notation supported: ftp.host, ftp.user, remote.domain…)');
+        Output::newLine();
 
         $entries = $this->collectEntries();
 
-        if (!is_dir($configDir)) {
-            mkdir($configDir, 0777, true);
-        }
+        Fs::ensureDir($configDir);
 
         $content = $this->buildFileContent($configName, $project, $entries);
         file_put_contents($configFile, $content);
 
-        echo "\nFichier '$configName.config.php' généré avec succès.\n";
+        Output::success("'$configName.config.php' generated successfully.");
     }
 
     private function collectEntries(): array
     {
         $flat = [];
 
-        echo "  (Notation pointée supportée : ftp.host, ftp.user, remote.domain…)\n\n";
-
         while (true) {
-            $key = $this->prompt('  Nom de la clé (vide pour terminer) : ');
+            $key = Output::prompt('  Key name (empty to finish): ');
 
             if ($key === '') {
                 break;
             }
 
-            $value = $this->prompt("  Valeur pour '$key' : ");
-
+            $value = Output::prompt("  Value for '$key': ");
             $flat[$key] = $value;
-
-            echo "\n";
+            Output::newLine();
         }
 
         return $this->expandDotKeys($flat);
@@ -119,7 +81,7 @@ HELP;
         $result = [];
 
         foreach ($flat as $key => $value) {
-            $parts   = explode('.', $key);
+            $parts = explode('.', $key);
             $current = &$result;
 
             foreach ($parts as $part) {
@@ -138,7 +100,7 @@ HELP;
     private function buildFileContent(string $configName, string $project, array $entries): string
     {
         $filePath = "./src/$project/Config/$configName.config.php";
-        $body     = $this->buildArray($entries, 1);
+        $body = $this->buildArray($entries, 1);
 
         return <<<PHP
 <?php
@@ -156,26 +118,19 @@ PHP;
             return '[]';
         }
 
-        $indent      = str_repeat('    ', $depth);
+        $indent = str_repeat('    ', $depth);
         $indentClose = str_repeat('    ', $depth - 1);
-        $lines       = [];
+        $lines = [];
 
         foreach ($entries as $key => $value) {
-            $formattedKey   = $this->formatKey($key);
+            $formattedKey = "'" . addslashes((string) $key) . "'";
             $formattedValue = is_array($value)
                 ? $this->buildArray($value, $depth + 1)
-                : $this->formatValue($value);
-            $lines[]        = "{$indent}{$formattedKey} => {$formattedValue},";
+                : $this->formatValue((string) $value);
+            $lines[] = "{$indent}{$formattedKey} => {$formattedValue},";
         }
 
-        $body = implode("\n", $lines);
-
-        return "[\n{$body}\n{$indentClose}]";
-    }
-
-    private function formatKey(string $key): string
-    {
-        return "'" . addslashes($key) . "'";
+        return "[\n" . implode("\n", $lines) . "\n{$indentClose}]";
     }
 
     private function formatValue(string $value): string
@@ -195,31 +150,26 @@ PHP;
         return "'" . addslashes($value) . "'";
     }
 
-    private function prompt(string $message): string
+    public function getName(): string
     {
-        echo $message;
-        return trim(fgets(STDIN));
+        return 'make:config';
     }
 
-    private function hasFlag(array $args, string $flag): bool
+    public function getDescription(): string
     {
-        return in_array($flag, $args, true);
+        return 'Create an interactive config file for a project';
     }
 
-    private function getOption(array $args, string $option): ?string
+    public function getHelp(): string
     {
-        $count = count($args);
+        Output::usage('make:config', $this->getDescription());
+        Output::option('<ConfigName>',     'Config file name (e.g. mail → mail.config.php)');
+        Output::option('--project=<name>', 'Target project inside ./src/');
+        Output::option('--force',          'Overwrite existing file');
+        Output::newLine();
+        echo "  Examples:\n";
+        Output::example('php bin/neo make:config mail --project=NeoAdmin');
 
-        for ($i = 0; $i < $count; $i++) {
-            if (str_starts_with($args[$i], $option . '=')) {
-                return explode('=', $args[$i], 2)[1];
-            }
-
-            if ($args[$i] === $option && isset($args[$i + 1])) {
-                return $args[$i + 1];
-            }
-        }
-
-        return null;
+        return '';
     }
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console;
 
+use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\DI\Container;
@@ -33,7 +34,6 @@ class ConsoleHandler
             if (!$file->isFile() || $file->getExtension() !== 'php') {
                 continue;
             }
-
             require_once $file->getPathname();
         }
 
@@ -44,21 +44,23 @@ class ConsoleHandler
 
             $reflection = new ReflectionClass($class);
             $attributes = $reflection->getAttributes(Command::class);
+
             if (empty($attributes)) {
                 continue;
             }
 
             $attribute = $attributes[0]->newInstance();
             $instance = new $class($this->container);
-
             $name = $attribute->name ?? $instance->getName();
             $description = $attribute->description ?? $instance->getDescription();
 
             $this->commands[$name] = [
                 'instance' => $instance,
-                'description' => $description
+                'description' => $description,
             ];
         }
+
+        ksort($this->commands);
     }
 
     public function run(array $argv): void
@@ -74,7 +76,8 @@ class ConsoleHandler
         }
 
         if (!isset($this->commands[$commandName])) {
-            echo "Commande inconnue : $commandName\n\n";
+            Output::error("Unknown command: $commandName");
+            Output::newLine();
             $this->showHelp();
             return;
         }
@@ -83,11 +86,7 @@ class ConsoleHandler
         $args = array_slice($argv, 1);
 
         if (in_array('--help', $args, true) || in_array('-h', $args, true)) {
-            if (method_exists($instance, 'getHelp')) {
-                echo $instance->getHelp() . "\n";
-            } else {
-                echo "Aucune aide disponible pour la commande : $commandName\n";
-            }
+            echo $instance->getHelp() . "\n";
             return;
         }
 
@@ -96,10 +95,24 @@ class ConsoleHandler
 
     private function showHelp(): void
     {
-        echo "Liste des commandes disponibles :\n\n";
+        Output::title('NeoPHP Console');
+        $groups = [];
+
         foreach ($this->commands as $name => $info) {
-            echo "  $name   => " . $info['description'] . "\n";
+            $group = str_contains($name, ':') ? explode(':', $name)[0] : 'other';
+            $groups[$group][] = [$name, $info['description']];
         }
-        echo "\nUtilisez 'php bin/neo <commande> --help' pour plus de détails.\n";
+
+        ksort($groups);
+
+        foreach ($groups as $group => $cmds) {
+            echo ' ' . Output::colorize(strtoupper($group), 'yellow') . "\n";
+            foreach ($cmds as [$name, $desc]) {
+                echo '  ' . Output::colorize(str_pad($name, 32), 'cyan') . Output::colorize($desc, 'dim') . "\n";
+            }
+            Output::newLine();
+        }
+
+        echo Output::colorize("Use 'php bin/neo <command> --help' for details.\n", 'dim');
     }
 }
