@@ -25,6 +25,7 @@ use Neo\Core\Profiler\Collector\LogCollector;
 use Neo\Core\Profiler\Collector\QueryCollector;
 use Neo\Core\Profiler\Collector\RequestCollector;
 use Neo\Core\Profiler\Collector\RouterCollector;
+use Neo\Core\Profiler\Collector\TranslationCollector;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Profiler\ProfilerResponseListener;
 use Neo\Core\Profiler\Toolbar\Toolbar;
@@ -201,6 +202,7 @@ class App
             $profiler->addCollector(new EventCollector($dispatcher));
             $profiler->addCollector(new LogCollector());
             $profiler->addCollector(new AuthCollector($this->container->get(AuthManager::class)));
+            $profiler->addCollector(new TranslationCollector($this->container->get(TranslationManager::class)));
 
             $toolbar = new Toolbar($profiler);
             $listener = new ProfilerResponseListener($toolbar);
