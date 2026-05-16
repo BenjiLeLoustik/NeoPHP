@@ -27,6 +27,17 @@ class Toolbar
             'hits_count' => 0, 'misses_count' => 0, 'hits' => [], 'misses' => [],
         ];
 
+        $statusCode = http_response_code() ?: 200;
+        $method     = htmlspecialchars($request['method'] ?? 'GET');
+        $path       = htmlspecialchars($request['path'] ?? '/');
+
+        $statusColor = match(true) {
+            $statusCode >= 500 => '#f87171',
+            $statusCode >= 400 => '#fb923c',
+            $statusCode >= 300 => '#60a5fa',
+            default            => '#4ade80',
+        };
+
         $durationColor = $duration < 200 ? '#4ade80' : ($duration < 500 ? '#fb923c' : '#f87171');
         $dbColor = $db['count'] > 20 ? '#f87171' : ($db['count'] > 10 ? '#fb923c' : '#a78bfa');
         $logColor = $this->logBadgeColor($logs['entries'] ?? []);
@@ -163,12 +174,23 @@ class Toolbar
   .n-log-emergency td:first-child{color:#f87171}
 
   .n-empty{color:#52525b;font-size:11px;padding:4px 0}
+
+  #neo-bar .n-status-chip{gap:8px;padding:0 14px;border-right:2px solid #3f3f46}
+  #neo-bar .n-method{font-size:10px;font-weight:700;color:#a78bfa;letter-spacing:.5px}
+  #neo-bar .n-status{font-size:12px;font-weight:700}
+  #neo-bar .n-path{font-size:11px;color:#71717a;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 
 <div id="neo-bar">
   <div class="n-brand">
     <div class="n-brand-dot"></div>
     Neo
+  </div>
+
+  <div class="n-tab n-status-chip" onclick="neoSwitch('request')" title="Statut HTTP">
+    <span class="n-method">{$method}</span>
+    <span class="n-status" style="color:{$statusColor}">{$statusCode}</span>
+    <span class="n-path">{$path}</span>
   </div>
 
   <div class="n-tab" onclick="neoSwitch('request')" title="Requête HTTP">
