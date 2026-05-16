@@ -30,7 +30,8 @@ jobs:
           php -r "
           \$tag = '${{ steps.tag.outputs.TAG }}';
 
-          \$log = shell_exec('git log ' . \$tag . '..HEAD --pretty=%s');
+          \$raw = shell_exec('git log ' . \$tag . '..HEAD --pretty=%s');
+          \$commits = array_filter(explode(PHP_EOL, trim(\$raw)));
 
           preg_match('/v(\d+)\.(\d+)\.(\d+)/', \$tag, \$m);
 
@@ -38,20 +39,40 @@ jobs:
           \$minor = (int)\$m[2];
           \$patch = (int)\$m[3];
 
-          \$isBreaking = preg_match('/!:/m', \$log) || str_contains(\$log, 'BREAKING CHANGE');
-          \$isFeature  = preg_match('/^feat(\(.+\))?:/m', \$log);
-          \$isFix      = preg_match('/^fix(\(.+\))?:/m', \$log);
+          \$hasBreaking = false;
+          \$hasFeature = false;
+          \$hasFix = false;
 
-          if (\$isBreaking) {
+          foreach (\$commits as \$msg) {
+
+              if (preg_match('/!:/', \$msg) || str_contains(\$msg, 'BREAKING')) {
+                  \$hasBreaking = true;
+                  break;
+              }
+
+              if (preg_match('/^(docs|chore|style)(\(.+\))?:/', \$msg)) {
+                  continue;
+              }
+
+              if (preg_match('/^feat(\(.+\))?:/', \$msg)) {
+                  \$hasFeature = true;
+              }
+
+              if (preg_match('/^fix(\(.+\))?:/', \$msg)) {
+                  \$hasFix = true;
+              }
+          }
+
+          if (\$hasBreaking) {
               \$major++;
               \$minor = 0;
               \$patch = 0;
 
-          } elseif (\$isFeature) {
+          } elseif (\$hasFeature) {
               \$minor++;
               \$patch = 0;
 
-          } elseif (\$isFix) {
+          } elseif (\$hasFix) {
               \$patch++;
 
           } else {
@@ -68,7 +89,7 @@ jobs:
 
       - name: Generate changelog
         run: |
-          git log ${{ steps.tag.outputs.TAG }}..HEAD --pretty=format:"%H|%s" > CHANGELOG.md
+          git log ${{ steps.tag.outputs.TAG }}..HEAD --pretty=format:"- %s (%h)" > CHANGELOG.md
 
       - name: Create Git tag
         run: |
