@@ -19,6 +19,14 @@ use Neo\Core\Http\Client\Session;
 use Neo\Core\Http\File\Uploader;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
+use Neo\Core\Profiler\Collector\EventCollector;
+use Neo\Core\Profiler\Collector\LogCollector;
+use Neo\Core\Profiler\Collector\QueryCollector;
+use Neo\Core\Profiler\Collector\RequestCollector;
+use Neo\Core\Profiler\Collector\RouterCollector;
+use Neo\Core\Profiler\Profiler;
+use Neo\Core\Profiler\ProfilerResponseListener;
+use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Routing\Router;
 use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Middleware\MiddlewareHandler;
@@ -177,6 +185,25 @@ class App
         $response = $this->container->get(Response::class);
         $router = $this->container->get(Router::class);
         $dispatcher = $this->container->get(EventDispatcher::class);
+
+        $env = $this->container->get(Config::class)->from('app')->get('environment') ?? 'prod';
+
+        if ($env === 'dev' && php_sapi_name() !== 'cli') {
+            if (!defined('NEO_PROFILER_ENABLED')) {
+                define('NEO_PROFILER_ENABLED', true);
+            }
+
+            $profiler = Profiler::getInstance();
+            $profiler->addCollector(new RequestCollector($request));
+            $profiler->addCollector(new RouterCollector($router));
+            $profiler->addCollector(new QueryCollector());
+            $profiler->addCollector(new EventCollector($dispatcher));
+            $profiler->addCollector(new LogCollector());
+
+            $toolbar = new Toolbar($profiler);
+            $listener = new ProfilerResponseListener($toolbar);
+            $dispatcher->addListenerInstance(ResponseEvent::class, $listener, 'onResponse');
+        }
 
         $dispatcher->dispatch(new RequestEvent($request));
 
