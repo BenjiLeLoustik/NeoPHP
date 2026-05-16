@@ -29,6 +29,7 @@ jobs:
         run: |
           php -r "
           \$tag = '${{ steps.tag.outputs.TAG }}';
+
           \$log = shell_exec('git log ' . \$tag . '..HEAD --pretty=%s');
 
           preg_match('/v(\d+)\.(\d+)\.(\d+)/', \$tag, \$m);
@@ -37,24 +38,37 @@ jobs:
           \$minor = (int)\$m[2];
           \$patch = (int)\$m[3];
 
-          if (str_contains(\$log, 'BREAKING')) {
-              \$major++; \$minor=0; \$patch=0;
-          } elseif (str_contains(\$log, 'feat:')) {
-              \$minor++; \$patch=0;
+          \$isBreaking = preg_match('/!:/m', \$log) || str_contains(\$log, 'BREAKING CHANGE');
+          \$isFeature  = preg_match('/^feat(\(.+\))?:/m', \$log);
+          \$isFix      = preg_match('/^fix(\(.+\))?:/m', \$log);
+
+          if (\$isBreaking) {
+              \$major++;
+              \$minor = 0;
+              \$patch = 0;
+
+          } elseif (\$isFeature) {
+              \$minor++;
+              \$patch = 0;
+
+          } elseif (\$isFix) {
+              \$patch++;
+
           } else {
               \$patch++;
           }
 
           \$new = \"v{\$major}.{\$minor}.{\$patch}\";
+
           echo \$new;
           file_put_contents('version.txt', \$new);
-          " > version.txt
+          "
 
           echo "VERSION=$(cat version.txt)" >> $GITHUB_OUTPUT
 
       - name: Generate changelog
         run: |
-          git log ${{ steps.tag.outputs.TAG }}..HEAD --pretty=format:"- %s" > CHANGELOG.md
+          git log ${{ steps.tag.outputs.TAG }}..HEAD --pretty=format:"%H|%s" > CHANGELOG.md
 
       - name: Create Git tag
         run: |
