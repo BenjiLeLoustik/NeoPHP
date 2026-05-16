@@ -8,6 +8,7 @@ use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Attribute\AsListener;
 use Neo\Core\Event\Contract\EventInterface;
 use Neo\Core\Event\Contract\EventSubscriberInterface;
+use Neo\Core\Profiler\Profiler;
 use Neo\Core\Utils\Config;
 
 class EventDispatcher
@@ -121,15 +122,21 @@ class EventDispatcher
     public function dispatch(EventInterface $event): EventInterface
     {
         $eventClass = get_class($event);
-        $listeners  = $this->listeners[$eventClass] ?? [];
+        $listeners = $this->listeners[$eventClass] ?? [];
+        $called = [];
+
+        $t0 = microtime(true);
 
         foreach ($listeners as $meta) {
-            if ($event->isPropagationStopped()) {
-                break;
+            if ($event->isPropagationStopped()) break;
+
+            if (isset($meta['instance'])) {
+                $listener = $meta['instance'];
+            } else {
+                $listener = $this->container->get($meta['class']);
             }
 
-            $listener = $this->container->get($meta['class']);
-            $method   = $meta['method'] ?? 'handle';
+            $method = $meta['method'] ?? 'handle';
 
             if (!method_exists($listener, $method)) {
                 throw new FrameworkException(
@@ -140,6 +147,13 @@ class EventDispatcher
             }
 
             $listener->$method($event);
+            $called[] = $meta['class'];
+        }
+
+        if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
+            $ms = (microtime(true) - $t0) * 1000;
+            $ec = Profiler::getInstance()->getCollector('events');
+            $ec?->record($eventClass, $called, $ms);
         }
 
         return $event;
@@ -147,13 +161,28 @@ class EventDispatcher
 
     public function addListener(string $eventClass, string $listenerClass, int $priority = 0, string $method = 'handle'): void
     {
+        $this->listeners[$eventClass][] = array(
+            'class' => $listenerClass,
+            'method' => $method,
+            'priority' => $priority,
+        );
+
+        usort($this->listeners[$eventClass], fn($a, $b) => $b['priority'] <=> $a['priority']);
+    }
+
+    public function addListenerInstance(string $eventClass, object $instance, string $method = 'handle', int $priority = 0): void
+    {
         $this->listeners[$eventClass][] = [
-            'class'    => $listenerClass,
-            'method'   => $method,
+            'instance' => $instance,
+            'class' => get_class($instance),
+            'method' => $method,
             'priority' => $priority,
         ];
 
-        usort($this->listeners[$eventClass], fn($a, $b) => $b['priority'] <=> $a['priority']);
+        usort(
+            $this->listeners[$eventClass],
+            fn ($a, $b) => $b['priority'] <=> $a['priority'],
+        );
     }
 
     public function addSubscriber(EventSubscriberInterface $subscriber): void
