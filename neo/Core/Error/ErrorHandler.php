@@ -6,6 +6,8 @@ namespace Neo\Core\Error;
 use Neo\Core\DI\Container;
 use Neo\Core\Event\Event\ExceptionEvent;
 use Neo\Core\Event\EventDispatcher;
+use Neo\Core\Profiler\Profiler;
+use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Utils\Config;
 use Neo\Core\Utils\Logger;
 use Neo\Core\View\View;
@@ -93,11 +95,12 @@ class ErrorHandler
         if (file_exists($viewFile) && $this->container->has(View::class)) {
             try {
                 $view = $this->container->get(View::class);
-                echo $view->render("errors/{$code}.html.twig", [
+                $html = $view->render("errors/{$code}.html.twig", [
                     'title'   => $exception->getTitle(),
                     'message' => $env === 'dev' ? $exception->getMessage() : 'An error occurred.',
                     'context' => $env === 'dev' ? $exception->getContext() : [],
                 ]);
+                echo $this->injectProfilerToolbar($html);
             } catch (\Throwable) {
                 $this->renderFallback($exception);
             }
@@ -227,7 +230,7 @@ class ErrorHandler
         HTML;
         }
 
-        echo <<<HTML
+        echo $this->injectProfilerToolbar(<<<HTML
     <!DOCTYPE html>
     <html lang="fr">
     <head>
@@ -258,6 +261,28 @@ class ErrorHandler
 
     </body>
     </html>
-    HTML;
+    HTML);
+    }
+
+    private function injectProfilerToolbar(string $html): string
+    {
+        if (!defined('NEO_PROFILER_ENABLED') || !NEO_PROFILER_ENABLED) {
+            return $html;
+        }
+
+        try {
+            $toolbar = new Toolbar(
+                Profiler::getInstance()
+            );
+            $rendered = $toolbar->render();
+
+            if (str_contains($html, '</body>')) {
+                return str_replace('</body>', $rendered . '</body>', $html);
+            }
+
+            return $html . $rendered;
+        } catch (\Throwable) {
+            return $html;
+        }
     }
 }
