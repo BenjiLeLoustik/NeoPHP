@@ -7,6 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
+use Neo\Core\Profiler\Profiler;
 use Neo\Core\Routing\Attribute\Route as RouteAttribute;
 use Neo\Core\Routing\Attribute\MainRoute as MainRouteAttribute;
 use Neo\Core\Security\Middleware\MiddlewareHandler;
@@ -228,6 +229,11 @@ class Router
             $controller = $this->container->get($routeInfo['controller']);
             $method = $routeInfo['action'];
 
+            if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
+                $rc = Profiler::getInstance()->getCollector('router');
+                $rc?->setMatchedRoute($routeInfo['controller'], $method, $params);
+            }
+
             $middlewareHandler = $this->container->get(MiddlewareHandler::class);
             $middlewareHandler->run($routeInfo['controller'], $method);
 
@@ -259,7 +265,7 @@ class Router
                     code: 500,
                     context: [
                         'controller' => $routeInfo['controller'],
-                        'method'     => $method,
+                        'method' => $method,
                     ]
                 );
             }
