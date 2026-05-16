@@ -6,6 +6,7 @@ namespace Neo\Core\Database\Builder;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Error\Exception\FrameworkException;
+use Neo\Core\Profiler\Profiler;
 use PDO;
 use PDOException;
 
@@ -388,8 +389,11 @@ class QueryBuilder
     public function get(): array
     {
         try {
-            $stmt = $this->pdo->prepare($this->toSql());
-            $stmt->execute($this->params);
+
+            $sql = $this->toSql();
+            $stmt = $this->pdo->prepare($sql);
+            $this->executeTracked($stmt, $this->params, $sql);
+
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             throw new FrameworkException(
@@ -426,7 +430,8 @@ class QueryBuilder
             $sql .= $this->buildWhere();
 
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute($this->params);
+            $this->executeTracked($stmt, $this->params, $sql);
+
             return (int) $stmt->fetchColumn();
         } catch (PDOException $e) {
             throw new FrameworkException(
@@ -453,7 +458,7 @@ class QueryBuilder
     public function insert(array $data): bool
     {
         try {
-            $columns      = array_keys($data);
+            $columns = array_keys($data);
             $placeholders = array_map(fn($c) => ":$c", $columns);
 
             $sql  = sprintf(
@@ -471,7 +476,8 @@ class QueryBuilder
                     : $stmt->bindValue(":$key", $value);
             }
 
-            return $stmt->execute();
+            return $this->executeTracked($stmt, [], $sql);
+
         } catch (PDOException $e) {
             throw new FrameworkException(
                 title: 'Query Builder Error',
@@ -503,12 +509,12 @@ class QueryBuilder
             $setParams = [];
 
             foreach ($data as $key => $value) {
-                $paramKey          = 'set_' . $key;
-                $setParts[]        = "$key = :$paramKey";
+                $paramKey = 'set_' . $key;
+                $setParts[] = "$key = :$paramKey";
                 $setParams[$paramKey] = $value;
             }
 
-            $sql  = "UPDATE {$this->table} SET " . implode(', ', $setParts) . $this->buildWhere();
+            $sql = "UPDATE {$this->table} SET " . implode(', ', $setParts) . $this->buildWhere();
             $stmt = $this->pdo->prepare($sql);
 
             foreach ($setParams as $key => $value) {
@@ -521,7 +527,8 @@ class QueryBuilder
                 $stmt->bindValue(":$key", $value);
             }
 
-            return $stmt->execute();
+            return $this->executeTracked($stmt, [], $sql);
+
         } catch (PDOException $e) {
             throw new FrameworkException(
                 title: 'Query Builder Error',
@@ -544,8 +551,10 @@ class QueryBuilder
 
         try {
             $sql = "DELETE FROM {$this->table} " . $this->buildWhere();
+
             $stmt = $this->pdo->prepare($sql);
-            return $stmt->execute($this->params);
+            return $this->executeTracked($stmt, $this->params, $sql);
+
         } catch (PDOException $e) {
             throw new FrameworkException(
                 title: 'Query Builder Error',
@@ -569,8 +578,10 @@ class QueryBuilder
             $sql .= $this->buildWhere();
 
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute($this->params);
+            $this->executeTracked($stmt, $this->params, $sql);
+
             return (int) $stmt->fetchColumn();
+
         } catch (PDOException $e) {
             throw new FrameworkException(
                 title: 'Query Builder Error',
@@ -583,7 +594,7 @@ class QueryBuilder
 
     public function paginate(int $perPage = 15, ?int $page = null, ?int $total = null): PaginationBuilder
     {
-        $page  = max(1, $page ?? (int) ($_GET['page'] ?? 1));
+        $page = max(1, $page ?? (int) ($_GET['page'] ?? 1));
         $total = $total ?? $this->count();
 
         $items = $this
@@ -592,9 +603,9 @@ class QueryBuilder
             ->get();
 
         return new PaginationBuilder(
-            items:       $items,
-            total:       $total,
-            perPage:     $perPage,
+            items: $items,
+            total: $total,
+            perPage: $perPage,
             currentPage: $page,
         );
     }
@@ -685,5 +696,19 @@ class QueryBuilder
                 previous: $e
             );
         }
+    }
+
+    private function executeTracked(\PDOStatement $stmt, array $params, string $sql): bool
+    {
+        $t0 = microtime(true);
+        $result = $stmt->execute($params);
+        $ms = (microtime(true) - $t0) * 1000;
+
+        if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
+            $qc = Profiler::getInstance()->getCollector('database');
+            $qc?->record($sql, $params, $ms);
+        }
+
+        return $result;
     }
 }
