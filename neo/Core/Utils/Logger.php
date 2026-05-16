@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Utils;
 
 use Neo\Core\DI\Container;
+use Neo\Core\Profiler\Profiler;
 use ZipArchive;
 use DateTime;
 
@@ -81,6 +82,11 @@ class Logger
 
         $filePath = $this->getLogFilePath();
         $entry = $this->formatMessage($level, $message, $context, $origin);
+
+        if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
+            $lc = Profiler::getInstance()->getCollector('logs');
+            $lc?->record($level, $message, $context, $origin);
+        }
 
         file_put_contents($filePath, $entry . PHP_EOL, FILE_APPEND | LOCK_EX);
     }
