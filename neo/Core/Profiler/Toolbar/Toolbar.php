@@ -71,15 +71,29 @@ class Toolbar
 
   #neo-bar{
     position:fixed;bottom:0;left:0;right:0;z-index:99999;
-    background:#18181b;color:#a1a1aa;
+    background:transparent;color:#a1a1aa;
     display:flex;align-items:stretch;height:34px;
-    border-top:1px solid #27272a;font-size:11px;
+    border-top:none;font-size:11px;
+  }
+  
+  #neo-bar.expanded{
+    background:#18181b;
+    border-top:1px solid #27272a;
+  }
+  
+  #neo-bar .n-tabs-wrapper {
+    display:none;align-items:stretch;flex:1;
+  }
+  
+  #neo-bar .n-tabs-wrapper.visible {
+    display:flex;
   }
 
   #neo-bar .n-brand{
     display:flex;align-items:center;gap:8px;padding:0 14px;
     background:#7c3aed;color:#fff;font-weight:600;font-size:11px;letter-spacing:.3px;
     border-right:1px solid #5b21b6;flex-shrink:0;cursor:default;user-select:none;
+    cursor:pointer;
   }
   #neo-bar .n-brand-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4)}
 
@@ -182,81 +196,107 @@ class Toolbar
 </style>
 
 <div id="neo-bar">
-  <div class="n-brand">
-    <div class="n-brand-dot"></div>
-    Neo
-  </div>
+    <div class="n-brand" onclick="neoToggleBar()">
+        <div class="n-brand-dot"></div>
+        Neo
+    </div>
 
-  <div class="n-tab n-status-chip" onclick="neoSwitch('request')" title="Statut HTTP">
-    <span class="n-method">{$method}</span>
-    <span class="n-status" style="color:{$statusColor}">{$statusCode}</span>
-    <span class="n-path">{$path}</span>
-  </div>
-
-  <div class="n-tab" onclick="neoSwitch('request')" title="Requête HTTP">
-    <span class="n-label">Response</span>
-    <span class="n-value" style="color:{$durationColor}">{$duration} ms</span>
-  </div>
-
-  <div class="n-tab" onclick="neoSwitch('request')" title="Mémoire">
-    <span class="n-label">Memory</span>
-    <span class="n-value">{$memory}</span>
-  </div>
-
-  <div class="n-tab" onclick="neoSwitch('database')" title="Requêtes SQL">
-    <span class="n-label">SQL</span>
-    <span class="n-value" style="color:{$dbColor}">{$dbCount} req</span>
-    <span class="n-badge">{$dbMs} ms</span>
-  </div>
-
-  <div class="n-tab" onclick="neoSwitch('events')" title="Événements">
-    <span class="n-label">Events</span>
-    <span class="n-value">{$eventCount}</span>
-  </div>
-
-  <div class="n-tab" onclick="neoSwitch('logs')" title="Logs">
-    <span class="n-label">Logs</span>
-    <span class="n-value" style="color:{$logColor}">{$logCount}</span>
-  </div>
-
-  <div class="n-tab" onclick="neoSwitch('auth')" title="Authentification">
-    <span class="n-label">User</span>
-    <span class="n-value" style="color:{$authColor}">{$authLabel}</span>
-  </div>
-
-  <div class="n-tab" onclick="neoSwitch('translation')" title="Traductions">
-    <span class="n-label">i18n</span>
-    <span class="n-value" style="color:{$transColor}">{$transLabel}</span>
-  </div>
-
-  <div class="n-spacer"></div>
+    <div class="n-tabs-wrapper" id="neo-tabs-wrapper">
+        <div class="n-tab n-status-chip" onclick="neoSwitch('request')" title="Statut HTTP">
+            <span class="n-method">{$method}</span>
+            <span class="n-status" style="color:{$statusColor}">{$statusCode}</span>
+            <span class="n-path">{$path}</span>
+        </div>
+    
+        <div class="n-tab" onclick="neoSwitch('request')" title="Requête HTTP">
+            <span class="n-label">Response</span>
+            <span class="n-value" style="color:{$durationColor}">{$duration} ms</span>
+        </div>
+    
+        <div class="n-tab" onclick="neoSwitch('request')" title="Mémoire">
+            <span class="n-label">Memory</span>
+            <span class="n-value">{$memory}</span>
+        </div>
+    
+        <div class="n-tab" onclick="neoSwitch('database')" title="Requêtes SQL">
+            <span class="n-label">SQL</span>
+            <span class="n-value" style="color:{$dbColor}">{$dbCount} req</span>
+            <span class="n-badge">{$dbMs} ms</span>
+        </div>
+    
+        <div class="n-tab" onclick="neoSwitch('events')" title="Événements">
+            <span class="n-label">Events</span>
+            <span class="n-value">{$eventCount}</span>
+        </div>
+    
+        <div class="n-tab" onclick="neoSwitch('logs')" title="Logs">
+            <span class="n-label">Logs</span>
+            <span class="n-value" style="color:{$logColor}">{$logCount}</span>
+        </div>
+    
+        <div class="n-tab" onclick="neoSwitch('auth')" title="Authentification">
+            <span class="n-label">User</span>
+            <span class="n-value" style="color:{$authColor}">{$authLabel}</span>
+        </div>
+    
+        <div class="n-tab" onclick="neoSwitch('translation')" title="Traductions">
+            <span class="n-label">i18n</span>
+            <span class="n-value" style="color:{$transColor}">{$transLabel}</span>
+        </div>
+    
+        <div class="n-spacer"></div>
+    </div>
 </div>
 
 <div id="neo-panel">
-  <div class="n-ptabs">
-    <div class="n-ptab" id="npt-request"  onclick="neoPanel('request')">Request</div>
-    <div class="n-ptab" id="npt-database" onclick="neoPanel('database')">Database</div>
-    <div class="n-ptab" id="npt-events"   onclick="neoPanel('events')">Events</div>
-    <div class="n-ptab" id="npt-logs"     onclick="neoPanel('logs')">Logs</div>
-    <div class="n-ptab" id="npt-auth"         onclick="neoPanel('auth')">Auth</div>
-    <div class="n-ptab" id="npt-translation"  onclick="neoPanel('translation')">i18n</div>
-    <button class="n-close" onclick="neoClose()">&#x2715; Fermer</button>
-  </div>
+    <div class="n-ptabs">
+        <div class="n-ptab" id="npt-request" onclick="neoPanel('request')">Request</div>
+        <div class="n-ptab" id="npt-database" onclick="neoPanel('database')">Database</div>
+        <div class="n-ptab" id="npt-events" onclick="neoPanel('events')">Events</div>
+        <div class="n-ptab" id="npt-logs" onclick="neoPanel('logs')">Logs</div>
+        <div class="n-ptab" id="npt-auth" onclick="neoPanel('auth')">Auth</div>
+        <div class="n-ptab" id="npt-translation" onclick="neoPanel('translation')">i18n</div>
+        <button class="n-close" onclick="neoClose()">&#x2715; Fermer</button>
+    </div>
 
-  <div class="n-body">
-    <div id="npane-request"     style="display:none">{$requestHtml}</div>
-    <div id="npane-database"    style="display:none">{$queriesHtml}</div>
-    <div id="npane-events"      style="display:none">{$eventsHtml}</div>
-    <div id="npane-logs"        style="display:none">{$logsHtml}</div>
-    <div id="npane-auth"        style="display:none">{$authHtml}</div>
-    <div id="npane-translation" style="display:none">{$translationHtml}</div>
-  </div>
+    <div class="n-body">
+        <div id="npane-request" style="display:none">{$requestHtml}</div>
+        <div id="npane-database" style="display:none">{$queriesHtml}</div>
+        <div id="npane-events" style="display:none">{$eventsHtml}</div>
+        <div id="npane-logs" style="display:none">{$logsHtml}</div>
+        <div id="npane-auth" style="display:none">{$authHtml}</div>
+        <div id="npane-translation" style="display:none">{$translationHtml}</div>
+    </div>
 </div>
 
 <script>
 (function(){
   var current = null;
   var panes = ['request','database','events','logs','auth','translation'];
+  var STORAGE_KEY = 'neo_bar_visible';
+
+  function applyBarState(visible) {
+    var bar = document.getElementById('neo-bar');
+    var wrapper = document.getElementById('neo-tabs-wrapper');
+    var panel = document.getElementById('neo-panel');
+    if (visible) {
+      wrapper.classList.add('visible');
+      bar.classList.add('expanded');
+    } else {
+      wrapper.classList.remove('visible');
+      bar.classList.remove('expanded');
+      panel.classList.remove('open');
+      current = null;
+    }
+  }
+
+  window.neoToggleBar = function() {
+    var wrapper = document.getElementById('neo-tabs-wrapper');
+    var isVisible = wrapper.classList.contains('visible');
+    var next = !isVisible;
+    localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
+    applyBarState(next);
+  };
 
   window.neoSwitch = function(name) {
     var panel = document.getElementById('neo-panel');
@@ -285,6 +325,10 @@ class Toolbar
     document.querySelectorAll('#neo-bar .n-tab').forEach(function(t){ t.classList.remove('active'); });
     current = null;
   };
+
+  // Init : relit l'état sauvegardé
+  var saved = localStorage.getItem(STORAGE_KEY);
+  applyBarState(saved === '1');
 })();
 </script>
 HTML;
