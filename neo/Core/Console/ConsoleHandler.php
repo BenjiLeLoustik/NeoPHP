@@ -20,21 +20,31 @@ class ConsoleHandler
 
     private function loadCommands(): void
     {
-        $commandPath = __DIR__ . '/Commands';
+        $basePaths = [
+            __DIR__ . '/../../../src',
+            __DIR__ . '/../../../neo',
+        ];
 
-        if (!is_dir($commandPath)) {
-            return;
-        }
-
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($commandPath)
-        );
-
-        foreach ($iterator as $file) {
-            if (!$file->isFile() || $file->getExtension() !== 'php') {
+        foreach ($basePaths as $basePath) {
+            if (!is_dir($basePath)) {
                 continue;
             }
-            require_once $file->getPathname();
+
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($basePath)
+            );
+
+            foreach ($iterator as $file) {
+                if (!$file->isFile() || $file->getExtension() !== 'php') {
+                    continue;
+                }
+
+                if (!str_contains($file->getPathname(), DIRECTORY_SEPARATOR . 'Commands' . DIRECTORY_SEPARATOR)) {
+                    continue;
+                }
+
+                require_once $file->getPathname();
+            }
         }
 
         foreach (get_declared_classes() as $class) {
