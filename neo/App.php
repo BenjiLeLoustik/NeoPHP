@@ -22,6 +22,7 @@ use Neo\Core\Http\Response\Response;
 use Neo\Core\Profiler\Collector\AuthCollector;
 use Neo\Core\Profiler\Collector\EventCollector;
 use Neo\Core\Profiler\Collector\LogCollector;
+use Neo\Core\Profiler\Collector\MailCollector;
 use Neo\Core\Profiler\Collector\QueryCollector;
 use Neo\Core\Profiler\Collector\RequestCollector;
 use Neo\Core\Profiler\Collector\RouterCollector;
@@ -206,6 +207,7 @@ class App
             $profiler->addCollector(new LogCollector());
             $profiler->addCollector(new AuthCollector($this->container->get(AuthManager::class)));
             $profiler->addCollector(new TranslationCollector($this->container->get(TranslationManager::class)));
+            $profiler->addCollector(new MailCollector($this->container->get(Mailer::class)));
 
             $toolbar = new Toolbar($profiler);
             $listener = new ProfilerResponseListener($toolbar);
