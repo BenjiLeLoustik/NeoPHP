@@ -22,6 +22,7 @@ use Neo\Core\Utils\Cache;
 use Neo\Core\Utils\Config;
 use Neo\Core\Utils\Extension\StringExtension;
 use Neo\Core\Utils\Logger;
+use Neo\Core\Utils\Mailer;
 use Neo\Core\View\View;
 use RuntimeException;
 
@@ -32,6 +33,7 @@ abstract class AbstractController
     protected Response $response;
     protected View $view;
     protected MiddlewareHandler $middlewareHandler;
+    protected Mailer $mailer;
 
     public function __construct(?Container $container = null)
     {
@@ -42,6 +44,7 @@ abstract class AbstractController
         $this->response = $container->get(Response::class);
         $this->view = $container->get(View::class);
         $this->middlewareHandler = $container->get(MiddlewareHandler::class);
+        $this->mailer = $container->get(Mailer::class);
 
         $app = array_merge(
             $this->view->getTwig()->getGlobals()['app'] ?? [],
@@ -197,5 +200,10 @@ abstract class AbstractController
         }
 
         return $uploader->upload($file, $name, $extensions, $directory);
+    }
+
+    protected function getMailer(): Mailer
+    {
+        return $this->container->get(Mailer::class);
     }
 }
