@@ -28,14 +28,14 @@ class Toolbar
         ];
 
         $statusCode = http_response_code() ?: 200;
-        $method     = htmlspecialchars($request['method'] ?? 'GET');
-        $path       = htmlspecialchars($request['path'] ?? '/');
+        $method = htmlspecialchars($request['method'] ?? 'GET');
+        $path = htmlspecialchars($request['path'] ?? '/');
 
         $statusColor = match(true) {
             $statusCode >= 500 => '#f87171',
             $statusCode >= 400 => '#fb923c',
             $statusCode >= 300 => '#60a5fa',
-            default            => '#4ade80',
+            default => '#4ade80',
         };
 
         $durationColor = $duration < 200 ? '#4ade80' : ($duration < 500 ? '#fb923c' : '#f87171');
@@ -64,6 +64,12 @@ class Toolbar
         $dbMs = $db['total_ms'];
         $eventCount = $events['count'];
         $logCount = $logs['count'];
+
+        $mail = $data['mail'] ?? ['count' => 0, 'sent' => 0, 'failed' => 0, 'total_ms' => 0, 'mails' => []];
+
+        $mailColor = $mail['failed'] > 0 ? '#f87171' : ($mail['count'] > 0 ? '#4ade80' : '#71717a');
+        $mailCount = $mail['count'];
+        $mailHtml = $this->renderMail($mail);
 
         return <<<HTML
 <style>
@@ -243,6 +249,11 @@ class Toolbar
             <span class="n-label">i18n</span>
             <span class="n-value" style="color:{$transColor}">{$transLabel}</span>
         </div>
+        
+        <div class="n-tab" onclick="neoSwitch('mail')" title="Mails">
+            <span class="n-label">Mail</span>
+            <span class="n-value" style="color:{$mailColor}">{$mailCount}</span>
+        </div>
     
         <div class="n-spacer"></div>
     </div>
@@ -256,6 +267,7 @@ class Toolbar
         <div class="n-ptab" id="npt-logs" onclick="neoPanel('logs')">Logs</div>
         <div class="n-ptab" id="npt-auth" onclick="neoPanel('auth')">Auth</div>
         <div class="n-ptab" id="npt-translation" onclick="neoPanel('translation')">i18n</div>
+        <div class="n-ptab" id="npt-mail" onclick="neoPanel('mail')">Mail</div>
         <button class="n-close" onclick="neoClose()">&#x2715; Fermer</button>
     </div>
 
@@ -266,13 +278,14 @@ class Toolbar
         <div id="npane-logs" style="display:none">{$logsHtml}</div>
         <div id="npane-auth" style="display:none">{$authHtml}</div>
         <div id="npane-translation" style="display:none">{$translationHtml}</div>
+        <div id="npane-mail" style="display:none">{$mailHtml}</div>
     </div>
 </div>
 
 <script>
 (function(){
   var current = null;
-  var panes = ['request','database','events','logs','auth','translation'];
+  var panes = ['request','database','events','logs','auth','translation','mail'];
   var STORAGE_KEY = 'neo_bar_visible';
 
   function applyBarState(visible) {
@@ -587,6 +600,60 @@ HTML;
   <tbody>{$rows}</tbody>
 </table>
 HTML;
+    }
+
+    private function renderMail(array $mail): string
+    {
+        if ($mail['count'] === 0) {
+            return '<p class="n-empty">Aucun mail envoyé.</p>';
+        }
+
+        $sent = $mail['sent'];
+        $failed = $mail['failed'];
+        $totalMs = $mail['total_ms'];
+
+        $rows = '';
+        foreach ($mail['mails'] as $i => $m) {
+            $n = $i + 1;
+            $to = htmlspecialchars($m['to']);
+            $subject = htmlspecialchars($m['subject']);
+            $status = htmlspecialchars($m['status']);
+            $ms = htmlspecialchars((string) $m['duration_ms']);
+            $error = isset($m['error']) ? htmlspecialchars($m['error']) : '—';
+            $statusColor = $m['status'] === 'sent' ? '#4ade80' : '#f87171';
+
+            $rows .= <<<HTML
+<tr>
+  <td style="color:#52525b;width:28px">{$n}</td>
+  <td class="n-event">{$to}</td>
+  <td>{$subject}</td>
+  <td style="color:{$statusColor};font-weight:600">{$status}</td>
+  <td class="n-origin">{$error}</td>
+  <td class="n-ms">{$ms} ms</td>
+</tr>
+HTML;
+        }
+
+        return <<<HTML
+<dl class="n-kv" style="margin-bottom:12px">
+  <dt>Total</dt><dd>{$mail['count']}</dd>
+  <dt>Envoyés</dt><dd style="color:#4ade80">{$sent}</dd>
+  <dt>Échoués</dt><dd style="color:{$this->mailFailColor($failed)}">{$failed}</dd>
+  <dt>Durée totale</dt><dd>{$totalMs} ms</dd>
+</dl>
+
+<table>
+  <thead>
+    <tr><th>#</th><th>To</th><th>Subject</th><th>Status</th><th>Error</th><th style="text-align:right">Time</th></tr>
+  </thead>
+  <tbody>{$rows}</tbody>
+</table>
+HTML;
+    }
+
+    private function mailFailColor(int $failed): string
+    {
+        return $failed > 0 ? '#f87171' : '#4ade80';
     }
 
     private function logBadgeColor(array $entries): string
