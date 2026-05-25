@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Asset;
 
 use Neo\Core\Asset\Compiler\LessCompiler;
+use Neo\Core\Asset\Exception\AssetException;
 use Neo\Core\DI\Container;
 use Neo\Core\View\View;
 use Neo\Core\Utils\Config;
@@ -30,10 +31,10 @@ class AssetHandler
         $this->env = $config->get('environment', 'prod');
 
         $this->currentApplication = $this->container->get('application');
-        $this->sourcePath         = $this->container->get('assetsPath');
-        $this->publicPath         = $this->container->get('publicPath');
-        $this->buildPath          = $this->container->get('buildsPath') . $this->currentApplication . '/assets/';
-        $this->manifestPath       = $this->container->get('buildsPath') . $this->currentApplication . '/' . $this->container->get('manifestFilename');
+        $this->sourcePath = $this->container->get('assetsPath');
+        $this->publicPath = $this->container->get('publicPath');
+        $this->buildPath = $this->container->get('buildsPath') . $this->currentApplication . '/assets/';
+        $this->manifestPath = $this->container->get('buildsPath') . $this->currentApplication . '/' . $this->container->get('manifestFilename');
 
         $this->loadManifest();
 
@@ -51,9 +52,9 @@ class AssetHandler
         $json = file_get_contents($this->manifestPath);
 
         if ($json === false) {
-            throw new FrameworkException(
+            throw new AssetException(
                 title: 'Asset Manifest Unreadable',
-                message: "Impossible de lire le manifest '{$this->manifestPath}'.",
+                message: sprintf("Unable to read manifest '%s'.", $this->manifestPath),
                 code: 500
             );
         }
@@ -66,9 +67,9 @@ class AssetHandler
         $dir = dirname($this->manifestPath);
 
         if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) {
-            throw new FrameworkException(
+            throw new AssetException(
                 title: 'Asset Manifest Directory Error',
-                message: "Impossible de créer le répertoire du manifest '{$dir}'.",
+                message: sprintf("Unable to create manifest directory '%s'.", $dir),
                 code: 500
             );
         }
@@ -79,9 +80,9 @@ class AssetHandler
         );
 
         if ($result === false) {
-            throw new FrameworkException(
+            throw new AssetException(
                 title: 'Asset Manifest Write Error',
-                message: "Impossible d'écrire le manifest '{$this->manifestPath}'.",
+                message: sprintf("Unable to write manifest '%s'.", $this->manifestPath),
                 code: 500
             );
         }
@@ -100,9 +101,9 @@ class AssetHandler
         $sourceFile = $this->sourcePath . $path;
 
         if (!file_exists($sourceFile)) {
-            throw new FrameworkException(
+            throw new AssetException(
                 title: 'Asset Source Missing',
-                message: "Le fichier source '{$path}' est introuvable.",
+                message: sprintf("The source file '%s' could not be found.", $path),
                 code: 404
             );
         }
@@ -118,59 +119,67 @@ class AssetHandler
 
     private function compile(string $path): string
     {
-        $ext      = pathinfo($path, PATHINFO_EXTENSION);
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
         $targetExt = $ext === 'less' ? 'css' : $ext;
 
         $compiler = match($ext) {
-            'css'  => new CssCompiler(),
-            'js'   => new JsCompiler(),
+            'css' => new CssCompiler(),
+            'js' => new JsCompiler(),
             'less' => new LessCompiler(),
             default => null
         };
 
         $sourceFile = $this->sourcePath . $path;
-        $hash       = substr(md5_file($sourceFile), 0, 8);
-        $targetDir  = $this->buildPath . dirname($path);
+        $hash = substr(md5_file($sourceFile), 0, 8);
+        $targetDir = $this->buildPath . dirname($path);
 
         if (!is_dir($targetDir) && !mkdir($targetDir, 0777, true) && !is_dir($targetDir)) {
-            throw new FrameworkException(
+            throw new AssetException(
                 title: 'Asset Build Directory Error',
-                message: "Impossible de créer le répertoire de build '{$targetDir}'.",
+                message: sprintf("Unable to create build directory '%s'.", $targetDir),
                 code: 500
             );
         }
 
-        $filename   = basename($path, '.' . $ext);
-        $minSuffix  = in_array($targetExt, ['css', 'js']) ? '.min' : '';
+        $filename = basename($path, '.' . $ext);
+        $minSuffix = in_array($targetExt, ['css', 'js']) ? '.min' : '';
         $targetFile = "{$targetDir}/{$filename}-{$hash}{$minSuffix}.{$targetExt}";
 
         if (isset($this->manifest[$path])) {
             $oldRelative = $this->manifest[$path];
-            $oldReal     = $this->publicPath . '/' . ltrim($oldRelative, '/');
+            $oldReal = $this->publicPath . '/' . ltrim($oldRelative, '/');
 
             if (file_exists($oldReal) && is_file($oldReal)) {
                 unlink($oldReal);
             }
         }
 
-        try {
-            if ($compiler) {
+        if ($compiler) {
+            try {
                 $compiler->compile($sourceFile, $targetFile);
-            } else {
-                if (!copy($sourceFile, $targetFile)) {
-                    throw new \RuntimeException("Échec de la copie.");
-                }
+            } catch (\Throwable $e) {
+                throw new AssetException(
+                    title: 'Asset Compilation Error',
+                    message: sprintf("Error compiling '%s': %s.", $path, $e->getMessage()),
+                    code: 500,
+                    previous: $e
+                );
             }
-        } catch (\Throwable $e) {
-            throw new FrameworkException(
-                title: 'Asset Compilation Error',
-                message: "Erreur lors de la compilation de '{$path}' : " . $e->getMessage(),
-                code: 500,
-                previous: $e
-            );
+        } else {
+            if (!copy($sourceFile, $targetFile)) {
+                throw new AssetException(
+                    title: 'Asset Copy Error',
+                    message: sprintf("Failed to copy '%s' to '%s'.", $sourceFile, $targetFile),
+                    code: 500
+                );
+            }
         }
 
-        $relativePath = '/builds/' . $this->currentApplication . '/assets/' . ltrim(str_replace($this->buildPath, '', $targetFile), '/');
+        $relativePath = '/builds/'
+            . $this->currentApplication
+            . '/assets/'
+            . ltrim(str_replace($this->buildPath, '', $targetFile), '/');
+
         $this->manifest[$path] = $relativePath;
         $this->saveManifest();
 
