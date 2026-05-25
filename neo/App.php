@@ -41,6 +41,7 @@ use Neo\Core\Utils\Cache;
 use Neo\Core\Utils\Config;
 use Neo\Core\Utils\Extension\StringExtension;
 use Neo\Core\Utils\Logger;
+use Neo\Core\Utils\Mailer;
 use Neo\Core\View\View;
 
 class App
@@ -160,6 +161,8 @@ class App
 
         $this->container->set(EventDispatcher::class, fn(Container $c) => new EventDispatcher($c));
         $this->container->get(EventDispatcher::class);
+
+        $this->container->set(Mailer::class, fn(Container $c) => new Mailer($c));
     }
 
     private function registerClientServices(): void
