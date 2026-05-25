@@ -39,7 +39,10 @@ class ConsoleHandler
                     continue;
                 }
 
-                if (!str_contains($file->getPathname(), DIRECTORY_SEPARATOR . 'Commands' . DIRECTORY_SEPARATOR)) {
+                if (
+                    !str_contains($file->getPathname(), DIRECTORY_SEPARATOR . 'Commands' . DIRECTORY_SEPARATOR)
+                )
+                {
                     continue;
                 }
 
