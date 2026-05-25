@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\DI;
 
 use Neo\Core\Controller\AbstractController;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
@@ -74,9 +75,9 @@ class Container implements ContainerInterface
             return $this->instances[$id] = $this->resolveClass($id);
         }
 
-        throw new FrameworkException(
+        throw new ContainerException(
             title: "Service Not Found",
-            message: "Service '{$id}' not found in the container.",
+            message: sprintf("Service '%s' not found in the container.", $id),
             code: 500,
             context: ['id' => $id]
         );
@@ -102,10 +103,14 @@ class Container implements ContainerInterface
     private function resolveClass(string $class, array $extraParams = []): object
     {
         if (isset($this->resolving[$class])) {
-            throw new FrameworkException(
+            throw new ContainerException(
                 title: "Circular Dependency",
-                message: "Circular dependency detected while resolving '{$class}'. Chain: "
-                . implode(' → ', array_keys($this->resolving)) . " → {$class}",
+                message: sprintf(
+                    "Circular dependency detected while resolving '%s'. Chain: %s -> %s",
+                    $class,
+                    implode(' → ', array_keys($this->resolving)),
+                    $class
+                ),
                 code: 500,
                 context: ['class' => $class, 'chain' => array_keys($this->resolving)]
             );
@@ -114,9 +119,9 @@ class Container implements ContainerInterface
         $ref = new ReflectionClass($class);
 
         if (!$ref->isInstantiable()) {
-            throw new FrameworkException(
+            throw new ContainerException(
                 title: "Class Not Instantiable",
-                message: "Class '{$class}' cannot be instantiated.",
+                message: sprintf("Class '%s' cannot be instantiated.", $class),
                 code: 500,
                 context: ['class' => $class]
             );
@@ -250,13 +255,17 @@ class Container implements ContainerInterface
 
         $declaringClass = $param->getDeclaringClass()?->getName() ?? 'closure/function';
 
-        throw new FrameworkException(
+        throw new ContainerException(
             title: "Parameter Cannot Be Resolved",
-            message: "Cannot resolve parameter '\${$param->getName()}' in '{$declaringClass}'.",
+            message: sprintf(
+                "Cannot resolve parameter '$%s' in '%s'.",
+                $param->getName(),
+                $declaringClass
+            ),
             code: 500,
             context: [
                 'parameter' => $param->getName(),
-                'class'     => $declaringClass,
+                'class' => $declaringClass,
             ]
         );
     }
