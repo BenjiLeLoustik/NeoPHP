@@ -8,6 +8,7 @@ use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Attribute\AsListener;
 use Neo\Core\Event\Contract\EventInterface;
 use Neo\Core\Event\Contract\EventSubscriberInterface;
+use Neo\Core\Event\Exception\EventException;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Utils\Config;
 
@@ -56,7 +57,7 @@ class EventDispatcher
             }
 
             $filePath = $file->getRealPath();
-            $src      = file_get_contents($filePath);
+            $src = file_get_contents($filePath);
             if ($src === false) continue;
 
             $namespace = '';
@@ -80,18 +81,18 @@ class EventDispatcher
             foreach ($attrs as $attr) {
                 $instance = $attr->newInstance();
                 $this->listeners[$instance->event][] = [
-                    'class'    => $fqcn,
+                    'class' => $fqcn,
                     'priority' => $instance->priority,
                 ];
             }
 
             if ($ref->implementsInterface(EventSubscriberInterface::class)) {
                 foreach ($fqcn::getSubscribedEvents() as $eventClass => $method) {
-                    $this->listeners[$eventClass][] = [
-                        'class'    => $fqcn,
-                        'method'   => $method,
+                    $this->listeners[$eventClass][] = array(
+                        'class' => $fqcn,
+                        'method' => $method,
                         'priority' => 0,
-                    ];
+                    );
                 }
             }
         }
@@ -103,16 +104,16 @@ class EventDispatcher
         if (!$this->isDebug()) {
             $cacheDir = dirname($cacheFile);
             if (!is_dir($cacheDir) && !mkdir($cacheDir, 0777, true) && !is_dir($cacheDir)) {
-                throw new FrameworkException(
+                throw new EventException(
                     title: 'Event Cache Directory Error',
-                    message: "Impossible de créer le répertoire de cache des events '{$cacheDir}'.",
+                    message: sprintf("Unable to create event cache directory '%s'.", $cacheDir),
                     code: 500
                 );
             }
             if (file_put_contents($cacheFile, serialize($this->listeners)) === false) {
-                throw new FrameworkException(
-                    title: 'Event Cache Error',
-                    message: "Impossible d'écrire le cache des events '{$cacheFile}'.",
+                throw new EventException(
+                    title: 'Event Cache Write Error',
+                    message: sprintf("Unable to write event cache file '%s'.", $cacheFile),
                     code: 500
                 );
             }
@@ -139,9 +140,9 @@ class EventDispatcher
             $method = $meta['method'] ?? 'handle';
 
             if (!method_exists($listener, $method)) {
-                throw new FrameworkException(
+                throw new EventException(
                     title: 'Event Listener Error',
-                    message: "La méthode '{$method}' n'existe pas sur le listener '{$meta['class']}'.",
+                    message: sprintf("Method '%s' does not exist on listener '%s'.", $method, $meta['class']),
                     code: 500
                 );
             }
