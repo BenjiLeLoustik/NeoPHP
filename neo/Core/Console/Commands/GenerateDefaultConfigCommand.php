@@ -42,6 +42,7 @@ final class GenerateDefaultConfigCommand implements CommandInterface
             'database.config.php' => fn() => $this->generateDatabaseConfig($configPath, $projectName),
             'deploy.config.php' => fn() => $this->generateDeployConfig($configPath, $projectName),
             'api.config.php' => fn() => $this->generateAPIConfig($configPath, $projectName),
+            'mailer.config.php' => fn() => $this->generateMailerConfig($configPath, $projectName),
         ];
 
         foreach ($files as $filename => $generator) {
@@ -169,6 +170,38 @@ PHP;
         file_put_contents($path . 'api.config.php', $content);
     }
 
+    private function generateMailerConfig(string $path, string $name)
+    {
+        $content = <<<PHP
+<?php
+declare(strict_types=1);
+
+// ./src/$name/Config/mailer.config.php
+
+return [
+    'enabled' => false,
+
+    'default' => 'smtp',
+
+    'drivers' => [
+        'smtp' => [
+            'host'       => '',
+            'port'       => 587,
+            'encryption' => 'tls',
+            'username'   => '',
+            'password'   => '',
+        ],
+    ],
+
+    'from' => [
+        'address' => '',
+        'name'    => '$name',
+    ],
+];
+PHP;
+        file_put_contents($path . 'mailer.config.php', $content);
+    }
+
     public function getName(): string
     {
         return 'generate:default:config';
@@ -176,18 +209,19 @@ PHP;
 
     public function getDescription(): string
     {
-        return 'Generate sensitive config files for a project (deploy, database, api)';
+        return 'Generate sensitive config files for a project (deploy, database, api, mailer)';
     }
 
     public function getHelp(): string
     {
         Output::usage('generate:default:config', $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive if omitted)');
+        Output::option('--project=<name>', 'Target project inside ./src/');
         Output::newLine();
         echo "  Generated files:\n";
         Output::muted('    Config/deploy.config.php');
         Output::muted('    Config/database.config.php');
         Output::muted('    Config/api.config.php');
+        Output::muted('    Config/mailer.config.php');
         Output::newLine();
         echo "  Examples:\n";
         Output::example('php bin/neo generate:default:config');

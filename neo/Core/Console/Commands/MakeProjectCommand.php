@@ -85,6 +85,7 @@ final class MakeProjectCommand implements CommandInterface
         $this->generateTwigConfig($path . '/Config/', $name);
         $this->generateSessionConfig($path . '/Config/', $name);
         $this->generateAPIConfig($path . '/Config/', $name);
+        $this->generateMailerConfig($path . '/Config/', $name);
         $this->generateGitignore($path);
 
         if ($skeleton) {
@@ -488,6 +489,37 @@ PHP;
         file_put_contents($path . 'api.config.php', $content);
     }
 
+    private function generateMailerConfig(string $path, string $name): void
+    {
+        $content = <<<PHP
+<?php
+declare(strict_types=1);
+
+// ./src/$name/Config/mailer.config.php
+return [
+    'enabled' => false,
+
+    'default' => 'smtp',
+
+    'drivers' => [
+        'smtp' => [
+            'host'       => '',
+            'port'       => 587,
+            'encryption' => 'tls',
+            'username'   => '',
+            'password'   => '',
+        ],
+    ],
+
+    'from' => [
+        'address' => '',
+        'name'    => '$name',
+    ],
+];
+PHP;
+        file_put_contents($path . 'mailer.config.php', $content);
+    }
+
     private function generateGitignore(string $path): void
     {
         $content = <<<GITIGNORE
@@ -495,6 +527,7 @@ PHP;
 /Config/database.config.php
 /Config/deploy.config.php
 /Config/api.config.php
+/Config/mailer.config.php
 
 # Storage
 /Storage/
