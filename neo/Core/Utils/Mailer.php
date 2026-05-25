@@ -23,7 +23,7 @@ class Mailer
 
     public function __construct(private Container $container)
     {
-        $this->config = $container->get(Config::class)->from('Mailer')->all();
+        $this->config = $container->get(Config::class)->from('mailer')->all();
         $this->enabled = $this->config['enabled'] ?? false;
     }
 
@@ -73,10 +73,11 @@ class Mailer
     public function send(): bool
     {
         if (!$this->enabled) {
-            $this->container->get(Logger::class)->warning('Mailer', 'Mailer is disabled, mail not sent.', [
+            $this->container->get(Logger::class)->warning('Mailer is disabled, mail not sent.', [
                 'to' => $this->to,
                 'subject' => $this->subject,
-            ]);
+            ], 'Mailer');
+
             $this->reset();
             return false;
         }
@@ -138,10 +139,10 @@ class Mailer
                 'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
             ];
 
-            $this->container->get(Logger::class)->error('Mailer', $e->getMessage(), [
+            $this->container->get(Logger::class)->error($e->getMessage(), [
                 'to' => $this->to,
                 'subject' => $this->subject,
-            ]);
+            ], 'Mailer');
 
             $this->reset();
             return false;
