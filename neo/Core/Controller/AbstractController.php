@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Controller;
 
+use Neo\Core\Controller\Exception\AbstractControllerException;
 use Neo\Core\DI\Container;
 use Neo\Core\Event\Contract\EventInterface;
 use Neo\Core\Event\EventDispatcher;
@@ -24,7 +25,6 @@ use Neo\Core\Utils\Extension\StringExtension;
 use Neo\Core\Utils\Logger;
 use Neo\Core\Utils\Mailer;
 use Neo\Core\View\View;
-use RuntimeException;
 
 abstract class AbstractController
 {
@@ -119,7 +119,7 @@ abstract class AbstractController
     {
         return new JsonResponse([
             'success' => true,
-            'data'    => $data
+            'data' => $data
         ], $status);
     }
 
@@ -127,7 +127,7 @@ abstract class AbstractController
     {
         return new JsonResponse(array_merge([
             'success' => false,
-            'error'   => $message,
+            'error' => $message,
         ], $extra), $status);
     }
 
@@ -196,7 +196,11 @@ abstract class AbstractController
         $uploader = $this->container->get(Uploader::class);
         $file = $this->request->file($field);
         if (!$file) {
-            throw new RuntimeException("File field '$field' not found.");
+            throw new AbstractControllerException(
+                title: 'File Upload Error',
+                message: sprintf("File field '%s' not found.", $field),
+                code: 400
+            );
         }
 
         return $uploader->upload($file, $name, $extensions, $directory);
