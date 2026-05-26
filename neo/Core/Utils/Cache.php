@@ -5,6 +5,7 @@ namespace Neo\Core\Utils;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
+use Neo\Core\Utils\Exception\CacheException;
 
 class Cache
 {
@@ -13,14 +14,14 @@ class Cache
 
     public function __construct(Container $container)
     {
-        $config               = $container->get(Config::class)->from('cache')->all();
+        $config = $container->get(Config::class)->from('cache')->all();
         $this->cacheDirectory = $container->get('storagePath') . '/cache';
-        $this->defaultTtl     = (int) ($config['ttl'] ?? 3600);
+        $this->defaultTtl = (int) ($config['ttl'] ?? 3600);
 
         if (!is_dir($this->cacheDirectory) && !mkdir($this->cacheDirectory, 0777, true) && !is_dir($this->cacheDirectory)) {
-            throw new FrameworkException(
+            throw new CacheException(
                 title: 'Cache Directory Error',
-                message: "Impossible de créer le répertoire de cache '{$this->cacheDirectory}'.",
+                message: sprintf("Unable to create cache directory '%s'.", $this->cacheDirectory),
                 code: 500
             );
         }
@@ -30,13 +31,13 @@ class Cache
     {
         $data = [
             'expires_at' => time() + ($ttl ?? $this->defaultTtl),
-            'content'    => $value,
+            'content' => $value,
         ];
 
         if (file_put_contents($this->getFilePath($key), serialize($data), LOCK_EX) === false) {
-            throw new FrameworkException(
+            throw new CacheException(
                 title: 'Cache Write Error',
-                message: "Impossible d'écrire le cache pour la clé '{$key}'.",
+                message: sprintf("Unable to write cache for key '%s'.", $key),
                 code: 500
             );
         }
@@ -53,9 +54,9 @@ class Cache
         $raw = file_get_contents($file);
 
         if ($raw === false) {
-            throw new FrameworkException(
+            throw new CacheException(
                 title: 'Cache Read Error',
-                message: "Impossible de lire le cache pour la clé '{$key}'.",
+                message: sprintf("Unable to read cache for key '%s'.", $key),
                 code: 500
             );
         }
@@ -75,9 +76,9 @@ class Cache
         $file = $this->getFilePath($key);
 
         if (file_exists($file) && !unlink($file)) {
-            throw new FrameworkException(
+            throw new CacheException(
                 title: 'Cache Delete Error',
-                message: "Impossible de supprimer le cache pour la clé '{$key}'.",
+                message: sprintf("Unable to delete cache for key '%s'.", $key),
                 code: 500
             );
         }
@@ -89,9 +90,9 @@ class Cache
 
         foreach ($files as $file) {
             if (is_file($file) && !unlink($file)) {
-                throw new FrameworkException(
+                throw new CacheException(
                     title: 'Cache Clear Error',
-                    message: "Impossible de supprimer le fichier de cache '{$file}'.",
+                    message: sprintf("Unable to delete cache file '%s'.", $file),
                     code: 500
                 );
             }
