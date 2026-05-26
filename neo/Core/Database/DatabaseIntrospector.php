@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database;
 
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 use PDO;
@@ -23,9 +24,9 @@ class DatabaseIntrospector
             $stmt = $this->pdo->query("SHOW TABLES");
 
             if ($stmt === false) {
-                throw new FrameworkException(
+                throw new DatabaseException(
                     title: 'Database Introspection Error',
-                    message: "Impossible de récupérer la liste des tables.",
+                    message: "Unable to retrieve the list of tables.",
                     code: 500
                 );
             }
@@ -37,9 +38,9 @@ class DatabaseIntrospector
 
             return $tables;
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Database Introspection Error',
-                message: "Erreur lors de la récupération des tables : " . $e->getMessage(),
+                message: sprintf("Error retrieving tables: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -55,20 +56,20 @@ class DatabaseIntrospector
             $columns = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $columns[] = [
-                    'name'     => $row['Field'],
-                    'type'     => $row['Type'],
+                    'name' => $row['Field'],
+                    'type' => $row['Type'],
                     'nullable' => $row['Null'] === 'YES',
-                    'default'  => $row['Default'],
-                    'key'      => $row['Key'],
-                    'extra'    => $row['Extra'],
+                    'default' => $row['Default'],
+                    'key' => $row['Key'],
+                    'extra' => $row['Extra'],
                 ];
             }
 
             return $columns;
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Database Introspection Error',
-                message: "Erreur lors de la récupération des colonnes de '{$table}' : " . $e->getMessage(),
+                message: sprintf("Error retrieving columns for table '%s': %s", $table, $e->getMessage()),
                 code: 500,
                 previous: $e
             );
