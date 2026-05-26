@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Security\Auth;
 
 use Neo\Core\Error\Exception\FrameworkException;
+use Neo\Core\Security\Auth\Exception\JwtException;
 
 final class JwtManager
 {
@@ -14,9 +15,9 @@ final class JwtManager
     public function __construct(string $secret, int $expiration = 3600, string $algorithm = 'HS256')
     {
         if (empty($secret)) {
-            throw new FrameworkException(
+            throw new JwtException(
                 title: 'JWT Configuration Error',
-                message: "La clé secrète JWT ne peut pas être vide.",
+                message: "The JWT secret key cannot be empty.",
                 code: 500
             );
         }
@@ -48,9 +49,9 @@ final class JwtManager
     {
         $parts = explode('.', $token);
         if (count($parts) !== 3) {
-            throw new FrameworkException(
+            throw new JwtException(
                 title: 'JWT Error',
-                message: "Format du token invalide",
+                message: "Invalid token format.",
                 code: 401
             );
         }
@@ -62,9 +63,9 @@ final class JwtManager
         );
 
         if (!hash_equals($expectedSignature, $signature)) {
-            throw new FrameworkException(
+            throw new JwtException(
                 title: 'JWT Error',
-                message: "Signature du token invalide.",
+                message: "Invalid token signature.",
                 code: 401
             );
         }
@@ -72,17 +73,17 @@ final class JwtManager
         $data = json_decode($this->base64UrlEncode($payload), true);
 
         if (!$data) {
-            throw new FrameworkException(
+            throw new JwtException(
                 title: 'JWT Error',
-                message: "Payload du token invalide.",
+                message: "Invalid token payload.",
                 code: 401
             );
         }
 
         if (isset($data['exp']) && $data['exp'] < time()) {
-            throw new FrameworkException(
+            throw new JwtException(
                 title: 'JWT Error',
-                message: "Le token a expiré.",
+                message: "The token has expired.",
                 code: 401
             );
         }
@@ -95,7 +96,7 @@ final class JwtManager
         try {
             $this->decode($token);
             return true;
-        } catch (FrameworkException) {
+        } catch (JwtException) {
             return false;
         }
     }
