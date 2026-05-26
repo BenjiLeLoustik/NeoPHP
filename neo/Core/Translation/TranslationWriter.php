@@ -2,6 +2,8 @@
 
 namespace Neo\Core\Translation;
 
+use Neo\Core\Translation\Exception\TranslationException;
+
 final class TranslationWriter
 {
     private TranslationLoader $loader;
@@ -27,9 +29,9 @@ final class TranslationWriter
             $translations = require $filePath;
 
             if (!is_array($translations)) {
-                throw new \Neo\Core\Translation\Exception\TranslationException(
+                throw new TranslationException(
                     title: 'Translation File Error',
-                    message: "Le fichier de traduction '{$filePath}' doit retourner un tableau.",
+                    message: sprintf("Translation file '%s' must return an array.", $filePath),
                     code: 500
                 );
             }
@@ -49,17 +51,17 @@ final class TranslationWriter
         $dir = dirname($filePath);
 
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
-            throw new \Neo\Core\Translation\Exception\TranslationException(
+            throw new TranslationException(
                 title: 'Translation Directory Error',
-                message: "Impossible de créer le répertoire de traduction '{$dir}'.",
+                message: sprintf("Unable to create translation directory '%s'.", $dir),
                 code: 500
             );
         }
 
         if (file_put_contents($filePath, "<?php\n\nreturn [\n];\n") === false) {
-            throw new \Neo\Core\Translation\Exception\TranslationException(
+            throw new TranslationException(
                 title: 'Translation File Error',
-                message: "Impossible de créer le fichier de traduction '{$filePath}'.",
+                message: sprintf("Unable to create translation file '%s'.", $filePath),
                 code: 500
             );
         }
@@ -103,9 +105,9 @@ final class TranslationWriter
         $content = "<?php\n\nreturn " . $this->arrayToPhp($translations) . ";\n";
 
         if (file_put_contents($filePath, $content) === false) {
-            throw new \Neo\Core\Translation\Exception\TranslationException(
+            throw new TranslationException(
                 title: 'Translation Write Error',
-                message: "Impossible d'écrire dans le fichier de traduction '{$filePath}'.",
+                message: sprintf("Unable to write to translation file '%s'.", $filePath),
                 code: 500
             );
         }
