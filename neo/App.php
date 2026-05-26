@@ -40,9 +40,9 @@ use Neo\Core\Translation\TranslationRegistry;
 use Neo\Core\Translation\TranslationTwigExtension;
 use Neo\Core\Utils\Cache;
 use Neo\Core\Utils\Config;
-use Neo\Core\Utils\Extension\StringExtension;
 use Neo\Core\Utils\Logger;
 use Neo\Core\Utils\Mailer;
+use Neo\Core\Utils\StringExtension;
 use Neo\Core\View\View;
 
 class App
