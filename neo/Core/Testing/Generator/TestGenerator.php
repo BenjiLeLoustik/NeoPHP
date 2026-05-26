@@ -7,6 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Testing\Context\TestClassContext;
 use Neo\Core\Testing\Enum\TestType;
+use Neo\Core\Testing\Exception\TestingException;
 use Neo\Core\Testing\Scanner\TestScanner;
 use Neo\Core\Testing\Template\DatabaseTestTemplate;
 use Neo\Core\Testing\Template\FeatureTestTemplate;
@@ -67,17 +68,17 @@ class TestGenerator
             }
 
             if (!is_dir($targetDir) && !mkdir($targetDir, 0777, true) && !is_dir($targetDir)) {
-                throw new FrameworkException(
+                throw new TestingException(
                     title: 'Test Generator Error',
-                    message: "Cannot create directory '{$targetDir}'.",
+                    message: sprintf("Cannot create directory '%s'.", $targetDir),
                     code: 500
                 );
             }
 
             if (file_put_contents($file, $content) === false) {
-                throw new FrameworkException(
+                throw new TestingException(
                     title: 'Test Generator Error',
-                    message: "Cannot write test file '{$file}'.",
+                    message: sprintf("Cannot write test file '%s'.", $file),
                     code: 500
                 );
             }
