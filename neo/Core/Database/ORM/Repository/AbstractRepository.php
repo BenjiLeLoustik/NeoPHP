@@ -5,9 +5,9 @@ namespace Neo\Core\Database\ORM\Repository;
 
 use Neo\Core\Database\Builder\PaginationBuilder;
 use Neo\Core\Database\DatabaseConnection;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Database\Builder\QueryBuilder;
-use Neo\Core\Error\Exception\FrameworkException;
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -32,40 +32,36 @@ abstract class AbstractRepository
         }
 
         if (!isset($this->modelClass)) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Repository Configuration Error',
                 message: 'Repository must define $modelClass.',
                 code: 500
             );
         }
 
-        $this->pdo        = DatabaseConnection::getPdo();
-        $this->table      = $this->modelClass::getTable();
+        $this->pdo = DatabaseConnection::getPdo();
+        $this->table = $this->modelClass::getTable();
         $this->primaryKey = $this->modelClass::getPrimaryKey();
-        $this->builder    = (new QueryBuilder())->table($this->table);
+        $this->builder = (new QueryBuilder())->table($this->table);
     }
 
     protected function resetState(): void
     {
         $this->includeTrashed = false;
-        $this->onlyTrashed    = false;
-        $this->with           = [];
-        $this->builder        = (new QueryBuilder())->table($this->table);
+        $this->onlyTrashed = false;
+        $this->with = [];
+        $this->builder = (new QueryBuilder())->table($this->table);
     }
-
-    /* ==========================================================
-     | Eager loading API
-     * ========================================================== */
 
     public function with(string|array $relations): self
     {
         foreach ((array)$relations as $relation) {
             $parts = explode('.', $relation);
-            $root  = array_shift($parts);
+            $root = array_shift($parts);
 
-            $this->with[$root]['nested'][]      = $parts;
-            $this->with[$root]['withTrashed']  ??= false;
-            $this->with[$root]['onlyTrashed']  ??= false;
+            $this->with[$root]['nested'][] = $parts;
+            $this->with[$root]['withTrashed'] ??= false;
+            $this->with[$root]['onlyTrashed'] ??= false;
         }
 
         return $this;
@@ -89,21 +85,17 @@ abstract class AbstractRepository
         return $this;
     }
 
-    /* ==========================================================
-     | Soft delete (MODEL)
-     * ========================================================== */
-
     public function withTrashedModels(): self
     {
         $this->includeTrashed = true;
-        $this->onlyTrashed    = false;
+        $this->onlyTrashed = false;
         return $this;
     }
 
     public function onlyTrashedModels(): self
     {
         $this->includeTrashed = true;
-        $this->onlyTrashed    = true;
+        $this->onlyTrashed = true;
         return $this;
     }
 
@@ -157,10 +149,6 @@ abstract class AbstractRepository
         }
     }
 
-    /* ==========================================================
-     | Query Builder
-     * ========================================================== */
-
     public function qb(): QueryBuilder
     {
         $qb = (new QueryBuilder())->table($this->table);
@@ -182,10 +170,6 @@ abstract class AbstractRepository
     {
         return $this->qb();
     }
-
-    /* ==========================================================
-     | Finders
-     * ========================================================== */
 
     public function find(int|string $id): ?AbstractModel
     {
@@ -217,7 +201,7 @@ abstract class AbstractRepository
     public function findAll(?int $limit = null, ?int $offset = null): static
     {
         $qb = $this->qb();
-        if ($limit !== null)  $qb->limit($limit);
+        if ($limit !== null) $qb->limit($limit);
         if ($offset !== null) $qb->offset($offset);
 
         $this->builder = $qb;
@@ -240,8 +224,12 @@ abstract class AbstractRepository
         return $this;
     }
 
-    public function findBy(string $column, mixed $value, bool $single = true, ?int $limit = null): AbstractModel|null|static
-    {
+    public function findBy(
+        string $column,
+        mixed $value,
+        bool $single = true,
+        ?int $limit = null
+    ): AbstractModel|null|static {
         $qb = $this->qb()->where($column, '=', $value);
 
         if ($limit !== null) {
@@ -280,10 +268,6 @@ abstract class AbstractRepository
 
         return $this;
     }
-
-    /* ==========================================================
-     | Persistence
-     * ========================================================== */
 
     public function create(AbstractModel $model): AbstractModel
     {
@@ -359,19 +343,15 @@ abstract class AbstractRepository
         return $data;
     }
 
-    /* ==========================================================
-     | Raw SQL
-     * ========================================================== */
-
     public function query(string $sql, array $params = []): PDOStatement
     {
         try {
             $stmt = $this->pdo->prepare($sql);
 
             if ($stmt === false) {
-                throw new FrameworkException(
+                throw new DatabaseException(
                     title: 'Repository Query Error',
-                    message: "Impossible de préparer la requête : {$sql}",
+                    message: sprintf("Unable to prepare the query: %s", $sql),
                     code: 500
                 );
             }
@@ -379,18 +359,14 @@ abstract class AbstractRepository
             $stmt->execute($params);
             return $stmt;
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Repository Query Error',
-                message: "Erreur lors de l'exécution de la requête : " . $e->getMessage(),
+                message: sprintf("Error while executing the query: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
         }
     }
-
-    /* ==========================================================
-     | Eager Loader
-     * ========================================================== */
 
     private function buildWithTree(): array
     {
@@ -490,7 +466,7 @@ abstract class AbstractRepository
             foreach ($rel as $item) {
                 if ($item instanceof AbstractModel) {
                     $chainCopy = $chain;
-                    $cached    = $item->getRelationsCache()[$next] ?? '__not_set__';
+                    $cached = $item->getRelationsCache()[$next] ?? '__not_set__';
                     if ($cached === '__not_set__' || $cached === null || $cached === []) {
                         $item->loadRelation($next, false, false, true);
                     }
@@ -499,10 +475,6 @@ abstract class AbstractRepository
             }
         }
     }
-
-    /* ==========================================================
-     | Results helpers
-     * ========================================================== */
 
     public function getModels(): array
     {
@@ -516,7 +488,9 @@ abstract class AbstractRepository
 
     public function toArray(): array
     {
-        return array_map(fn(AbstractModel $m) => $m->toArray(), $this->lastResult ?? []);
+        return array_map(
+            fn(AbstractModel $m) => $m->toArray(), $this->lastResult ?? []
+        );
     }
 
     public function toList(): array
@@ -526,7 +500,7 @@ abstract class AbstractRepository
 
     public function paginate(int $perPage = 15, ?int $page = null): PaginationBuilder
     {
-        $page  = max(1, $page ?? (int)($_GET['page'] ?? 1));
+        $page = max(1, $page ?? (int)($_GET['page'] ?? 1));
         $total = (clone $this->builder)->count();
 
         $rows = $this->builder
@@ -541,16 +515,12 @@ abstract class AbstractRepository
         }
 
         return new PaginationBuilder(
-            items:       array_map(fn($model) => $model->toArray(), $this->lastResult),
-            total:       $total,
-            perPage:     $perPage,
+            items: array_map(fn($model) => $model->toArray(), $this->lastResult),
+            total: $total,
+            perPage: $perPage,
             currentPage: $page
         );
     }
-
-    /* ==========================================================
-     | Hydration
-     * ========================================================== */
 
     protected function hydrateSingle(array $row): AbstractModel
     {
@@ -572,7 +542,7 @@ abstract class AbstractRepository
         $targetClass = $this->modelClass::getRelationTarget($relationName);
 
         $this->lastResult = array_map(function ($row) use ($relationName, $targetClass) {
-            $model   = new $this->modelClass($row);
+            $model = new $this->modelClass($row);
             $relData = [];
 
             foreach ($row as $key => $value) {
