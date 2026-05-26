@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database\ORM\Model;
 
 use Neo\Core\Database\DatabaseConnection;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Attribute\HasOne;
 use Neo\Core\Database\ORM\Attribute\HasMany;
 use Neo\Core\Database\ORM\Attribute\BelongsTo;
@@ -37,7 +38,7 @@ abstract class AbstractModel
                 continue;
             }
 
-            $name  = $prop->getName();
+            $name = $prop->getName();
             $value = array_key_exists($name, $data) ? $data[$name]
                 : ($prop->isInitialized($this) ? $this->$name : null);
 
@@ -88,10 +89,6 @@ abstract class AbstractModel
         ];
     }
 
-    /* ==========================================================
-     | Identity Map
-     * ========================================================== */
-
     public function registerIdentity(): void
     {
         if (!$this->trackIdentity) return;
@@ -114,10 +111,6 @@ abstract class AbstractModel
     {
         unset(self::$instanceCache[static::class . ':' . $id]);
     }
-
-    /* ==========================================================
-     | Magic access
-     * ========================================================== */
 
     public function __get(string $name): mixed
     {
@@ -154,10 +147,6 @@ abstract class AbstractModel
         return $this->timestamps;
     }
 
-    /* ==========================================================
-     | Table / PK
-     * ========================================================== */
-
     public static function getTable(): string
     {
         return static::$table
@@ -168,10 +157,6 @@ abstract class AbstractModel
     {
         return static::$primaryKey;
     }
-
-    /* ==========================================================
-     | Relations metadata
-     * ========================================================== */
 
     public function getRelations(): array
     {
@@ -206,10 +191,6 @@ abstract class AbstractModel
         return isset($this->getRelations()[$name]);
     }
 
-    /* ==========================================================
-     | Soft delete helpers
-     * ========================================================== */
-
     protected function filterTrashed(array $items, bool $include, bool $only): array
     {
         return array_values(array_filter($items, function ($item) use ($include, $only) {
@@ -221,10 +202,6 @@ abstract class AbstractModel
             return true;
         }));
     }
-
-    /* ==========================================================
-     | Relation loader
-     * ========================================================== */
 
     public static function getRelationTarget(string $relationName): ?string
     {
@@ -251,7 +228,7 @@ abstract class AbstractModel
             return $this->relationsCache[$name];
         }
 
-        $pk       = static::getPrimaryKey();
+        $pk = static::getPrimaryKey();
         $guardKey = static::class . ':' . ($this->$pk ?? spl_object_id($this)) . ':' . $name;
 
         if (!$forceReload && isset(self::$loadingGuard[$guardKey])) {
@@ -268,8 +245,8 @@ abstract class AbstractModel
             }
 
             $relation = $relations[$name];
-            $pdo      = DatabaseConnection::getPdo();
-            $where    = $onlyTrashed
+            $pdo = DatabaseConnection::getPdo();
+            $where = $onlyTrashed
                 ? 'deleted_at IS NOT NULL'
                 : ($includeTrashed ? '1=1' : 'deleted_at IS NULL');
 
@@ -283,7 +260,7 @@ abstract class AbstractModel
 
                     $stmt = $pdo->prepare("SELECT * FROM {$relation->target::getTable()} WHERE {$relation->target::getPrimaryKey()} = ? AND $where LIMIT 1");
                     $stmt->execute([$fk]);
-                    $row    = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $row = $stmt->fetch(PDO::FETCH_ASSOC);
                     $result = $row ? $relation->target::hydrateRow($row) : null;
 
                     $this->relationsCache[$name] = $result;
@@ -293,7 +270,7 @@ abstract class AbstractModel
                 if ($relation instanceof HasOne) {
                     $stmt = $pdo->prepare("SELECT * FROM {$relation->target::getTable()} WHERE {$relation->foreignKey} = ? AND $where LIMIT 1");
                     $stmt->execute([$this->{$relation->localKey}]);
-                    $row    = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $row = $stmt->fetch(PDO::FETCH_ASSOC);
                     $result = $row ? $relation->target::hydrateRow($row) : null;
 
                     $this->relationsCache[$name] = $result;
@@ -329,9 +306,9 @@ abstract class AbstractModel
                     return $objs;
                 }
             } catch (PDOException $e) {
-                throw new FrameworkException(
+                throw new DatabaseException(
                     title: 'Relation Load Error',
-                    message: "Erreur lors du chargement de la relation '{$name}' sur " . static::class . ' : ' . $e->getMessage(),
+                    message: sprintf("Error while loading relation '%s' on %s: %s", $name, static::class, $e->getMessage()),
                     code: 500,
                     previous: $e
                 );
@@ -349,10 +326,6 @@ abstract class AbstractModel
     {
         return new static($row);
     }
-
-    /* ==========================================================
-     | Relation loading helpers
-     * ========================================================== */
 
     public function loadRelations(array $relations): void
     {
@@ -373,7 +346,7 @@ abstract class AbstractModel
         int $depth = 0,
         int $maxDepth = 5,
     ): void {
-        $pk  = static::getPrimaryKey();
+        $pk = static::getPrimaryKey();
         $key = static::class . ':' . ($this->$pk ?? spl_object_id($this));
 
         if (isset($loaded[$key]) || $depth >= $maxDepth) return;
@@ -432,10 +405,6 @@ abstract class AbstractModel
         return $this;
     }
 
-    /* ==========================================================
-     | Serialization
-     * ========================================================== */
-
     public function toArray(
         array $stack = [],
         int $depth = 0,
@@ -443,7 +412,7 @@ abstract class AbstractModel
         bool $includeRelations = true,
         bool $autoLoadMissing = false
     ): array {
-        $pk    = static::getPrimaryKey();
+        $pk = static::getPrimaryKey();
         $objId = spl_object_hash($this);
 
         if (isset($stack[$objId]) || $depth >= $maxDepth) {
@@ -451,7 +420,7 @@ abstract class AbstractModel
         }
 
         $stack[$objId] = true;
-        $result        = [];
+        $result = [];
 
         foreach ($this->data as $name => $value) {
             if (in_array($name, $this->getInternalProperties(), true)) continue;
@@ -504,10 +473,6 @@ abstract class AbstractModel
         return $this;
     }
 
-    /* ==========================================================
-     | Persistence
-     * ========================================================== */
-
     public function fill(array $data): void
     {
         $relations = array_keys($this->getRelations());
@@ -529,9 +494,9 @@ abstract class AbstractModel
     public function save(): bool
     {
         try {
-            $pdo   = DatabaseConnection::getPdo();
-            $data  = $this->toDatabase();
-            $pk    = static::getPrimaryKey();
+            $pdo = DatabaseConnection::getPdo();
+            $data = $this->toDatabase();
+            $pk = static::getPrimaryKey();
             $table = static::getTable();
 
             foreach ($this->getRelations() as $relName => $_) {
@@ -542,9 +507,9 @@ abstract class AbstractModel
             if (!isset($columnsCache[$table])) {
                 $stmt = $pdo->query("DESCRIBE $table");
                 if ($stmt === false) {
-                    throw new FrameworkException(
+                    throw new DatabaseException(
                         title: 'Model Save Error',
-                        message: "Impossible de décrire la table '{$table}'.",
+                        message: sprintf("Unable to describe table '%s'.", $table),
                         code: 500
                     );
                 }
@@ -552,8 +517,8 @@ abstract class AbstractModel
             }
 
             $tableColumns = $columnsCache[$table];
-            $isInsert     = empty($this->$pk);
-            $now          = (new \DateTime())->format('Y-m-d H:i:s');
+            $isInsert = empty($this->$pk);
+            $now = (new \DateTime())->format('Y-m-d H:i:s');
 
             if ($isInsert) {
                 if (in_array('created_at', $tableColumns) && !isset($data['created_at'])) $data['created_at'] = $now;
@@ -564,13 +529,13 @@ abstract class AbstractModel
 
             if ($isInsert) {
                 unset($data[$pk]);
-                $columns      = implode(',', array_keys($data));
+                $columns = implode(',', array_keys($data));
                 $placeholders = implode(',', array_fill(0, count($data), '?'));
-                $stmt         = $pdo->prepare("INSERT INTO $table ($columns) VALUES ($placeholders)");
+                $stmt = $pdo->prepare("INSERT INTO $table ($columns) VALUES ($placeholders)");
                 $stmt->execute(array_values($data));
                 $this->$pk = (int) $pdo->lastInsertId();
             } else {
-                $set  = implode(', ', array_map(fn($col) => "$col = ?", array_keys($data)));
+                $set = implode(', ', array_map(fn($col) => "$col = ?", array_keys($data)));
                 $stmt = $pdo->prepare("UPDATE $table SET $set WHERE $pk = ?");
                 $stmt->execute([...array_values($data), $this->$pk]);
             }
@@ -581,9 +546,9 @@ abstract class AbstractModel
         } catch (FrameworkException $e) {
             throw $e;
         } catch (\Throwable $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Model Save Error',
-                message: "Erreur lors de la sauvegarde du modèle '" . static::class . "' : " . $e->getMessage(),
+                message: sprintf("Error while saving model '%s': %s", static::class, $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -595,9 +560,9 @@ abstract class AbstractModel
         $relations = $this->getRelations();
 
         if (!isset($relations[$relationName])) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Model Relation Error',
-                message: "La relation '{$relationName}' n'existe pas sur " . static::class . '.',
+                message: sprintf("Relation '%s' does not exist on %s.", $relationName, static::class),
                 code: 500
             );
         }
@@ -605,9 +570,9 @@ abstract class AbstractModel
         $relation = $relations[$relationName];
 
         if (!$relation instanceof HasMany) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Model Relation Error',
-                message: "saveRelation() ne supporte que les relations HasMany. '{$relationName}' n'est pas HasMany.",
+                message: sprintf("saveRelation() only supports HasMany relations. '%s' is not HasMany.", $relationName),
                 code: 500
             );
         }
@@ -684,7 +649,7 @@ abstract class AbstractModel
                 $data['updated_at'] = $now;
 
                 $setParts = array_map(fn($col) => "{$col} = ?", array_keys($data));
-                $stmt     = $pdo->prepare(
+                $stmt = $pdo->prepare(
                     "UPDATE {$table} SET " . implode(', ', $setParts) . " WHERE {$targetPk} = ?"
                 );
                 $stmt->execute([...array_values($data), $pk]);
@@ -697,7 +662,7 @@ abstract class AbstractModel
                 $data['created_at'] ??= $now;
                 $data['updated_at'] ??= $now;
 
-                $columns      = implode(', ', array_keys($data));
+                $columns = implode(', ', array_keys($data));
                 $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
                 $stmt = $pdo->prepare(
@@ -722,7 +687,7 @@ abstract class AbstractModel
         }
 
         $table = $target::getTable();
-        $stmt  = $pdo->prepare("SHOW COLUMNS FROM {$table} LIKE 'deleted_at'");
+        $stmt = $pdo->prepare("SHOW COLUMNS FROM {$table} LIKE 'deleted_at'");
         $stmt->execute();
 
         return $cache[$target] = (bool)$stmt->fetch();
@@ -730,8 +695,8 @@ abstract class AbstractModel
 
     public function toDatabase(): array
     {
-        $data      = [];
-        $ref       = new \ReflectionObject($this);
+        $data = [];
+        $ref = new \ReflectionObject($this);
         $relations = array_keys($this->getRelations());
 
         foreach ($ref->getProperties() as $prop) {
@@ -755,16 +720,12 @@ abstract class AbstractModel
         return $data;
     }
 
-    /* ==========================================================
-     | Casting
-     * ========================================================== */
-
     protected function castValue(\ReflectionProperty $prop, mixed $value): mixed
     {
         $type = $prop->getType();
         if (!$type instanceof \ReflectionNamedType) return $value;
 
-        $name     = $type->getName();
+        $name = $type->getName();
         $nullable = $type->allowsNull();
 
         if ($name === \DateTime::class) {
@@ -779,21 +740,21 @@ abstract class AbstractModel
 
         if ($value === null) {
             return $nullable ? null : match ($name) {
-                'int'    => 0,
-                'float'  => 0.0,
-                'bool'   => false,
+                'int' => 0,
+                'float' => 0.0,
+                'bool' => false,
                 'string' => '',
-                'array'  => [],
-                default  => null,
+                'array' => [],
+                default => null,
             };
         }
 
         return match ($name) {
-            'int'    => (int) $value,
-            'float'  => (float) $value,
-            'bool'   => (bool) $value,
+            'int' => (int) $value,
+            'float' => (float) $value,
+            'bool' => (bool) $value,
             'string' => (string) $value,
-            default  => $value,
+            default => $value,
         };
     }
 
@@ -815,13 +776,13 @@ abstract class AbstractModel
     ): void {
         if (empty($models)) return;
 
-        $first     = $models[0];
+        $first = $models[0];
         $relations = $first->getRelations();
 
         if (!isset($relations[$relation])) return;
 
-        $rel   = $relations[$relation];
-        $pdo   = DatabaseConnection::getPdo();
+        $rel = $relations[$relation];
+        $pdo = DatabaseConnection::getPdo();
         $where = self::buildSoftDeleteWhere($includeTrashed, $onlyTrashed);
 
         $syncWithIdentityMap = function (self $obj): self {
@@ -830,9 +791,9 @@ abstract class AbstractModel
 
         try {
             if ($rel instanceof HasMany || $rel instanceof HasOne) {
-                $localKey   = $rel->localKey;
+                $localKey = $rel->localKey;
                 $foreignKey = $rel->foreignKey;
-                $target     = $rel->target;
+                $target = $rel->target;
 
                 $ids = array_values(array_unique(array_filter(
                     array_map(fn($m) => $m->$localKey, $models)
@@ -841,13 +802,13 @@ abstract class AbstractModel
                 if (!$ids) return;
 
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
-                $stmt         = $pdo->prepare("SELECT * FROM {$target::getTable()} WHERE $foreignKey IN ($placeholders) AND $where");
+                $stmt = $pdo->prepare("SELECT * FROM {$target::getTable()} WHERE $foreignKey IN ($placeholders) AND $where");
                 $stmt->execute($ids);
-                $rows    = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $grouped = [];
 
                 foreach ($rows as $row) {
-                    $obj                          = $syncWithIdentityMap($target::hydrateRow($row));
+                    $obj = $syncWithIdentityMap($target::hydrateRow($row));
                     $grouped[$row[$foreignKey]][] = $obj;
                 }
 
@@ -863,8 +824,8 @@ abstract class AbstractModel
 
             if ($rel instanceof BelongsTo) {
                 $foreignKey = $rel->foreignKey;
-                $target     = $rel->target;
-                $targetPk   = $target::getPrimaryKey();
+                $target = $rel->target;
+                $targetPk = $target::getPrimaryKey();
 
                 $ids = array_values(array_unique(array_filter(
                     array_map(fn($m) => $m->$foreignKey, $models)
@@ -873,13 +834,13 @@ abstract class AbstractModel
                 if (!$ids) return;
 
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
-                $stmt         = $pdo->prepare("SELECT * FROM {$target::getTable()} WHERE $targetPk IN ($placeholders) AND $where");
+                $stmt = $pdo->prepare("SELECT * FROM {$target::getTable()} WHERE $targetPk IN ($placeholders) AND $where");
                 $stmt->execute($ids);
-                $rows   = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $mapped = [];
 
                 foreach ($rows as $row) {
-                    $obj              = $syncWithIdentityMap($target::hydrateRow($row));
+                    $obj = $syncWithIdentityMap($target::hydrateRow($row));
                     $mapped[$row[$targetPk]] = $obj;
                 }
 
@@ -891,12 +852,12 @@ abstract class AbstractModel
             }
 
             if ($rel instanceof BelongsToMany) {
-                $localKey       = $rel->localKey;
-                $target         = $rel->target;
-                $pivotTable     = $rel->pivotTable;
-                $pivotLocalKey  = $rel->pivotLocalKey;
+                $localKey = $rel->localKey;
+                $target = $rel->target;
+                $pivotTable = $rel->pivotTable;
+                $pivotLocalKey = $rel->pivotLocalKey;
                 $pivotTargetKey = $rel->pivotTargetKey;
-                $targetPk       = $target::getPrimaryKey();
+                $targetPk = $target::getPrimaryKey();
 
                 $ids = array_values(array_unique(array_filter(
                     array_map(fn($m) => $m->$localKey, $models)
@@ -905,7 +866,7 @@ abstract class AbstractModel
                 if (!$ids) return;
 
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
-                $sql          = "
+                $sql = "
                     SELECT t.*, p.$pivotLocalKey AS pivot_local
                     FROM {$target::getTable()} t
                     INNER JOIN $pivotTable p ON p.$pivotTargetKey = t.$targetPk
@@ -913,13 +874,13 @@ abstract class AbstractModel
                     AND $where
                 ";
 
-                $stmt    = $pdo->prepare($sql);
+                $stmt = $pdo->prepare($sql);
                 $stmt->execute($ids);
-                $rows    = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $grouped = [];
 
                 foreach ($rows as $row) {
-                    $obj                           = $syncWithIdentityMap($target::hydrateRow($row));
+                    $obj = $syncWithIdentityMap($target::hydrateRow($row));
                     $grouped[$row['pivot_local']][] = $obj;
                 }
 
@@ -931,9 +892,9 @@ abstract class AbstractModel
             }
 
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Eager Load Error',
-                message: "Erreur lors du chargement eager de la relation '{$relation}' : " . $e->getMessage(),
+                message: sprintf("Error while eager loading relation '%s': %s", $relation, $e->getMessage()),
                 code: 500,
                 previous: $e
             );
