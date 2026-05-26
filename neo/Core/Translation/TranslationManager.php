@@ -43,7 +43,11 @@ final class TranslationManager implements TranslatorInterface
         if (!empty($availableLocales) && !isset($availableLocales[$locale])) {
             throw new TranslationException(
                 title: 'Invalid Locale',
-                message: "La locale '{$locale}' n'est pas disponible. Locales acceptées : " . implode(', ', array_keys($availableLocales)) . '.',
+                message: sprintf(
+                    "Locale '%s' is not available. Accepted locales: %s.",
+                    $locale,
+                    implode(', ', array_keys($availableLocales))
+                ),
                 code: 400
             );
         }
@@ -64,7 +68,7 @@ final class TranslationManager implements TranslatorInterface
         if (!$this->isValidKey($key)) {
             throw new TranslationException(
                 title: 'Invalid Translation Key',
-                message: "La clé de traduction '{$key}' est invalide. Format attendu : 'fichier.clé'.",
+                message: sprintf("Translation key '%s' is invalid. Expected format: 'file.key'.", $key),
                 code: 500
             );
         }
@@ -131,9 +135,9 @@ final class TranslationManager implements TranslatorInterface
     }
 
     public function registerKeyIfNotExists(
-        string  $key,
+        string $key,
         ?string $value = null,
-        bool    $forceUpdate = false
+        bool $forceUpdate = false
     ): void {
         if (!$this->enabled || !str_contains($key, '.')) {
             return;
@@ -142,14 +146,14 @@ final class TranslationManager implements TranslatorInterface
         if (!$this->isValidKey($key)) {
             throw new TranslationException(
                 title: 'Invalid Translation Key',
-                message: "La clé de traduction '{$key}' est invalide. Format attendu : 'fichier.clé'.",
+                message: sprintf("Translation key '%s' is invalid. Expected format: 'file.key'.", $key),
                 code: 500
             );
         }
 
         [$file, $path] = explode('.', $key, 2);
-        $segments      = explode('.', $path);
-        $translations  = $this->loader->load($this->locale, $file);
+        $segments = explode('.', $path);
+        $translations = $this->loader->load($this->locale, $file);
 
         $existingValue = $translations;
         foreach ($segments as $segment) {
