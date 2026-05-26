@@ -34,7 +34,7 @@ class AuthCollector implements CollectorInterface
             ];
         }
 
-        $pk         = $user::getPrimaryKey();
+        $pk = $user::getPrimaryKey();
         $attributes = $user->toArray();
 
         foreach (['password', 'remember_token', 'token'] as $sensitive) {
