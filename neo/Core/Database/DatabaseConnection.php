@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database;
 
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\ORM;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
@@ -54,9 +55,9 @@ class DatabaseConnection
                 $orm->generate();
 
             } catch (PDOException $e) {
-                throw new FrameworkException(
-                    title: "Database error",
-                    message: "Database connection failed: " . $e->getMessage(),
+                throw new DatabaseException(
+                    title: "Database Connection Error",
+                    message: sprintf("Database connection failed: %s", $e->getMessage()),
                     code: $e->getCode(),
                 );
             }
@@ -73,9 +74,9 @@ class DatabaseConnection
     public static function getPdo(): PDO
     {
         if (self::$connection === null) {
-            throw new FrameworkException(
-                title: "Database error",
-                message: "Database is not connected. Call DatabaseConnection::connect() first.",
+            throw new DatabaseException(
+                title: "Database Not Connected",
+                message: "No active database connection. Call DatabaseConnection::connect() first.",
                 code: 500
             );
         }
