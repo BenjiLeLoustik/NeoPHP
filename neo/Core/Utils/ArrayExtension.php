@@ -37,13 +37,13 @@ class ArrayExtension
         return empty($array) ? $default : array_values($array)[count($array) - 1];
     }
 
-    public function flatten(array $array, int $depth = INF): array
+    public function flatten(array $array, ?int $depth = null): array
     {
         $result = [];
 
         foreach ($array as $item) {
-            if (is_array($item) && $depth > 0) {
-                $result = array_merge($result, $this->flatten($item, $depth - 1));
+            if (is_array($item) && ($depth === null || $depth > 0)) {
+                $result = array_merge($result, $this->flatten($item, $depth === null ? null : $depth - 1));
             } else {
                 $result[] = $item;
             }
