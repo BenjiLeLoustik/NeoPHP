@@ -63,23 +63,23 @@ class View
         try {
             return $this->twig->render($template, $params);
         } catch (\Twig\Error\LoaderError $e) {
-            throw new FrameworkException(
+            throw new ViewException(
                 title: 'Template Not Found',
-                message: "Le template '{$template}' est introuvable : " . $e->getMessage(),
+                message: sprintf("Template '%s' not found: %s", $template, $e->getMessage()),
                 code: 404,
                 previous: $e
             );
         } catch (\Twig\Error\SyntaxError $e) {
-            throw new FrameworkException(
+            throw new ViewException(
                 title: 'Template Syntax Error',
-                message: "Erreur de syntaxe dans le template '{$template}' : " . $e->getMessage(),
+                message: sprintf("Syntax error in template '%s': %s", $template, $e->getMessage()),
                 code: 500,
                 previous: $e
             );
         } catch (\Twig\Error\RuntimeError $e) {
-            throw new FrameworkException(
+            throw new ViewException(
                 title: 'Template Runtime Error',
-                message: "Erreur d'exécution dans le template '{$template}' : " . $e->getMessage(),
+                message: sprintf("Runtime error in template '%s': %s", $template, $e->getMessage()),
                 code: 500,
                 previous: $e
             );
