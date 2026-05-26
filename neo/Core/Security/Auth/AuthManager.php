@@ -8,6 +8,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Client\Session;
 use Neo\Core\Http\Request;
+use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Guard\GuardInterface;
 use Neo\Core\Security\Auth\Guard\SessionGuard;
 use Neo\Core\Security\Auth\Guard\TokenGuard;
@@ -33,9 +34,9 @@ class AuthManager
         }
 
         if (empty($this->config['model'])) {
-            throw new FrameworkException(
+            throw new AuthException(
                 title: 'Auth Configuration Error',
-                message: "La configuration 'auth.model' est manquante dans app.config.php.",
+                message: "The 'auth.model' configuration is missing in app.config.php.",
                 code: 500
             );
         }
@@ -84,9 +85,9 @@ class AuthManager
         $this->ensureEnabled();
 
         if (!$this->guard instanceof TokenGuard) {
-            throw new FrameworkException(
+            throw new AuthException(
                 title: 'Auth Error',
-                message: "generateToken() n'est disponible qu'avec le guard 'token'.",
+                message: "generateToken() is only available with the 'token' guard.",
                 code: 500
             );
         }
@@ -104,14 +105,14 @@ class AuthManager
             'token' => new TokenGuard(
                 $this->container->get(Request::class),
                 new JwtManager(
-                    $options['secret']     ?? '',
+                    $options['secret'] ?? '',
                     $options['expiration'] ?? 3600,
                     $options['algorithm']  ?? 'HS256'
                 ),
                 $this->container->get(PasswordManager::class),
                 $this->config['model'],
                 $this->config['identifier'] ?? 'email',
-                $this->config['password']   ?? 'password',
+                $this->config['password'] ?? 'password',
                 $role
             ),
             default => new SessionGuard(
@@ -119,7 +120,7 @@ class AuthManager
                 $this->container->get(PasswordManager::class),
                 $this->config['model'],
                 $this->config['identifier'] ?? 'email',
-                $this->config['password']   ?? 'password',
+                $this->config['password'] ?? 'password',
                 $role
             ),
         };
@@ -128,9 +129,9 @@ class AuthManager
     private function ensureEnabled(): void
     {
         if ($this->guard === null) {
-            throw new FrameworkException(
+            throw new AuthException(
                 title: 'Auth Disabled',
-                message: "Le système d'authentification est désactivé dans app.config.php.",
+                message: "The authentication system is disabled in app.config.php.",
                 code: 500
             );
         }
