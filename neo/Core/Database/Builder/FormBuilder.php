@@ -3,16 +3,12 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Builder;
 
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Form\Form;
 use Neo\Core\Database\Form\FormField;
 use Neo\Core\Database\Form\Type\AbstractType;
 use Neo\Core\Database\Form\Type\TextType;
-use Neo\Core\Database\ORM\Attribute\BelongsTo;
-use Neo\Core\Database\ORM\Attribute\BelongsToMany;
-use Neo\Core\Database\ORM\Attribute\HasMany;
-use Neo\Core\Database\ORM\Attribute\HasOne;
 use Neo\Core\Database\ORM\Model\AbstractModel;
-use Neo\Core\Error\Exception\FrameworkException;
 
 class FormBuilder
 {
@@ -23,9 +19,9 @@ class FormBuilder
     {
         if (is_string($model)) {
             if (!class_exists($model)) {
-                throw new FrameworkException(
+                throw new DatabaseException(
                     title: 'Form Builder Error',
-                    message: "La classe '{$model}' n'existe pas.",
+                    message: sprintf("Class '%s' does not exist.", $model),
                     code: 500
                 );
             }
@@ -42,14 +38,14 @@ class FormBuilder
     public function add(string $name, string|AbstractType $type, array $options = []): self
     {
         $typeInstance = is_string($type) ? new $type() : $type;
-        $field        = new FormField($name, $typeInstance, $options);
+        $field = new FormField($name, $typeInstance, $options);
         $this->form->addField($field);
         return $this;
     }
 
     public function auto(array $fieldTypes = [], array $excludeFields = []): self
     {
-        $refClass     = new \ReflectionClass($this->model);
+        $refClass = new \ReflectionClass($this->model);
         $wantedFields = array_keys($fieldTypes);
 
         $defaultExcluded = [
@@ -81,7 +77,7 @@ class FormBuilder
             }
 
             $typeClass = TextType::class;
-            $options   = [
+            $options = [
                 'label' => ucfirst($name),
                 'value' => $prop->isInitialized($this->model) ? $prop->getValue($this->model) : null,
             ];
@@ -91,7 +87,7 @@ class FormBuilder
                     $typeClass = $fieldTypes[$name];
                 } elseif (is_array($fieldTypes[$name])) {
                     $typeClass = $fieldTypes[$name][0] ?? TextType::class;
-                    $options   = array_merge($options, $fieldTypes[$name][1] ?? []);
+                    $options = array_merge($options, $fieldTypes[$name][1] ?? []);
                 }
             }
 
