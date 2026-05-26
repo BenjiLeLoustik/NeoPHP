@@ -11,9 +11,9 @@ class RouteCollection
     {
         $path = '/' . trim($path, '/');
         $this->routes[$method][$path] = [
-            'name'         => $name,
-            'controller'   => $controller,
-            'action'       => $action,
+            'name' => $name,
+            'controller' => $controller,
+            'action' => $action,
             'requirements' => $requirements,
         ];
     }
