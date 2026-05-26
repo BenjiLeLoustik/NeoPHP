@@ -21,7 +21,7 @@ use Neo\Core\Security\Middleware\MiddlewareHandler;
 use Neo\Core\Security\PasswordManager;
 use Neo\Core\Utils\Cache;
 use Neo\Core\Utils\Config;
-use Neo\Core\Utils\Extension\StringExtension;
+use Neo\Core\Utils\StringExtension;
 use Neo\Core\Utils\Logger;
 use Neo\Core\Utils\Mailer;
 use Neo\Core\View\View;
@@ -166,9 +166,9 @@ abstract class AbstractController
         return $this->container->get(Cache::class);
     }
 
-    protected function slugify(string $string): string
+    protected function getString(): StringExtension
     {
-        return $this->container->get(StringExtension::class)->slugify($string);
+        return $this->container->get(StringExtension::class);
     }
 
     protected function dispatch(EventInterface $event): EventInterface
