@@ -81,7 +81,7 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
         $this->assertGreaterThan(
             0,
             $count,
-            "Aucune ligne trouvée dans '$table' avec les données : " . json_encode($data)
+            "No row found in '$table' with data: " . json_encode($data)
         );
     }
 
@@ -95,7 +95,7 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
         $this->assertSame(
             0,
             $count,
-            "Une ligne a été trouvée dans '$table' alors qu'elle ne devrait pas exister : " . json_encode($data)
+            "A row was found in '$table' but should not exist: " . json_encode($data)
         );
     }
 }
