@@ -6,6 +6,7 @@ namespace Neo\Core\View;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Utils\Config;
+use Neo\Core\View\Exception\ViewException;
 use Twig\Environment;
 use Twig\Extension\CoreExtension;
 use Twig\Extension\DebugExtension;
