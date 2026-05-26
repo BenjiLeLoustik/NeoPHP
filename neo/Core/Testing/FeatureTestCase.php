@@ -87,7 +87,7 @@ abstract class FeatureTestCase extends PHPUnitTestCase
         ];
 
         foreach ($headers as $name => $value) {
-            $key          = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
+            $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
             $server[$key] = $value;
         }
 
@@ -106,7 +106,7 @@ abstract class FeatureTestCase extends PHPUnitTestCase
         $this->assertSame(
             $expected,
             $response->getStatusCode(),
-            "Le status code attendu était $expected, obtenu : {$response->getStatusCode()}"
+            "Expected status code $expected, got: {$response->getStatusCode()}"
         );
     }
 
@@ -115,14 +115,14 @@ abstract class FeatureTestCase extends PHPUnitTestCase
         $this->assertStringContainsString(
             $text,
             $response->getContent(),
-            "La réponse ne contient pas le texte attendu : '$text'"
+            "The response does not contain the expected text: '$text'"
         );
     }
 
     protected function assertJsonKey(string $key, Response $response): void
     {
         $data = json_decode($response->getContent(), true);
-        $this->assertIsArray($data, "La réponse n'est pas un JSON valide.");
-        $this->assertArrayHasKey($key, $data, "La clé JSON '$key' est absente de la réponse.");
+        $this->assertIsArray($data, "The response is not valid JSON.");
+        $this->assertArrayHasKey($key, $data, "JSON key '$key' is missing from the response.");
     }
 }
