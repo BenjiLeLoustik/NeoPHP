@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM\Model;
 
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 
@@ -15,13 +16,13 @@ class ModelGenerator
     public function __construct(Container $container)
     {
         $this->container = $container;
-        $this->appName   = $this->container->get('application');
-        $this->modelDir  = $this->container->get('modelPath');
+        $this->appName = $this->container->get('application');
+        $this->modelDir = $this->container->get('modelPath');
 
         if (!is_dir($this->modelDir) && !mkdir($this->modelDir, 0777, true) && !is_dir($this->modelDir)) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Model Generator Error',
-                message: "Impossible de créer le répertoire des modèles '{$this->modelDir}'.",
+                message: sprintf("Unable to create the models directory '%s'.", $this->modelDir),
                 code: 500
             );
         }
@@ -30,7 +31,7 @@ class ModelGenerator
     public function generate(string $table, array $columns): string
     {
         $className = $this->convertToClassName($table);
-        $file      = "{$this->modelDir}/$className.php";
+        $file = "{$this->modelDir}/$className.php";
 
         $modelData = ['table' => $table, 'columns' => []];
 
@@ -50,8 +51,8 @@ PHP;
 
         $columnsFromBDD = [];
         foreach ($columns as $col) {
-            $name                  = $col['name'];
-            $existing              = ($existingColumns['columns'] ?? [])[$name] ?? null;
+            $name = $col['name'];
+            $existing = ($existingColumns['columns'] ?? [])[$name] ?? null;
             $columnsFromBDD[$name] = $this->createColumnArray($col, $existing);
         }
 
@@ -60,7 +61,7 @@ PHP;
             if (isset($columnsFromBDD[$name])) continue;
 
             $isCustomVisibility = in_array($col['visibility'] ?? 'public', ['protected', 'private'], true);
-            $hasAttribute       = str_contains($col['docblock'], '#[');
+            $hasAttribute = str_contains($col['docblock'], '#[');
 
             if ($isCustomVisibility || $hasAttribute) {
                 $customColumns[$name] = $col;
@@ -74,22 +75,22 @@ PHP;
 
     private function createColumnArray(array $col, ?array $existing = null): array
     {
-        $type     = $this->convertColumnType($col['type']);
+        $type = $this->convertColumnType($col['type']);
         $nullable = ($col['nullable'] || $type === '\\DateTime');
 
         if (($col['key'] ?? '') === 'PRI' && str_contains(strtolower($col['extra'] ?? ''), 'auto_increment')) {
             $nullable = true;
-            $default  = null;
+            $default = null;
         } else {
             $default = $col['default'] ?? null;
         }
 
         return [
-            'docblock'     => $existing['docblock'] ?? '',
-            'type'         => $type,
-            'nullable'     => $existing['nullable'] ?? $nullable,
-            'default'      => $default,
-            'visibility'   => $existing['visibility'] ?? 'public',
+            'docblock' => $existing['docblock'] ?? '',
+            'type' => $type,
+            'nullable' => $existing['nullable'] ?? $nullable,
+            'default' => $default,
+            'visibility' => $existing['visibility'] ?? 'public',
             'defaultValue' => $existing['defaultValue'] ?? '',
         ];
     }
@@ -113,17 +114,17 @@ PHP;
 
     private function parseExistingFile(string $content): array
     {
-        $header       = '';
+        $header = '';
         $contentArray = ['columns' => []];
 
         if (preg_match('/^(<\?php[\s\S]*?)class\s+\w+\s+extends\s+AbstractModel\s*{/', $content, $m)) {
             $header = trim($m[1]);
-            $rest   = str_replace($m[0], '', $content);
+            $rest = str_replace($m[0], '', $content);
         } else {
             $rest = $content;
         }
 
-        $lines  = preg_split("/\r?\n/", $rest);
+        $lines = preg_split("/\r?\n/", $rest);
         $buffer = [];
 
         foreach ($lines as $line) {
@@ -136,18 +137,18 @@ PHP;
             }
 
             if (preg_match('/^\s*(public|protected|private)\s+([?\w\\\\]+)\s+\$(\w+)(\s*=\s*[^;]+)?/', $trim, $m2)) {
-                $visibility   = $m2[1];
-                $rawType      = $m2[2];
-                $nullable     = str_starts_with($rawType, '?');
-                $type         = ltrim($rawType, '?');
-                $colName      = $m2[3];
+                $visibility = $m2[1];
+                $rawType = $m2[2];
+                $nullable = str_starts_with($rawType, '?');
+                $type = ltrim($rawType, '?');
+                $colName = $m2[3];
                 $defaultValue = $m2[4] ?? '';
 
                 $contentArray['columns'][$colName] = [
-                    'docblock'     => implode("\n", $buffer),
-                    'type'         => $type,
-                    'nullable'     => $nullable,
-                    'visibility'   => $visibility,
+                    'docblock' => implode("\n", $buffer),
+                    'type' => $type,
+                    'nullable' => $nullable,
+                    'visibility' => $visibility,
                     'defaultValue' => $defaultValue,
                 ];
 
@@ -162,7 +163,7 @@ PHP;
 
     private function writeModelFile(string $file, string $className, array $modelData, string $header = ''): string
     {
-        $hasHidden  = isset($modelData['columns']['hidden']);
+        $hasHidden = isset($modelData['columns']['hidden']);
         $hiddenLine = !$hasHidden ? "protected array \$hidden = [];" : '';
 
         $columns = $modelData['columns'];
@@ -177,7 +178,7 @@ PHP;
             }
 
             $nullableSign = ($col['nullable'] ?? false) ? '?' : '';
-            $default      = $col['defaultValue'] ?? '';
+            $default = $col['defaultValue'] ?? '';
 
             if ($default === '') {
                 if ($col['nullable'] ?? false) {
@@ -192,25 +193,25 @@ PHP;
             }
 
             $visibility = $col['visibility'] ?? 'public';
-            $lines[]    = "    {$visibility} {$nullableSign}{$col['type']} \${$colName}{$default};";
-            $props[]    = implode("\n", $lines);
+            $lines[] = "    {$visibility} {$nullableSign}{$col['type']} \${$colName}{$default};";
+            $props[] = implode("\n", $lines);
         }
 
         $propsString = implode("\n\n", $props);
 
         if ($hasHidden) {
-            $col        = $modelData['columns']['hidden'];
-            $default    = trim($col['defaultValue'] ?? '= []');
+            $col = $modelData['columns']['hidden'];
+            $default = trim($col['defaultValue'] ?? '= []');
             $hiddenLine = "protected array \$hidden {$default};";
         }
 
-        $header          = rtrim($header);
+        $header = rtrim($header);
         $classAttributes = '';
 
         if (preg_match_all('/^\s*#\[.*\]\s*$/m', $header, $matches)) {
             $classAttributes = implode("\n", $matches[0]);
-            $header          = preg_replace('/^\s*#\[.*\]\s*$/m', '', $header);
-            $header          = rtrim($header);
+            $header = preg_replace('/^\s*#\[.*\]\s*$/m', '', $header);
+            $header = rtrim($header);
         }
 
         $content = <<<PHP
@@ -226,9 +227,9 @@ $propsString
 PHP;
 
         if (file_put_contents($file, $content) === false) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Model Generator Error',
-                message: "Impossible d'écrire le fichier modèle '{$file}'.",
+                message: sprintf("Unable to write the model file '%s'.", $file),
                 code: 500
             );
         }
