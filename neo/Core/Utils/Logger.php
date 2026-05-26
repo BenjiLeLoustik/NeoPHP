@@ -139,8 +139,8 @@ class Logger
     private function getLogFilePath(): string
     {
         $channelConfig = $this->config['channels'][$this->currentChannel] ?? [];
-        $fileName      = $channelConfig['name'] ?? $this->currentChannel;
-        $extension     = $channelConfig['extension'] ?? 'log';
+        $fileName = $channelConfig['name'] ?? $this->currentChannel;
+        $extension = $channelConfig['extension'] ?? 'log';
 
         $rotationType = $this->config['rotation']['type'] ?? 'daily';
 
@@ -196,7 +196,7 @@ class Logger
         $ext = $this->config['archive']['extension'] ?? 'zip';
 
         $dt = new DateTime();
-        $year  = $dt->format('Y');
+        $year = $dt->format('Y');
         $month = $dt->format('m');
 
         $archivePath = "{$this->archiveDirectory}/{$year}/{$month}";
@@ -205,7 +205,7 @@ class Logger
         }
 
         $baseName = basename($file);
-        $zipPath  = "{$archivePath}/{$baseName}.{$ext}";
+        $zipPath = "{$archivePath}/{$baseName}.{$ext}";
 
         if (file_exists($zipPath)) {
             return;
