@@ -26,7 +26,7 @@ class TestScanner
             }
 
             $filePath = $file->getRealPath();
-            $src      = file_get_contents($filePath);
+            $src = file_get_contents($filePath);
             if ($src === false) continue;
 
             if (!str_contains($src, '#[Test') && !str_contains($src, 'Test(')) {
@@ -84,9 +84,9 @@ class TestScanner
                 namespace: $namespace,
                 type: $type,
                 methods: $methodCtxs,
-                cases: $classTest?->cases    ?? [],
-                dataset: $classTest?->dataset  ?? [],
-                skip: $classTest?->skip     ?? false,
+                cases: $classTest?->cases ?? [],
+                dataset: $classTest?->dataset ?? [],
+                skip: $classTest?->skip ?? false,
                 customExtends: $classTest?->extends,
             );
         }
