@@ -5,7 +5,6 @@ namespace Neo\Core\Utils;
 
 class ArrayExtension
 {
-    // --- Access ---
 
     public function get(array $array, string $key, mixed $default = null): mixed
     {
