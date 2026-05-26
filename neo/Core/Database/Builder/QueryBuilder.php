@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database\Builder;
 
 use Neo\Core\Database\DatabaseConnection;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Profiler\Profiler;
@@ -37,9 +38,9 @@ class QueryBuilder
     private function sanitizeIdentifier(string $name): string
     {
         if (!preg_match('/^[a-zA-Z0-9_]+$/', $name)) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Identifiant SQL invalide : '{$name}'.",
+                message: sprintf("Invalid SQL identifier: '%s'.", $name),
                 code: 500
             );
         }
@@ -57,9 +58,9 @@ class QueryBuilder
         }
 
         if (!preg_match('/^[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)?$/', $column)) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Colonne SQL invalide : '{$column}'.",
+                message: sprintf("Invalid SQL column: '%s'.", $column),
                 code: 500
             );
         }
@@ -70,9 +71,9 @@ class QueryBuilder
     private function sanitizeJoinOn(string $on): string
     {
         if (!preg_match('/^[a-zA-Z0-9_.=\s]+$/', $on)) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Clause JOIN invalide : '{$on}'.",
+                message: sprintf("Invalid JOIN clause: '%s'.", $on),
                 code: 500
             );
         }
@@ -85,9 +86,9 @@ class QueryBuilder
         $allowed = ['=', '!=', '<', '<=', '>', '>=', 'LIKE'];
 
         if (!in_array(strtoupper($operator), $allowed, true)) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Opérateur SQL invalide : '{$operator}'.",
+                message: sprintf("Invalid SQL operator: '%s'.", $operator),
                 code: 500
             );
         }
@@ -260,7 +261,7 @@ class QueryBuilder
 
         if (!empty($conditions)) {
             $this->where[] = ['AND', '(' . implode(' OR ', $conditions) . ')'];
-            $this->params  = array_merge($this->params, $sub->params);
+            $this->params = array_merge($this->params, $sub->params);
         }
 
         return $this;
@@ -299,9 +300,9 @@ class QueryBuilder
     {
         $direction = strtoupper($direction);
         if (!in_array($direction, ['ASC', 'DESC'], true)) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Direction ORDER BY invalide : '{$direction}'.",
+                message: sprintf("Invalid ORDER BY direction: '%s'.", $direction),
                 code: 500
             );
         }
@@ -342,12 +343,12 @@ class QueryBuilder
             return '';
         }
 
-        $sql   = ' WHERE ';
+        $sql = ' WHERE ';
         $first = true;
 
         foreach ($this->where as [$logic, $condition]) {
             if ($first) {
-                $sql  .= $condition;
+                $sql .= $condition;
                 $first = false;
             } else {
                 $sql .= " $logic $condition";
@@ -360,7 +361,7 @@ class QueryBuilder
     private function buildSelect(): string
     {
         $cols = $this->select ? implode(', ', $this->select) : '*';
-        $sql  = "SELECT $cols FROM {$this->table}";
+        $sql = "SELECT $cols FROM {$this->table}";
 
         if ($this->joins) {
             $sql .= ' ' . implode(' ', $this->joins);
@@ -396,9 +397,9 @@ class QueryBuilder
 
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Erreur lors de l'exécution de la requête : " . $e->getMessage(),
+                message: sprintf("Error executing query: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -434,9 +435,9 @@ class QueryBuilder
 
             return (int) $stmt->fetchColumn();
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Erreur lors du count : " . $e->getMessage(),
+                message: sprintf("Error executing count: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -461,7 +462,7 @@ class QueryBuilder
             $columns = array_keys($data);
             $placeholders = array_map(fn($c) => ":$c", $columns);
 
-            $sql  = sprintf(
+            $sql = sprintf(
                 'INSERT INTO %s (%s) VALUES (%s)',
                 $this->table,
                 implode(',', $columns),
@@ -479,9 +480,9 @@ class QueryBuilder
             return $this->executeTracked($stmt, [], $sql);
 
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Erreur lors de l'insertion : " . $e->getMessage(),
+                message: sprintf("Error executing insert: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -497,9 +498,9 @@ class QueryBuilder
     public function update(array $data): bool
     {
         if (!$this->where) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: 'Les requêtes UPDATE nécessitent au moins une condition WHERE.',
+                message: "UPDATE queries require at least one WHERE condition.",
                 code: 500
             );
         }
@@ -530,9 +531,9 @@ class QueryBuilder
             return $this->executeTracked($stmt, [], $sql);
 
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Erreur lors de la mise à jour : " . $e->getMessage(),
+                message: sprintf("Error executing update: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -542,9 +543,9 @@ class QueryBuilder
     public function delete(): bool
     {
         if (!$this->where) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: 'Les requêtes DELETE nécessitent au moins une condition WHERE.',
+                message: "DELETE queries require at least one WHERE condition.",
                 code: 500
             );
         }
@@ -556,9 +557,9 @@ class QueryBuilder
             return $this->executeTracked($stmt, $this->params, $sql);
 
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Erreur lors de la suppression : " . $e->getMessage(),
+                message: sprintf("Error executing delete: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -583,9 +584,9 @@ class QueryBuilder
             return (int) $stmt->fetchColumn();
 
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Query Builder Error',
-                message: "Erreur lors du countDistinct : " . $e->getMessage(),
+                message: sprintf("Error executing countDistinct: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -635,9 +636,9 @@ class QueryBuilder
         try {
             $this->pdo->beginTransaction();
         } catch (\PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Transaction Error',
-                message: 'Impossible de démarrer la transaction : ' . $e->getMessage(),
+                message: sprintf("Unable to start transaction: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -649,9 +650,9 @@ class QueryBuilder
         try {
             $this->pdo->commit();
         } catch (\PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Transaction Error',
-                message: 'Impossible de committer la transaction : ' . $e->getMessage(),
+                message: sprintf("Unable to commit transaction: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -665,9 +666,9 @@ class QueryBuilder
                 $this->pdo->rollBack();
             }
         } catch (\PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Transaction Error',
-                message: 'Impossible de rollback la transaction : ' . $e->getMessage(),
+                message: sprintf("Unable to rollback transaction: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -685,13 +686,13 @@ class QueryBuilder
         } catch (\Throwable $e) {
             $this->rollback();
 
-            if ($e instanceof FrameworkException) {
+            if ($e instanceof DatabaseException) {
                 throw $e;
             }
 
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Transaction Error',
-                message: 'La transaction a échoué : ' . $e->getMessage(),
+                message: sprintf("Transaction failed: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
