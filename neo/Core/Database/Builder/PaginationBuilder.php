@@ -6,19 +6,19 @@ namespace Neo\Core\Database\Builder;
 class PaginationBuilder
 {
     private array $items;
-    private int   $total;
-    private int   $perPage;
-    private int   $currentPage;
+    private int $total;
+    private int $perPage;
+    private int $currentPage;
 
     public function __construct(
         array $items,
-        int   $total,
-        int   $perPage,
-        int   $currentPage,
+        int $total,
+        int $perPage,
+        int $currentPage,
     ) {
-        $this->items       = $items;
-        $this->total       = $total;
-        $this->perPage     = $perPage;
+        $this->items = $items;
+        $this->total = $total;
+        $this->perPage = $perPage;
         $this->currentPage = $currentPage;
     }
 
@@ -60,12 +60,12 @@ class PaginationBuilder
     public function toArray(): array
     {
         return [
-            'items'        => $this->items,
-            'total'        => $this->total,
-            'per_page'     => $this->perPage,
+            'items' => $this->items,
+            'total' => $this->total,
+            'per_page' => $this->perPage,
             'current_page' => $this->currentPage,
-            'last_page'    => $this->getLastPage(),
-            'has_next'     => $this->hasNextPage(),
+            'last_page' => $this->getLastPage(),
+            'has_next' => $this->hasNextPage(),
             'has_previous' => $this->hasPreviousPage(),
         ];
     }
