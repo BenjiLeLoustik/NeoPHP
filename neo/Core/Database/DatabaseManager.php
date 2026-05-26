@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database;
 
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Error\Exception\FrameworkException;
 use PDO;
 use PDOException;
@@ -23,9 +24,9 @@ class DatabaseManager
             $stmt = $this->pdo->prepare($sql);
 
             if ($stmt === false) {
-                throw new FrameworkException(
+                throw new DatabaseException(
                     title: 'Database Query Error',
-                    message: "Impossible de préparer la requête : {$sql}",
+                    message: sprintf("Unable to prepare query: %s", $sql),
                     code: 500
                 );
             }
@@ -33,9 +34,9 @@ class DatabaseManager
             $stmt->execute($params);
             return $stmt;
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Database Query Error',
-                message: "Erreur lors de l'exécution de la requête : " . $e->getMessage(),
+                message: sprintf("Error executing query: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
@@ -59,18 +60,18 @@ class DatabaseManager
             $stmt = $this->pdo->prepare($sql);
 
             if ($stmt === false) {
-                throw new FrameworkException(
+                throw new DatabaseException(
                     title: 'Database Execute Error',
-                    message: "Impossible de préparer la requête : {$sql}",
+                    message: sprintf("Unable to prepare query: %s", $sql),
                     code: 500
                 );
             }
 
             return $stmt->execute($params);
         } catch (PDOException $e) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Database Execute Error',
-                message: "Erreur lors de l'exécution : " . $e->getMessage(),
+                message: sprintf("Error executing query: %s", $e->getMessage()),
                 code: 500,
                 previous: $e
             );
