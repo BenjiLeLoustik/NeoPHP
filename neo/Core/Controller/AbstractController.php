@@ -19,6 +19,7 @@ use Neo\Core\Routing\Router;
 use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Middleware\MiddlewareHandler;
 use Neo\Core\Security\PasswordManager;
+use Neo\Core\Utils\ArrayExtension;
 use Neo\Core\Utils\Cache;
 use Neo\Core\Utils\Config;
 use Neo\Core\Utils\StringExtension;
@@ -50,7 +51,7 @@ abstract class AbstractController
             $this->view->getTwig()->getGlobals()['app'] ?? [],
             [
                 'session' => $this->getSession(),
-                'cookie'  => $this->getCookie(),
+                'cookie' => $this->getCookie(),
             ]
         );
 
@@ -169,6 +170,11 @@ abstract class AbstractController
     protected function getString(): StringExtension
     {
         return $this->container->get(StringExtension::class);
+    }
+
+    protected function getArray(): ArrayExtension
+    {
+        return $this->container->get(ArrayExtension::class);
     }
 
     protected function dispatch(EventInterface $event): EventInterface
