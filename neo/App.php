@@ -38,6 +38,7 @@ use Neo\Core\Security\Csrf\CsrfTokenManager;
 use Neo\Core\Translation\TranslationManager;
 use Neo\Core\Translation\TranslationRegistry;
 use Neo\Core\Translation\TranslationTwigExtension;
+use Neo\Core\Utils\ArrayExtension;
 use Neo\Core\Utils\Cache;
 use Neo\Core\Utils\Config;
 use Neo\Core\Utils\Logger;
@@ -143,6 +144,8 @@ class App
         $this->container->set(MiddlewareHandler::class, fn(Container $c) => new MiddlewareHandler($c));
         $this->container->set(StringExtension::class, fn(Container $c) => new StringExtension($c));
         $this->container->get(StringExtension::class);
+
+        $this->container->set(ArrayExtension::class, fn(Container $c) => new ArrayExtension());
 
         $this->container->set(AuthManager::class, fn(Container $c) => new AuthManager($c));
         $this->container->set(CsrfTokenManager::class, fn() => new CsrfTokenManager());
