@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Form;
 
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 
@@ -17,9 +18,9 @@ class FormGenerator
         $this->formDir   = $this->container->get('formPath');
 
         if (!is_dir($this->formDir) && !mkdir($this->formDir, 0777, true) && !is_dir($this->formDir)) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Form Generator Error',
-                message: "Impossible de créer le répertoire des formulaires '{$this->formDir}'.",
+                message: sprintf("Unable to create the forms directory '%s'.", $this->formDir),
                 code: 500
             );
         }
@@ -27,12 +28,12 @@ class FormGenerator
 
     public function generate(string $modelClass): string
     {
-        $modelParts     = explode('\\', $modelClass);
-        $modelName      = array_pop($modelParts);
+        $modelParts = explode('\\', $modelClass);
+        $modelName = array_pop($modelParts);
         $modelNamespace = implode('\\', $modelParts);
-        $formClassName  = $modelName . 'Form';
-        $namespaceForm  = $this->container->get('formNamespace');
-        $file           = "{$this->formDir}/$formClassName.php";
+        $formClassName = $modelName . 'Form';
+        $namespaceForm = $this->container->get('formNamespace');
+        $file = "{$this->formDir}/$formClassName.php";
 
         if (file_exists($file)) {
             return $formClassName;
@@ -89,9 +90,9 @@ class $formClassName
 PHP;
 
         if (file_put_contents($file, $code) === false) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'Form Generator Error',
-                message: "Impossible de générer le formulaire '{$formClassName}' dans '{$this->formDir}'.",
+                message: sprintf("Unable to generate the form '%s' in '%s'.", $formClassName, $this->formDir),
                 code: 500
             );
         }
