@@ -7,6 +7,7 @@ use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Request;
+use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\JwtManager;
 use Neo\Core\Security\PasswordManager;
 
@@ -30,9 +31,9 @@ final class TokenGuard implements GuardInterface
         $passwordField = $this->password;
 
         if (!isset($credentials[$identifierField], $credentials[$passwordField])) {
-            throw new FrameworkException(
+            throw new AuthException(
                 title: 'Auth Error',
-                message: "Les credentials doivent contenir '{$identifierField}' et '{$passwordField}'.",
+                message: sprintf("Credentials must contain '%s' and '%s'.", $identifierField, $passwordField),
                 code: 400
             );
         }
@@ -154,9 +155,9 @@ final class TokenGuard implements GuardInterface
             $token = $this->extractToken();
 
             if (!$token) {
-                throw new FrameworkException(
+                throw new AuthException(
                     title: 'Auth Error',
-                    message: "Aucun token trouvé dans la requête.",
+                    message: "No token found in the request.",
                     code: 401
                 );
             }
@@ -185,9 +186,9 @@ final class TokenGuard implements GuardInterface
         $instance = new $modelClass();
 
         if (!empty($instance->fillable) && !in_array($field, $instance->fillable, true)) {
-            throw new FrameworkException(
+            throw new AuthException(
                 title: 'Auth Error',
-                message: "Champ d'identification invalide.",
+                message: "Invalid identifier field.",
                 code: 400
             );
         }
