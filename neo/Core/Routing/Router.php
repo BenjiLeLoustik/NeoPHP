@@ -172,17 +172,18 @@ class Router
         }
 
         if ($pathExists) {
-            throw new FrameworkException(
+            throw new RouterException(
                 title: "Method Not Allowed",
-                message: "HTTP method '{$method}' is not allowed for '{$path}'.",
+                message: sprintf("HTTP method '%s' is not allowed for '%s'.", $method, $path),
                 code: 405,
                 context: ['method' => $method, 'path' => $path]
             );
+
         }
 
-        throw new FrameworkException(
+        throw new RouteNotFoundException(
             title: "Not Found",
-            message: "No route found for '{$path}'.",
+            message: sprintf("No route found for '%s'.", $path),
             code: 404,
             context: ['method' => $method, 'path' => $path]
         );
@@ -259,23 +260,20 @@ class Router
                     continue;
                 }
 
-                throw new FrameworkException(
+                throw new RouterException(
                     title: "Injection Error",
-                    message: "Cannot inject parameter \${$name} into {$routeInfo['controller']}::{$method}",
+                    message: sprintf("Cannot inject parameter '$%s' into %s::%s.", $name, $routeInfo['controller'], $method),
                     code: 500,
-                    context: [
-                        'controller' => $routeInfo['controller'],
-                        'method' => $method,
-                    ]
+                    context: ['controller' => $routeInfo['controller'], 'method' => $method]
                 );
             }
 
             return $refMethod->invokeArgs($controller, $resolved);
 
         } catch (Throwable $e) {
-            if ($e instanceof FrameworkException) throw $e;
+            if ($e instanceof RouterException || $e instanceof RouteNotFoundException) throw $e;
 
-            throw new FrameworkException(
+            throw new RouterException(
                 title: "Controller Invocation Error",
                 message: $e->getMessage(),
                 code: 500,
@@ -306,9 +304,9 @@ class Router
             }
         }
 
-        throw new FrameworkException(
+        throw new RouteNotFoundException(
             title: "Route Not Found",
-            message: "Route '{$name}' not found.",
+            message: sprintf("Route '%s' not found.", $name),
             code: 404,
             context: []
         );
