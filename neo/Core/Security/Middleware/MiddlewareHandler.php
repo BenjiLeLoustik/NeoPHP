@@ -9,6 +9,7 @@ use Neo\Core\Routing\Attribute\Maintenance;
 use Neo\Core\Routing\Attribute\RateLimit;
 use Neo\Core\Security\Middleware\Attribute\Middleware as MiddlewareAttribute;
 use Neo\Core\Security\Middleware\Default\RateLimitMiddleware;
+use Neo\Core\Security\Middleware\Exception\MiddlewareException;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
 use Neo\Core\Http\Client\Flash;
 use Neo\Core\Http\Response\Response;
@@ -100,7 +101,7 @@ class MiddlewareHandler
         }
 
         if ($onError === 'block') {
-            throw new FrameworkException(
+            throw new MiddlewareException(
                 title: 'Middleware Error',
                 message: $message,
                 code: 403
