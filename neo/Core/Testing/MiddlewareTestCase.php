@@ -49,7 +49,7 @@ abstract class MiddlewareTestCase extends PHPUnitTestCase
         $this->assertInstanceOf(
             MiddlewareInterface::class,
             $instance,
-            "$middlewareClass doit implémenter MiddlewareInterface."
+            "$middlewareClass must implement MiddlewareInterface."
         );
 
         return $instance;
@@ -58,14 +58,14 @@ abstract class MiddlewareTestCase extends PHPUnitTestCase
     protected function assertMiddlewarePasses(MiddlewareInterface $middleware): void
     {
         $result = $middleware->handle();
-        $this->assertTrue($result, 'Le middleware devrait laisser passer la requête (retourner true).');
+        $this->assertTrue($result, 'The middleware should let the request pass (return true).');
     }
 
     protected function assertMiddlewareBlocks(MiddlewareInterface $middleware): void
     {
         try {
             $result = $middleware->handle();
-            $this->assertFalse($result, 'Le middleware devrait bloquer la requête (retourner false).');
+            $this->assertFalse($result, 'The middleware should block the request (return false).');
         } catch (FrameworkException $e) {
             $this->assertTrue(true);
         }
@@ -75,12 +75,12 @@ abstract class MiddlewareTestCase extends PHPUnitTestCase
     {
         try {
             $middleware->handle();
-            $this->fail('Le middleware aurait dû lancer une FrameworkException.');
+            $this->fail('The middleware should have thrown a FrameworkException.');
         } catch (FrameworkException $e) {
             $this->assertSame(
                 $expectedCode,
                 $e->getCode(),
-                "Code HTTP attendu : $expectedCode, obtenu : {$e->getCode()}"
+                "Expected HTTP code: $expectedCode, got: {$e->getCode()}"
             );
         }
     }
