@@ -5,6 +5,7 @@ namespace Neo\Core\Utils;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
+use Neo\Core\Utils\Exception\ConfigException;
 
 class Config
 {
@@ -38,9 +39,9 @@ class Config
             $data = require $file;
 
             if (!is_array($data)) {
-                throw new FrameworkException(
+                throw new ConfigException(
                     title: "Invalid Config File",
-                    message: "Config file '{$file}' must return an array.",
+                    message: sprintf("Config file '%s' must return an array.", $file),
                     code: 500,
                     context: ['file' => $file]
                 );
@@ -60,9 +61,9 @@ class Config
             $data = require $file;
 
             if (!is_array($data)) {
-                throw new FrameworkException(
+                throw new ConfigException(
                     title: "Invalid Test Config File",
-                    message: "Test config file '{$file}' must return an array.",
+                    message: sprintf("Test config file '%s' must return an array.", $file),
                     code: 500,
                     context: ['file' => $file]
                 );
@@ -91,9 +92,9 @@ class Config
     public function from(string $key): self
     {
         if (!isset($this->configs[$key])) {
-            throw new FrameworkException(
+            throw new ConfigException(
                 title: "Config Not Found",
-                message: "Config '{$key}' not found.",
+                message: sprintf("Config '%s' not found.", $key),
                 code: 404,
                 context: ['key' => $key]
             );
@@ -128,7 +129,7 @@ class Config
     private function assertSelected(): void
     {
         if (empty($this->current)) {
-            throw new FrameworkException(
+            throw new ConfigException(
                 title: "Config Not Selected",
                 message: "Call from() before calling get() or all().",
                 code: 500
