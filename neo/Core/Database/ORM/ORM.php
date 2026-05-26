@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database\ORM;
 
 use Neo\Core\Database\DatabaseIntrospector;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Form\FormGenerator;
 use Neo\Core\Database\ORM\Model\ModelGenerator;
 use Neo\Core\Database\ORM\Repository\RepositoryGenerator;
@@ -38,9 +39,9 @@ class ORM
         $lockFile = $cachePath . '/.orm_generated';
 
         if (!is_dir($cachePath) && !mkdir($cachePath, 0777, true) && !is_dir($cachePath)) {
-            throw new FrameworkException(
+            throw new DatabaseException(
                 title: 'ORM Cache Directory Error',
-                message: "Impossible de créer le répertoire de cache ORM '{$cachePath}'.",
+                message: sprintf("Unable to create the ORM cache directory '%s'.", $cachePath),
                 code: 500
             );
         }
@@ -62,9 +63,9 @@ class ORM
 
         if (!$isDebug) {
             if (file_put_contents($lockFile, date('Y-m-d H:i:s')) === false) {
-                throw new FrameworkException(
+                throw new DatabaseException(
                     title: 'ORM Lock File Error',
-                    message: "Impossible d'écrire le fichier de lock ORM '{$lockFile}'.",
+                    message: sprintf("Unable to write the ORM lock file '%s'.", $lockFile),
                     code: 500
                 );
             }
