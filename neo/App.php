@@ -279,7 +279,7 @@ class App
             if (!$project) {
                 throw new FrameworkException(
                     title: 'Application Error',
-                    message: 'Vous devez passer --project=NomDuProjet en CLI.',
+                    message: "You must pass --project=ProjectName in CLI.",
                     code: 500
                 );
             }
@@ -297,7 +297,7 @@ class App
         if (!$serverName) {
             throw new FrameworkException(
                 title: 'Application Error',
-                message: 'Impossible de détecter le nom du serveur.',
+                message: "Unable to detect the server name.",
                 code: 500
             );
         }
@@ -325,7 +325,7 @@ class App
 
         throw new FrameworkException(
             title: 'Application Error',
-            message: "Aucune application détectée pour l'accès : {$server}.",
+            message: sprintf("No application detected for access: '%s'.", $server),
             code: 500
         );
     }
