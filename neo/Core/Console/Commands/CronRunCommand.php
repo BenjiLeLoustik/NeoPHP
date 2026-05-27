@@ -22,7 +22,12 @@ final class CronRunCommand implements CommandInterface
 
     public function execute(array $args): void
     {
-        $cronsPath = $this->container->get('cronsPath');
+        try {
+            $cronsPath = $this->container->get('cronsPath');
+        } catch (\Throwable) {
+            Output::error('You must pass --project=<name> to use this command.');
+            return;
+        }
 
         $scanner = new CronScanner();
         $jobs = $scanner->scan($cronsPath);
