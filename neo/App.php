@@ -14,7 +14,12 @@ use Neo\Core\Event\Event\RequestEvent;
 use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Extension\ArrayExtension;
+use Neo\Core\Extension\DateExtension;
+use Neo\Core\Extension\FileExtension;
+use Neo\Core\Extension\JsonExtension;
+use Neo\Core\Extension\NumberExtension;
 use Neo\Core\Extension\StringExtension;
+use Neo\Core\Extension\UrlExtension;
 use Neo\Core\Http\Client\Cookie;
 use Neo\Core\Http\Client\Flash;
 use Neo\Core\Http\Client\Session;
@@ -103,24 +108,24 @@ class App
             $publicPath = $basePath . '/public';
         }
 
-        $this->container->set('publicPath',          $publicPath);
-        $this->container->set('buildsPath',          $publicPath . '/builds/');
-        $this->container->set('srcPath',             $basePath . '/src');
-        $this->container->set('storagePath',         $basePath . '/src/' . $appName . '/Storage');
-        $this->container->set('configsPath',         $basePath . '/src/' . $appName . '/Config');
-        $this->container->set('viewsPath',           $basePath . '/src/' . $appName . '/App/Views');
-        $this->container->set('controllersPath',     $basePath . '/src/' . $appName . '/App/Controllers');
-        $this->container->set('assetsPath',          $basePath . '/src/' . $appName . '/Assets/');
-        $this->container->set('repositoryPath',      $basePath . '/src/' . $appName . '/Repository');
-        $this->container->set('modelPath',           $basePath . '/src/' . $appName . '/Model');
-        $this->container->set('formPath',            $basePath . '/src/' . $appName . '/App/Forms');
-        $this->container->set('listenersPath',       $basePath . '/src/' . $appName . '/App/Event/Listener');
+        $this->container->set('publicPath', $publicPath);
+        $this->container->set('buildsPath', $publicPath . '/builds/');
+        $this->container->set('srcPath', $basePath . '/src');
+        $this->container->set('storagePath', $basePath . '/src/' . $appName . '/Storage');
+        $this->container->set('configsPath', $basePath . '/src/' . $appName . '/Config');
+        $this->container->set('viewsPath', $basePath . '/src/' . $appName . '/App/Views');
+        $this->container->set('controllersPath', $basePath . '/src/' . $appName . '/App/Controllers');
+        $this->container->set('assetsPath', $basePath . '/src/' . $appName . '/Assets/');
+        $this->container->set('repositoryPath', $basePath . '/src/' . $appName . '/Repository');
+        $this->container->set('modelPath', $basePath . '/src/' . $appName . '/Model');
+        $this->container->set('formPath', $basePath . '/src/' . $appName . '/App/Forms');
+        $this->container->set('listenersPath', $basePath . '/src/' . $appName . '/App/Event/Listener');
 
-        $this->container->set('manifestFilename',    'manifest.json');
+        $this->container->set('manifestFilename', 'manifest.json');
         $this->container->set('controllerNamespace', 'Neo\\Src\\' . $appName . '\\App\\Controllers\\');
-        $this->container->set('modelNamespace',      'Neo\\Src\\' . $appName . '\\Model');
+        $this->container->set('modelNamespace', 'Neo\\Src\\' . $appName . '\\Model');
         $this->container->set('repositoryNamespace', 'Neo\\Src\\' . $appName . '\\Repository');
-        $this->container->set('formNamespace',       'Neo\\Src\\' . $appName . '\\App\\Forms');
+        $this->container->set('formNamespace', 'Neo\\Src\\' . $appName . '\\App\\Forms');
 
         if (!empty($GLOBALS['_NEO_TEST_CONFIGS_PATH'])) {
             $this->container->set('testConfigsPath', $GLOBALS['_NEO_TEST_CONFIGS_PATH']);
@@ -142,10 +147,6 @@ class App
         FormExtension::register($this->container);
 
         $this->container->set(MiddlewareHandler::class, fn(Container $c) => new MiddlewareHandler($c));
-        $this->container->set(StringExtension::class, fn(Container $c) => new StringExtension($c));
-        $this->container->get(StringExtension::class);
-
-        $this->container->set(ArrayExtension::class, fn(Container $c) => new ArrayExtension());
 
         $this->container->set(AuthManager::class, fn(Container $c) => new AuthManager($c));
         $this->container->set(CsrfTokenManager::class, fn() => new CsrfTokenManager());
@@ -167,6 +168,21 @@ class App
         $this->container->get(EventDispatcher::class);
 
         $this->container->set(Mailer::class, fn(Container $c) => new Mailer($c));
+
+        $this->registerExtensions();
+    }
+
+    private function registerExtensions(): void
+    {
+        $this->container->set(StringExtension::class, fn(Container $c) => new StringExtension($c));
+        $this->container->set(ArrayExtension::class, fn() => new ArrayExtension());
+        $this->container->set(NumberExtension::class, fn() => new NumberExtension());
+        $this->container->set(DateExtension::class, fn() => new DateExtension());
+        $this->container->set(FileExtension::class, fn() => new FileExtension());
+        $this->container->set(JsonExtension::class, fn() => new JsonExtension());
+        $this->container->set(UrlExtension::class, fn() => new UrlExtension());
+
+        $this->container->get(StringExtension::class);
     }
 
     private function registerClientServices(): void
