@@ -9,6 +9,7 @@ use Neo\Core\DI\Container;
 define('ROOT_DIR', dirname(__DIR__) . '/');
 
 $container = new Container();
+$container->set(Container::class, fn() => $container);
 $basePath = realpath(__DIR__ . '/../');
 
 global $argv;
@@ -16,8 +17,14 @@ global $argv;
 foreach ($argv as $arg) {
     if (str_starts_with($arg, '--project=')) {
         $project = substr($arg, 10);
+        $srcPath = $basePath . '/src/' . $project;
+
         $container->set('application', $project);
-        $container->set('cronsPath', $basePath . '/src/' . $project . '/App/Crons');
+        $container->set('cronsPath',   $srcPath . '/App/Crons');
+        $container->set('storagePath', $srcPath . '/Storage');
+        $container->set('configsPath', $srcPath . '/Config');
+
+        var_dump($container->get('configsPath'));
     }
 }
 
