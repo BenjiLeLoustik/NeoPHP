@@ -13,6 +13,8 @@ use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Event\RequestEvent;
 use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\EventDispatcher;
+use Neo\Core\Extension\ArrayExtension;
+use Neo\Core\Extension\StringExtension;
 use Neo\Core\Http\Client\Cookie;
 use Neo\Core\Http\Client\Flash;
 use Neo\Core\Http\Client\Session;
@@ -32,18 +34,16 @@ use Neo\Core\Profiler\ProfilerResponseListener;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Routing\Router;
 use Neo\Core\Security\Auth\AuthManager;
+use Neo\Core\Security\Csrf\CsrfTokenManager;
 use Neo\Core\Security\Middleware\MiddlewareHandler;
 use Neo\Core\Security\PasswordManager;
-use Neo\Core\Security\Csrf\CsrfTokenManager;
 use Neo\Core\Translation\TranslationManager;
 use Neo\Core\Translation\TranslationRegistry;
 use Neo\Core\Translation\TranslationTwigExtension;
-use Neo\Core\Utils\ArrayExtension;
 use Neo\Core\Utils\Cache;
 use Neo\Core\Utils\Config;
 use Neo\Core\Utils\Logger;
 use Neo\Core\Utils\Mailer;
-use Neo\Core\Utils\StringExtension;
 use Neo\Core\View\View;
 
 class App
