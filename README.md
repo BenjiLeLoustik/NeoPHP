@@ -23,6 +23,7 @@ Ce depot contient le moteur du framework et un projet d'exemple dans `src/Test/`
 - [Formulaires, upload et validation](#formulaires-upload-et-validation)
 - [Securite: auth, mot de passe, middlewares, csrf](#securite-auth-mot-de-passe-middlewares-csrf)
 - [Events](#events)
+- [Crons](#Crons)
 - [Cache, logs et erreurs](#cache-logs-et-erreurs)
 - [CLI et generateurs](#cli-et-generateurs)
 - [Tests PHPUnit](#tests-phpunit)
@@ -1202,6 +1203,172 @@ public function register(): Response
     ], 201);
 }
 ```
+
+## Crons
+
+NeoPHP embarque un systeme de taches planifiees executables via la CLI.
+
+Les crons applicatifs sont attendus dans le projet courant et peuvent etre lances manuellement ou automatiquement via le systeme d'exploitation.
+
+### Creer un cron
+
+Pour generer un nouveau cron :
+
+```bash
+php bin/neo make:cron <NomDuCron> --project=Blog
+```
+
+Exemple :
+
+```bash
+php bin/neo make:cron CleanupTempFiles --project=Blog
+```
+
+Le generateur cree automatiquement le fichier du cron dans le projet cible.
+
+### Lister les crons
+
+Pour afficher tous les crons disponibles d'un projet :
+
+```bash
+php bin/neo cron:list --project=Blog
+```
+
+Cette commande affiche notamment :
+
+- le nom du cron
+- sa description
+- sa frequence
+- son statut
+
+### Executer les crons
+
+Pour executer tous les crons du projet :
+
+```bash
+php bin/neo cron:run --project=Blog
+```
+
+Cette commande est celle qui doit etre planifiee automatiquement par le systeme d'exploitation.
+
+### Execution automatique des crons
+
+#### Linux
+
+Sous Linux, les crons sont generalement pilotes via `crontab`.
+
+Ouvrir la configuration cron :
+
+```bash
+crontab -e
+```
+
+Executer les crons NeoPHP toutes les minutes :
+
+```bash
+* * * * * php /path/to/project/bin/neo cron:run --project=Blog
+```
+
+Exemple concret :
+
+```bash
+* * * * * php /var/www/neophp/bin/neo cron:run --project=Blog
+```
+
+Verifier les logs cron :
+
+```bash
+grep CRON /var/log/syslog
+```
+
+#### macOS
+
+macOS supporte egalement `crontab`.
+
+Ouvrir la configuration :
+
+```bash
+crontab -e
+```
+
+Ajouter :
+
+```bash
+* * * * * php /path/to/project/bin/neo cron:run --project=Blog
+```
+
+Exemple :
+
+```bash
+* * * * * php /Users/benjamin/Sites/neophp/bin/neo cron:run --project=Blog
+```
+
+Verifier les taches :
+
+```bash
+crontab -l
+```
+
+#### Windows
+
+Sous Windows, utiliser le Planificateur de taches.
+
+Commande a executer :
+
+```bash
+php C:\path\to\project\bin\neo cron:run --project=Blog
+```
+
+Exemple :
+
+```bash
+php C:\Sites\NeoPHP\bin\neo cron:run --project=Blog
+```
+
+Configuration conseillee :
+
+- declencheur : toutes les minutes
+- programme : `php.exe`
+- arguments :
+
+```bash
+C:\Sites\NeoPHP\bin\neo cron:run --project=Blog
+```
+
+Le Planificateur de taches peut etre ouvert avec :
+
+```text
+Win + R -> taskschd.msc
+```
+
+#### Docker
+
+Exemple avec une boucle simple :
+
+```bash
+while true; do
+    php bin/neo cron:run --project=Blog
+    sleep 60
+done
+```
+
+Exemple via `docker-compose` :
+
+```yaml
+services:
+  cron:
+    command: sh -c "while true; do php bin/neo cron:run --project=Blog; sleep 60; done"
+```
+
+### Conseils
+
+En production, il est recommande :
+
+- d'executer `cron:run` toutes les minutes
+- de journaliser les erreurs via le `Logger`
+- d'eviter les traitements bloquants trop longs
+- d'utiliser des files d'attente pour les traitements lourds
+- de surveiller les executions via les logs applicatifs ou systeme
 
 ## Cache, logs et erreurs
 
