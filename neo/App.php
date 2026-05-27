@@ -120,6 +120,7 @@ class App
         $this->container->set('modelPath', $basePath . '/src/' . $appName . '/Model');
         $this->container->set('formPath', $basePath . '/src/' . $appName . '/App/Forms');
         $this->container->set('listenersPath', $basePath . '/src/' . $appName . '/App/Event/Listener');
+        $this->container->set('cronsPath', $basePath . '/src/' . $appName . '/App/Crons');
 
         $this->container->set('manifestFilename', 'manifest.json');
         $this->container->set('controllerNamespace', 'Neo\\Src\\' . $appName . '\\App\\Controllers\\');
