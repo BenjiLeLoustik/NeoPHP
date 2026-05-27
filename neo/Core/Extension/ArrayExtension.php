@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Utils;
+namespace Neo\Core\Extension;
 
 class ArrayExtension
 {
