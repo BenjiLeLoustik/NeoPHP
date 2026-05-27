@@ -23,8 +23,6 @@ foreach ($argv as $arg) {
         $container->set('cronsPath',   $srcPath . '/App/Crons');
         $container->set('storagePath', $srcPath . '/Storage');
         $container->set('configsPath', $srcPath . '/Config');
-
-        var_dump($container->get('configsPath'));
     }
 }
 
