@@ -23,8 +23,7 @@
         "ext-iconv": "*",
         "ext-curl": "*",
         "ext-simplexml": "*",
-        "phpmailer/phpmailer": "^7.1",
-        "test/app": "@dev"
+        "phpmailer/phpmailer": "^7.1"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0",
@@ -38,13 +37,5 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "path",
-            "url": "src/Test",
-            "options": {
-                "symlink": false
-            }
-        }
-    ]
+    "repositories": []
 }
