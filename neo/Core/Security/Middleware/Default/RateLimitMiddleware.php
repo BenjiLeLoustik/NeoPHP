@@ -7,7 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
-use Neo\Core\Utils\Cache;
+use Neo\Core\Utils\Cache\Cache;
 
 class RateLimitMiddleware implements MiddlewareInterface
 {

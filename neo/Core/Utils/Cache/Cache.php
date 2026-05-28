@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Utils;
+namespace Neo\Core\Utils\Cache;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Error\Exception\FrameworkException;
-use Neo\Core\Utils\Exception\CacheException;
+use Neo\Core\Utils\Cache\Exception\CacheException;
+use Neo\Core\Utils\Config;
 
 class Cache
 {

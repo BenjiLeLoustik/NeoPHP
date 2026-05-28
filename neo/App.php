@@ -45,7 +45,7 @@ use Neo\Core\Security\PasswordManager;
 use Neo\Core\Translation\TranslationManager;
 use Neo\Core\Translation\TranslationRegistry;
 use Neo\Core\Translation\TranslationTwigExtension;
-use Neo\Core\Utils\Cache;
+use Neo\Core\Utils\Cache\Cache;
 use Neo\Core\Utils\Config;
 use Neo\Core\Utils\Logger;
 use Neo\Core\Utils\Mailer;
