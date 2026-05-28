@@ -4,13 +4,12 @@ declare(strict_types=1);
 namespace Neo\Core\Event;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Attribute\AsListener;
 use Neo\Core\Event\Contract\EventInterface;
 use Neo\Core\Event\Contract\EventSubscriberInterface;
 use Neo\Core\Event\Exception\EventException;
 use Neo\Core\Profiler\Profiler;
-use Neo\Core\Utils\Config;
+use Neo\Core\Utils\Config\Config;
 
 class EventDispatcher
 {

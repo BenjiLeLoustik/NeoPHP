@@ -5,7 +5,7 @@ namespace Neo\Core\Utils\Cache;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Utils\Cache\Exception\CacheException;
-use Neo\Core\Utils\Config;
+use Neo\Core\Utils\Config\Config;
 
 class Cache
 {

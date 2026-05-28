@@ -4,8 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Http\Client;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Utils\Config;
-use Neo\Core\View\View;
+use Neo\Core\Utils\Config\Config;
 
 class Cookie
 {

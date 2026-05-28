@@ -5,7 +5,6 @@ namespace Neo\Core\Security\Auth;
 
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\DI\Container;
-use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Client\Session;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Auth\Exception\AuthException;
@@ -13,7 +12,7 @@ use Neo\Core\Security\Auth\Guard\GuardInterface;
 use Neo\Core\Security\Auth\Guard\SessionGuard;
 use Neo\Core\Security\Auth\Guard\TokenGuard;
 use Neo\Core\Security\PasswordManager;
-use Neo\Core\Utils\Config;
+use Neo\Core\Utils\Config\Config;
 
 class AuthManager
 {

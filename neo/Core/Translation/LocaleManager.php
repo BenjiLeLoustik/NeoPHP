@@ -4,8 +4,7 @@ namespace Neo\Core\Translation;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Http\Client\Cookie;
-use Neo\Core\Translation\Exception\TranslationException;
-use Neo\Core\Utils\Config;
+use Neo\Core\Utils\Config\Config;
 
 final class LocaleManager
 {

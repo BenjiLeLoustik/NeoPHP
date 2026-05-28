@@ -4,14 +4,14 @@ declare(strict_types=1);
 namespace Neo\Core\Error;
 
 use Neo\Core\DI\Container;
+use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Event\ExceptionEvent;
 use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Profiler\Toolbar\Toolbar;
-use Neo\Core\Utils\Config;
+use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Logger;
 use Neo\Core\View\View;
-use Neo\Core\Error\Exception\FrameworkException;
 
 class ErrorHandler
 {

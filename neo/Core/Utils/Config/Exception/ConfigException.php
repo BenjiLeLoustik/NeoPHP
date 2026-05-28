@@ -1,6 +1,6 @@
 <?php
 
-namespace Neo\Core\Utils\Exception;
+namespace Neo\Core\Utils\Config\Exception;
 
 use Neo\Core\Error\Exception\FrameworkException;
 
