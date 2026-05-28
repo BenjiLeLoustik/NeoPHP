@@ -3,7 +3,7 @@
 namespace Neo\Core\Translation;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Http\Client\Cookie;
+use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Translation\Contract\TranslatorInterface;
 use Neo\Core\Translation\Exception\TranslationException;
 use Neo\Core\Utils\Config\Config;

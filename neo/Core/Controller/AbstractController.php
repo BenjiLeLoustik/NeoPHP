@@ -9,7 +9,7 @@ use Neo\Core\Event\Contract\EventInterface;
 use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Extension\ArrayExtension;
 use Neo\Core\Extension\StringExtension;
-use Neo\Core\Http\Client\Cookie;
+use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Http\Client\Flash;
 use Neo\Core\Http\Client\Session;
 use Neo\Core\Http\File\Uploader;
