@@ -48,7 +48,7 @@ use Neo\Core\Translation\TranslationTwigExtension;
 use Neo\Core\Utils\Cache\Cache;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Logger\Logger;
-use Neo\Core\Utils\Mailer;
+use Neo\Core\Utils\Mailer\Mailer;
 use Neo\Core\View\View;
 
 class App
