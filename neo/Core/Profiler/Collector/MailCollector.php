@@ -2,8 +2,7 @@
 
 namespace Neo\Core\Profiler\Collector;
 
-use Neo\Core\Profiler\Collector\CollectorInterface;
-use Neo\Core\Utils\Mailer;
+use Neo\Core\Utils\Mailer\Mailer;
 
 class MailCollector implements CollectorInterface
 {
