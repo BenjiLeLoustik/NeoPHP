@@ -20,7 +20,7 @@ use Neo\Core\Http\Response\Response;
 use Neo\Core\Routing\Router;
 use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Middleware\MiddlewareHandler;
-use Neo\Core\Security\PasswordManager;
+use Neo\Core\Security\Password\PasswordManager;
 use Neo\Core\Utils\Cache\Cache;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Logger\Logger;

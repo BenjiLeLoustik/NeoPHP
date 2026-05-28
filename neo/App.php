@@ -41,7 +41,7 @@ use Neo\Core\Routing\Router;
 use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Csrf\CsrfTokenManager;
 use Neo\Core\Security\Middleware\MiddlewareHandler;
-use Neo\Core\Security\PasswordManager;
+use Neo\Core\Security\Password\PasswordManager;
 use Neo\Core\Translation\TranslationManager;
 use Neo\Core\Translation\TranslationRegistry;
 use Neo\Core\Translation\TranslationTwigExtension;
