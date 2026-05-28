@@ -6,7 +6,7 @@ use DateTime;
 use DateTimeZone;
 use Neo\Core\Cron\Exception\CronException;
 use Neo\Core\DI\Container;
-use Neo\Core\Utils\Logger;
+use Neo\Core\Utils\Logger\Logger;
 use Throwable;
 
 class CronRunner
