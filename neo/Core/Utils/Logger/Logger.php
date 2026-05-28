@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Utils;
+namespace Neo\Core\Utils\Logger;
 
 use DateTime;
 use Neo\Core\DI\Container;

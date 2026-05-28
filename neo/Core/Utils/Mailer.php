@@ -5,6 +5,7 @@ namespace Neo\Core\Utils;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Logger\Logger;
 use Neo\Core\View\View;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;

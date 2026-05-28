@@ -10,7 +10,7 @@ use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Utils\Config\Config;
-use Neo\Core\Utils\Logger;
+use Neo\Core\Utils\Logger\Logger;
 use Neo\Core\View\View;
 
 class ErrorHandler
