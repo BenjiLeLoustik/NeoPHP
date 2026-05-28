@@ -9,8 +9,7 @@ use Neo\Core\Database\Form\FormGenerator;
 use Neo\Core\Database\ORM\Model\ModelGenerator;
 use Neo\Core\Database\ORM\Repository\RepositoryGenerator;
 use Neo\Core\DI\Container;
-use Neo\Core\Error\Exception\FrameworkException;
-use Neo\Core\Utils\Config;
+use Neo\Core\Utils\Config\Config;
 
 class ORM
 {

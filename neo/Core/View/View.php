@@ -4,16 +4,15 @@ declare(strict_types=1);
 namespace Neo\Core\View;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Error\Exception\FrameworkException;
-use Neo\Core\Utils\Config;
+use Neo\Core\Utils\Config\Config;
 use Neo\Core\View\Exception\ViewException;
 use Twig\Environment;
 use Twig\Extension\CoreExtension;
 use Twig\Extension\DebugExtension;
 use Twig\Extra\Intl\IntlExtension;
 use Twig\Loader\FilesystemLoader;
-use Twig\TwigFunction;
 use Twig\TwigFilter;
+use Twig\TwigFunction;
 
 class View
 {

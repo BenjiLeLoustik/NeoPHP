@@ -22,7 +22,7 @@ use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Middleware\MiddlewareHandler;
 use Neo\Core\Security\PasswordManager;
 use Neo\Core\Utils\Cache\Cache;
-use Neo\Core\Utils\Config;
+use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Logger;
 use Neo\Core\Utils\Mailer;
 use Neo\Core\View\View;

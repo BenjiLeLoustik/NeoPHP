@@ -5,8 +5,7 @@ namespace Neo\Core\Http\Client;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
-use Neo\Core\Utils\Config;
-use Neo\Core\View\View;
+use Neo\Core\Utils\Config\Config;
 
 class Session
 {

@@ -3,14 +3,13 @@ declare(strict_types=1);
 
 namespace Neo\Core\Asset;
 
+use Neo\Core\Asset\Compiler\CssCompiler;
+use Neo\Core\Asset\Compiler\JsCompiler;
 use Neo\Core\Asset\Compiler\LessCompiler;
 use Neo\Core\Asset\Exception\AssetException;
 use Neo\Core\DI\Container;
+use Neo\Core\Utils\Config\Config;
 use Neo\Core\View\View;
-use Neo\Core\Utils\Config;
-use Neo\Core\Asset\Compiler\CssCompiler;
-use Neo\Core\Asset\Compiler\JsCompiler;
-use Neo\Core\Error\Exception\FrameworkException;
 
 class AssetHandler
 {
