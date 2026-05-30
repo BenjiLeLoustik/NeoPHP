@@ -5,7 +5,6 @@ namespace Neo\Core\Http\File;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Http\File\Exception\UploaderException;
-use RuntimeException;
 
 class Uploader
 {
