@@ -3,31 +3,38 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Neo\App;
 use Neo\Core\Console\ConsoleHandler;
 use Neo\Core\DI\Container;
 
 define('ROOT_DIR', dirname(__DIR__) . '/');
 
-$container = new Container();
-$container->set(Container::class, fn() => $container);
-$basePath = realpath(__DIR__ . '/../');
-
 global $argv;
+
+$basePath = realpath(__DIR__ . '/../');
+$project  = null;
 
 foreach ($argv as $arg) {
     if (str_starts_with($arg, '--project=')) {
         $project = substr($arg, 10);
-        $srcPath = $basePath . '/src/' . $project;
-
-        $container->set('application', $project);
-        $container->set('cronsPath',   $srcPath . '/App/Crons');
-        $container->set('storagePath', $srcPath . '/Storage');
-        $container->set('configsPath', $srcPath . '/Config');
+        break;
     }
 }
 
-$container->set('basePath', $basePath);
-$container->set('srcPath', $basePath . '/src');
+if ($project !== null && !is_dir($basePath . '/src/' . $project)) {
+    echo "\033[31m✘ Project '$project' not found in src/.\033[0m\n";
+    exit(1);
+}
+
+if ($project !== null) {
+    $app       = new App();
+    $container = $app->getContainer();
+} else {
+    $container = new Container();
+    $container->set(Container::class, fn() => $container);
+    $container->set('basePath', $basePath);
+    $container->set('srcPath',  $basePath . '/src');
+}
 
 $console = new ConsoleHandler($container);
 $console->run($argv);
