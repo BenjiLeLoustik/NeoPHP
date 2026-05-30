@@ -197,7 +197,8 @@ declare(strict_types=1);
 
 namespace Neo\Src\Blog\App\Services;
 
-use Neo\Core\Utils\Cache\Cache;use Neo\Core\Utils\Logger\Logger;
+use Neo\Core\Utils\Cache\Cache;
+use Neo\Core\Utils\Logger\Logger;
 
 final class ReportService
 {
