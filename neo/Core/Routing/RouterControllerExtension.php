@@ -1,0 +1,71 @@
+<?php
+declare(strict_types=1);
+
+namespace Neo\Core\Routing;
+
+use Neo\Core\Controller\AbstractController;
+use Neo\Core\Controller\Interface\ControllerExtensionInterface;
+use Neo\Core\DI\Container;
+use Neo\Core\Http\Request;
+use Neo\Core\Http\Response\RedirectResponse;
+
+/**
+ * @method string getRoutePath(string $routeName, array $params = [])
+ * @method string getRedirectBack(?string $fallbackRoute = null, array $routeParams = [])
+ * @method \Neo\Core\Http\Response\RedirectResponse redirectToRoute(string $routeName, array $params = [])
+ * @method \Neo\Core\Http\Response\RedirectResponse redirectToPath(string $path, int $code = 302)
+ * @method \Neo\Core\Http\Response\RedirectResponse redirectBack(?string $fallbackRoute = null, array $routeParams = [], int $code = 302)
+ */
+class RouterControllerExtension implements ControllerExtensionInterface
+{
+    public function extend(AbstractController $controller, Container $container): void
+    {
+        $controller->registerMethod('getRoutePath', function (string $routeName, array $params = []) use ($container) {
+            return $container->get(Router::class)->generateUrl($routeName, $params);
+        });
+
+        $controller->registerMethod('getRedirectBack', function (
+            ?string $fallbackRoute = null,
+            array   $routeParams = []
+        ) use ($container) {
+            $request = $container->get(Request::class);
+            $referer = $request->header('Referer');
+
+            if (is_string($referer) && $referer !== '') {
+                return $referer;
+            }
+
+            return $fallbackRoute
+                ? $container->get(Router::class)->generateUrl($fallbackRoute, $routeParams)
+                : '/';
+        });
+
+        $controller->registerMethod('redirectToRoute', function (string $routeName, array $params = []) use ($container) {
+            $path = $container->get(Router::class)->generateUrl($routeName, $params);
+            return new RedirectResponse($path, 302);
+        });
+
+        $controller->registerMethod('redirectToPath', function (string $path, int $code = 302) {
+            return new RedirectResponse($path, $code);
+        });
+
+        $controller->registerMethod('redirectBack', function (
+            ?string $fallbackRoute = null,
+            array   $routeParams = [],
+            int     $code = 302
+        ) use ($container) {
+            $request = $container->get(Request::class);
+            $referer = $request->header('Referer');
+
+            if (is_string($referer) && $referer !== '') {
+                return new RedirectResponse($referer, $code);
+            }
+
+            $fallback = $fallbackRoute
+                ? $container->get(Router::class)->generateUrl($fallbackRoute, $routeParams)
+                : '/';
+
+            return new RedirectResponse($request->getPreviousUrl($fallback), $code);
+        });
+    }
+}
