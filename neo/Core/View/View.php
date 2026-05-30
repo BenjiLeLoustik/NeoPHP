@@ -103,22 +103,24 @@ class View
 
     public function addExtension(TwigExtensionInterface $extension): void
     {
-        foreach ($extension->getFunctions() as $name => $callable) {
-            $this->twig->addFunction(new TwigFunction($name, $callable));
+        foreach ($extension->getFunctions() as $name => $definition) {
+            if (is_callable($definition)) {
+                $this->twig->addFunction(new TwigFunction($name, $definition));
+            } else {
+                $this->twig->addFunction(
+                    new TwigFunction($name, $definition['callable'], $definition['options'] ?? [])
+                );
+            }
         }
 
-        foreach ($extension->getFilters() as $name => $callable) {
-            $this->twig->addFilter(new TwigFilter($name, $callable));
+        foreach ($extension->getFilters() as $name => $definition) {
+            if (is_callable($definition)) {
+                $this->twig->addFilter(new TwigFilter($name, $definition));
+            } else {
+                $this->twig->addFilter(
+                    new TwigFilter($name, $definition['callable'], $definition['options'] ?? [])
+                );
+            }
         }
-    }
-
-    public function registerTwigFunction(string $name, callable $callable, array $options = []): void
-    {
-        $this->twig->addFunction(new TwigFunction($name, $callable, $options));
-    }
-
-    public function registerTwigFilter(string $name, callable $callable, array $options = []): void
-    {
-        $this->twig->addFilter(new TwigFilter($name, $callable, $options));
     }
 }
