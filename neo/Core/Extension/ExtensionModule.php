@@ -27,7 +27,7 @@ class ExtensionModule extends AbstractModule
 
     public function register(Container $container): void
     {
-        $container->set(StringExtension::class, fn(Container $c) => new StringExtension($c));
+        $container->set(StringExtension::class, fn(Container $c) => new StringExtension());
         $container->set(ArrayExtension::class,  fn() => new ArrayExtension());
         $container->set(NumberExtension::class, fn() => new NumberExtension());
         $container->set(DateExtension::class, fn() => new DateExtension());
@@ -36,6 +36,20 @@ class ExtensionModule extends AbstractModule
         $container->set(UrlExtension::class, fn() => new UrlExtension());
         $container->set(PathExtension::class,   fn() => new PathExtension());
         $container->set(HtmlExtension::class,   fn() => new HtmlExtension());
+
+        $container->set(ExtensionViewExtension::class, fn(Container $container) => new ExtensionViewExtension(
+            $container->get(StringExtension::class),
+            $container->get(ArrayExtension::class),
+            $container->get(DateExtension::class),
+            $container->get(FileExtension::class),
+            $container->get(HtmlExtension::class),
+            $container->get(JsonExtension::class),
+            $container->get(NumberExtension::class),
+            $container->get(PathExtension::class),
+            $container->get(UrlExtension::class),
+        ));
+
+        $container->tag(ExtensionViewExtension::class, 'twig.extension');
     }
 
     protected function resolveDependencies(): void
