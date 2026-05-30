@@ -10,7 +10,7 @@ final class TranslationTwigExtension
     private TranslationManager $translator;
 
     public function __construct(
-        View               $view,
+        View $view,
         TranslationManager $translator
     )
     {
