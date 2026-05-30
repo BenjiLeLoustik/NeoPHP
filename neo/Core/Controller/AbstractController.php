@@ -11,7 +11,7 @@ use Neo\Core\Extension\ArrayExtension;
 use Neo\Core\Extension\StringExtension;
 use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Http\Client\Flash\Flash;
-use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\File\Uploader;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\JsonResponse;

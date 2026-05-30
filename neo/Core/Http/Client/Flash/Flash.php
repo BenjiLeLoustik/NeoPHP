@@ -5,7 +5,7 @@ namespace Neo\Core\Http\Client\Flash;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
-use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\View\View;
 use Twig\Markup;
