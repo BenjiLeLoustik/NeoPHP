@@ -18,7 +18,10 @@ class ViewControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        $controller->registerMethod('render', function (string $template, array $params = []) use ($container) {
+        $controller->registerMethod('render', function (
+            string $template,
+            array $params = []
+        ) use ($container) {
             $view = $container->get(View::class);
             $response = $container->get(Response::class);
 
@@ -37,7 +40,10 @@ class ViewControllerExtension implements ControllerExtensionInterface
             return $response;
         });
 
-        $controller->registerMethod('template', function (string $template, array $params = []) use ($container) {
+        $controller->registerMethod('template', function (
+            string $template,
+            array $params = []
+        ) use ($container) {
             return $container->get(View::class)->render($template, $params);
         });
     }
