@@ -13,7 +13,6 @@ use Neo\Core\Routing\Exception\RouteNotFoundException;
 use Neo\Core\Routing\Exception\RouterException;
 use Neo\Core\Security\Middleware\MiddlewareHandler;
 use Neo\Core\Utils\Config\Config;
-use Neo\Core\View\View;
 use ReflectionClass;
 use ReflectionMethod;
 use Throwable;
@@ -34,16 +33,6 @@ class Router
         $this->controllersPath = $this->container->get('controllersPath');
 
         $this->scanControllers();
-
-        $this->container->get(View::class)->registerTwigFunction(
-            'path',
-            fn(string $name, array $params = []) => $this->generateUrl($name, $params)
-        );
-
-        $this->container->get(View::class)->registerTwigFunction(
-            'currentRoute',
-            fn() => $this->getCurrentRouteName()
-        );
     }
 
     private function isDebug(): bool
