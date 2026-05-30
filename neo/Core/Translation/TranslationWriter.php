@@ -16,7 +16,7 @@ final class TranslationWriter
     public function ensure(
         string $locale,
         string $file,
-        array  $segments,
+        array $segments,
         string $defaultValue
     ): void {
         foreach (TranslationRegistry::getPaths() as $path) {
