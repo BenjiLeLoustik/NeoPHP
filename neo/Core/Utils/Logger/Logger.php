@@ -41,7 +41,7 @@ class Logger
 
         $storagePath = $this->container->get('storagePath');
 
-        $this->logDirectory     = $storagePath . '/logs';
+        $this->logDirectory = $storagePath . '/logs';
         $this->archiveDirectory = $storagePath . '/logs/archives';
 
         if (!is_dir($this->logDirectory)) {
