@@ -7,8 +7,6 @@ use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Utils\Config\Config;
-use Neo\Core\View\View;
-use Twig\Markup;
 
 class Flash
 {
@@ -25,21 +23,6 @@ class Flash
 
         $this->session = $container->get(Session::class);
         $this->initFlash();
-
-        $container->get(View::class)->registerTwigFunction(
-            'flashes',
-            function () {
-                $html = '';
-                foreach ($this->getAll() as $datas) {
-                    $type = htmlspecialchars($datas['type'], ENT_QUOTES, 'UTF-8');
-                    $msg  = htmlspecialchars($datas['message'], ENT_QUOTES, 'UTF-8');
-
-                    $html .= "<span class='flash-message {$type}'>{$msg}</span>";
-                }
-
-                return new Markup($html, 'UTF-8');
-            }
-        );
     }
 
     private function initFlash(): void
@@ -59,7 +42,7 @@ class Flash
             );
         }
 
-        $messages   = $this->session->get($this->flashKey, []);
+        $messages = $this->session->get($this->flashKey, []);
         $messages[] = ['type' => $type, 'message' => $message];
 
         $this->session->set($this->flashKey, $messages);
@@ -79,5 +62,16 @@ class Flash
     public function has(): bool
     {
         return !empty($this->session->get($this->flashKey, []));
+    }
+
+    public function render(): string
+    {
+        $html = '';
+        foreach ($this->getAll() as $data) {
+            $type = htmlspecialchars($data['type'], ENT_QUOTES, 'UTF-8');
+            $msg = htmlspecialchars($data['message'], ENT_QUOTES, 'UTF-8');
+            $html .= "<span class='flash-message {$type}'>{$msg}</span>";
+        }
+        return $html;
     }
 }
