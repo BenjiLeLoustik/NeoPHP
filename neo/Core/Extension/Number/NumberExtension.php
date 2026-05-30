@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Extension;
+namespace Neo\Core\Extension\Number;
 
 class NumberExtension
 {
