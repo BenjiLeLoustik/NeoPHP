@@ -44,6 +44,35 @@ class ErrorHandler
         return $this->resolvedEnv;
     }
 
+    public static function registerBootstrap(): void
+    {
+        set_exception_handler(function (\Throwable $e) {
+            if (!headers_sent()) {
+                http_response_code(500);
+            }
+            $exception = $e instanceof FrameworkException
+                ? $e
+                : FrameworkException::fromThrowable($e);
+            echo self::renderFallbackHtml($exception, self::detectBootstrapEnv());
+            exit;
+        });
+
+        set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) {
+            if (!(error_reporting() & $errno)) {
+                return;
+            }
+            throw new \ErrorException($errstr, $errno, $errno, $errfile, $errline);
+        });
+    }
+
+    private static function detectBootstrapEnv(): string
+    {
+        $host = $_SERVER['SERVER_NAME'] ?? $_SERVER['HTTP_HOST'] ?? '';
+        return (str_contains($host, 'localhost') || str_contains($host, '127.0.0.1'))
+            ? 'dev'
+            : 'prod';
+    }
+
     public function register(): void
     {
         set_exception_handler([$this, 'handleException']);
@@ -76,7 +105,7 @@ class ErrorHandler
         }
 
         try {
-            $dispatcher     = $this->container->get(EventDispatcher::class);
+            $dispatcher = $this->container->get(EventDispatcher::class);
             $exceptionEvent = new ExceptionEvent(
                 $e instanceof FrameworkException ? $e : FrameworkException::fromThrowable($e)
             );
@@ -85,7 +114,7 @@ class ErrorHandler
 
         $exception = $e instanceof FrameworkException ? $e : FrameworkException::fromThrowable($e);
 
-        $code     = $exception->getCode() ?: 500;
+        $code = $exception->getCode() ?: 500;
         $viewFile = $this->container->get('viewsPath') . "/errors/{$code}.html.twig";
 
         if (!headers_sent()) {
@@ -97,8 +126,12 @@ class ErrorHandler
                 $view = $this->container->get(View::class);
                 $html = $view->render("errors/{$code}.html.twig", [
                     'title'   => $exception->getTitle(),
-                    'message' => $env === 'dev' ? $exception->getMessage() : 'An error occurred.',
-                    'context' => $env === 'dev' ? $exception->getContext() : [],
+                    'message' => $env === 'dev'
+                        ? $exception->getMessage()
+                        : 'An error occurred.',
+                    'context' => $env === 'dev'
+                        ? $exception->getContext()
+                        : [],
                 ]);
                 echo $this->injectProfilerToolbar($html);
             } catch (\Throwable) {
@@ -124,23 +157,28 @@ class ErrorHandler
 
     private function renderFallback(FrameworkException $exception): void
     {
-        $env   = $this->getEnv();
-        $code  = $exception->getCode() ?: 500;
+        $env = $this->getEnv();
+        echo $this->injectProfilerToolbar(self::renderFallbackHtml($exception, $env));
+    }
+
+    private static function renderFallbackHtml(FrameworkException $exception, string $env): string
+    {
+        $code = $exception->getCode() ?: 500;
         $isDev = $env === 'dev';
 
         $title = htmlspecialchars($exception->getTitle(), ENT_QUOTES, 'UTF-8');
 
         $message = htmlspecialchars(
             $isDev ? $exception->getMessage() : match(true) {
-                $code === 404 => 'La page que vous recherchez est introuvable.',
-                $code === 403 => 'Vous n\'avez pas les droits pour accéder à cette ressource.',
-                $code === 401 => 'Vous devez être authentifié pour accéder à cette ressource.',
-                $code === 405 => 'La méthode HTTP utilisée n\'est pas autorisée pour cette route.',
-                $code === 419 => 'La session a expiré, veuillez rafraîchir la page.',
-                $code === 422 => 'Les données envoyées sont invalides.',
-                $code === 429 => 'Trop de requêtes, veuillez réessayer dans quelques instants.',
-                $code >= 500 => 'Une erreur interne est survenue, veuillez réessayer plus tard.',
-                default => 'Une erreur inattendue s\'est produite.',
+                $code === 404 => 'The page you are looking for could not be found.',
+                $code === 403 => 'You do not have permission to access this resource.',
+                $code === 401 => 'You must be authenticated to access this resource.',
+                $code === 405 => 'The HTTP method used is not allowed for this route.',
+                $code === 419 => 'Your session has expired, please refresh the page.',
+                $code === 422 => 'The submitted data is invalid.',
+                $code === 429 => 'Too many requests, please try again in a few moments.',
+                $code >= 500 => 'An internal error has occurred, please try again later.',
+                default => 'An unexpected error has occurred.',
             },
             ENT_QUOTES, 'UTF-8'
         );
@@ -154,8 +192,8 @@ class ErrorHandler
 
         $devBlock = '';
         if ($isDev) {
-            $file  = htmlspecialchars($exception->getFile(), ENT_QUOTES, 'UTF-8');
-            $line  = $exception->getLine();
+            $file = htmlspecialchars($exception->getFile(), ENT_QUOTES, 'UTF-8');
+            $line = $exception->getLine();
             $class = htmlspecialchars(get_class($exception), ENT_QUOTES, 'UTF-8');
 
             $traceRows = '';
@@ -230,7 +268,7 @@ class ErrorHandler
         HTML;
         }
 
-        echo $this->injectProfilerToolbar(<<<HTML
+        return <<<HTML
     <!DOCTYPE html>
     <html lang="fr">
     <head>
@@ -261,7 +299,7 @@ class ErrorHandler
 
     </body>
     </html>
-    HTML);
+    HTML;
     }
 
     private function injectProfilerToolbar(string $html): string
