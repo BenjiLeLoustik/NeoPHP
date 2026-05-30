@@ -44,10 +44,6 @@ class App
                     $this->container->get(Session::class)
                 );
         }
-
-        date_default_timezone_set(
-            $this->container->get(Config::class)->from('app')->get('date.timezone')
-        );
     }
 
     private function registerBasePaths(): void
