@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Http;
 
 
-use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\File\UploadedFile;
 
 class Request

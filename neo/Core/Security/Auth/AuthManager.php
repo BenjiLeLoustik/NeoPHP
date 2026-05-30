@@ -5,7 +5,7 @@ namespace Neo\Core\Security\Auth;
 
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\DI\Container;
-use Neo\Core\Http\Client\Session;
+use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Guard\GuardInterface;
