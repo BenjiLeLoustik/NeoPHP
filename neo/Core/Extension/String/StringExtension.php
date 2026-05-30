@@ -8,28 +8,6 @@ use Neo\Core\View\View;
 
 class StringExtension
 {
-    protected Container $container;
-
-    public function __construct(Container $container)
-    {
-        $this->container = $container;
-
-        $view = $this->container->get(View::class);
-
-        $view->registerTwigFunction('slugify', fn(string $text) => $this->slugify($text));
-        $view->registerTwigFunction('camel_case', fn(string $text) => $this->camelCase($text));
-        $view->registerTwigFunction('snake_case', fn(string $text) => $this->snakeCase($text));
-        $view->registerTwigFunction('pascal_case',fn(string $text) => $this->pascalCase($text));
-        $view->registerTwigFunction('truncate', fn(string $text, int $length, string $suffix = '...') => $this->truncate($text, $length, $suffix));
-        $view->registerTwigFunction('excerpt', fn(string $text, string $keyword, int $radius = 50) => $this->excerpt($text, $keyword, $radius));
-
-        $view->registerTwigFilter('slugify', fn(string $text) => $this->slugify($text));
-        $view->registerTwigFilter('camel_case', fn(string $text) => $this->camelCase($text));
-        $view->registerTwigFilter('snake_case', fn(string $text) => $this->snakeCase($text));
-        $view->registerTwigFilter('pascal_case', fn(string $text) => $this->pascalCase($text));
-        $view->registerTwigFilter('truncate', fn(string $text, int $length, string $suffix = '...') => $this->truncate($text, $length, $suffix));
-        $view->registerTwigFilter('sanitize', fn(string $text) => $this->sanitize($text));
-    }
 
     public function slugify(string $text): string
     {
