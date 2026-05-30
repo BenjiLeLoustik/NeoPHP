@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Console\Commands;
+namespace Neo\Core\Event\Commands;
 
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:event',

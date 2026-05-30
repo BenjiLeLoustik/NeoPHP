@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Console\Commands;
+namespace Neo\Core\Asset\Commands;
 
 
 use Neo\Core\Console\Attribute\Command;
