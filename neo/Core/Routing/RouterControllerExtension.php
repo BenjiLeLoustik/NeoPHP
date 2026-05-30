@@ -20,13 +20,16 @@ class RouterControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        $controller->registerMethod('getRoutePath', function (string $routeName, array $params = []) use ($container) {
+        $controller->registerMethod('getRoutePath', function (
+            string $routeName,
+            array $params = []
+        ) use ($container) {
             return $container->get(Router::class)->generateUrl($routeName, $params);
         });
 
         $controller->registerMethod('getRedirectBack', function (
             ?string $fallbackRoute = null,
-            array   $routeParams = []
+            array $routeParams = []
         ) use ($container) {
             $request = $container->get(Request::class);
             $referer = $request->header('Referer');
@@ -40,7 +43,10 @@ class RouterControllerExtension implements ControllerExtensionInterface
                 : '/';
         });
 
-        $controller->registerMethod('redirectToRoute', function (string $routeName, array $params = []) use ($container) {
+        $controller->registerMethod('redirectToRoute', function (
+            string $routeName,
+            array $params = []
+        ) use ($container) {
             $path = $container->get(Router::class)->generateUrl($routeName, $params);
             return new RedirectResponse($path, 302);
         });
@@ -51,8 +57,8 @@ class RouterControllerExtension implements ControllerExtensionInterface
 
         $controller->registerMethod('redirectBack', function (
             ?string $fallbackRoute = null,
-            array   $routeParams = [],
-            int     $code = 302
+            array $routeParams = [],
+            int $code = 302
         ) use ($container) {
             $request = $container->get(Request::class);
             $referer = $request->header('Referer');

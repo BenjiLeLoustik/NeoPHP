@@ -27,8 +27,8 @@ class HttpControllerExtension implements ControllerExtensionInterface
     public function extend(AbstractController $controller, Container $container): void
     {
         $controller->registerMethod('getSession', fn() => $container->get(Session::class));
-        $controller->registerMethod('getCookie',  fn() => $container->get(Cookie::class));
-        $controller->registerMethod('getFlash',   fn() => $container->get(Flash::class));
+        $controller->registerMethod('getCookie', fn() => $container->get(Cookie::class));
+        $controller->registerMethod('getFlash', fn() => $container->get(Flash::class));
 
         $controller->registerMethod('json', function (array|object $data, int $status = 200) {
             return new JsonResponse($data, $status);
@@ -38,14 +38,18 @@ class HttpControllerExtension implements ControllerExtensionInterface
             return new JsonResponse(['success' => true, 'data' => $data], $status);
         });
 
-        $controller->registerMethod('jsonError', function (string $message, int $status = 400, array $extra = []) {
+        $controller->registerMethod('jsonError', function (
+            string $message,
+            int $status = 400,
+            array $extra = []
+        ) {
             return new JsonResponse(array_merge(['success' => false, 'error' => $message], $extra), $status);
         });
 
         $controller->registerMethod('upload', function (
             string $field,
             string $name,
-            array  $extensions,
+            array $extensions,
             string $directory
         ) use ($container) {
             $file = $container->get(Request::class)->file($field);

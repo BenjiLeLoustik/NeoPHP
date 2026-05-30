@@ -32,13 +32,13 @@ class ExtensionControllerExtension implements ControllerExtensionInterface
     public function extend(AbstractController $controller, Container $container): void
     {
         $controller->registerMethod('getString', fn() => $container->get(StringExtension::class));
-        $controller->registerMethod('getArray',  fn() => $container->get(ArrayExtension::class));
-        $controller->registerMethod('getDate',   fn() => $container->get(DateExtension::class));
-        $controller->registerMethod('getFile',   fn() => $container->get(FileExtension::class));
-        $controller->registerMethod('getHtml',   fn() => $container->get(HtmlExtension::class));
-        $controller->registerMethod('getJson',   fn() => $container->get(JsonExtension::class));
+        $controller->registerMethod('getArray', fn() => $container->get(ArrayExtension::class));
+        $controller->registerMethod('getDate', fn() => $container->get(DateExtension::class));
+        $controller->registerMethod('getFile', fn() => $container->get(FileExtension::class));
+        $controller->registerMethod('getHtml', fn() => $container->get(HtmlExtension::class));
+        $controller->registerMethod('getJson', fn() => $container->get(JsonExtension::class));
         $controller->registerMethod('getNumber', fn() => $container->get(NumberExtension::class));
-        $controller->registerMethod('getPath',   fn() => $container->get(PathExtension::class));
-        $controller->registerMethod('getUrl',    fn() => $container->get(UrlExtension::class));
+        $controller->registerMethod('getPath', fn() => $container->get(PathExtension::class));
+        $controller->registerMethod('getUrl', fn() => $container->get(UrlExtension::class));
     }
 }
