@@ -7,8 +7,10 @@ use Neo\Core\DI\Container;
 use Neo\Core\Extension\Array\ArrayExtension;
 use Neo\Core\Extension\Date\DateExtension;
 use Neo\Core\Extension\File\FileExtension;
+use Neo\Core\Extension\Html\HtmlExtension;
 use Neo\Core\Extension\Json\JsonExtension;
 use Neo\Core\Extension\Number\NumberExtension;
+use Neo\Core\Extension\Path\PathExtension;
 use Neo\Core\Extension\String\StringExtension;
 use Neo\Core\Extension\Url\UrlExtension;
 use Neo\Core\Module\AbstractModule;
@@ -32,6 +34,8 @@ class ExtensionModule extends AbstractModule
         $container->set(FileExtension::class, fn() => new FileExtension());
         $container->set(JsonExtension::class, fn() => new JsonExtension());
         $container->set(UrlExtension::class, fn() => new UrlExtension());
+        $container->set(PathExtension::class,   fn() => new PathExtension());
+        $container->set(HtmlExtension::class,   fn() => new HtmlExtension());
     }
 
     protected function resolveDependencies(): void
