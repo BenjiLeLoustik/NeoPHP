@@ -6,7 +6,9 @@ namespace Neo\Core\DI;
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
+use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
 use ReflectionFunctionAbstract;
 use ReflectionNamedType;
@@ -18,6 +20,7 @@ class Container implements ContainerInterface
     private array $instances = [];
     private array $bindings = [];
     private array $resolving = [];
+    private array $tags = [];
     private static ?self $instance = null;
 
     public function __construct()
@@ -137,7 +140,7 @@ class Container implements ContainerInterface
                 $instance = $ref->newInstanceWithoutConstructor();
 
                 $parentConstructor = new \ReflectionMethod(
-                    \Neo\Core\Controller\AbstractController::class,
+                    AbstractController::class,
                     '__construct'
                 );
                 $parentConstructor->invoke($instance, $this);
@@ -151,7 +154,7 @@ class Container implements ContainerInterface
                         continue;
                     }
 
-                    $name  = $param->getName();
+                    $name = $param->getName();
                     $value = array_key_exists($name, $extraParams)
                         ? $extraParams[$name]
                         : $this->resolveParameter($param);
@@ -298,5 +301,20 @@ class Container implements ContainerInterface
     public function getBindings(): array
     {
         return $this->bindings;
+    }
+
+    public function tag(string $id, string ...$tags): void
+    {
+        foreach ($tags as $tag) {
+            $this->tags[$tag][] = $id;
+        }
+    }
+
+    public function tagged(string $tag): array
+    {
+        $ids = $this->tags[$tag] ?? [];
+        return array_map(
+         fn(string $id) => $this->get($id), $ids
+        );
     }
 }
