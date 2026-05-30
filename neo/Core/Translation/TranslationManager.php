@@ -4,7 +4,8 @@ namespace Neo\Core\Translation;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Http\Client\Cookie\Cookie;
-use Neo\Core\Translation\Contract\TranslatorInterface;
+use Neo\Core\Translation\Interface\TranslationCollectorInterface;
+use Neo\Core\Translation\Interface\TranslatorInterface;
 use Neo\Core\Translation\Exception\TranslationException;
 use Neo\Core\Utils\Config\Config;
 
@@ -16,6 +17,7 @@ final class TranslationManager implements TranslatorInterface
     private TranslationWriter $writer;
     private bool $autoWrite;
     private bool $enabled;
+    private ?TranslationCollectorInterface $collector = null;
 
     public function __construct(Container $container)
     {
@@ -74,6 +76,9 @@ final class TranslationManager implements TranslatorInterface
         }
 
         $translated = $this->resolve($key);
+        $found = $translated !== $key;
+        $this->collector?->record($key, $found ? $translated : ($defaultMessage ?? $key), $found);
+
 
         if ($translated === $key) {
             if ($this->autoWrite) {
@@ -172,5 +177,11 @@ final class TranslationManager implements TranslatorInterface
     private function isValidKey(string $key): bool
     {
         return (bool) preg_match('/^[a-zA-Z0-9_\-]+(\.[a-zA-Z0-9_\-]+)+$/', $key);
+    }
+
+
+    public function setCollector(TranslationCollectorInterface $collector): void
+    {
+        $this->collector = $collector;
     }
 }
