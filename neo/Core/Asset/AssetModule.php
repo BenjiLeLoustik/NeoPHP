@@ -4,14 +4,16 @@ namespace Neo\Core\Asset;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Module\AbstractModule;
+use Neo\Core\Utils\Config\ConfigModule;
+use Neo\Core\View\ViewModule;
 
 class AssetModule extends AbstractModule
 {
     public function dependencies(): array
     {
         return [
-            // ConfigModule::class,
-            // ViewModule::class
+            ConfigModule::class,
+            ViewModule::class
         ];
     }
 

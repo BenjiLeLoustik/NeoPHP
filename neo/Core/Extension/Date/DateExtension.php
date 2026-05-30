@@ -1,12 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Extension;
+namespace Neo\Core\Extension\Date;
 
-use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
-use DateInterval;
 use DateTimeZone;
 
 class DateExtension
