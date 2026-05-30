@@ -1,6 +1,6 @@
 <?php
 
-namespace Neo\Core\Security\Password;
+namespace Neo\Core\Security\Auth;
 
 use Neo\Core\DI\Container;
 

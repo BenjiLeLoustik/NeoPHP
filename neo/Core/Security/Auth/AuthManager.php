@@ -11,7 +11,6 @@ use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Guard\GuardInterface;
 use Neo\Core\Security\Auth\Guard\SessionGuard;
 use Neo\Core\Security\Auth\Guard\TokenGuard;
-use Neo\Core\Security\Password\PasswordManager;
 use Neo\Core\Utils\Config\Config;
 
 class AuthManager
