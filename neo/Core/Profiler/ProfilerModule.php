@@ -76,8 +76,11 @@ class ProfilerModule extends AbstractModule
         $profiler->addCollector(new EventCollector($dispatcher));
         $profiler->addCollector(new LogCollector());
         $profiler->addCollector(new AuthCollector($auth));
-        $profiler->addCollector(new TranslationCollector($translator));
         $profiler->addCollector(new MailCollector($mailer));
+
+        $translationCollector = new TranslationCollector($translator);
+        $translator->setCollector($translationCollector);
+        $profiler->addCollector($translationCollector);
 
         $toolbar = new Toolbar($profiler);
         $listener = new ProfilerResponseListener($toolbar);
