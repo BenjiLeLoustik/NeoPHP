@@ -23,6 +23,10 @@ class ViewModule extends AbstractModule
 
     protected function resolveDependencies(): void
     {
-        $this->get(View::class);
+        $view = $this->get(View::class);
+
+        foreach ($this->container->tagged('twig.extension') as $extension) {
+            $view->addExtension($extension);
+        }
     }
 }
