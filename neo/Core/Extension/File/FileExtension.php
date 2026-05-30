@@ -43,7 +43,37 @@ class FileExtension
 
     public function mimeType(string $path): string|false
     {
-        return mime_content_type($path);
+        if (function_exists('mime_content_type')) {
+            return mime_content_type($path);
+        }
+
+        if (class_exists(\finfo::class)) {
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            return $finfo->file($path);
+        }
+
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $map = [
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+            'gif'  => 'image/gif',
+            'webp' => 'image/webp',
+            'svg'  => 'image/svg+xml',
+            'pdf'  => 'application/pdf',
+            'json' => 'application/json',
+            'xml'  => 'application/xml',
+            'zip'  => 'application/zip',
+            'html' => 'text/html',
+            'css'  => 'text/css',
+            'js'   => 'text/javascript',
+            'txt'  => 'text/plain',
+            'csv'  => 'text/csv',
+            'mp4'  => 'video/mp4',
+            'mp3'  => 'audio/mpeg',
+        ];
+
+        return $map[$ext] ?? false;
     }
 
     public function isImage(string $path): bool
