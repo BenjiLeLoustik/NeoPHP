@@ -8,6 +8,8 @@ use Neo\Core\DI\Container;
 use Neo\Core\Event\Contract\EventInterface;
 use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Extension\Array\ArrayExtension;
+use Neo\Core\Extension\Html\HtmlExtension;
+use Neo\Core\Extension\Path\PathExtension;
 use Neo\Core\Extension\String\StringExtension;
 use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Http\Client\Flash\Flash;
@@ -175,6 +177,16 @@ abstract class AbstractController
     protected function getArray(): ArrayExtension
     {
         return $this->container->get(ArrayExtension::class);
+    }
+
+    protected function getPath(): PathExtension
+    {
+        return $this->container->get(PathExtension::class);
+    }
+
+    protected function getHtml(): HtmlExtension
+    {
+        return $this->container->get(HtmlExtension::class);
     }
 
     protected function dispatch(EventInterface $event): EventInterface
