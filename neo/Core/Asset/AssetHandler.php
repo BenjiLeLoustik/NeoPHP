@@ -9,7 +9,6 @@ use Neo\Core\Asset\Compiler\LessCompiler;
 use Neo\Core\Asset\Exception\AssetException;
 use Neo\Core\DI\Container;
 use Neo\Core\Utils\Config\Config;
-use Neo\Core\View\View;
 
 class AssetHandler
 {
@@ -36,10 +35,6 @@ class AssetHandler
         $this->manifestPath = $this->container->get('buildsPath') . $this->currentApplication . '/' . $this->container->get('manifestFilename');
 
         $this->loadManifest();
-
-        $this->container->get(View::class)->registerTwigFunction('asset', function (string $path) {
-            return $this->getAssetPath($path);
-        });
     }
 
     private function loadManifest(): void
