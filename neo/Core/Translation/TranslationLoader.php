@@ -2,6 +2,8 @@
 
 namespace Neo\Core\Translation;
 
+use Neo\Core\Translation\Exception\TranslationException;
+
 final class TranslationLoader
 {
     private array $cache = [];
@@ -26,9 +28,9 @@ final class TranslationLoader
             $data = require $filePath;
 
             if (!is_array($data)) {
-                throw new \Neo\Core\Translation\Exception\TranslationException(
+                throw new TranslationException(
                     title: 'Translation File Error',
-                    message: "Le fichier de traduction '{$filePath}' doit retourner un tableau.",
+                    message: sprintf("Translation file '%s' must return an array.", $filePath),
                     code: 500
                 );
             }

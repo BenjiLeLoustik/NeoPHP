@@ -2,6 +2,8 @@
 
 namespace Neo\Core\Translation;
 
+use Neo\Core\Translation\Exception\TranslationException;
+
 final class TranslationWriter
 {
     private TranslationLoader $loader;
@@ -14,7 +16,7 @@ final class TranslationWriter
     public function ensure(
         string $locale,
         string $file,
-        array  $segments,
+        array $segments,
         string $defaultValue
     ): void {
         foreach (TranslationRegistry::getPaths() as $path) {
@@ -27,9 +29,9 @@ final class TranslationWriter
             $translations = require $filePath;
 
             if (!is_array($translations)) {
-                throw new \Neo\Core\Translation\Exception\TranslationException(
+                throw new TranslationException(
                     title: 'Translation File Error',
-                    message: "Le fichier de traduction '{$filePath}' doit retourner un tableau.",
+                    message: sprintf("Translation file '%s' must return an array.", $filePath),
                     code: 500
                 );
             }
@@ -49,17 +51,17 @@ final class TranslationWriter
         $dir = dirname($filePath);
 
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
-            throw new \Neo\Core\Translation\Exception\TranslationException(
+            throw new TranslationException(
                 title: 'Translation Directory Error',
-                message: "Impossible de créer le répertoire de traduction '{$dir}'.",
+                message: sprintf("Unable to create translation directory '%s'.", $dir),
                 code: 500
             );
         }
 
         if (file_put_contents($filePath, "<?php\n\nreturn [\n];\n") === false) {
-            throw new \Neo\Core\Translation\Exception\TranslationException(
+            throw new TranslationException(
                 title: 'Translation File Error',
-                message: "Impossible de créer le fichier de traduction '{$filePath}'.",
+                message: sprintf("Unable to create translation file '%s'.", $filePath),
                 code: 500
             );
         }
@@ -79,11 +81,11 @@ final class TranslationWriter
 
     private function writeKey(
         string $filePath,
-        array  $translations,
-        array  $segments,
+        array $translations,
+        array $segments,
         string $value
     ): void {
-        $ref  = &$translations;
+        $ref = &$translations;
         $last = array_pop($segments);
 
         foreach ($segments as $segment) {
@@ -103,9 +105,9 @@ final class TranslationWriter
         $content = "<?php\n\nreturn " . $this->arrayToPhp($translations) . ";\n";
 
         if (file_put_contents($filePath, $content) === false) {
-            throw new \Neo\Core\Translation\Exception\TranslationException(
+            throw new TranslationException(
                 title: 'Translation Write Error',
-                message: "Impossible d'écrire dans le fichier de traduction '{$filePath}'.",
+                message: sprintf("Unable to write to translation file '%s'.", $filePath),
                 code: 500
             );
         }
@@ -114,14 +116,14 @@ final class TranslationWriter
     private function arrayToPhp(array $array, int $level = 0): string
     {
         $indent = str_repeat('    ', $level);
-        $lines  = [];
+        $lines = [];
 
         foreach ($array as $key => $value) {
             $keyExport = is_int($key) ? $key : "'" . str_replace("'", "\\'", $key) . "'";
             if (is_array($value)) {
                 $lines[] = "$keyExport => " . $this->arrayToPhp($value, $level + 1);
             } else {
-                $val     = str_replace("'", "\\'", $value);
+                $val = str_replace("'", "\\'", $value);
                 $lines[] = "$keyExport => '$val'";
             }
         }
