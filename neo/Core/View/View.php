@@ -6,6 +6,7 @@ namespace Neo\Core\View;
 use Neo\Core\DI\Container;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\View\Exception\ViewException;
+use Neo\Core\View\Interface\TwigExtensionInterface;
 use Twig\Environment;
 use Twig\Extension\CoreExtension;
 use Twig\Extension\DebugExtension;
@@ -98,6 +99,17 @@ class View
     public function getTwig(): Environment
     {
         return $this->twig;
+    }
+
+    public function addExtension(TwigExtensionInterface $extension): void
+    {
+        foreach ($extension->getFunctions() as $name => $callable) {
+            $this->twig->addFunction(new TwigFunction($name, $callable));
+        }
+
+        foreach ($extension->getFilters() as $name => $callable) {
+            $this->twig->addFilter(new TwigFilter($name, $callable));
+        }
     }
 
     public function registerTwigFunction(string $name, callable $callable, array $options = []): void
