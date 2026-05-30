@@ -23,7 +23,7 @@ class View
     {
         $this->container = $container;
 
-        $config     = $this->container->get(Config::class);
+        $config = $this->container->get(Config::class);
         $twigConfig = $config->from('twig')->all();
 
         $loader = new FilesystemLoader($this->container->get('viewsPath'));
