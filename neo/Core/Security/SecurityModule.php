@@ -12,7 +12,6 @@ use Neo\Core\Security\Auth\PasswordManager;
 use Neo\Core\Security\Csrf\CsrfTokenManager;
 use Neo\Core\Security\Middleware\MiddlewareHandler;
 use Neo\Core\Utils\Config\ConfigModule;
-use Neo\Core\View\View;
 use Neo\Core\View\ViewModule;
 
 class SecurityModule extends AbstractModule
@@ -33,6 +32,12 @@ class SecurityModule extends AbstractModule
         $container->set(CsrfTokenManager::class, fn() => new CsrfTokenManager());
         $container->set(AuthManager::class, fn(Container $c) => new AuthManager($c));
         $container->set(MiddlewareHandler::class, fn(Container $c) => new MiddlewareHandler($c));
+
+        $container->set(SecurityViewExtension::class, fn(Container $container) => new SecurityViewExtension(
+            $container->get(AuthManager::class),
+            $container->get(CsrfTokenManager::class),
+        ));
+        $container->tag(SecurityViewExtension::class, 'twig.extension');
     }
 
     protected function resolveDependencies(): void
@@ -43,11 +48,5 @@ class SecurityModule extends AbstractModule
         $csrf = $this->get(CsrfTokenManager::class);
 
         $this->get(MiddlewareHandler::class);
-
-        $view = $this->get(View::class);
-        $view->registerTwigFunction('auth_check', fn() => $auth->check());
-        $view->registerTwigFunction('auth_user', fn() => $auth->user());
-        $view->registerTwigFunction('auth_has_role', fn(string $role) => $auth->hasRole($role));
-        $view->registerTwigFunction('csrf_token', fn(string $id = 'default') => $csrf->generateToken($id)->getValue());
     }
 }
