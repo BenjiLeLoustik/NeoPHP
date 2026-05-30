@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Console\Commands;
+namespace Neo\Core\Testing\Commands;
 
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\DI\Container;
 use Neo\Core\Testing\Generator\TestGenerator;
 use Neo\Core\Testing\Scaffold\TestScaffolder;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Neo\Core\Console\Commands;
+namespace Neo\Core\Routing\Commands;
 
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
