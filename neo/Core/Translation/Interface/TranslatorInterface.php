@@ -1,6 +1,6 @@
 <?php
 
-namespace Neo\Core\Translation\Contract;
+namespace Neo\Core\Translation\Interface;
 
 interface TranslatorInterface
 {
