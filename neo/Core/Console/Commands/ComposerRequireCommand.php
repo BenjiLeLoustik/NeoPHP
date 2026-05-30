@@ -9,7 +9,7 @@ use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Output;
 
 #[Command(
-    name: 'composer:require',
+    name: 'app:composer:require',
     description: 'Add a Composer dependency to a specific project'
 )]
 final class ComposerRequireCommand implements CommandInterface
