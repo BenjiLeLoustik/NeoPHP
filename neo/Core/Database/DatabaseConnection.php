@@ -62,12 +62,6 @@ class DatabaseConnection
             }
 
         }
-
-        if ($this->container->has(View::class)) {
-            $this->container->get(View::class)->registerTwigFunction('database', function () {
-                return self::$connection ? 'On' : 'Off';
-            });
-        }
     }
 
     public static function getPdo(): PDO
@@ -81,5 +75,10 @@ class DatabaseConnection
         }
 
         return self::$connection;
+    }
+
+    public static function isConnected(): bool
+    {
+        return self::$connection !== null;
     }
 }
