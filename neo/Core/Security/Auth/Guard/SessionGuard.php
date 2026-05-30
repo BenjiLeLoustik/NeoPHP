@@ -7,7 +7,7 @@ use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Security\Auth\Exception\AuthException;
-use Neo\Core\Security\Password\PasswordManager;
+use Neo\Core\Security\Auth\PasswordManager;
 
 final class SessionGuard implements GuardInterface
 {
