@@ -3,9 +3,10 @@ declare(strict_types=1);
 
 namespace Neo\Core\Profiler\Collector;
 
+use Neo\Core\Translation\Interface\TranslationCollectorInterface;
 use Neo\Core\Translation\TranslationManager;
 
-class TranslationCollector implements CollectorInterface
+class TranslationCollector implements CollectorInterface, TranslationCollectorInterface
 {
     private array $hits   = [];
     private array $misses = [];
