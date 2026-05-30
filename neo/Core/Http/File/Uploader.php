@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Http\File;
 
 use Neo\Core\DI\Container;
+use Neo\Core\Http\File\Exception\UploaderException;
 use RuntimeException;
 
 class Uploader
@@ -22,18 +23,30 @@ class Uploader
         string $directory
     ): string {
         if (!$file->isValid()) {
-            throw new \RuntimeException('Invalid uploaded file.');
+            throw new UploaderException(
+                title: 'Invalid File',
+                message: sprintf('Invalid uploaded file.'),
+                code: 500,
+            );
         }
 
         $extension = strtolower(pathinfo($file->getOriginalName(), PATHINFO_EXTENSION));
 
         $forbidden = ['php', 'phtml', 'exe', 'sh', 'js'];
         if (in_array($extension, $forbidden, true)) {
-            throw new \RuntimeException("Forbidden file type: .$extension");
+            throw new UploaderException(
+                title: 'Forbidden File Type',
+                message: sprintf('Forbidden file type : %s.', $extension),
+                code: 500,
+            );
         }
 
         if (!empty($allowedExtensions) && !in_array($extension, $allowedExtensions, true)) {
-            throw new \RuntimeException("Extension .$extension not allowed.");
+            throw new UploaderException(
+                title: 'Extension Not Allowed',
+                message: sprintf('Extension .%s not allowed.', $extension),
+                code: 500,
+            );
         }
 
         $destinationDir = $this->assetsPath . '/' . trim($directory, '/');
@@ -51,7 +64,12 @@ class Uploader
         }
 
         if (!move_uploaded_file($file->getTempPath(), $destination)) {
-            throw new \RuntimeException('Upload failed.');
+            throw new UploaderException(
+                title: 'Upload Failed',
+                message: sprintf('Upload failed.'),
+                code: 500,
+                context: []
+            );
         }
 
         return $finalName;
