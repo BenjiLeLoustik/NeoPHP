@@ -81,11 +81,11 @@ final class TranslationWriter
 
     private function writeKey(
         string $filePath,
-        array  $translations,
-        array  $segments,
+        array $translations,
+        array $segments,
         string $value
     ): void {
-        $ref  = &$translations;
+        $ref = &$translations;
         $last = array_pop($segments);
 
         foreach ($segments as $segment) {
@@ -116,14 +116,14 @@ final class TranslationWriter
     private function arrayToPhp(array $array, int $level = 0): string
     {
         $indent = str_repeat('    ', $level);
-        $lines  = [];
+        $lines = [];
 
         foreach ($array as $key => $value) {
             $keyExport = is_int($key) ? $key : "'" . str_replace("'", "\\'", $key) . "'";
             if (is_array($value)) {
                 $lines[] = "$keyExport => " . $this->arrayToPhp($value, $level + 1);
             } else {
-                $val     = str_replace("'", "\\'", $value);
+                $val = str_replace("'", "\\'", $value);
                 $lines[] = "$keyExport => '$val'";
             }
         }
