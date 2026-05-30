@@ -10,7 +10,7 @@ use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Output;
 
 #[Command(
-    name: 'make:service',
+    name: 'app:make:service',
     description: 'Create a Service class for a project'
 )]
 final class MakeServiceCommand implements CommandInterface

@@ -9,7 +9,7 @@ use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Output;
 
-#[Command(name: 'delete:project', description: 'Delete a NeoPHP project')]
+#[Command(name: 'app:delete:project', description: 'Delete a NeoPHP project')]
 final class DeleteProjectCommand implements CommandInterface
 {
     public function execute(array $args): void
