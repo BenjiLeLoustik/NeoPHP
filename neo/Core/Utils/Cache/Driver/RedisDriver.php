@@ -5,41 +5,35 @@ namespace Neo\Core\Utils\Cache\Driver;
 
 use Neo\Core\Utils\Cache\Driver\Interface\CacheDriverInterface;
 use Neo\Core\Utils\Cache\Exception\CacheException;
-use Redis;
+use Predis\Client;
 
 class RedisDriver implements CacheDriverInterface
 {
-    private Redis $redis;
+    private Client $redis;
     private int $defaultTtl;
     private string $prefix;
 
     public function __construct(array $config, int $defaultTtl = 3600)
     {
         $this->defaultTtl = $defaultTtl;
-        $this->prefix = $config['prefix'] ?? '';
+        $this->prefix     = $config['prefix'] ?? '';
 
-        $this->redis = new Redis();
+        try {
+            $this->redis = new Client([
+                'scheme' => 'tcp',
+                'host' => $config['host'] ?? '127.0.0.1',
+                'port' => (int) ($config['port'] ?? 6379),
+                'password' => $config['password'] ?? null,
+                'database' => (int) ($config['database'] ?? 0),
+            ]);
 
-        $connected = $this->redis->connect(
-            $config['host'] ?? '127.0.0.1',
-            (int) ($config['port'] ?? 6379),
-            2.5
-        );
-
-        if (!$connected) {
+            $this->redis->ping();
+        } catch (ConnectionException $e) {
             throw new CacheException(
                 title: 'Redis Connection Error',
-                message: 'Unable to connect to Redis server.',
+                message: 'Unable to connect to Redis server: ' . $e->getMessage(),
                 code: 500
             );
-        }
-
-        if (!empty($config['password'])) {
-            $this->redis->auth($config['password']);
-        }
-
-        if (isset($config['database'])) {
-            $this->redis->select((int) $config['database']);
         }
     }
 
@@ -47,7 +41,7 @@ class RedisDriver implements CacheDriverInterface
     {
         $raw = $this->redis->get($this->key($key));
 
-        if ($raw === false) {
+        if ($raw === null) {
             return $default;
         }
 
@@ -63,24 +57,18 @@ class RedisDriver implements CacheDriverInterface
     public function set(string $key, mixed $value, ?int $ttl = null): void
     {
         $data = serialize(['content' => $value]);
-        $ttl = $ttl ?? $this->defaultTtl;
+        $ttl  = $ttl ?? $this->defaultTtl;
 
-        $result = $ttl > 0
-            ? $this->redis->setex($this->key($key), $ttl, $data)
-            : $this->redis->set($this->key($key), $data);
-
-        if (!$result) {
-            throw new CacheException(
-                title: 'Cache Write Error',
-                message: sprintf("Unable to write cache for key '%s'.", $key),
-                code: 500
-            );
+        if ($ttl > 0) {
+            $this->redis->setex($this->key($key), $ttl, $data);
+        } else {
+            $this->redis->set($this->key($key), $data);
         }
     }
 
     public function delete(string $key): void
     {
-        $this->redis->del($this->key($key));
+        $this->redis->del([$this->key($key)]);
     }
 
     public function clear(): void
@@ -88,12 +76,12 @@ class RedisDriver implements CacheDriverInterface
         if ($this->prefix !== '') {
             $keys = $this->redis->keys($this->prefix . '*');
             if (!empty($keys)) {
-                $this->redis->del(...$keys);
+                $this->redis->del($keys);
             }
             return;
         }
 
-        $this->redis->flushDB();
+        $this->redis->flushdb();
     }
 
     public function has(string $key): bool
