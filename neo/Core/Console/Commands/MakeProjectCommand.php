@@ -386,14 +386,27 @@ PHP;
         $content = <<<PHP
 <?php
 declare(strict_types=1);
-
+ 
 // ./src/$name/Config/cache.config.php
-
+ 
 return [
     'enabled' => true,
     'driver'  => 'files',
     'ttl'     => 3600,
-    'storage' => 'cache',
+ 
+    'drivers' => [
+        'files' => [
+            'path' => 'cache',
+        ],
+        'redis' => [
+            'host'     => '127.0.0.1',
+            'port'     => 6379,
+            'password' => null,
+            'database' => 0,
+            'prefix'   => '',
+        ],
+        'array' => [],
+    ],
 ];
 PHP;
         file_put_contents($path . 'cache.config.php', $content);
