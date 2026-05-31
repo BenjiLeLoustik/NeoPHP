@@ -4,103 +4,81 @@ declare(strict_types=1);
 namespace Neo\Core\Utils\Cache;
 
 use Neo\Core\DI\Container;
+use Neo\Core\Utils\Cache\Driver\ArrayDriver;
+use Neo\Core\Utils\Cache\Driver\FileDriver;
+use Neo\Core\Utils\Cache\Driver\Interface\CacheDriverInterface;
+use Neo\Core\Utils\Cache\Driver\RedisDriver;
 use Neo\Core\Utils\Cache\Exception\CacheException;
 use Neo\Core\Utils\Config\Config;
 
 class Cache
 {
-    private string $cacheDirectory;
-    private int $defaultTtl;
+    private CacheDriverInterface $driver;
 
     public function __construct(Container $container)
     {
         $config = $container->get(Config::class)->from('cache')->all();
-        $this->cacheDirectory = $container->get('storagePath') . '/cache';
-        $this->defaultTtl = (int) ($config['ttl'] ?? 3600);
+        $driverName = $config['driver'] ?? 'files';
+        $ttl = (int) ($config['ttl'] ?? 3600);
+        $drivers = $config['drivers'] ?? [];
 
-        if (!is_dir($this->cacheDirectory) && !mkdir($this->cacheDirectory, 0777, true) && !is_dir($this->cacheDirectory)) {
-            throw new CacheException(
-                title: 'Cache Directory Error',
-                message: sprintf("Unable to create cache directory '%s'.", $this->cacheDirectory),
+        $this->driver = match ($driverName) {
+            'files' => new FileDriver(
+                $container->get('storagePath') . '/' . ($drivers['files']['path'] ?? 'cache'),
+                $ttl
+            ),
+            'redis' => new RedisDriver(
+                $drivers['redis'] ?? [],
+                $ttl
+            ),
+            'array' => new ArrayDriver($ttl),
+            default => throw new CacheException(
+                title: 'Cache Driver Error',
+                message: sprintf("Unsupported cache driver '%s'.", $driverName),
                 code: 500
-            );
-        }
-    }
-
-    public function set(string $key, mixed $value, ?int $ttl = null): void
-    {
-        $data = [
-            'expires_at' => time() + ($ttl ?? $this->defaultTtl),
-            'content' => $value,
-        ];
-
-        if (file_put_contents($this->getFilePath($key), serialize($data), LOCK_EX) === false) {
-            throw new CacheException(
-                title: 'Cache Write Error',
-                message: sprintf("Unable to write cache for key '%s'.", $key),
-                code: 500
-            );
-        }
+            ),
+        };
     }
 
     public function get(string $key, mixed $default = null): mixed
     {
-        $file = $this->getFilePath($key);
+        return $this->driver->get($key, $default);
+    }
 
-        if (!file_exists($file)) {
-            return $default;
-        }
-
-        $raw = file_get_contents($file);
-
-        if ($raw === false) {
-            throw new CacheException(
-                title: 'Cache Read Error',
-                message: sprintf("Unable to read cache for key '%s'.", $key),
-                code: 500
-            );
-        }
-
-        $data = unserialize($raw);
-
-        if (time() > $data['expires_at']) {
-            $this->delete($key);
-            return $default;
-        }
-
-        return $data['content'];
+    public function set(string $key, mixed $value, ?int $ttl = null): void
+    {
+        $this->driver->set($key, $value, $ttl);
     }
 
     public function delete(string $key): void
     {
-        $file = $this->getFilePath($key);
-
-        if (file_exists($file) && !unlink($file)) {
-            throw new CacheException(
-                title: 'Cache Delete Error',
-                message: sprintf("Unable to delete cache for key '%s'.", $key),
-                code: 500
-            );
-        }
+        $this->driver->delete($key);
     }
 
     public function clear(): void
     {
-        $files = glob($this->cacheDirectory . '/*.cache') ?: [];
-
-        foreach ($files as $file) {
-            if (is_file($file) && !unlink($file)) {
-                throw new CacheException(
-                    title: 'Cache Clear Error',
-                    message: sprintf("Unable to delete cache file '%s'.", $file),
-                    code: 500
-                );
-            }
-        }
+        $this->driver->clear();
     }
 
-    private function getFilePath(string $key): string
+    public function has(string $key): bool
     {
-        return $this->cacheDirectory . '/' . md5($key) . '.cache';
+        return $this->driver->has($key);
+    }
+
+    public function remember(string $key, int $ttl, callable $callback): mixed
+    {
+        if ($this->driver->has($key)) {
+            return $this->driver->get($key);
+        }
+
+        $value = $callback();
+        $this->driver->set($key, $value, $ttl);
+
+        return $value;
+    }
+
+    public function getDriver(): CacheDriverInterface
+    {
+        return $this->driver;
     }
 }
