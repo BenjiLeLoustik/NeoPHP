@@ -7,6 +7,19 @@ use Neo\Core\Controller\Exception\AbstractControllerException;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
 
+/**
+ * @mixin \Neo\Core\Event\EventControllerExtension
+ * @mixin \Neo\Core\Extension\ExtensionControllerExtension
+ * @mixin \Neo\Core\Http\HttpControllerExtension
+ * @mixin \Neo\Core\Routing\RouterControllerExtension
+ * @mixin \Neo\Core\Security\Auth\AuthControllerExtension
+ * @mixin \Neo\Core\Security\Middleware\MiddlewareControllerExtension
+ * @mixin \Neo\Core\Utils\Cache\CacheControllerExtension
+ * @mixin \Neo\Core\Utils\Config\ConfigControllerExtension
+ * @mixin \Neo\Core\Utils\Logger\LoggerControllerExtension
+ * @mixin \Neo\Core\Utils\Mailer\MailerControllerExtension
+ * @mixin \Neo\Core\View\ViewControllerExtension
+ */
 abstract class AbstractController
 {
     protected Container $container;
