@@ -6,6 +6,7 @@ namespace Neo\Core\Utils\Cache\Driver;
 use Neo\Core\Utils\Cache\Driver\Interface\CacheDriverInterface;
 use Neo\Core\Utils\Cache\Exception\CacheException;
 use Predis\Client;
+use Predis\Connection\ConnectionException;
 
 class RedisDriver implements CacheDriverInterface
 {
@@ -16,7 +17,7 @@ class RedisDriver implements CacheDriverInterface
     public function __construct(array $config, int $defaultTtl = 3600)
     {
         $this->defaultTtl = $defaultTtl;
-        $this->prefix     = $config['prefix'] ?? '';
+        $this->prefix = $config['prefix'] ?? '';
 
         try {
             $this->redis = new Client([
@@ -31,7 +32,7 @@ class RedisDriver implements CacheDriverInterface
         } catch (ConnectionException $e) {
             throw new CacheException(
                 title: 'Redis Connection Error',
-                message: 'Unable to connect to Redis server: ' . $e->getMessage(),
+                message: sprintf('Unable to connect to Redis server: %s', $e->getMessage()),
                 code: 500
             );
         }
@@ -57,7 +58,7 @@ class RedisDriver implements CacheDriverInterface
     public function set(string $key, mixed $value, ?int $ttl = null): void
     {
         $data = serialize(['content' => $value]);
-        $ttl  = $ttl ?? $this->defaultTtl;
+        $ttl = $ttl ?? $this->defaultTtl;
 
         if ($ttl > 0) {
             $this->redis->setex($this->key($key), $ttl, $data);
