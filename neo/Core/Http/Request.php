@@ -255,4 +255,9 @@ class Request
         return $this->body;
     }
 
+    public function getServer(): array
+    {
+        return $this->server;
+    }
+
 }
