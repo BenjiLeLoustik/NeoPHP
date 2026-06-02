@@ -149,7 +149,7 @@ class App
         }
 
         $request = $this->container->get(Request::class);
-        $serverData = $request->server() ?? $_SERVER;
+        $serverData = $request->getServer() ?? $_SERVER;
 
         $serverName = $serverData['SERVER_NAME'] ?? $serverData['HTTP_HOST'] ?? null;
         $serverPort = (string) ($serverData['SERVER_PORT'] ?? '');
