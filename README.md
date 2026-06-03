@@ -11,13 +11,13 @@ Ce dépôt contient le moteur du framework et un projet d'exemple dans `src/Test
 ## Sommaire
 
 - [Vue d'ensemble](#vue-densemble)
-- [Architecture du depot](#architecture-du-depot)
+- [Architecture du depot](#architecture-du-dépôt)
 - [Cartographie du coeur](#cartographie-du-coeur)
-- [Cycle d'execution](#cycle-dexecution)
+- [Cycle d'execution](#cycle-déxécution)
 - [Structure d'un projet](#structure-dun-projet)
 - [Conteneur DI et configuration](#conteneur-di-et-configuration)
 - [Couche HTTP](#couche-http)
-- [Routing et controleurs](#routing-et-controleurs)
+- [Routing et controleurs](#routing-et-contrôleurs)
 - [Vues Twig, assets et traductions](#vues-twig-assets-et-traductions)
 - [Base de donnees et QueryBuilder](#base-de-donnees-et-querybuilder)
 - [ORM et repositories](#orm-et-repositories)
@@ -29,7 +29,7 @@ Ce dépôt contient le moteur du framework et un projet d'exemple dans `src/Test
 - [CLI et generateurs](#cli-et-generateurs)
 - [Tests PHPUnit](#tests-phpunit)
 - [Deploiement](#deploiement)
-- [Dependances et prerequis](#dependances-et-prerequis)
+- [Dependances et prerequis](#dépendances-et-prérequis)
 
 ## Vue d'ensemble
 
@@ -50,7 +50,7 @@ Le coeur passe par `Neo\App`, qui :
 - éxécute la requête HTTP ou la commande CLI
 - centralise la gestion des erreurs
 
-## Architecture du depôt
+## Architecture du dépôt
 
 ```text
 .
