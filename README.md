@@ -8,6 +8,15 @@ Framework PHP 8.1+ centré sur :
 
 Ce dépôt contient le moteur du framework et un projet d'exemple dans `src/Test/`.
 
+NeoPHP vise un autre point d'équilibre que Symfony ou Laravel. 
+L'objectif n'est pas d'empiler des couches, des bundles ou un ecosysteme très large, mais de fournir un noyau PHP lisible, compact et directement exploitable pour construire une application complete sans sortir du depot. 
+Le framework mise sur une structure simple, une CLI integrée, des modules coeur autodétéctes et un workflow multi-projets qui reste explicite.
+
+En pratique, NeoPHP s'adresse surtout aux projets qui veulent aller vite sans adopter toute la complexite organisationnelle des gros frameworks généralistes. 
+Par rapport a Symfony, il réduit fortement la cérémonie de configuration et la fragmentation entre composants. 
+Par rapport a Laravel, il se montre plus minimal, plus direct dans son architecture, et moins dépendant d'une couche "magique" ou d'un ensemble d'outils externes. 
+Si le besoin est un framework plus petit, plus prévisible et plus facile a suivre de bout en bout dans le code source, c'est précisement le terrain de NeoPHP.
+
 ## Sommaire
 
 - [Vue d'ensemble](#vue-densemble)
