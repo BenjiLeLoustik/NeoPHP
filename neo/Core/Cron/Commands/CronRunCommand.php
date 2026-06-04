@@ -26,6 +26,7 @@ final class CronRunCommand implements CommandInterface
             $cronsPath = $this->container->get('cronsPath');
         } catch (\Throwable) {
             Output::error('You must pass --project=<name> to use this command.');
+            Output::muted('Example: php bin/neo cron:run --project=MyApp');
             return;
         }
 
