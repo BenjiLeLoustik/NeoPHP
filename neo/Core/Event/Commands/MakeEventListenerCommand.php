@@ -6,6 +6,7 @@ namespace Neo\Core\Event\Commands;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 
@@ -23,10 +24,42 @@ final class MakeEventListenerCommand implements CommandInterface
         $priority = (int) (Args::option($args, '--priority') ?? 0);
         $force = Args::flag($args, '--force');
 
-        if (!$listener || !$project || !$event) {
-            Output::error('Missing arguments.');
-            Output::muted('Usage: php bin/neo make:event:listener <ListenerName> --event=<EventName> --project=<name>');
-            return;
+        if (!$listener) {
+            $listener = Input::ask('Listener name ?');
+            if (!$listener) {
+                Output::error('Listener name is required.');
+                return;
+            }
+        }
+
+        if (!$project) {
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $project = Input::choice('Target project ?', $projects);
+        }
+
+        if (!$event) {
+            $available = $this->getAvailableEvents($project);
+
+            if (!empty($available)) {
+                $event = Input::choice('Event to listen to ?', $available);
+            } else {
+                $event = Input::ask('Event to listen to ?');
+                if (!$event) {
+                    Output::error('Event name is required.');
+                    return;
+                }
+            }
+        }
+
+        if ($priority === 0) {
+            $raw = Input::ask('Listener priority ?', '0');
+            $priority = (int) $raw;
         }
 
         $listener = $this->normalizeListenerName($listener);
@@ -38,13 +71,15 @@ final class MakeEventListenerCommand implements CommandInterface
         $path = "$basePath/$listener.php";
 
         if (file_exists($path) && !$force) {
-            Output::warning("Listener already exists. Use --force to overwrite.");
-            return;
+            if (!Input::confirm("Listener '$listener' already exists. Overwrite ?", false)) {
+                Output::muted('Cancelled.');
+                return;
+            }
         }
 
         $listenerNs = "Neo\\Src\\$project\\App\\Event\\Listener";
         $eventNs = "Neo\\Src\\$project\\App\\Event";
-        $eventFqcn = "$eventNs\\$event";
+        $eventFqcn  = "$eventNs\\$event";
 
         $content = <<<PHP
 <?php
@@ -70,6 +105,36 @@ PHP;
 
         file_put_contents($path, $content);
         Output::success("Listener '$listener' generated for event '$event' in project '$project'.");
+    }
+
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
+    }
+
+    private function getAvailableEvents(string $project): array
+    {
+        $eventDir = ROOT_DIR . "/src/$project/App/Event";
+
+        if (!is_dir($eventDir)) {
+            return [];
+        }
+
+        $files = glob($eventDir . '/*Event.php') ?: [];
+
+        return array_map(
+            fn(string $file) => basename($file, '.php'),
+            $files
+        );
     }
 
     private function normalizeListenerName(string $input): string
@@ -109,15 +174,16 @@ PHP;
     public function getHelp(): string
     {
         Output::usage('make:event:listener', $this->getDescription());
-        Output::option('<ListenerName>',    '"Listener" suffix added automatically');
-        Output::option('--event=<name>',    'Event to listen to (e.g. UserRegistered)');
-        Output::option('--priority=<n>',    'Listener priority (default: 0, higher = earlier)');
-        Output::option('--project=<name>',  'Target project inside ./src/');
-        Output::option('--force',           'Overwrite existing file');
+        Output::option('<ListenerName>', '"Listener" suffix added automatically');
+        Output::option('--event=<name>', 'Event to listen to — interactive selection from existing events if omitted');
+        Output::option('--priority=<n>', 'Listener priority (default: 0, higher = earlier)');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
+        Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
         Output::example('php bin/neo make:event:listener SendWelcomeEmail --event=UserRegistered --project=NeoAdmin');
         Output::example('php bin/neo make:event:listener SendWelcomeEmail --event=UserRegistered --priority=10 --project=NeoAdmin');
+        Output::example('php bin/neo make:event:listener');
 
         return '';
     }
