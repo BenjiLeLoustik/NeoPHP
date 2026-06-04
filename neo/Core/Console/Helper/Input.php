@@ -7,7 +7,7 @@ final class Input
     public static function ask(string $question, ?string $default = null): string
     {
         $hint = $default !== null ? " [{$default}] " : '';
-        echo Output::colorize("? {$question}{$hint} : ", 'cyan');
+        echo Output::colorize("{$question}{$hint} : ", 'cyan');
         $answer = trim(fgets(STDIN));
 
         return $answer !== ''
