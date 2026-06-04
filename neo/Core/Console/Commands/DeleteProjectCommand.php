@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Console\Commands;
 
 use Neo\Core\Console\Attribute\Command;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
@@ -25,7 +26,7 @@ final class DeleteProjectCommand implements CommandInterface
         Output::newLine();
         Output::warning("You are about to delete project '$project'. This action is irreversible.");
 
-        if (!Output::confirm('Confirm deletion?')) {
+        if (!Input::confirm('Confirm deletion?', false)) {
             Output::muted('Deletion cancelled.');
             return;
         }

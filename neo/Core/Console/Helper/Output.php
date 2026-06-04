@@ -152,13 +152,11 @@ final class Output
 
     public static function prompt(string $message): string
     {
-        echo self::CYAN . $message . self::RESET;
-        return trim(fgets(STDIN));
+        return Input::ask($message);
     }
 
-    public static function confirm(string $message, string $yes = 'oui'): bool
+    public static function confirm(string $message, bool $default = true): bool
     {
-        $answer = strtolower(trim(self::prompt($message . ' [' . $yes . '/non] : ')));
-        return $answer === $yes || $answer === 'o' || $answer === 'y' || $answer === 'yes';
+        return Input::confirm($message, $default);
     }
 }
