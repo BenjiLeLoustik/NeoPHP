@@ -5,6 +5,7 @@ namespace Neo\Core\Testing\Commands;
 
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Testing\Scaffold\TestScaffolder;
@@ -21,13 +22,30 @@ final class MakeTestCommand implements CommandInterface
     {
         $testName = Args::positional($args, 0);
         $project = Args::option($args, '--project');
-        $type = strtolower(Args::option($args, '--type') ?? 'unit');
+        $type = strtolower(Args::option($args, '--type') ?? '');
         $force = Args::flag($args, '--force');
 
-        if (!$testName || !$project) {
-            Output::error('Missing arguments.');
-            Output::muted('Usage: php bin/neo make:test <TestName> --type=<type> --project=<name>');
-            return;
+        if (!$testName) {
+            $testName = Input::ask('Test name ?', 'ExampleTest');
+            if (!$testName) {
+                Output::error('Test name is required.');
+                return;
+            }
+        }
+
+        if (!$project) {
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $project = Input::choice('Target project ?', $projects);
+        }
+
+        if (!$type || !in_array($type, self::VALID_TYPES, true)) {
+            $type = Input::choice('Test type ?', self::VALID_TYPES, 'unit');
         }
 
         if (!in_array($type, self::VALID_TYPES, true)) {
@@ -46,6 +64,20 @@ final class MakeTestCommand implements CommandInterface
 
         (new TestScaffolder())->ensure($basePath, $project);
         $this->generateTest($basePath, $project, $testName, $type, $force);
+    }
+
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
     }
 
     private function generateTest(
@@ -250,17 +282,18 @@ PHP;
     public function getHelp(): string
     {
         Output::usage('make:test', $this->getDescription());
-        Output::option('<TestName>',        'Test class name (e.g. UserServiceTest)');
-        Output::option('--project=<name>',  'Target project inside ./src/');
-        Output::option('--type=unit',       'Isolated class test (service, model…)');
-        Output::option('--type=feature',    'End-to-end HTTP route test');
-        Output::option('--type=database',   'Repository test with auto-rollback');
+        Output::option('<TestName>', 'Test class name (e.g. UserServiceTest)');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
+        Output::option('--type=unit', 'Isolated class test (service, model…)');
+        Output::option('--type=feature', 'End-to-end HTTP route test');
+        Output::option('--type=database', 'Repository test with auto-rollback');
         Output::option('--type=middleware', 'Middleware pass/block test');
-        Output::option('--force',           'Overwrite existing file');
+        Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
         Output::example('php bin/neo make:test UserServiceTest --type=unit --project=Blog');
         Output::example('php bin/neo make:test UserControllerTest --type=feature --project=Blog');
+        Output::example('php bin/neo make:test');
 
         return '';
     }
