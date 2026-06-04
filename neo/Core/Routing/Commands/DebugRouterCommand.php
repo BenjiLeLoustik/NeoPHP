@@ -1,9 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace Neo\Core\Routing\Commands;
 
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\DI\Container;
@@ -13,12 +15,19 @@ use Neo\Core\Routing\Router;
     name: 'debug:router',
     description: 'Display all registered routes for a project'
 )]
-class DebugRouterCommand implements CommandInterface
+final class DebugRouterCommand implements CommandInterface
 {
+    private const METHOD_COLORS = [
+        'GET' => 'green',
+        'POST' => 'yellow',
+        'PUT' => 'cyan',
+        'PATCH' => 'cyan',
+        'DELETE' => 'red',
+    ];
 
     public function __construct(
         private Container $container
-    ){}
+    ) {}
 
     public function execute(array $args): void
     {
@@ -28,8 +37,14 @@ class DebugRouterCommand implements CommandInterface
         $filterPath = Args::option($args, '--path');
 
         if (!$project) {
-            Output::error('Missing required option: --project=<name>');
-            return;
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $project = Input::choice('Target project ?', $projects);
         }
 
         $srcPath = ROOT_DIR . "/src/$project";
@@ -50,10 +65,27 @@ class DebugRouterCommand implements CommandInterface
             return;
         }
 
-
         $routes = $router->getRoutes()->all();
+        $rows   = $this->filterRoutes($routes, $filterMethod, $filterName, $filterPath);
 
+        if (empty($rows)) {
+            Output::warning('No routes found matching the given filters.');
+            return;
+        }
+
+        usort($rows, fn($a, $b) => strcmp($a['path'], $b['path']));
+
+        $this->renderTable($rows, $project, $filterMethod, $filterName, $filterPath);
+    }
+
+    private function filterRoutes(
+        array $routes,
+        ?string $filterMethod,
+        ?string $filterName,
+        ?string $filterPath
+    ): array {
         $rows = [];
+
         foreach ($routes as $method => $methodRoutes) {
             foreach ($methodRoutes as $path => $info) {
                 if ($filterMethod && strtoupper($filterMethod) !== strtoupper($method)) {
@@ -76,25 +108,32 @@ class DebugRouterCommand implements CommandInterface
             }
         }
 
-        if (empty($rows)) {
-            Output::warning('No routes found.');
-            return;
+        return $rows;
+    }
+
+    private function renderTable(
+        array $rows,
+        string $project,
+        ?string $filterMethod,
+        ?string $filterName,
+        ?string $filterPath
+    ): void {
+        $title = sprintf('Routes for %s (%d)', $project, count($rows));
+
+        $filters = array_filter([
+            $filterMethod ? 'method=' . strtoupper($filterMethod) : null,
+            $filterName ? 'name~' . $filterName : null,
+            $filterPath ? 'path~' . $filterPath : null,
+        ]);
+
+        if (!empty($filters)) {
+            $title .= Output::colorize('  filters: ' . implode(', ', $filters), 'dim');
         }
 
-        usort($rows, fn($a, $b) => strcmp($a['path'], $b['path']));
-
-        Output::title(sprintf('Routes (%d)', count($rows)));
-
-        $methodColors = [
-            'GET' => 'green',
-            'POST' => 'yellow',
-            'PUT' => 'cyan',
-            'PATCH' => 'cyan',
-            'DELETE' => 'red',
-        ];
+        Output::title($title);
 
         foreach ($rows as $row) {
-            $color = $methodColors[$row['method']] ?? 'white';
+            $color = self::METHOD_COLORS[$row['method']] ?? 'white';
             $method = Output::colorize(str_pad($row['method'], 7), $color);
             $path = Output::colorize(str_pad($row['path'], 40), 'white');
             $name = Output::colorize(str_pad($row['name'], 35), 'dim');
@@ -104,6 +143,22 @@ class DebugRouterCommand implements CommandInterface
         }
 
         Output::newLine();
+        Output::muted(count($rows) . ' route(s) listed.');
+        Output::newLine();
+    }
+
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
     }
 
     public function getName(): string
@@ -119,15 +174,16 @@ class DebugRouterCommand implements CommandInterface
     public function getHelp(): string
     {
         Output::usage('debug:router', $this->getDescription());
-        Output::option('--project=<name>',  'Target project inside ./src/');
-        Output::option('--method=<method>', 'Filter by HTTP method (GET, POST...)');
-        Output::option('--name=<name>',     'Filter by route name (partial match)');
-        Output::option('--path=<path>',     'Filter by path (partial match)');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
+        Output::option('--method=<method>', 'Filter by HTTP method (GET, POST, PUT, PATCH, DELETE)');
+        Output::option('--name=<name>', 'Filter by route name (partial match)');
+        Output::option('--path=<path>', 'Filter by path (partial match)');
         Output::newLine();
         echo "  Examples:\n";
         Output::example('php bin/neo debug:router --project=MyApp');
         Output::example('php bin/neo debug:router --project=MyApp --method=GET');
         Output::example('php bin/neo debug:router --project=MyApp --name=user');
+        Output::example('php bin/neo debug:router');
 
         return '';
     }
