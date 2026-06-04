@@ -6,6 +6,7 @@ namespace Neo\Core\Controller\Commands;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 
@@ -23,10 +24,32 @@ final class MakeControllerCommand implements CommandInterface
         $isApi = Args::flag($args, '--api');
         $force = Args::flag($args, '--force');
 
-        if (!$controller || !$project) {
-            Output::error('Missing arguments.');
-            Output::muted('Usage: php bin/neo make:controller <ControllerName> --project=<name>');
-            return;
+        if (!$controller) {
+            $controller = Input::ask('Controller name ?', 'test');
+            if (!$controller) {
+                Output::error('Controller name is required.');
+                return;
+            }
+        }
+
+        if (!$project) {
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $project = Input::choice('Target project ?', $projects);
+        }
+
+        if (!$directory) {
+            $raw = Input::ask('Sub-folder ? (leave empty to skip)', '');
+            $directory = $raw !== '' ? $raw : null;
+        }
+
+        if (!$isApi) {
+            $isApi = Input::confirm('Generate as API controller ?', false);
         }
 
         $controller = $this->normalizeControllerName($controller);
@@ -45,6 +68,20 @@ final class MakeControllerCommand implements CommandInterface
         }
 
         Output::success("Controller '$controller' generated for project '$project'.");
+    }
+
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
     }
 
     private function generateController(
@@ -173,15 +210,16 @@ TWIG;
     public function getHelp(): string
     {
         Output::usage('make:controller', $this->getDescription());
-        Output::option('<ControllerName>',     'Controller class name (e.g. UserController)');
-        Output::option('--project=<name>',     'Target project inside ./src/');
+        Output::option('<ControllerName>', 'Controller class name (e.g. UserController)');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('-d, --dir <directory>', 'Create inside a sub-folder (e.g. User)');
-        Output::option('--api',                'Generate an API controller (JsonResponse)');
-        Output::option('--force',              'Overwrite existing files');
+        Output::option('--api', 'Generate an API controller (JsonResponse)');
+        Output::option('--force', 'Overwrite existing files');
         Output::newLine();
         echo "  Examples:\n";
         Output::example('php bin/neo make:controller UserController --project=NeoAdmin');
         Output::example('php bin/neo make:controller UserController -d User --api --project=NeoAdmin');
+        Output::example('php bin/neo make:controller');
 
         return '';
     }
