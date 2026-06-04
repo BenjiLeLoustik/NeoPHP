@@ -5,6 +5,7 @@ namespace Neo\Core\Testing\Commands;
 
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 
@@ -22,9 +23,14 @@ final class RunTestAllCommand implements CommandInterface
         $stopOnFailure = Args::flag($args, '--stop-on-failure');
 
         if (!$project) {
-            Output::error('Missing required option: --project');
-            Output::muted('Usage: php bin/neo run:test:all --project=<name>');
-            return;
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $project = Input::choice('Target project ?', $projects);
         }
 
         $basePath = ROOT_DIR . "/src/$project";
@@ -99,6 +105,20 @@ final class RunTestAllCommand implements CommandInterface
             $exitCode === 1 => Output::warning('Completed with warnings (code 1).'),
             default => Output::error("Tests failed (code $exitCode)."),
         };
+    }
+
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
     }
 
     private function generateHtmlSummary(
@@ -220,16 +240,17 @@ HTML;
     public function getHelp(): string
     {
         Output::usage('run:test:all', $this->getDescription());
-        Output::option('--project=<name>',  'Target project inside ./src/');
-        Output::option('--format=console',  'Console output only (default)');
-        Output::option('--format=html',     'Generate HTML report in Storage/reports/');
-        Output::option('--format=both',     'Console output + HTML report');
-        Output::option('--coverage',        'Generate coverage report (requires Xdebug or PCOV)');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
+        Output::option('--format=console', 'Console output only (default)');
+        Output::option('--format=html', 'Generate HTML report in Storage/reports/');
+        Output::option('--format=both', 'Console output + HTML report');
+        Output::option('--coverage', 'Generate coverage report (requires Xdebug or PCOV)');
         Output::option('--stop-on-failure', 'Stop at the first failure');
         Output::newLine();
         echo "  Examples:\n";
         Output::example('php bin/neo run:test:all --project=Blog');
         Output::example('php bin/neo run:test:all --project=Blog --format=html --coverage');
+        Output::example('php bin/neo run:test:all');
 
         return '';
     }

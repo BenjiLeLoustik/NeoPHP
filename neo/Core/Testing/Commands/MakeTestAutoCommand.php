@@ -5,6 +5,7 @@ namespace Neo\Core\Testing\Commands;
 
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\DI\Container;
@@ -27,9 +28,14 @@ final class MakeTestAutoCommand implements CommandInterface
         $dryRun = Args::flag($args, '--dry-run');
 
         if (!$project) {
-            Output::error('Missing required option: --project');
-            Output::muted('Usage: php bin/neo make:test:auto --project=<name>');
-            return;
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $project = Input::choice('Target project ?', $projects);
         }
 
         $basePath = ROOT_DIR . "/src/$project";
@@ -74,6 +80,20 @@ final class MakeTestAutoCommand implements CommandInterface
         Output::success('Done.');
     }
 
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
+    }
+
     public function getName(): string
     {
         return 'make:test:auto';
@@ -87,14 +107,15 @@ final class MakeTestAutoCommand implements CommandInterface
     public function getHelp(): string
     {
         Output::usage('make:test:auto', $this->getDescription());
-        Output::option('--project=<name>',  'Target project inside ./src/');
-        Output::option('--force',           'Overwrite existing test files');
-        Output::option('--only=<type>',     'Generate only a specific type (unit|feature|database|middleware)');
-        Output::option('--dry-run',         'Show what would be generated without creating files');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
+        Output::option('--force', 'Overwrite existing test files');
+        Output::option('--only=<type>', 'Generate only a specific type (unit|feature|database|middleware)');
+        Output::option('--dry-run', 'Show what would be generated without creating files');
         Output::newLine();
         echo "  Examples:\n";
         Output::example('php bin/neo make:test:auto --project=Blog');
         Output::example('php bin/neo make:test:auto --project=Blog --only=database --dry-run');
+        Output::example('php bin/neo make:test:auto');
 
         return '';
     }

@@ -5,6 +5,7 @@ namespace Neo\Core\Testing\Commands;
 
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 
@@ -21,10 +22,23 @@ final class RunTestCommand implements CommandInterface
         $filter = Args::option($args, '--filter');
         $type = Args::option($args, '--type');
 
-        if (!$testName || !$project) {
-            Output::error('Missing arguments.');
-            Output::muted('Usage: php bin/neo run:test <TestName> --project=<name>');
-            return;
+        if (!$testName) {
+            $testName = Input::ask('Test name ?', 'ExampleTest');
+            if (!$testName) {
+                Output::error('Test name is required.');
+                return;
+            }
+        }
+
+        if (!$project) {
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $project = Input::choice('Target project ?', $projects);
         }
 
         $basePath = ROOT_DIR . "/src/$project";
@@ -56,7 +70,7 @@ final class RunTestCommand implements CommandInterface
         }
 
         $phpunitBin = ROOT_DIR . '/vendor/bin/phpunit';
-        $xmlConfig = "$testsPath/phpunit.xml";
+        $xmlConfig  = "$testsPath/phpunit.xml";
 
         $cmd = escapeshellarg($phpunitBin);
         $cmd .= ' --configuration ' . escapeshellarg($xmlConfig);
@@ -76,6 +90,20 @@ final class RunTestCommand implements CommandInterface
             $exitCode === 1 => Output::warning('Completed with warnings (code 1).'),
             default => Output::error("Tests failed (code $exitCode)."),
         };
+    }
+
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
     }
 
     private function findTestFile(string $testsPath, string $testName, ?string $type): ?string
@@ -129,14 +157,15 @@ final class RunTestCommand implements CommandInterface
     public function getHelp(): string
     {
         Output::usage('run:test', $this->getDescription());
-        Output::option('<TestName>',        'Test class name (e.g. UserServiceTest)');
-        Output::option('--project=<name>',  'Target project inside ./src/');
+        Output::option('<TestName>', 'Test class name (e.g. UserServiceTest)');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--filter=<method>', 'Filter on a specific test method');
-        Output::option('--type=<type>',     'Search only inside Tests/<Type>/ (unit|feature|database|middleware)');
+        Output::option('--type=<type>', 'Search only inside Tests/<Type>/ (unit|feature|database|middleware)');
         Output::newLine();
         echo "  Examples:\n";
         Output::example('php bin/neo run:test UserServiceTest --project=Blog');
         Output::example('php bin/neo run:test UserServiceTest --filter=test_example --project=Blog');
+        Output::example('php bin/neo run:test');
 
         return '';
     }
