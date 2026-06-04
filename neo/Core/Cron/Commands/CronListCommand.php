@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Cron\Commands;
 
 use Neo\Core\Console\Attribute\Command;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Cron\CronScanner;
@@ -24,7 +25,16 @@ final class CronListCommand implements CommandInterface
         try {
             $cronsPath = $this->container->get('cronsPath');
         } catch (\Throwable) {
-            Output::error('You must pass --project=<name> to use this command.');
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            Output::warning('You must pass --project=<name> to use this command.');
+            $project = Input::choice('Target project ?', $projects);
+            Output::muted("Re-run with: php bin/neo cron:list --project=$project");
             return;
         }
 
@@ -46,6 +56,20 @@ final class CronListCommand implements CommandInterface
         }
 
         Output::newLine();
+    }
+
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
     }
 
     public function getName(): string
