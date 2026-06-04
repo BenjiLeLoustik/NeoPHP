@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Console\Commands;
 
 use Neo\Core\Console\Attribute\Command;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Output;
@@ -28,7 +29,7 @@ final class ServeCommand implements CommandInterface
 
         Output::title('Available projects:');
 
-        $i  = 1;
+        $i = 1;
         $keys = [];
 
         foreach ($projects as $name => $config) {
@@ -38,14 +39,8 @@ final class ServeCommand implements CommandInterface
             $i++;
         }
 
-        $choice = (int) Output::prompt("\nChoose a project: ");
-
-        if (!isset($keys[$choice])) {
-            Output::error('Invalid choice.');
-            return;
-        }
-
-        $this->runProject($keys[$choice], $projects);
+        $selected = Input::choice('Choose a project', array_keys($projects));
+        $this->runProject($selected, $projects);
     }
 
     private function runProject(string $project, array $projects): void
