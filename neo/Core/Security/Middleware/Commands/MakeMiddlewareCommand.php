@@ -6,6 +6,7 @@ namespace Neo\Core\Security\Middleware\Commands;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 
@@ -22,10 +23,28 @@ final class MakeMiddlewareCommand implements CommandInterface
         $directory = Args::option($args, '-d') ?? Args::option($args, '--dir');
         $force = Args::flag($args, '--force');
 
-        if (!$middleware || !$project) {
-            Output::error('Missing arguments.');
-            Output::muted('Usage: php bin/neo make:middleware <MiddlewareName> --project=<name>');
-            return;
+        if (!$middleware) {
+            $middleware = Input::ask('Middleware name ?', 'Auth');
+            if (!$middleware) {
+                Output::error('Middleware name is required.');
+                return;
+            }
+        }
+
+        if (!$project) {
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $project = Input::choice('Target project ?', $projects);
+        }
+
+        if (!$directory) {
+            $raw = Input::ask('Sub-folder ? (leave empty to skip)', '');
+            $directory = $raw !== '' ? $raw : null;
         }
 
         $middleware = $this->normalizeMiddlewareName($middleware);
@@ -74,6 +93,20 @@ PHP;
         Output::success("Middleware '$middleware' generated for project '$project'.");
     }
 
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
+    }
+
     private function normalizeMiddlewareName(string $input): string
     {
         $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
@@ -99,14 +132,15 @@ PHP;
     public function getHelp(): string
     {
         Output::usage('make:middleware', $this->getDescription());
-        Output::option('<MiddlewareName>',      '"Middleware" suffix added automatically');
-        Output::option('--project=<name>',      'Target project inside ./src/');
+        Output::option('<MiddlewareName>', '"Middleware" suffix added automatically');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('-d, --dir <directory>', 'Create inside a sub-folder (e.g. Security)');
-        Output::option('--force',               'Overwrite existing file');
+        Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
         Output::example('php bin/neo make:middleware Auth --project=NeoAdmin');
         Output::example('php bin/neo make:middleware Auth -d Security --project=NeoAdmin');
+        Output::example('php bin/neo make:middleware');
 
         return '';
     }
