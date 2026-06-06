@@ -57,7 +57,8 @@ final class DebugRouterCommand extends AbstractCommand
 
         $this->container->set('controllerNamespace', "Neo\\Src\\$project\\App\\Controllers");
         $this->container->set('controllersPath', $srcPath . '/App/Controllers');
-        $this->container->set('storagePath', $srcPath . '/storage');
+        $this->container->set('storagePath', $srcPath . '/Storage');
+        $this->container->set('configsPath', $srcPath . '/Config');
 
         try {
             $router = $this->container->get(Router::class);
