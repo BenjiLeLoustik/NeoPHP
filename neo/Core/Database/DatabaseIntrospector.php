@@ -36,7 +36,8 @@ class DatabaseIntrospector
                 $tables[] = $row[0];
             }
 
-            return $tables;
+            $internal = ['neo_migrations', 'neo_schema_snapshots'];
+            return array_values(array_filter($tables, fn($t) => !in_array($t, $internal, true)));
         } catch (PDOException $e) {
             throw new DatabaseException(
                 title: 'Database Introspection Error',
