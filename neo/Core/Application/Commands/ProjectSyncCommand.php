@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Console\Commands;
+namespace Neo\Core\Application\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
@@ -9,11 +9,11 @@ use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Output;
 
 #[Command(
-    name: 'app:sync:projects',
+    name: 'project:sync',
     description: 'Sync root composer.json with all projects present in ./src/',
     category: 'Project'
 )]
-final class SyncProjectsCommand extends AbstractCommand
+final class ProjectSyncCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -82,8 +82,8 @@ final class SyncProjectsCommand extends AbstractCommand
         }
 
         $rootComposer['minimum-stability'] = 'dev';
-        $rootComposer['prefer-stable']     = true;
-        $rootComposer['repositories'][]    = [
+        $rootComposer['prefer-stable'] = true;
+        $rootComposer['repositories'][] = [
             'type' => 'path',
             'url' => 'src/' . $name,
             'options' => ['symlink' => false],
@@ -100,7 +100,7 @@ final class SyncProjectsCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('sync:projects', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--run-composer', 'Run `composer update` automatically after sync');
         Output::newLine();
         Output::muted('  Useful after a git pull that resets the root composer.json.');
