@@ -95,6 +95,7 @@ Le coeur passe par `Neo\App`, qui :
 |       |-- App/
 |       |-- Assets/
 |       |-- Config/
+|       |-- Database/
 |       |-- Model/
 |       |-- Repository/
 |       |-- Storage/
@@ -119,7 +120,7 @@ Le noyau `neo/Core/` est structuré par sous-système :
 - `Cron/`
   attribut `#[Cron]`, scan de `App/Crons`, listing et éxécution planifiée avec timezone et lock optionnel
 - `Database/`
-  connexion PDO, `DatabaseManager`, introspection, `QueryBuilder`, formulaires, pagination, ORM, repositories
+  connexion PDO, `DatabaseManager`, introspection, `QueryBuilder`, formulaires, pagination, ORM, repositories, génération depuis le schéma et migrations
 - `DI/`
   conteneur de dépendances et autowiring
 - `Error/`
@@ -156,7 +157,7 @@ Asset/      -> Commands/, Compiler/, Exception/
 Console/    -> Attribute/, Commands/, Helper/, Interface/
 Controller/ -> Commands/, Exception/, Interface/
 Cron/       -> Attribute/, Commands/, Exception/
-Database/   -> Builder/, Commands/, Exception/, Form/, ORM/
+Database/   -> Builder/, Commands/, Exception/, Form/, Migration/, ORM/
 DI/         -> Exception/
 Error/      -> Exception/
 Event/      -> Attribute/, Commands/, Contract/, Event/, Exception/
@@ -249,6 +250,7 @@ Certains dossiers sont créés plus tard, quand la fonctionnalité est activée 
 
 - `App/Crons/` via `make:cron`
 - `App/Event/Listener/` via `make:event` et `make:event:listener`
+- `Database/Migrations/` via `database:migration:generate`
 - `Tests/` via `make:test` ou `make:test:auto`
 
 Les configs sensibles `database.config.php`, `deploy.config.php`, `api.config.php` et `mailer.config.php` sont prévues pour être ignorées par Git dans le `.gitignore` généré. 
@@ -678,6 +680,40 @@ return [
 ];
 ```
 
+### Outils de schéma
+
+Le framework embarque une CLI dédiée à la base de données :
+
+- `database:create`
+  crée la base déclarée dans `database.config.php`
+- `database:generate`
+  génère les `Model`, `Repository` et `App/Forms` à partir du schéma courant
+- `database:migration:generate`
+  génère un fichier de migration dans `src/<Projet>/Database/Migrations/`
+- `database:migration:migrate`
+  applique toutes les migrations en attente
+- `database:migration:rollback`
+  annule le dernier batch appliqué
+- `database:migration:status`
+  affiche l'état des migrations et signale un écart entre le schéma courant et le dernier snapshot
+
+Comportements notables :
+
+- `database:generate` supporte `--only=all|models|repositories|forms`
+- `database:generate --force` écrase les repositories existants si nécessaire
+- les tables internes `neo_migrations` et `neo_schema_snapshots` sont exclues de l'introspection et de la génération
+- les formulaires générés sont écrits dans `src/<Projet>/App/Forms/`
+
+Exemples :
+
+```bash
+php bin/neo database:create --project=Blog
+php bin/neo database:generate --project=Blog
+php bin/neo database:generate --project=Blog --only=models
+php bin/neo database:generate --project=Blog --only=forms
+php bin/neo database:generate --project=Blog --only=repositories --force
+```
+
 ### QueryBuilder
 
 Le `QueryBuilder` couvre notamment :
@@ -728,6 +764,51 @@ Exemple avec transaction :
     });
 ```
 
+### Migrations
+
+Les migrations vivent dans `src/<Projet>/Database/Migrations/`.
+
+Chaque migration expose :
+
+- `up(DatabaseManager $db): void`
+- `down(DatabaseManager $db): void`
+
+Le runner maintient deux tables techniques :
+
+- `neo_migrations` pour l'historique des migrations appliquées
+- `neo_schema_snapshots` pour mémoriser un hash du schéma après exécution
+
+Le snapshot permet à `database:migration:status` de prévenir quand le schéma courant a changé depuis la dernière migration générée ou appliquée.
+
+Exemple de workflow :
+
+```bash
+php bin/neo database:migration:generate --project=Blog --name=initial_schema
+php bin/neo database:migration:status --project=Blog
+php bin/neo database:migration:migrate --project=Blog
+php bin/neo database:migration:rollback --project=Blog
+```
+
+Exemple minimal de migration :
+
+```php
+<?php
+declare(strict_types=1);
+
+final class MigrationVersion_20260606120000
+{
+    public function up(DatabaseManager $db): void
+    {
+        $db->execute('CREATE TABLE posts (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY)');
+    }
+
+    public function down(DatabaseManager $db): void
+    {
+        $db->execute('DROP TABLE posts');
+    }
+}
+```
+
 ## ORM et repositories
 
 ### ORM
@@ -750,6 +831,13 @@ Relations disponibles :
 - `#[HasMany(...)]`
 - `#[BelongsTo(...)]`
 - `#[BelongsToMany(...)]`
+
+La génération ORM depuis le schéma passe par `database:generate` :
+
+- `ModelGenerator` met à jour les propriétés depuis les colonnes SQL
+- `RepositoryGenerator` génère les repositories manquants
+- `FormGenerator` génère un formulaire par modèle dans `App/Forms/`
+- les tables internes de migration sont ignorées
 
 Exemple de modèles :
 
@@ -1634,12 +1722,18 @@ Afficher l'aide d'une commande :
 php bin/neo <commande> --help
 ```
 
-Commandes disponibles :
+La console charge automatiquement :
+
+- les commandes natives du framework dans `neo/**/Commands/`
+- les commandes applicatives dans `src/<Projet>/App/Commands/`
+
+Commandes natives disponibles :
 
 - `app:make:project`
 - `app:delete:project`
 - `app:sync:projects`
 - `app:serve`
+- `app:make:command`
 - `app:make:service`
 - `app:composer:require`
 - `app:make:deployment`
@@ -1647,6 +1741,12 @@ Commandes disponibles :
 - `cache:clear`
 - `cron:list`
 - `cron:run`
+- `database:create`
+- `database:generate`
+- `database:migration:generate`
+- `database:migration:migrate`
+- `database:migration:rollback`
+- `database:migration:status`
 - `debug:router`
 - `generate:default:config`
 - `make:config`
@@ -1669,6 +1769,7 @@ Exemples :
 php bin/neo app:make:project Blog
 php bin/neo make:controller PostController --project=Blog
 php bin/neo make:controller ApiPostController --api --project=Blog
+php bin/neo app:make:command CleanupLogs --name=logs:clean --project=Blog
 php bin/neo app:make:service Mail --project=Blog
 php bin/neo make:middleware AdminAccess --project=Blog
 php bin/neo make:event UserRegistered --project=Blog
@@ -1676,6 +1777,9 @@ php bin/neo make:event:listener SendWelcomeEmail --event=UserRegistered --projec
 php bin/neo make:cron CleanupTempFiles --project=Blog
 php bin/neo make:crud Post --project=Blog
 php bin/neo make:config mail --project=Blog
+php bin/neo database:create --project=Blog
+php bin/neo database:generate --project=Blog --only=all
+php bin/neo database:migration:generate --project=Blog --name=initial_schema
 ```
 
 Exemple de commande intéractive de config :
@@ -1693,6 +1797,17 @@ Tu peux ensuite saisir par exemple :
 
 Le générateur écrira un tableau PHP imbrique.
 
+### Commandes applicatives
+
+`app:make:command` permet de générer une commande dans le projet cible. Une fois créée dans `src/<Projet>/App/Commands/`, elle est détectée automatiquement par la console au même titre que les commandes natives.
+
+Exemple :
+
+```bash
+php bin/neo app:make:command CleanupLogs --name=logs:clean --category=maintenance --project=Blog
+php bin/neo logs:clean --project=Blog
+```
+
 ### Maintenance de projet
 
 Exemples :
@@ -1705,6 +1820,8 @@ php bin/neo app:serve Blog
 php bin/neo debug:router --project=Blog
 php bin/neo cache:clear --project=Blog
 php bin/neo asset:reload --project=Blog
+php bin/neo database:migration:status --project=Blog
+php bin/neo database:migration:migrate --project=Blog
 ```
 
 ## Tests PHPUnit
@@ -1968,7 +2085,8 @@ NeoPHP couvre aujourd'hui :
 - contrôleurs et vues Twig
 - pipeline d'assets CSS, JS et Less
 - traduction et helpers Twig/PHP
-- QueryBuilder, ORM et repositories
+- QueryBuilder, ORM, repositories, formulaires générés et génération depuis le schéma
+- migrations de base de données et suivi des snapshots de schéma
 - formulaires, validation, upload et CSRF
 - auth session / token, mot de passe et middlewares
 - events et crons
