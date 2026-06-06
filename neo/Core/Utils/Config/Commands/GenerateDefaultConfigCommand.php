@@ -6,21 +6,29 @@ namespace Neo\Core\Utils\Config\Commands;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'generate:default:config',
-    description: 'Generate sensitive config files for a project (deploy, database, api)'
+    description: 'Generate sensitive config files for a project (deploy, database, api, mailer)'
 )]
 final class GenerateDefaultConfigCommand implements CommandInterface
 {
     public function execute(array $args): void
     {
-        $projectName = Args::option($args, '--project') ?? $this->pickProjectInteractively();
+        $projectName = Args::option($args, '--project');
 
         if (!$projectName) {
-            return;
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $projectName = Input::choice('Target project ?', $projects);
         }
 
         $projectPath = ROOT_DIR . "/src/$projectName";
@@ -36,7 +44,7 @@ final class GenerateDefaultConfigCommand implements CommandInterface
         Output::title("Generating sensitive configs for: $projectName");
 
         $generated = 0;
-        $skipped = 0;
+        $skipped   = 0;
 
         $files = [
             'database.config.php' => fn() => $this->generateDatabaseConfig($configPath, $projectName),
@@ -49,7 +57,7 @@ final class GenerateDefaultConfigCommand implements CommandInterface
             $filePath = $configPath . $filename;
 
             if (file_exists($filePath)) {
-                if (!Output::confirm("  $filename already exists. Overwrite?", 'o')) {
+                if (!Input::confirm("$filename already exists. Overwrite ?", false)) {
                     Output::skip($filename);
                     $skipped++;
                     continue;
@@ -66,37 +74,18 @@ final class GenerateDefaultConfigCommand implements CommandInterface
         Output::newLine();
     }
 
-    private function pickProjectInteractively(): ?string
+    private function getAvailableProjects(): array
     {
         $srcDir = ROOT_DIR . '/src/';
-        $projects = [];
 
-        foreach (glob($srcDir . '*', GLOB_ONLYDIR) as $dir) {
-            $projects[] = basename($dir);
+        if (!is_dir($srcDir)) {
+            return [];
         }
 
-        if (empty($projects)) {
-            Output::error('No projects found in ./src/');
-            return null;
-        }
-
-        Output::title('Available projects:');
-        foreach ($projects as $i => $project) {
-            echo '  ' . Output::colorize("[$i]", 'cyan') . " $project\n";
-        }
-
-        $input = Output::prompt("\nEnter number or project name: ");
-
-        if (is_numeric($input) && isset($projects[(int) $input])) {
-            return $projects[(int) $input];
-        }
-
-        if (in_array($input, $projects, true)) {
-            return $input;
-        }
-
-        Output::error("Project not found: '$input'");
-        return null;
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
     }
 
     private function generateDatabaseConfig(string $path, string $name): void
@@ -170,7 +159,7 @@ PHP;
         file_put_contents($path . 'api.config.php', $content);
     }
 
-    private function generateMailerConfig(string $path, string $name)
+    private function generateMailerConfig(string $path, string $name): void
     {
         $content = <<<PHP
 <?php
@@ -215,11 +204,11 @@ PHP;
     public function getHelp(): string
     {
         Output::usage('generate:default:config', $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::newLine();
         echo "  Generated files:\n";
-        Output::muted('    Config/deploy.config.php');
         Output::muted('    Config/database.config.php');
+        Output::muted('    Config/deploy.config.php');
         Output::muted('    Config/api.config.php');
         Output::muted('    Config/mailer.config.php');
         Output::newLine();
