@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Utils\Config\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'generate:default:config',
     description: 'Generate sensitive config files for a project (deploy, database, api, mailer)',
     category: 'Config'
 )]
-final class GenerateDefaultConfigCommand implements CommandInterface
+final class GenerateDefaultConfigCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -73,20 +73,6 @@ final class GenerateDefaultConfigCommand implements CommandInterface
         Output::separator();
         Output::info("Done: $generated file(s) generated, $skipped skipped.");
         Output::newLine();
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
     }
 
     private function generateDatabaseConfig(string $path, string $name): void
@@ -190,16 +176,6 @@ return [
 ];
 PHP;
         file_put_contents($path . 'mailer.config.php', $content);
-    }
-
-    public function getName(): string
-    {
-        return 'generate:default:config';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Generate sensitive config files for a project (deploy, database, api, mailer)';
     }
 
     public function getHelp(): string

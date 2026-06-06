@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'app:make:service',
     description: 'Create a Service class for a project',
     category: 'Service'
 )]
-final class MakeServiceCommand implements CommandInterface
+final class MakeServiceCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -89,20 +89,6 @@ PHP;
         Output::success("Service '$service' generated for project '$project'.");
     }
 
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
     private function normalizeServiceName(string $input): string
     {
         $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
@@ -113,16 +99,6 @@ PHP;
         }
 
         return $input;
-    }
-
-    public function getName(): string
-    {
-        return 'make:service';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create a Service class for a project';
     }
 
     public function getHelp(): string

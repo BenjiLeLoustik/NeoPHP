@@ -3,18 +3,18 @@ declare(strict_types=1);
 
 namespace Neo\Core\Testing\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'run:test:all',
     description: 'Run all PHPUnit tests for a project',
     category: 'Testing'
 )]
-final class RunTestAllCommand implements CommandInterface
+final class RunTestAllCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -106,20 +106,6 @@ final class RunTestAllCommand implements CommandInterface
             $exitCode === 1 => Output::warning('Completed with warnings (code 1).'),
             default => Output::error("Tests failed (code $exitCode)."),
         };
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
     }
 
     private function generateHtmlSummary(
@@ -226,16 +212,6 @@ HTML;
         }
 
         return true;
-    }
-
-    public function getName(): string
-    {
-        return 'run:test:all';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Run all PHPUnit tests for a project';
     }
 
     public function getHelp(): string

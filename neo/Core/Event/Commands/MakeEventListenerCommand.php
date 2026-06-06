@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Event\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:event:listener',
     description: 'Create a Listener for an Event in a project',
     category: 'Event'
 )]
-final class MakeEventListenerCommand implements CommandInterface
+final class MakeEventListenerCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -108,20 +108,6 @@ PHP;
         Output::success("Listener '$listener' generated for event '$event' in project '$project'.");
     }
 
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
     private function getAvailableEvents(string $project): array
     {
         $eventDir = ROOT_DIR . "/src/$project/App/Event";
@@ -160,16 +146,6 @@ PHP;
         }
 
         return $input;
-    }
-
-    public function getName(): string
-    {
-        return 'make:event:listener';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create a Listener for an Event in a project';
     }
 
     public function getHelp(): string

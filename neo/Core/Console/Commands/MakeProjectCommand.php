@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console\Commands;
 
-use Neo\Core\Console\Interface\CommandInterface;
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
@@ -14,7 +14,7 @@ use Neo\Core\Console\Helper\Output;
     description: 'Create a new NeoPHP project inside ./src/',
     category: 'Project',
 )]
-final class MakeProjectCommand implements CommandInterface
+final class MakeProjectCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -750,16 +750,6 @@ PHP;
         }
 
         return ['localhost', $port];
-    }
-
-    public function getName(): string
-    {
-        return 'make:project';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create a new NeoPHP project inside ./src/';
     }
 
     public function getHelp(): string

@@ -3,18 +3,18 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'app:composer:require',
     description: 'Add a Composer dependency to a specific project',
     category: 'Composer'
 )]
-final class ComposerRequireCommand implements CommandInterface
+final class ComposerRequireCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -78,30 +78,6 @@ final class ComposerRequireCommand implements CommandInterface
         $output = shell_exec('composer update 2>&1');
         echo $output . "\n";
         Output::success('Composer update done.');
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'composer:require';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Add a Composer dependency to a specific project';
     }
 
     public function getHelp(): string

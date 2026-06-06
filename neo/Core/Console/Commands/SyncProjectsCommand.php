@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console\Commands;
 
-use Neo\Core\Console\Interface\CommandInterface;
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Output;
@@ -13,7 +13,7 @@ use Neo\Core\Console\Helper\Output;
     description: 'Sync root composer.json with all projects present in ./src/',
     category: 'Project'
 )]
-final class SyncProjectsCommand implements CommandInterface
+final class SyncProjectsCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -96,16 +96,6 @@ final class SyncProjectsCommand implements CommandInterface
         );
 
         return true;
-    }
-
-    public function getName(): string
-    {
-        return 'sync:projects';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Sync root composer.json with all projects present in ./src/';
     }
 
     public function getHelp(): string

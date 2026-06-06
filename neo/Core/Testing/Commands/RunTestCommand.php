@@ -3,18 +3,18 @@ declare(strict_types=1);
 
 namespace Neo\Core\Testing\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'run:test',
     description: 'Run a targeted PHPUnit test for a project',
     category: 'Testing'
 )]
-final class RunTestCommand implements CommandInterface
+final class RunTestCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -93,20 +93,6 @@ final class RunTestCommand implements CommandInterface
         };
     }
 
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
     private function findTestFile(string $testsPath, string $testName, ?string $type): ?string
     {
         $searchDirs = $type
@@ -143,16 +129,6 @@ final class RunTestCommand implements CommandInterface
         }
 
         return true;
-    }
-
-    public function getName(): string
-    {
-        return 'run:test';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Run a targeted PHPUnit test for a project';
     }
 
     public function getHelp(): string

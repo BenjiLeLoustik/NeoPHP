@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\DI\Container;
 use PDO;
 use PDOException;
@@ -17,7 +17,7 @@ use PDOException;
     description: 'Create the database defined in database.config.php for a project',
     category: 'Database'
 )]
-final class DatabaseCreateCommand implements CommandInterface
+final class DatabaseCreateCommand extends AbstractCommand
 {
     public function __construct(
         private Container $container
@@ -106,30 +106,6 @@ final class DatabaseCreateCommand implements CommandInterface
         } catch (PDOException $e) {
             Output::error('Database creation failed: ' . $e->getMessage());
         }
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'db:create';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create the database defined in database.config.php for a project';
     }
 
     public function getHelp(): string

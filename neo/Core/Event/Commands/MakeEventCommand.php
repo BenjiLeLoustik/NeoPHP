@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Event\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:event',
     description: 'Create an Event class for a project',
     category: 'Event'
 )]
-final class MakeEventCommand implements CommandInterface
+final class MakeEventCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -78,20 +78,6 @@ PHP;
         Output::success("Event '$event' generated for project '$project'.");
     }
 
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
     private function normalizeEventName(string $input): string
     {
         $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
@@ -102,16 +88,6 @@ PHP;
         }
 
         return $input;
-    }
-
-    public function getName(): string
-    {
-        return 'make:event';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create an Event class for a project';
     }
 
     public function getHelp(): string

@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Controller\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:controller',
     description: 'Create a web or API Controller for a project',
     category: 'Controller'
 )]
-final class MakeControllerCommand implements CommandInterface
+final class MakeControllerCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -69,20 +69,6 @@ final class MakeControllerCommand implements CommandInterface
         }
 
         Output::success("Controller '$controller' generated for project '$project'.");
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
     }
 
     private function generateController(
@@ -196,16 +182,6 @@ TWIG;
         $input = str_replace(' ', '', ucwords($input));
         $input = preg_replace('/Controller$/i', '', $input);
         return $input . 'Controller';
-    }
-
-    public function getName(): string
-    {
-        return 'make:controller';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create a web or API Controller for a project';
     }
 
     public function getHelp(): string

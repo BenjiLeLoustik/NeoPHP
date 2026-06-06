@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Routing\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\DI\Container;
 use Neo\Core\Routing\Router;
 
@@ -16,7 +16,7 @@ use Neo\Core\Routing\Router;
     description: 'Display all registered routes for a project',
     category: 'Router'
 )]
-final class DebugRouterCommand implements CommandInterface
+final class DebugRouterCommand extends AbstractCommand
 {
     private const METHOD_COLORS = [
         'GET' => 'green',
@@ -67,7 +67,7 @@ final class DebugRouterCommand implements CommandInterface
         }
 
         $routes = $router->getRoutes()->all();
-        $rows   = $this->filterRoutes($routes, $filterMethod, $filterName, $filterPath);
+        $rows = $this->filterRoutes($routes, $filterMethod, $filterName, $filterPath);
 
         if (empty($rows)) {
             Output::warning('No routes found matching the given filters.');
@@ -146,30 +146,6 @@ final class DebugRouterCommand implements CommandInterface
         Output::newLine();
         Output::muted(count($rows) . ' route(s) listed.');
         Output::newLine();
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'debug:router';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Display all registered routes for a project';
     }
 
     public function getHelp(): string

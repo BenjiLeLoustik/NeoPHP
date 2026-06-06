@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Testing\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\DI\Container;
 use Neo\Core\Testing\Generator\TestGenerator;
 use Neo\Core\Testing\Scaffold\TestScaffolder;
@@ -17,7 +17,7 @@ use Neo\Core\Testing\Scaffold\TestScaffolder;
     description: 'Auto-generate test files from #[Test] attributes',
     category: 'Testing'
 )]
-final class MakeTestAutoCommand implements CommandInterface
+final class MakeTestAutoCommand extends AbstractCommand
 {
     public function __construct(private Container $container) {}
 
@@ -79,30 +79,6 @@ final class MakeTestAutoCommand implements CommandInterface
 
         Output::separator();
         Output::success('Done.');
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'make:test:auto';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Auto-generate test files from #[Test] attributes';
     }
 
     public function getHelp(): string
