@@ -62,7 +62,7 @@ final class ProjectSyncCommand extends AbstractCommand
             Output::success('Composer update done.');
         } else {
             Output::muted('Remember to run: composer update');
-            Output::muted('Or re-run with: php bin/neo sync:projects --run-composer');
+            Output::muted("Or re-run with: php bin/neo {$this->getName()} --run-composer");
         }
     }
 

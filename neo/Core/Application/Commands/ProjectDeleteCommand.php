@@ -23,7 +23,7 @@ final class ProjectDeleteCommand extends AbstractCommand
 
         if (!$project) {
             Output::error('Missing argument: <ProjectName>');
-            Output::muted('Usage: php bin/neo delete:project <ProjectName>');
+            Output::muted("Usage: php bin/neo {$this->getName()} <ProjectName>");
             return;
         }
 

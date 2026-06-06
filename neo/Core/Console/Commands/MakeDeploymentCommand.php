@@ -32,7 +32,7 @@ final class MakeDeploymentCommand extends AbstractCommand
 
         if (!$project) {
             Output::error('Missing required option: --project');
-            Output::muted('Usage: php bin/neo make:deployment --project=<name>');
+            Output::muted("Usage: php bin/neo {$this->getName()} --project=<name>");
             return;
         }
 

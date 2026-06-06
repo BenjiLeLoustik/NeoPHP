@@ -27,7 +27,7 @@ final class CronRunCommand extends AbstractCommand
             $cronsPath = $this->container->get('cronsPath');
         } catch (\Throwable) {
             Output::error('You must pass --project=<name> to use this command.');
-            Output::muted('Example: php bin/neo cron:run --project=MyApp');
+            Output::muted("Example: php bin/neo {$this->getName()} --project=MyApp");
             return;
         }
 

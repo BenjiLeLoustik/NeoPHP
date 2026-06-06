@@ -35,7 +35,7 @@ final class CronListCommand extends AbstractCommand
 
             Output::warning('You must pass --project=<name> to use this command.');
             $project = Input::choice('Target project ?', $projects);
-            Output::muted("Re-run with: php bin/neo cron:list --project=$project");
+            Output::muted("Re-run with: php bin/neo {$this->getName()} --project=$project");
             return;
         }
 

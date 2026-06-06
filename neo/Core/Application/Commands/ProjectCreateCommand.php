@@ -23,7 +23,7 @@ final class ProjectCreateCommand extends AbstractCommand
 
         if (!$originalName) {
             Output::error('Missing argument: <ProjectName>');
-            Output::muted('Usage: php bin/neo make:project <ProjectName> [--skeleton]');
+            Output::muted("Usage: php bin/neo {$this->getName()} <ProjectName> [--skeleton]");
             return;
         }
 
