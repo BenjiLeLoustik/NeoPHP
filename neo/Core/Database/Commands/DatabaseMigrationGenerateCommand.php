@@ -72,7 +72,7 @@ final class DatabaseMigrationGenerateCommand implements CommandInterface
             Output::newLine();
 
             $generator = new MigrationGenerator($introspector);
-            $file = $generator->generate($migrationsPath, $name, $project);
+            $file = $generator->generate($migrationsPath, $name);
 
             Output::success('Migration file generated:');
             Output::muted('  ' . str_replace(ROOT_DIR, '', $file));
