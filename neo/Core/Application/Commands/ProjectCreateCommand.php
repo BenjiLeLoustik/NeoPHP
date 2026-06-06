@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Console\Commands;
+namespace Neo\Core\Application\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
@@ -10,11 +10,11 @@ use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Output;
 
 #[Command(
-    name: 'app:make:project',
+    name: 'project:create',
     description: 'Create a new NeoPHP project inside ./src/',
     category: 'Project',
 )]
-final class MakeProjectCommand extends AbstractCommand
+final class ProjectCreateCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -754,7 +754,7 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('make:project', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<ProjectName>',  'Name of the project to create');
         Output::option('--skeleton',     'Create only the base folder structure (no files or views)');
         Output::newLine();
