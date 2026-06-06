@@ -30,6 +30,36 @@ class ORM
 
     public function generate(): void
     {
+        $this->run(
+            generateModels: true,
+            generateRepositories: true,
+            generateForms: true,
+            force: false,
+        );
+    }
+
+    public function generateSelective(
+        bool $generateModels = true,
+        bool $generateRepositories = true,
+        bool $generateForms = true,
+        bool $force = false,
+    ): void {
+        $this->run(
+            generateModels: $generateModels,
+            generateRepositories: $generateRepositories,
+            generateForms: $generateForms,
+            force: $force,
+            bypassLock: true,
+        );
+    }
+
+    private function run(
+        bool $generateModels = true,
+        bool $generateRepositories = true,
+        bool $generateForms = true,
+        bool $force = false,
+        bool $bypassLock = false,
+    ): void {
         $env = $this->container->get(Config::class)->from('app')->get('environment') ?? 'prod';
         $isDebug = $env === 'dev';
 
@@ -45,22 +75,34 @@ class ORM
             );
         }
 
-        if (!$isDebug && file_exists($lockFile)) {
+        if (!$isDebug && !$bypassLock && !$force && file_exists($lockFile)) {
             return;
         }
 
         $tables = $this->introspector->getTables();
+        $modelNamespace = $this->container->get('modelNamespace');
 
         foreach ($tables as $tableName) {
             $columns = $this->introspector->getColumns($tableName);
-            $modelNamespace = $this->container->get('modelNamespace');
-            $modelClass = $modelNamespace . '\\' . $this->modelGenerator->generate($tableName, $columns);
 
-            $this->repositoryGenerator->generate($modelClass);
-            $this->formGenerator->generate($modelClass);
+            $modelClassName = $this->modelGenerator->generate(
+                table: $tableName,
+                columns: $columns,
+                write: $generateModels,
+            );
+
+            $modelClass = $modelNamespace . '\\' . $modelClassName;
+
+            if ($generateRepositories) {
+                $this->repositoryGenerator->generate($modelClass, force: $force);
+            }
+
+            if ($generateForms) {
+                $this->formGenerator->generate($modelClass);
+            }
         }
 
-        if (!$isDebug) {
+        if (!$isDebug && !$bypassLock) {
             if (file_put_contents($lockFile, date('Y-m-d H:i:s')) === false) {
                 throw new DatabaseException(
                     title: 'ORM Lock File Error',

@@ -28,7 +28,7 @@ class ModelGenerator
         }
     }
 
-    public function generate(string $table, array $columns): string
+    public function generate(string $table, array $columns, bool $write = true): string
     {
         $className = $this->convertToClassName($table);
         $file = "{$this->modelDir}/$className.php";
@@ -69,6 +69,10 @@ PHP;
         }
 
         $modelData['columns'] = array_merge($columnsFromBDD, $customColumns);
+
+        if (!$write) {
+            return $className;
+        }
 
         return $this->writeModelFile($file, $className, $modelData, $header);
     }
