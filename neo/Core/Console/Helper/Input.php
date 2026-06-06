@@ -6,42 +6,51 @@ final class Input
 {
     public static function ask(string $question, ?string $default = null): string
     {
-        $hint = $default !== null ? " [{$default}] " : '';
-        echo Output::colorize("{$question}{$hint} : ", 'cyan');
+        $hint = $default !== null
+            ? Output::colorize(" [{$default}]", 'dim')
+            : '';
+
+        echo Output::colorize($question, 'bold') . $hint . Output::colorize(' : ', 'cyan');
         $answer = trim(fgets(STDIN));
 
-        return $answer !== ''
-            ? $answer
-            : ($default ?? '');
+        return $answer !== '' ? $answer : ($default ?? '');
     }
 
-    public static function confirm(string $question, bool $default = null): bool
+    public static function confirm(string $question, bool $default = false): bool
     {
-        $hint = $default ? '[Y/n]' : '[y/N]';
-        echo Output::colorize("? {$question} {$hint} : ", 'cyan');
-        $answer = trim(fgets(STDIN));
+        $hint = $default
+            ? Output::colorize(' [Y/n]', 'dim')
+            : Output::colorize(' [y/N]', 'dim');
+
+        echo Output::colorize($question, 'bold') . $hint . Output::colorize(' : ', 'cyan');
+        $answer = strtolower(trim(fgets(STDIN)));
 
         if ($answer === '') {
             return $default;
         }
 
-        return in_array($answer, ['y', 'yes'], true);
+        return in_array($answer, ['y', 'yes', 'o', 'oui'], true);
     }
 
     public static function choice(string $question, array $choices, ?string $default = null): string
     {
-        echo Output::colorize("? {$question}", 'cyan') . "\n";
+        echo Output::colorize($question, 'bold') . "\n";
 
         $indexed = array_values($choices);
 
         foreach ($indexed as $i => $choice) {
-            $marker = ($default === $choice)
-                ? Output::colorize("  [" . ($i + 1) . "] ", 'green') . Output::colorize($choice, 'green')
-                : Output::colorize("  [" . ($i + 1) . "] ", 'dim') . $choice;
-            echo $marker . "\n";
+            $number = Output::colorize('  [' . ($i + 1) . '] ', 'dim');
+
+            if ($default === $choice) {
+                echo $number .
+                    Output::colorize($choice, 'green') .
+                    Output::colorize(' (default)', 'dim') . "\n";
+            } else {
+                echo $number . $choice . "\n";
+            }
         }
 
-        echo Output::colorize('  Your choice : ', 'cyan');
+        echo Output::colorize('  › ', 'cyan');
         $answer = trim(fgets(STDIN));
 
         if ($answer === '' && $default !== null) {
@@ -60,16 +69,16 @@ final class Input
 
     public static function multiChoice(string $question, array $choices): array
     {
-        echo Output::colorize("? {$question}", 'cyan') . "\n";
-        Output::muted('  (separate multiple choices with commas, e.g. 1,3)');
+        echo Output::colorize($question, 'bold') . "\n";
+        echo Output::colorize('  (separate multiple choices with commas, e.g. 1,3)', 'dim') . "\n";
 
         $indexed = array_values($choices);
 
         foreach ($indexed as $i => $choice) {
-            echo Output::colorize("  [" . ($i + 1) . "] ", 'dim') . $choice . "\n";
+            echo Output::colorize('  [' . ($i + 1) . '] ', 'dim') . $choice . "\n";
         }
 
-        echo Output::colorize('  Your choices : ', 'cyan');
+        echo Output::colorize('  › ', 'cyan');
         $answer = trim(fgets(STDIN));
 
         if ($answer === '') {
@@ -91,7 +100,7 @@ final class Input
 
     public static function secret(string $question): string
     {
-        echo Output::colorize("? {$question} : ", 'cyan');
+        echo Output::colorize($question, 'bold') . Output::colorize(' : ', 'cyan');
 
         if (DIRECTORY_SEPARATOR === '\\') {
             return trim(fgets(STDIN));
@@ -107,10 +116,14 @@ final class Input
 
     public static function autocomplete(string $question, array $suggestions, ?string $default = null): string
     {
-        $hint = $default !== null ? " [{$default}]" : '';
-        echo Output::colorize("? {$question}{$hint}", 'cyan') . "\n";
-        echo Output::colorize('  Suggestions : ', 'dim') . implode(', ', $suggestions) . "\n";
-        echo Output::colorize('  Your answer : ', 'cyan');
+        $hint = $default !== null
+            ? Output::colorize(" [{$default}]", 'dim')
+            : '';
+
+        echo Output::colorize($question, 'bold') . $hint . "\n";
+        echo Output::colorize('  Suggestions : ', 'dim') .
+            Output::colorize(implode(', ', $suggestions), 'dim') . "\n";
+        echo Output::colorize('  › ', 'cyan');
 
         $answer = trim(fgets(STDIN));
 
