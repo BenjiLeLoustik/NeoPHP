@@ -12,7 +12,7 @@ define('ROOT_DIR', dirname(__DIR__) . '/');
 global $argv;
 
 $basePath = realpath(__DIR__ . '/../');
-$project  = null;
+$project = null;
 
 foreach ($argv as $arg) {
     if (str_starts_with($arg, '--project=')) {
@@ -27,7 +27,7 @@ if ($project !== null && !is_dir($basePath . '/src/' . $project)) {
 }
 
 if ($project !== null) {
-    $app       = new App();
+    $app = new App();
     $container = $app->getContainer();
 } else {
     $container = new Container();
