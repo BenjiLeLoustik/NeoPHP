@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Utils\Config\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:config',
     description: 'Create an interactive config file for a project',
     category: 'Config'
 )]
-final class MakeConfigCommand implements CommandInterface
+final class MakeConfigCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -165,30 +165,6 @@ PHP;
         }
 
         return "'" . addslashes($value) . "'";
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'make:config';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create an interactive config file for a project';
     }
 
     public function getHelp(): string

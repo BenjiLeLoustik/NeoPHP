@@ -3,14 +3,13 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\DatabaseIntrospector;
-use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Database\Migration\MigrationGenerator;
 use Neo\Core\DI\Container;
 
@@ -19,7 +18,7 @@ use Neo\Core\DI\Container;
     description: 'Generate a migration file from the current database schema',
     category: 'Database'
 )]
-final class DatabaseMigrationGenerateCommand implements CommandInterface
+final class DatabaseMigrationGenerateCommand extends AbstractCommand
 {
     public function __construct(private Container $container) {}
 
@@ -99,30 +98,6 @@ final class DatabaseMigrationGenerateCommand implements CommandInterface
         $this->container->set('modelNamespace', "Neo\\Src\\$project\\Model");
         $this->container->set('repositoryNamespace', "Neo\\Src\\$project\\Repository");
         $this->container->set('formNamespace', "Neo\\Src\\$project\\App\\Forms");
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'database:migration:generate';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Generate a migration file from the current database schema';
     }
 
     public function getHelp(): string

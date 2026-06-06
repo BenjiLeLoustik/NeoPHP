@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\DatabaseIntrospector;
 use Neo\Core\Database\ORM\ORM;
@@ -18,7 +18,7 @@ use Neo\Core\DI\Container;
     description: 'Generate Models and Repositories from the database schema',
     category: 'Database'
 )]
-final class DatabaseGenerateCommand implements CommandInterface
+final class DatabaseGenerateCommand extends AbstractCommand
 {
     public function __construct(
         private Container $container
@@ -108,30 +108,6 @@ final class DatabaseGenerateCommand implements CommandInterface
         } catch (\Throwable $e) {
             Output::error('Generation failed: ' . $e->getMessage());
         }
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'db:generate';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Generate Models and Repositories from the database schema';
     }
 
     public function getHelp(): string

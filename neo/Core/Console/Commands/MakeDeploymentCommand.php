@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Output;
@@ -14,7 +14,7 @@ use Neo\Core\Console\Helper\Output;
     description: 'Deploy a NeoPHP project via FTP',
     category: 'Deployment'
 )]
-final class MakeDeploymentCommand implements CommandInterface
+final class MakeDeploymentCommand extends AbstractCommand
 {
     private float $startTime;
 
@@ -604,16 +604,6 @@ final class MakeDeploymentCommand implements CommandInterface
         }
 
         Fs::emptyDir($dir);
-    }
-
-    public function getName(): string
-    {
-        return 'make:deployment';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Deploy a NeoPHP project via FTP';
     }
 
     public function getHelp(): string

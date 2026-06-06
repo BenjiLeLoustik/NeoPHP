@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Output;
 
@@ -14,7 +14,7 @@ use Neo\Core\Console\Helper\Output;
     description: 'Start the PHP built-in server for a NeoPHP project',
     category: 'Server'
 )]
-final class ServeCommand implements CommandInterface
+final class ServeCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -95,16 +95,6 @@ final class ServeCommand implements CommandInterface
         }
 
         return $projects;
-    }
-
-    public function getName(): string
-    {
-        return 'serve';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Start the PHP built-in server for a NeoPHP project';
     }
 
     public function getHelp(): string

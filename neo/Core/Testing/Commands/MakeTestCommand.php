@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Testing\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Testing\Scaffold\TestScaffolder;
 
 #[Command(
@@ -15,7 +15,7 @@ use Neo\Core\Testing\Scaffold\TestScaffolder;
     description: 'Generate a PHPUnit test skeleton for a project',
     category: 'Testing'
 )]
-final class MakeTestCommand implements CommandInterface
+final class MakeTestCommand extends AbstractCommand
 {
     private const VALID_TYPES = ['unit', 'feature', 'database', 'middleware'];
 
@@ -65,20 +65,6 @@ final class MakeTestCommand implements CommandInterface
 
         (new TestScaffolder())->ensure($basePath, $project);
         $this->generateTest($basePath, $project, $testName, $type, $force);
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
     }
 
     private function generateTest(
@@ -268,16 +254,6 @@ PHP;
         }
 
         return $input;
-    }
-
-    public function getName(): string
-    {
-        return 'make:test';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Generate a PHPUnit test skeleton for a project';
     }
 
     public function getHelp(): string

@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Neo\Core\Cron\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Cron\CronRunner;
 use Neo\Core\Cron\CronScanner;
 use Neo\Core\DI\Container;
@@ -15,7 +15,7 @@ use Neo\Core\DI\Container;
     description: 'Run all due cron jobs for a project',
     category: 'Cron'
 )]
-final class CronRunCommand implements CommandInterface
+final class CronRunCommand extends AbstractCommand
 {
     public function __construct(
         private Container $container
@@ -41,16 +41,6 @@ final class CronRunCommand implements CommandInterface
 
         $runner = new CronRunner($this->container);
         $runner->run($jobs);
-    }
-
-    public function getName(): string
-    {
-        return 'cron:run';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Run all due cron jobs for a project';
     }
 
     public function getHelp(): string

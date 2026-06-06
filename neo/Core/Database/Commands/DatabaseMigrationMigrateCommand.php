@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\DatabaseIntrospector;
 use Neo\Core\Database\DatabaseManager;
@@ -20,7 +20,7 @@ use Neo\Core\DI\Container;
     description: 'Run all pending migrations for a project',
     category: 'Database'
 )]
-final class DatabaseMigrationMigrateCommand implements CommandInterface
+final class DatabaseMigrationMigrateCommand extends AbstractCommand
 {
     public function __construct(private Container $container) {}
 
@@ -98,20 +98,6 @@ final class DatabaseMigrationMigrateCommand implements CommandInterface
         }
     }
 
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
     private function bootProjectContainer(string $project): void
     {
         $srcPath = ROOT_DIR . "/src/$project";
@@ -128,16 +114,6 @@ final class DatabaseMigrationMigrateCommand implements CommandInterface
         $this->container->set('modelNamespace', "Neo\\Src\\$project\\Model");
         $this->container->set('repositoryNamespace', "Neo\\Src\\$project\\Repository");
         $this->container->set('formNamespace', "Neo\\Src\\$project\\App\\Forms");
-    }
-
-    public function getName(): string
-    {
-        return 'database:migration:migrate';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Run all pending migrations for a project';
     }
 
     public function getHelp(): string

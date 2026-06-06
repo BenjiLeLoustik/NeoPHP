@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Utils\Cache\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'cache:clear',
     description: 'Clear the cache of a project',
     category: 'Cache'
 )]
-final class CacheClearCommand implements CommandInterface
+final class CacheClearCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -46,30 +46,6 @@ final class CacheClearCommand implements CommandInterface
 
         Fs::emptyDir($cacheDir);
         Output::success("Cache cleared for project '$project'.");
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'cache:clear';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Clear the cache of a project';
     }
 
     public function getHelp(): string

@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\DatabaseIntrospector;
 use Neo\Core\Database\DatabaseManager;
@@ -20,7 +20,7 @@ use Neo\Core\DI\Container;
     description: 'Rollback the last batch of migrations for a project',
     category: 'Database'
 )]
-final class DatabaseMigrationRollbackCommand implements CommandInterface
+final class DatabaseMigrationRollbackCommand extends AbstractCommand
 {
     public function __construct(private Container $container) {}
 
@@ -118,29 +118,6 @@ final class DatabaseMigrationRollbackCommand implements CommandInterface
         $this->container->set('formNamespace', "Neo\\Src\\$project\\App\\Forms");
     }
 
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'database:migration:rollback';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Rollback the last batch of migrations for a project';
-    }
 
     public function getHelp(): string
     {

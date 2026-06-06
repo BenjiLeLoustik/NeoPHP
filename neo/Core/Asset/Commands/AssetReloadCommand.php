@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Asset\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'asset:reload',
     description: 'Delete the build folder of a project',
     category: 'Asset'
 )]
-final class AssetReloadCommand implements CommandInterface
+final class AssetReloadCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -46,30 +46,6 @@ final class AssetReloadCommand implements CommandInterface
 
         Fs::deleteDir($buildDir);
         Output::success("Build folder deleted for project '$project'.");
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $buildsDir = ROOT_DIR . '/public/builds/';
-
-        if (!is_dir($buildsDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($buildsDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'asset:reload';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Delete the build folder of a project';
     }
 
     public function getHelp(): string

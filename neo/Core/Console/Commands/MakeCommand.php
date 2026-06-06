@@ -2,19 +2,19 @@
 
 namespace Neo\Core\Console\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'app:make:command',
     description: 'Create a new CLI Command for a project',
     category: 'Command'
 )]
-class MakeCommand implements CommandInterface
+class MakeCommand extends AbstractCommand
 {
 
     private const CATEGORIES = ['app', 'other', 'testing', 'cron', 'config', 'debug'];
@@ -82,18 +82,18 @@ declare(strict_types=1);
 
 namespace $namespace;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: '$cmdName',
     description: 'Add a short description',
     category: '$category'
 )]
-final class $commandName implements CommandInterface
+final class $commandName extends AbstractCommand
 {
     public function execute(array \$args): void
     {
@@ -110,16 +110,6 @@ final class $commandName implements CommandInterface
         // \$secret   = Input::secret('Password ?');
 
         Output::success('Done.');
-    }
-
-    public function getName(): string
-    {
-        return '$cmdName';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Add a short description';
     }
 
     public function getHelp(): string
@@ -146,20 +136,6 @@ PHP;
         Output::newLine();
     }
 
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
     private function normalizeCommandName(string $input): string
     {
         $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
@@ -177,16 +153,6 @@ PHP;
         $name = preg_replace('/Command$/', '', $className);
         $name = preg_replace('/([A-Z])/', ':$1', lcfirst($name));
         return strtolower(ltrim($name, ':'));
-    }
-
-    public function getName(): string
-    {
-        return 'make:command';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create a new CLI Command class for a project';
     }
 
     public function getHelp(): string

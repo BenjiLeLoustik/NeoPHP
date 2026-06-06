@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Security\Middleware\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:middleware',
     description: 'Create a Middleware for a project',
     category: 'Middleware'
 )]
-final class MakeMiddlewareCommand implements CommandInterface
+final class MakeMiddlewareCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -94,20 +94,6 @@ PHP;
         Output::success("Middleware '$middleware' generated for project '$project'.");
     }
 
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
     private function normalizeMiddlewareName(string $input): string
     {
         $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
@@ -118,16 +104,6 @@ PHP;
         }
 
         return $input;
-    }
-
-    public function getName(): string
-    {
-        return 'make:middleware';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create a Middleware for a project';
     }
 
     public function getHelp(): string

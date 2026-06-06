@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Cron\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:cron',
     description: 'Create a Cron class for a project',
     category: 'Cron'
 )]
-final class MakeCronCommand implements CommandInterface
+final class MakeCronCommand extends AbstractCommand
 {
     private const COMMON_EXPRESSIONS = [
         '* * * * *',
@@ -100,20 +100,6 @@ PHP;
         Output::success("Cron '$cron' generated for project '$project'.");
     }
 
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
     private function normalizeCronName(string $input): string
     {
         $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
@@ -124,16 +110,6 @@ PHP;
         }
 
         return $input;
-    }
-
-    public function getName(): string
-    {
-        return 'make:cron';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create a Cron class for a project';
     }
 
     public function getHelp(): string

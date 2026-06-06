@@ -3,19 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:crud',
     description: 'Create a full CRUD (Controller + Twig views) for an entity',
     category: 'Database'
 )]
-final class MakeCrudCommand implements CommandInterface
+final class MakeCrudCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -69,20 +69,6 @@ final class MakeCrudCommand implements CommandInterface
 
         Output::newLine();
         Output::success("CRUD '$entity' generated for project '$project'.");
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
     }
 
     private function generateController(
@@ -210,16 +196,6 @@ TWIG);
         }
 
         return strtolower(trim($directory . '/' . $base, '/'));
-    }
-
-    public function getName(): string
-    {
-        return 'make:crud';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Create a full CRUD (Controller + Twig views) for an entity';
     }
 
     public function getHelp(): string

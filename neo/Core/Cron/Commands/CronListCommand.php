@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace Neo\Core\Cron\Commands;
 
+use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Cron\CronScanner;
 use Neo\Core\DI\Container;
 
@@ -15,7 +15,7 @@ use Neo\Core\DI\Container;
     description: 'List all registered cron jobs for a project',
     category: 'Cron'
 )]
-final class CronListCommand implements CommandInterface
+final class CronListCommand extends AbstractCommand
 {
     public function __construct(
         private Container $container
@@ -57,30 +57,6 @@ final class CronListCommand implements CommandInterface
         }
 
         Output::newLine();
-    }
-
-    private function getAvailableProjects(): array
-    {
-        $srcDir = ROOT_DIR . '/src/';
-
-        if (!is_dir($srcDir)) {
-            return [];
-        }
-
-        return array_map(
-            fn(string $dir) => basename($dir),
-            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
-        );
-    }
-
-    public function getName(): string
-    {
-        return 'cron:list';
-    }
-
-    public function getDescription(): string
-    {
-        return 'List all registered cron jobs for a project';
     }
 
     public function getHelp(): string
