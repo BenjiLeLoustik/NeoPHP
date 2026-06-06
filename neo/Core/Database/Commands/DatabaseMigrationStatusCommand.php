@@ -18,7 +18,7 @@ use Neo\Core\DI\Container;
 #[Command(
     name: 'database:migration:status',
     description: 'Show applied and pending migrations for a project',
-    category: 'database'
+    category: 'Database'
 )]
 final class DatabaseMigrationStatusCommand implements CommandInterface
 {

@@ -16,7 +16,7 @@ use Neo\Core\DI\Container;
 #[Command(
     name: 'database:generate',
     description: 'Generate Models and Repositories from the database schema',
-    category: 'database'
+    category: 'Database'
 )]
 final class DatabaseGenerateCommand implements CommandInterface
 {

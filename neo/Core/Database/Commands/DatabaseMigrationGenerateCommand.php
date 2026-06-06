@@ -17,7 +17,7 @@ use Neo\Core\DI\Container;
 #[Command(
     name: 'database:migration:generate',
     description: 'Generate a migration file from the current database schema',
-    category: 'database'
+    category: 'Database'
 )]
 final class DatabaseMigrationGenerateCommand implements CommandInterface
 {
