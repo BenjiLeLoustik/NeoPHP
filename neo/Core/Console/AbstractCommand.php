@@ -3,7 +3,6 @@
 namespace Neo\Core\Console;
 
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 
 class AbstractCommand implements CommandInterface
