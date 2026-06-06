@@ -74,7 +74,7 @@ final class MigrationRunner
     {
         $pending = $this->getPending($migrationsPath);
 
-        if (empty($pending)) {
+        if (count($pending) === 0) {
             return [];
         }
 
@@ -99,7 +99,7 @@ final class MigrationRunner
             $ran[] = $className;
         }
 
-        if (!$dryRun && $snapshot !== null && !empty($ran)) {
+        if (!$dryRun && $snapshot !== null && count($ran) > 0) {
             $snapshot->take();
         }
 
@@ -140,7 +140,7 @@ final class MigrationRunner
             $rolledBack[] = $className;
         }
 
-        if ($snapshot !== null && !empty($rolledBack)) {
+        if ($snapshot !== null && count($rolledBack) > 0) {
             $snapshot->take();
         }
 
