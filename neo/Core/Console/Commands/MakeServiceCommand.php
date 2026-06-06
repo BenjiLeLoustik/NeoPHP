@@ -3,11 +3,12 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console\Commands;
 
-use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'app:make:service',
@@ -22,15 +23,32 @@ final class MakeServiceCommand implements CommandInterface
         $directory = Args::option($args, '-d') ?? Args::option($args, '--dir');
         $force = Args::flag($args, '--force');
 
-        if (!$service || !$project) {
-            Output::error('Missing arguments.');
-            Output::muted('Usage: php bin/neo make:service <ServiceName> --project=<name>');
-            return;
+        if (!$service) {
+            $service = Input::ask('Service name ?');
+            if (!$service) {
+                Output::error('Service name is required.');
+                return;
+            }
+        }
+
+        if (!$project) {
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $project = Input::choice('Target project ?', $projects);
+        }
+
+        if (!$directory) {
+            $raw = Input::ask('Sub-folder ? (leave empty to skip)', '');
+            $directory = $raw !== '' ? $raw : null;
         }
 
         $service = $this->normalizeServiceName($service);
         $directory = $directory ? Fs::normalizeDir($directory) : null;
-
         $basePath = ROOT_DIR . "/src/$project/App/Services";
 
         if ($directory) {
@@ -42,8 +60,10 @@ final class MakeServiceCommand implements CommandInterface
         $path = "$basePath/$service.php";
 
         if (file_exists($path) && !$force) {
-            Output::warning("Service already exists. Use --force to overwrite.");
-            return;
+            if (!Input::confirm("Service '$service' already exists. Overwrite ?", false)) {
+                Output::muted('Cancelled.');
+                return;
+            }
         }
 
         $namespace = "Neo\\Src\\$project\\App\\Services";
@@ -66,6 +86,20 @@ PHP;
 
         file_put_contents($path, $content);
         Output::success("Service '$service' generated for project '$project'.");
+    }
+
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
     }
 
     private function normalizeServiceName(string $input): string
@@ -92,15 +126,16 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('make:service', $this->getDescription());
-        Output::option('<ServiceName>',         '"Service" suffix added automatically');
-        Output::option('--project=<name>',      'Target project inside ./src/');
+        Output::usage('app:make:service', $this->getDescription());
+        Output::option('<ServiceName>', '"Service" suffix added automatically');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('-d, --dir <directory>', 'Create inside a sub-folder (e.g. Utils)');
-        Output::option('--force',               'Overwrite existing file');
+        Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:service Mail --project=NeoAdmin');
-        Output::example('php bin/neo make:service Mail -d Utils --project=NeoAdmin');
+        Output::example('php bin/neo app:make:service Mail --project=NeoAdmin');
+        Output::example('php bin/neo app:make:service Mail -d Utils --project=NeoAdmin');
+        Output::example('php bin/neo app:make:service');
 
         return '';
     }
