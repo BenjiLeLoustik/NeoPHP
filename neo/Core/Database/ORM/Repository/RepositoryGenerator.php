@@ -27,7 +27,7 @@ class RepositoryGenerator
         }
     }
 
-    public function generate(string $modelClass): string
+    public function generate(string $modelClass, bool $force = false): string
     {
         $modelParts = explode('\\', $modelClass);
         $modelName = array_pop($modelParts);
@@ -52,6 +52,10 @@ class $repoClassName extends AbstractRepository
 PHP;
 
         $file = "{$this->repoDir}/{$repoClassName}.php";
+
+        if (!$force && file_exists($file)) {
+            return $repoClassName;
+        }
 
         if (!file_exists($file) && file_put_contents($file, $code) === false) {
             throw new DatabaseException(
