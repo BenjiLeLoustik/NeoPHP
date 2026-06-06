@@ -18,7 +18,7 @@ use Neo\Core\DI\Container;
 #[Command(
     name: 'database:migration:migrate',
     description: 'Run all pending migrations for a project',
-    category: 'database'
+    category: 'Database'
 )]
 final class DatabaseMigrationMigrateCommand implements CommandInterface
 {

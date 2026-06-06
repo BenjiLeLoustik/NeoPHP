@@ -15,7 +15,7 @@ use PDOException;
 #[Command(
     name: 'database:create',
     description: 'Create the database defined in database.config.php for a project',
-    category: 'database'
+    category: 'Database'
 )]
 final class DatabaseCreateCommand implements CommandInterface
 {

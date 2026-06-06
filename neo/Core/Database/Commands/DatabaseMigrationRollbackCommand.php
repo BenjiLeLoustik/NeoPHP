@@ -18,7 +18,7 @@ use Neo\Core\DI\Container;
 #[Command(
     name: 'database:migration:rollback',
     description: 'Rollback the last batch of migrations for a project',
-    category: 'database'
+    category: 'Database'
 )]
 final class DatabaseMigrationRollbackCommand implements CommandInterface
 {
