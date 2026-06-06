@@ -50,12 +50,12 @@ final class CacheClearCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('cache:clear', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo cache:clear --project=NeoAdmin');
-        Output::example('php bin/neo cache:clear');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

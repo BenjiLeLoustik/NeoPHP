@@ -82,15 +82,15 @@ final class ComposerRequireCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('composer:require', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<package/name>', 'Package to install (e.g. stripe/stripe-php)');
         Output::option('[version]', 'Version constraint (e.g. ^20.0, ~1.0) — defaults to *');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo app:composer:require stripe/stripe-php --project=MonProjet');
-        Output::example('php bin/neo app:composer:require stripe/stripe-php ^20.0 --project=MonProjet');
-        Output::example('php bin/neo app:composer:require');
+        Output::example("php bin/neo {$this->getName()} stripe/stripe-php --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} stripe/stripe-php ^20.0 --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

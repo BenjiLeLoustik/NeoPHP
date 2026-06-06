@@ -118,14 +118,14 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('migrate:run', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--dry-run', 'List pending migrations without executing them');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo migrate:run --project=Blog');
-        Output::example('php bin/neo migrate:run --project=Blog --dry-run');
-        Output::example('php bin/neo migrate:run');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} --project=MyApp --dry-run");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

@@ -121,14 +121,14 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('migrate:rollback', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--force', 'Skip confirmation prompt');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo migrate:rollback --project=Blog');
-        Output::example('php bin/neo migrate:rollback --project=Blog --force');
-        Output::example('php bin/neo migrate:rollback');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} --project=MyApp --force");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

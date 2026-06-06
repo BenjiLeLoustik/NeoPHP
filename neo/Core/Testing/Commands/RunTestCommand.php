@@ -133,16 +133,16 @@ final class RunTestCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('run:test', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<TestName>', 'Test class name (e.g. UserServiceTest)');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--filter=<method>', 'Filter on a specific test method');
         Output::option('--type=<type>', 'Search only inside Tests/<Type>/ (unit|feature|database|middleware)');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo run:test UserServiceTest --project=Blog');
-        Output::example('php bin/neo run:test UserServiceTest --filter=test_example --project=Blog');
-        Output::example('php bin/neo run:test');
+        Output::example("php bin/neo {$this->getName()} UserServiceTest --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} UserServiceTest --filter=test_example --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

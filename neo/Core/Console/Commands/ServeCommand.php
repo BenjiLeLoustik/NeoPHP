@@ -99,7 +99,7 @@ final class ServeCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('serve', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<ProjectName>', 'Project to serve (interactive selection if omitted)');
         Output::newLine();
         echo "  Prerequisites:\n";
@@ -107,8 +107,8 @@ final class ServeCommand extends AbstractCommand
         Output::muted("    with an 'access' key (e.g. '127.0.0.1:8000').");
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo serve');
-        Output::example('php bin/neo serve NeoAdmin');
+        Output::example("php bin/neo {$this->getName()}");
+        Output::example("php bin/neo {$this->getName()} MyApp");
 
         return '';
     }

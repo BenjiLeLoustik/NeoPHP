@@ -83,16 +83,16 @@ final class MakeTestAutoCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('make:test:auto', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--force', 'Overwrite existing test files');
         Output::option('--only=<type>', 'Generate only a specific type (unit|feature|database|middleware)');
         Output::option('--dry-run', 'Show what would be generated without creating files');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:test:auto --project=Blog');
-        Output::example('php bin/neo make:test:auto --project=Blog --only=database --dry-run');
-        Output::example('php bin/neo make:test:auto');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} --project=MyApp --only=database --dry-run");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

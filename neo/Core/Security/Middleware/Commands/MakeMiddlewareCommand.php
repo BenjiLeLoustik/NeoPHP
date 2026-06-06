@@ -108,16 +108,16 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('make:middleware', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<MiddlewareName>', '"Middleware" suffix added automatically');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('-d, --dir <directory>', 'Create inside a sub-folder (e.g. Security)');
         Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:middleware Auth --project=NeoAdmin');
-        Output::example('php bin/neo make:middleware Auth -d Security --project=NeoAdmin');
-        Output::example('php bin/neo make:middleware');
+        Output::example("php bin/neo {$this->getName()} Auth --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} Auth -d Security --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }
