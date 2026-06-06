@@ -1,21 +1,21 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Console\Commands;
+namespace Neo\Core\Application\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 
 #[Command(
-    name: 'app:delete:project',
+    name: 'project:delete',
     description: 'Delete a NeoPHP project',
     category: 'Project'
 )]
-final class DeleteProjectCommand extends AbstractCommand
+final class ProjectDeleteCommand extends AbstractCommand
 {
     public function execute(array $args): void
     {
@@ -135,7 +135,7 @@ final class DeleteProjectCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('delete:project', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<ProjectName>', 'Name of the project to delete');
         Output::newLine();
         echo "  Examples:\n";
