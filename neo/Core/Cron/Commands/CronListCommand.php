@@ -12,7 +12,8 @@ use Neo\Core\DI\Container;
 
 #[Command(
     name: 'cron:list',
-    description: 'List all registered cron jobs for a project'
+    description: 'List all registered cron jobs for a project',
+    category: 'Cron'
 )]
 final class CronListCommand implements CommandInterface
 {

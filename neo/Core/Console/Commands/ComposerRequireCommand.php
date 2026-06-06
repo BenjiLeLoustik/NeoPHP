@@ -11,7 +11,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'app:composer:require',
-    description: 'Add a Composer dependency to a specific project'
+    description: 'Add a Composer dependency to a specific project',
+    category: 'Composer'
 )]
 final class ComposerRequireCommand implements CommandInterface
 {

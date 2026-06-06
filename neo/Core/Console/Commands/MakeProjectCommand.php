@@ -11,7 +11,8 @@ use Neo\Core\Console\Helper\Output;
 
 #[Command(
     name: 'app:make:project',
-    description: 'Create a new NeoPHP project inside ./src/'
+    description: 'Create a new NeoPHP project inside ./src/',
+    category: 'Project',
 )]
 final class MakeProjectCommand implements CommandInterface
 {

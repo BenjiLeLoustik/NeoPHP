@@ -10,7 +10,8 @@ use Neo\Core\Console\Helper\Output;
 
 #[Command(
     name: 'app:sync:projects',
-    description: 'Sync root composer.json with all projects present in ./src/'
+    description: 'Sync root composer.json with all projects present in ./src/',
+    category: 'Project'
 )]
 final class SyncProjectsCommand implements CommandInterface
 {

@@ -66,10 +66,12 @@ class ConsoleHandler
             $instance = new $class($this->container);
             $name = $attribute->name ?? $instance->getName();
             $description = $attribute->description ?? $instance->getDescription();
+            $category = $attribute->category ?? 'other';
 
             $this->commands[$name] = [
                 'instance' => $instance,
                 'description' => $description,
+                'category' => $category
             ];
         }
 
@@ -112,7 +114,7 @@ class ConsoleHandler
         $groups = [];
 
         foreach ($this->commands as $name => $info) {
-            $group = str_contains($name, ':') ? explode(':', $name)[0] : 'other';
+            $group = $info['category'];
             $groups[$group][] = [$name, $info['description']];
         }
 

@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:event',
-    description: 'Create an Event class for a project'
+    description: 'Create an Event class for a project',
+    category: 'Event'
 )]
 final class MakeEventCommand implements CommandInterface
 {

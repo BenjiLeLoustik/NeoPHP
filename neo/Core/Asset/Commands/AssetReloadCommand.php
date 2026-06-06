@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'asset:reload',
-    description: 'Delete the build folder of a project'
+    description: 'Delete the build folder of a project',
+    category: 'Asset'
 )]
 final class AssetReloadCommand implements CommandInterface
 {

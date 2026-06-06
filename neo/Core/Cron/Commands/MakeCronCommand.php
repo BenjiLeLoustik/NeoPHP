@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:cron',
-    description: 'Create a Cron class for a project'
+    description: 'Create a Cron class for a project',
+    category: 'Cron'
 )]
 final class MakeCronCommand implements CommandInterface
 {

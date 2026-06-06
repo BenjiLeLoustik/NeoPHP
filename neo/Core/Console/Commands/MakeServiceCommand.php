@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'app:make:service',
-    description: 'Create a Service class for a project'
+    description: 'Create a Service class for a project',
+    category: 'Service'
 )]
 final class MakeServiceCommand implements CommandInterface
 {

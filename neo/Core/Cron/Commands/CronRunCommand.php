@@ -12,7 +12,8 @@ use Neo\Core\DI\Container;
 
 #[Command(
     name: 'cron:run',
-    description: 'Run all due cron jobs for a project'
+    description: 'Run all due cron jobs for a project',
+    category: 'Cron'
 )]
 final class CronRunCommand implements CommandInterface
 {

@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:controller',
-    description: 'Create a web or API Controller for a project'
+    description: 'Create a web or API Controller for a project',
+    category: 'Controller'
 )]
 final class MakeControllerCommand implements CommandInterface
 {
