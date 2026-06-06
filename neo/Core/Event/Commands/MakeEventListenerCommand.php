@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:event:listener',
-    description: 'Create a Listener for an Event in a project'
+    description: 'Create a Listener for an Event in a project',
+    category: 'Event'
 )]
 final class MakeEventListenerCommand implements CommandInterface
 {

@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'cache:clear',
-    description: 'Clear the cache of a project'
+    description: 'Clear the cache of a project',
+    category: 'Cache'
 )]
 final class CacheClearCommand implements CommandInterface
 {

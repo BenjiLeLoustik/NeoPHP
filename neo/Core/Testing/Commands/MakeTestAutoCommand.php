@@ -14,7 +14,8 @@ use Neo\Core\Testing\Scaffold\TestScaffolder;
 
 #[Command(
     name: 'make:test:auto',
-    description: 'Auto-generate test files from #[Test] attributes'
+    description: 'Auto-generate test files from #[Test] attributes',
+    category: 'Testing'
 )]
 final class MakeTestAutoCommand implements CommandInterface
 {

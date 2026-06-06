@@ -11,7 +11,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'run:test:all',
-    description: 'Run all PHPUnit tests for a project'
+    description: 'Run all PHPUnit tests for a project',
+    category: 'Testing'
 )]
 final class RunTestAllCommand implements CommandInterface
 {

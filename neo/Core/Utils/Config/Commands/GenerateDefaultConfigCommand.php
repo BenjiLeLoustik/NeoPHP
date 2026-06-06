@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'generate:default:config',
-    description: 'Generate sensitive config files for a project (deploy, database, api, mailer)'
+    description: 'Generate sensitive config files for a project (deploy, database, api, mailer)',
+    category: 'Config'
 )]
 final class GenerateDefaultConfigCommand implements CommandInterface
 {

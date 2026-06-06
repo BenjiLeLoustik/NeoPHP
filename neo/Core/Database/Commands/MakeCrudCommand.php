@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:crud',
-    description: 'Create a full CRUD (Controller + Twig views) for an entity'
+    description: 'Create a full CRUD (Controller + Twig views) for an entity',
+    category: 'Database'
 )]
 final class MakeCrudCommand implements CommandInterface
 {

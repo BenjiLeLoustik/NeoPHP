@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:middleware',
-    description: 'Create a Middleware for a project'
+    description: 'Create a Middleware for a project',
+    category: 'Middleware'
 )]
 final class MakeMiddlewareCommand implements CommandInterface
 {

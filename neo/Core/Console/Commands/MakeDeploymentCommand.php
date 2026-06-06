@@ -9,7 +9,11 @@ use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Helper\Output;
 
-#[Command(name: 'app:make:deployment', description: 'Deploy a NeoPHP project via FTP')]
+#[Command(
+    name: 'app:make:deployment',
+    description: 'Deploy a NeoPHP project via FTP',
+    category: 'Deployment'
+)]
 final class MakeDeploymentCommand implements CommandInterface
 {
     private float $startTime;

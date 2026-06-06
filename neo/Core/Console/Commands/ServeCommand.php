@@ -9,7 +9,11 @@ use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Output;
 
-#[Command(name: 'app:serve', description: 'Start the PHP built-in server for a NeoPHP project')]
+#[Command(
+    name: 'app:serve',
+    description: 'Start the PHP built-in server for a NeoPHP project',
+    category: 'Server'
+)]
 final class ServeCommand implements CommandInterface
 {
     public function execute(array $args): void

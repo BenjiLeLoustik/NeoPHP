@@ -12,7 +12,8 @@ use Neo\Core\Console\Interface\CommandInterface;
 
 #[Command(
     name: 'make:config',
-    description: 'Create an interactive config file for a project'
+    description: 'Create an interactive config file for a project',
+    category: 'Config'
 )]
 final class MakeConfigCommand implements CommandInterface
 {

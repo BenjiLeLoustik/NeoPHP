@@ -13,7 +13,8 @@ use Neo\Core\Routing\Router;
 
 #[Command(
     name: 'debug:router',
-    description: 'Display all registered routes for a project'
+    description: 'Display all registered routes for a project',
+    category: 'Router'
 )]
 final class DebugRouterCommand implements CommandInterface
 {

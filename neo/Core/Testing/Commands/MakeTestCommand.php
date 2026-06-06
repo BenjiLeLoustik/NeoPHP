@@ -12,7 +12,8 @@ use Neo\Core\Testing\Scaffold\TestScaffolder;
 
 #[Command(
     name: 'make:test',
-    description: 'Generate a PHPUnit test skeleton for a project'
+    description: 'Generate a PHPUnit test skeleton for a project',
+    category: 'Testing'
 )]
 final class MakeTestCommand implements CommandInterface
 {
