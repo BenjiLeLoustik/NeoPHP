@@ -6,6 +6,7 @@ namespace Neo\Core\Utils\Config\Commands;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Fs;
+use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
 
@@ -21,10 +22,23 @@ final class MakeConfigCommand implements CommandInterface
         $project = Args::option($args, '--project');
         $force = Args::flag($args, '--force');
 
-        if (!$configName || !$project) {
-            Output::error('Missing arguments.');
-            Output::muted('Usage: php bin/neo make:config <ConfigName> --project=<name>');
-            return;
+        if (!$configName) {
+            $configName = Input::ask('Config file name ?');
+            if (!$configName) {
+                Output::error('Config name is required.');
+                return;
+            }
+        }
+
+        if (!$project) {
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found in ./src/');
+                return;
+            }
+
+            $project = Input::choice('Target project ?', $projects);
         }
 
         $configName = strtolower($configName);
@@ -39,8 +53,10 @@ final class MakeConfigCommand implements CommandInterface
         $configFile = "$configDir/$configName.config.php";
 
         if (file_exists($configFile) && !$force) {
-            Output::warning("'$configName.config.php' already exists. Use --force to overwrite.");
-            return;
+            if (!Input::confirm("'$configName.config.php' already exists. Overwrite ?", false)) {
+                Output::muted('Cancelled.');
+                return;
+            }
         }
 
         Output::info("Generating '$configName.config.php' for project '$project'.");
@@ -62,13 +78,13 @@ final class MakeConfigCommand implements CommandInterface
         $flat = [];
 
         while (true) {
-            $key = Output::prompt('  Key name (empty to finish): ');
+            $key = Input::ask('Key name (empty to finish)', '');
 
             if ($key === '') {
                 break;
             }
 
-            $value = Output::prompt("  Value for '$key': ");
+            $value = Input::ask("Value for '$key'", '');
             $flat[$key] = $value;
             Output::newLine();
         }
@@ -150,6 +166,20 @@ PHP;
         return "'" . addslashes($value) . "'";
     }
 
+    private function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
+    }
+
     public function getName(): string
     {
         return 'make:config';
@@ -163,12 +193,13 @@ PHP;
     public function getHelp(): string
     {
         Output::usage('make:config', $this->getDescription());
-        Output::option('<ConfigName>',     'Config file name (e.g. mail → mail.config.php)');
-        Output::option('--project=<name>', 'Target project inside ./src/');
-        Output::option('--force',          'Overwrite existing file');
+        Output::option('<ConfigName>', 'Config file name (e.g. mail → mail.config.php)');
+        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
+        Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
         Output::example('php bin/neo make:config mail --project=NeoAdmin');
+        Output::example('php bin/neo make:config');
 
         return '';
     }
