@@ -56,10 +56,19 @@ final class DatabaseGenerateCommand implements CommandInterface
             return;
         }
 
+        $this->container->set('application', $project);
         $this->container->set('projectPath', $srcPath);
         $this->container->set('controllerNamespace', "Neo\\Src\\$project\\App\\Controllers");
         $this->container->set('controllersPath', "$srcPath/App/Controllers");
         $this->container->set('storagePath', "$srcPath/Storage");
+        $this->container->set('configsPath', "$srcPath/Config");
+        $this->container->set('repositoryPath', "$srcPath/Repository");
+        $this->container->set('modelPath', "$srcPath/Model");
+        $this->container->set('formPath', "$srcPath/App/Forms");
+
+        $this->container->set('modelNamespace', 'Neo\\Src\\' . $project . '\\Model');
+        $this->container->set('repositoryNamespace', 'Neo\\Src\\' . $project . '\\Repository');
+        $this->container->set('formNamespace', 'Neo\\Src\\' . $project . '\\App\\Forms');
 
         Output::newLine();
         Output::title("Generating from database schema for '$project'");
