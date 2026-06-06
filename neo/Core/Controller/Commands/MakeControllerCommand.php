@@ -186,7 +186,7 @@ TWIG;
 
     public function getHelp(): string
     {
-        Output::usage('make:controller', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<ControllerName>', 'Controller class name (e.g. UserController)');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('-d, --dir <directory>', 'Create inside a sub-folder (e.g. User)');
@@ -194,9 +194,9 @@ TWIG;
         Output::option('--force', 'Overwrite existing files');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:controller UserController --project=NeoAdmin');
-        Output::example('php bin/neo make:controller UserController -d User --api --project=NeoAdmin');
-        Output::example('php bin/neo make:controller');
+        Output::example("php bin/neo {$this->getName()} UserController --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} UserController -d User --api --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

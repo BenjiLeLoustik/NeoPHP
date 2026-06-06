@@ -216,7 +216,7 @@ HTML;
 
     public function getHelp(): string
     {
-        Output::usage('run:test:all', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--format=console', 'Console output only (default)');
         Output::option('--format=html', 'Generate HTML report in Storage/reports/');
@@ -225,9 +225,9 @@ HTML;
         Output::option('--stop-on-failure', 'Stop at the first failure');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo run:test:all --project=Blog');
-        Output::example('php bin/neo run:test:all --project=Blog --format=html --coverage');
-        Output::example('php bin/neo run:test:all');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} --project=MyApp --format=html --coverage");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

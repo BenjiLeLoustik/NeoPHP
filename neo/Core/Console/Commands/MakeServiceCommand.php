@@ -103,16 +103,16 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('app:make:service', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<ServiceName>', '"Service" suffix added automatically');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('-d, --dir <directory>', 'Create inside a sub-folder (e.g. Utils)');
         Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo app:make:service Mail --project=NeoAdmin');
-        Output::example('php bin/neo app:make:service Mail -d Utils --project=NeoAdmin');
-        Output::example('php bin/neo app:make:service');
+        Output::example("php bin/neo {$this->getName()} Mail --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} Mail -d Utils --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

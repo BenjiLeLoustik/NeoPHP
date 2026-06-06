@@ -150,7 +150,7 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('make:event:listener', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<ListenerName>', '"Listener" suffix added automatically');
         Output::option('--event=<name>', 'Event to listen to — interactive selection from existing events if omitted');
         Output::option('--priority=<n>', 'Listener priority (default: 0, higher = earlier)');
@@ -158,9 +158,9 @@ PHP;
         Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:event:listener SendWelcomeEmail --event=UserRegistered --project=NeoAdmin');
-        Output::example('php bin/neo make:event:listener SendWelcomeEmail --event=UserRegistered --priority=10 --project=NeoAdmin');
-        Output::example('php bin/neo make:event:listener');
+        Output::example("php bin/neo {$this->getName()} SendWelcomeEmail --event=UserRegistered --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} SendWelcomeEmail --event=UserRegistered --priority=10 --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

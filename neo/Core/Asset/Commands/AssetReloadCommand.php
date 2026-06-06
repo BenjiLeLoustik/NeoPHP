@@ -50,12 +50,12 @@ final class AssetReloadCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('asset:reload', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Project whose build folder should be deleted (interactive selection if omitted)');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo asset:reload --project=NeoAdmin');
-        Output::example('php bin/neo asset:reload');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

@@ -102,7 +102,7 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('migrate:generate', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--name=<name>', 'Migration name slug (default: initial_schema)');
         Output::newLine();
@@ -110,9 +110,9 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
         Output::muted('    src/<project>/Database/Migrations/MigrationVersion_<timestamp>.php');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo migrate:generate --project=Blog');
-        Output::example('php bin/neo migrate:generate --project=Blog --name=add_users_table');
-        Output::example('php bin/neo migrate:generate');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} --project=MyApp --name=add_users_table");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

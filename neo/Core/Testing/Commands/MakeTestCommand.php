@@ -258,7 +258,7 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('make:test', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<TestName>', 'Test class name (e.g. UserServiceTest)');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--type=unit', 'Isolated class test (service, model…)');
@@ -268,9 +268,9 @@ PHP;
         Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:test UserServiceTest --type=unit --project=Blog');
-        Output::example('php bin/neo make:test UserControllerTest --type=feature --project=Blog');
-        Output::example('php bin/neo make:test');
+        Output::example("php bin/neo {$this->getName()} UserServiceTest --type=unit --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} UserControllerTest --type=feature --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

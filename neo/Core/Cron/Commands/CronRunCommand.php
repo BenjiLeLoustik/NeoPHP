@@ -45,12 +45,12 @@ final class CronRunCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('cron:run', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo cron:run --project=MyApp');
-        Output::example('* * * * * php bin/neo cron:run --project=MyApp');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("* * * * * php bin/neo {$this->getName()} --project=MyApp");
 
         return '';
     }

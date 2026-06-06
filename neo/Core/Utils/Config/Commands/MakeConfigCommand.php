@@ -169,14 +169,14 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('make:config', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<ConfigName>', 'Config file name (e.g. mail → mail.config.php)');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:config mail --project=NeoAdmin');
-        Output::example('php bin/neo make:config');
+        Output::example("php bin/neo {$this->getName()} mail --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

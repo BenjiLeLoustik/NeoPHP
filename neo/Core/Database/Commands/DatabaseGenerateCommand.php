@@ -112,16 +112,16 @@ final class DatabaseGenerateCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('db:generate', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--only=<target>', 'What to generate: all, models, repositories, forms (default: all)');
         Output::option('--force', 'Bypass lock file and overwrite existing files');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo db:generate --project=Blog');
-        Output::example('php bin/neo db:generate --project=Blog --only=models');
-        Output::example('php bin/neo db:generate --project=Blog --only=repositories --force');
-        Output::example('php bin/neo db:generate');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} --project=MyApp --only=models");
+        Output::example("php bin/neo {$this->getName()} --project=MyApp --only=repositories --force");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

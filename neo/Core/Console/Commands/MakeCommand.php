@@ -157,7 +157,7 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('make:command', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<CommandName>', 'Command class name — "Command" suffix added automatically');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--cmd=<name>', 'CLI command name (e.g. cache:clear) — guessed from class name if omitted');
@@ -165,9 +165,9 @@ PHP;
         Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:command CleanLogs --project=Blog');
-        Output::example('php bin/neo make:command CleanLogs --cmd=logs:clean --category=cache --project=Blog');
-        Output::example('php bin/neo make:command');
+        Output::example("php bin/neo {$this->getName()} CleanLogs --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} CleanLogs --cmd=logs:clean --category=cache --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

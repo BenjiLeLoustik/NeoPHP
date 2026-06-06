@@ -180,7 +180,7 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('generate:default:config', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::newLine();
         echo "  Generated files:\n";
@@ -190,8 +190,8 @@ PHP;
         Output::muted('    Config/mailer.config.php');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo generate:default:config');
-        Output::example('php bin/neo generate:default:config --project=NeoAdmin');
+        Output::example("php bin/neo {$this->getName()}");
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
 
         return '';
     }

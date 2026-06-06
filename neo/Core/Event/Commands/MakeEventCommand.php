@@ -92,14 +92,14 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('make:event', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<EventName>', '"Event" suffix added automatically');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:event UserRegistered --project=NeoAdmin');
-        Output::example('php bin/neo make:event');
+        Output::example("php bin/neo {$this->getName()} UserRegistered --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

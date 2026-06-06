@@ -200,7 +200,7 @@ TWIG);
 
     public function getHelp(): string
     {
-        Output::usage('make:crud', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<Entity>', 'Entity name (e.g. User)');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('-d, --dir <directory>', 'Create inside a sub-folder (e.g. Admin)');
@@ -211,9 +211,9 @@ TWIG);
         Output::muted('    Views/pages/<entity>/               (index, show, create, edit)');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:crud User --project=NeoAdmin');
-        Output::example('php bin/neo make:crud User -d Admin --force --project=NeoAdmin');
-        Output::example('php bin/neo make:crud');
+        Output::example("php bin/neo {$this->getName()} User --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} User -d Admin --force --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

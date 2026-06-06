@@ -106,8 +106,8 @@ final class ProjectSyncCommand extends AbstractCommand
         Output::muted('  Useful after a git pull that resets the root composer.json.');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo sync:projects');
-        Output::example('php bin/neo sync:projects --run-composer');
+        Output::example("php bin/neo {$this->getName()}");
+        Output::example("php bin/neo {$this->getName()} --run-composer");
 
         return '';
     }

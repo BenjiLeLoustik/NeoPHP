@@ -125,12 +125,12 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('migrate:status', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo migrate:status --project=Blog');
-        Output::example('php bin/neo migrate:status');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

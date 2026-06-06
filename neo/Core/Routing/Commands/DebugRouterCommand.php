@@ -150,17 +150,17 @@ final class DebugRouterCommand extends AbstractCommand
 
     public function getHelp(): string
     {
-        Output::usage('debug:router', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--method=<method>', 'Filter by HTTP method (GET, POST, PUT, PATCH, DELETE)');
         Output::option('--name=<name>', 'Filter by route name (partial match)');
         Output::option('--path=<path>', 'Filter by path (partial match)');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo debug:router --project=MyApp');
-        Output::example('php bin/neo debug:router --project=MyApp --method=GET');
-        Output::example('php bin/neo debug:router --project=MyApp --name=user');
-        Output::example('php bin/neo debug:router');
+        Output::example("php bin/neo {$this->getName()} --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} --project=MyApp --method=GET");
+        Output::example("php bin/neo {$this->getName()} --project=MyApp --name=user");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

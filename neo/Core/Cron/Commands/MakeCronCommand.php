@@ -114,16 +114,16 @@ PHP;
 
     public function getHelp(): string
     {
-        Output::usage('make:cron', $this->getDescription());
+        Output::usage($this->getName(), $this->getDescription());
         Output::option('<CronName>', '"Cron" suffix added automatically');
         Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
         Output::option('--expression=<expr>', 'Cron expression (interactive autocomplete if omitted)');
         Output::option('--force', 'Overwrite existing file');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:cron CleanLogs --project=MyApp');
-        Output::example('php bin/neo make:cron CleanLogs --expression="0 0 * * *" --project=MyApp');
-        Output::example('php bin/neo make:cron');
+        Output::example("php bin/neo {$this->getName()} CleanLogs --project=MyApp");
+        Output::example("php bin/neo {$this->getName()} CleanLogs --expression='0 0 * * *' --project=MyApp");
+        Output::example("php bin/neo {$this->getName()}");
 
         return '';
     }

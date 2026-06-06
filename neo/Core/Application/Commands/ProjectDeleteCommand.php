@@ -139,7 +139,7 @@ final class ProjectDeleteCommand extends AbstractCommand
         Output::option('<ProjectName>', 'Name of the project to delete');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo delete:project MonProjet');
+        Output::example("php bin/neo {$this->getName()} MyApp");
 
         return '';
     }

@@ -759,8 +759,8 @@ PHP;
         Output::option('--skeleton',     'Create only the base folder structure (no files or views)');
         Output::newLine();
         echo "  Examples:\n";
-        Output::example('php bin/neo make:project NeoAdmin');
-        Output::example('php bin/neo make:project MyApp --skeleton');
+        Output::example("php bin/neo {$this->getName()} MyApp");
+        Output::example("php bin/neo {$this->getName()} MyApp --skeleton");
 
         return '';
     }
