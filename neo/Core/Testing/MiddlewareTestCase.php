@@ -67,7 +67,7 @@ abstract class MiddlewareTestCase extends PHPUnitTestCase
             $result = $middleware->handle();
             $this->assertFalse($result, 'The middleware should block the request (return false).');
         } catch (FrameworkException $e) {
-            $this->assertTrue(true);
+            $this->addToAssertionCount(1);
         }
     }
 
