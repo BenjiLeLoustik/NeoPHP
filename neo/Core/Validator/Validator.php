@@ -48,7 +48,7 @@ class Validator
 
                 $value = $field->getValue();
 
-                $constraints = $form->getAddedConstraints($fieldName) ?? [];
+                $constraints = $form->getAddedConstraints($fieldName);
 
                 $this->runConstraints($constraints, $value, $model, $fieldName, $form, $errors);
             }
