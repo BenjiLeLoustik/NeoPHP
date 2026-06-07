@@ -144,6 +144,7 @@ final class Output
             'white' => self::WHITE,
             'bold' => self::BOLD,
             'dim' => self::DIM,
+            'black' => self::BLACK,
             default => '',
         };
 
