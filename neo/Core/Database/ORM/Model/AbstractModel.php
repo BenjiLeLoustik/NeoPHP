@@ -424,7 +424,7 @@ abstract class AbstractModel
 
         foreach ($this->data as $name => $value) {
             if (in_array($name, $this->getInternalProperties(), true)) continue;
-            if (in_array($name, $this->hidden ?? [], true)) continue;
+            if (in_array($name, $this->hidden, true)) continue;
             $result[$name] = $value instanceof \DateTime ? $value->format('Y-m-d H:i:s') : $value;
         }
 
