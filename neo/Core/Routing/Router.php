@@ -21,7 +21,6 @@ class Router
 {
     private RouteCollection $routes;
     private Container $container;
-    private string $controllerNamespace;
     private string $controllersPath;
     private ?string $currentRouteName = null;
 
@@ -29,7 +28,6 @@ class Router
     {
         $this->container = $container;
         $this->routes = new RouteCollection();
-        $this->controllerNamespace = $this->container->get('controllerNamespace');
         $this->controllersPath = $this->container->get('controllersPath');
 
         $this->scanControllers();
@@ -86,11 +84,7 @@ class Router
                 if (!class_exists($fqcn)) continue;
             }
 
-            try {
-                $refClass = new ReflectionClass($fqcn);
-            } catch (\ReflectionException $e) {
-                continue;
-            }
+            $refClass = new ReflectionClass($fqcn);
 
             $mainRouteAttr = $refClass->getAttributes(MainRouteAttribute::class);
             $prefixPath = '';
@@ -187,7 +181,7 @@ class Router
             '/\/\{([a-zA-Z0-9_]+)(\?)?\}/',
             function ($m) use ($requirements) {
                 $paramName = $m[1];
-                $isOptional = isset($m[2]) && $m[2] === '?';
+                $isOptional = isset($m[2]);
                 $regex = $requirements[$paramName] ?? '[^/]+';
 
                 return $isOptional
