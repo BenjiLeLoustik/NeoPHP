@@ -53,11 +53,7 @@ class TestScanner
 
             if (!class_exists($fqcn)) continue;
 
-            try {
-                $refClass = new ReflectionClass($fqcn);
-            } catch (\ReflectionException) {
-                continue;
-            }
+            $refClass = new ReflectionClass($fqcn);
 
             $classAttr = $refClass->getAttributes(Test::class)[0] ?? null;
             $methodCtxs = $this->scanMethods($refClass);
@@ -84,10 +80,10 @@ class TestScanner
                 namespace: $namespace,
                 type: $type,
                 methods: $methodCtxs,
-                cases: $classTest?->cases ?? [],
-                dataset: $classTest?->dataset ?? [],
-                skip: $classTest?->skip ?? false,
-                customExtends: $classTest?->extends,
+                cases: $classTest->cases ?? [],
+                dataset: $classTest->dataset ?? [],
+                skip: $classTest->skip ?? false,
+                customExtends: $classTest->extends,
             );
         }
 
