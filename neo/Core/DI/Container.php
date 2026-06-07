@@ -119,6 +119,15 @@ class Container implements ContainerInterface
             );
         }
 
+        if (!class_exists($class)) {
+            throw new ContainerException(
+                title: "Class Not Found",
+                message: sprintf("Class '%s' does not exist.", $class),
+                code: 500,
+                context: ['class' => $class]
+            );
+        }
+
         $ref = new ReflectionClass($class);
 
         if (!$ref->isInstantiable()) {
