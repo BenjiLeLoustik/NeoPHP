@@ -377,7 +377,11 @@ abstract class AbstractRepository
             foreach ($options['nested'] as $chain) {
                 $current = &$tree[$relation];
                 foreach ($chain as $part) {
-                    $current[$part] ??= [];
+
+                    if(!isset($current[$part])) {
+                        $current[$part] = [];
+                    }
+
                     $current = &$current[$part];
                 }
             }
@@ -458,7 +462,7 @@ abstract class AbstractRepository
 
         if ($rel instanceof AbstractModel) {
             $cached = $rel->getRelationsCache()[$next] ?? '__not_set__';
-            if ($cached === '__not_set__' || $cached === null || $cached === []) {
+            if ($cached === '__not_set__' || $cached === []) {
                 $rel->loadRelation($next, false, false, true);
             }
             $this->loadNestedRelations($rel->getRelationsCache()[$next] ?? null, $chain);
@@ -467,7 +471,7 @@ abstract class AbstractRepository
                 if ($item instanceof AbstractModel) {
                     $chainCopy = $chain;
                     $cached = $item->getRelationsCache()[$next] ?? '__not_set__';
-                    if ($cached === '__not_set__' || $cached === null || $cached === []) {
+                    if ($cached === '__not_set__' || $cached === []) {
                         $item->loadRelation($next, false, false, true);
                     }
                     $this->loadNestedRelations($item->getRelationsCache()[$next] ?? null, $chainCopy);
@@ -478,7 +482,7 @@ abstract class AbstractRepository
 
     public function getModels(): array
     {
-        return $this->lastResult ?? [];
+        return $this->lastResult;
     }
 
     public function getModel(): ?AbstractModel
