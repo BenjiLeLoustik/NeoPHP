@@ -10,7 +10,13 @@ class FrameworkException extends \Exception
     private string $title;
     private array $context;
 
-    public function __construct(string $title, string $message, int $code = 0, array $context = [], Throwable $previous = null)
+    public function __construct(
+        string $title,
+        string $message,
+        int $code = 0,
+        array $context = [],
+        ?Throwable $previous = null
+    )
     {
         parent::__construct($message, $code, $previous);
         $this->title = $title;
