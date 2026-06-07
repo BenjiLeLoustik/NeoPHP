@@ -62,6 +62,7 @@ MODULES=(
     "Console"
     "Controller"
     "Cron"
+    "DI"
 )
 
 RESET="\033[0m"
