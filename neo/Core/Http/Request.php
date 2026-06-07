@@ -135,7 +135,7 @@ class Request
         return $this->query[$key] ?? $default;
     }
 
-    public function body(string $key = null, $default = null)
+    public function body(?string $key = null, $default = null)
     {
         if ($key === null) {
             return $this->body;
