@@ -64,6 +64,7 @@ MODULES=(
     "Cron"
     "DI"
     "Error"
+    "Event"
 )
 
 RESET="\033[0m"
