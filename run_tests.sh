@@ -63,6 +63,7 @@ MODULES=(
     "Controller"
     "Cron"
     "DI"
+    "Error"
 )
 
 RESET="\033[0m"
