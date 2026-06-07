@@ -69,7 +69,7 @@ class RedisDriver implements CacheDriverInterface
 
     public function delete(string $key): void
     {
-        $this->redis->del([$this->key($key)]);
+        $this->redis->del($this->key($key));
     }
 
     public function clear(): void
@@ -77,7 +77,7 @@ class RedisDriver implements CacheDriverInterface
         if ($this->prefix !== '') {
             $keys = $this->redis->keys($this->prefix . '*');
             if (!empty($keys)) {
-                $this->redis->del($keys);
+                $this->redis->del(...$keys);
             }
             return;
         }
