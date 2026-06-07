@@ -102,7 +102,7 @@ class ApplicationDetectorTest extends TestCase
 
     private function assertServerStringInException(array $serverData, string $expected, ?string $notExpected = null): void
     {
-        $request  = $this->makeRequest($serverData);
+        $request = $this->makeRequest($serverData);
         $detector = new ApplicationDetector($this->makeContainer($request));
 
         try {

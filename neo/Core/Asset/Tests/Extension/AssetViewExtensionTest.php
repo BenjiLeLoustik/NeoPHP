@@ -19,11 +19,6 @@ class AssetViewExtensionTest extends TestCase
         $this->extension = new AssetViewExtension($this->handler);
     }
 
-    public function testGetFunctionsReturnsArray(): void
-    {
-        $this->assertIsArray($this->extension->getFunctions());
-    }
-
     public function testGetFunctionsContainsAssetKey(): void
     {
         $this->assertArrayHasKey('asset', $this->extension->getFunctions());
@@ -62,11 +57,8 @@ class AssetViewExtensionTest extends TestCase
         $this->assertSame('/builds/app/assets/css/app-abc123.min.css', $result);
     }
 
-    public function testGetFiltersReturnsEmptyArray(): void
+    public function testGetFiltersReturnsEmpty(): void
     {
-        $filters = $this->extension->getFilters();
-
-        $this->assertIsArray($filters);
-        $this->assertEmpty($filters);
+        $this->assertEmpty($this->extension->getFilters());
     }
 }
