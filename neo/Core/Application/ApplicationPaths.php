@@ -7,7 +7,7 @@ use Neo\Core\DI\Container;
 class ApplicationPaths
 {
     public function __construct(
-        private readonly Container $container
+        protected readonly Container $container
     ) {}
 
     public function register(): void
@@ -43,7 +43,7 @@ class ApplicationPaths
         }
     }
 
-    private function resolvePublicPath(string $basePath): string
+    protected function resolvePublicPath(string $basePath): string
     {
         if (is_dir($basePath . '/public_html')) {
             return realpath($basePath . '/public_html');
