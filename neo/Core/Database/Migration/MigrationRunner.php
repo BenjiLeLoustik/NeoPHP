@@ -99,7 +99,7 @@ final class MigrationRunner
             $ran[] = $className;
         }
 
-        if (!$dryRun && !$snapshot !== null) {
+        if (!$dryRun && $snapshot !== null) {
             $snapshot->take();
         }
 
