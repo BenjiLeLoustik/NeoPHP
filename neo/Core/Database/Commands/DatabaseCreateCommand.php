@@ -8,7 +8,6 @@ use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
-use Neo\Core\DI\Container;
 use PDO;
 use PDOException;
 
@@ -19,9 +18,6 @@ use PDOException;
 )]
 final class DatabaseCreateCommand extends AbstractCommand
 {
-    public function __construct(
-        private Container $container
-    ) {}
 
     public function execute(array $args): void
     {
