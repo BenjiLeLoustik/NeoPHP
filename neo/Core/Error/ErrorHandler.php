@@ -57,9 +57,9 @@ class ErrorHandler
             exit;
         });
 
-        set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) {
+        set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline): bool {
             if (!(error_reporting() & $errno)) {
-                return;
+                return true;
             }
             throw new \ErrorException($errstr, $errno, $errno, $errfile, $errline);
         });
@@ -79,7 +79,7 @@ class ErrorHandler
         set_error_handler([$this, 'handleError']);
     }
 
-    public function handleException(\Throwable $e): void
+    public function handleException(\Throwable $e): never
     {
         $env = $this->getEnv();
 
@@ -144,10 +144,10 @@ class ErrorHandler
         exit;
     }
 
-    public function handleError(int $errno, string $errstr, string $errfile, int $errline): void
+    public function handleError(int $errno, string $errstr, string $errfile, int $errline): bool
     {
         if (!(error_reporting() & $errno)) {
-            return;
+            return true;
         }
 
         $this->handleException(FrameworkException::fromThrowable(

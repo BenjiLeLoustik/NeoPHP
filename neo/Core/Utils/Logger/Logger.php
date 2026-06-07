@@ -233,7 +233,7 @@ class Logger
             '{%level_code%}' => self::LEVELS[$level],
             '{%origin%}' => $origin,
             '{%message%}' => $message,
-            '{%context%}' => $context ? json_encode($context, JSON_UNESCAPED_UNICODE) : '',
+            '{%context%}' => $context ? (string)json_encode($context, JSON_UNESCAPED_UNICODE) : '',
         ];
 
         return str_replace(array_keys($replace), array_values($replace), $format);

@@ -173,7 +173,7 @@ class CollectionType extends AbstractType
             }
         }
 
-        return array_values($result);
+        return $result;
     }
 
     public function validateEntries(FormField $field, Validator $validator): array
