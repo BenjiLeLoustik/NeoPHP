@@ -375,6 +375,7 @@ abstract class AbstractRepository
             $tree[$relation] ??= [];
 
             foreach ($options['nested'] as $chain) {
+                /** @var array<string, mixed> $current */
                 $current = &$tree[$relation];
                 foreach ($chain as $part) {
 
@@ -493,7 +494,7 @@ abstract class AbstractRepository
     public function toArray(): array
     {
         return array_map(
-            fn(AbstractModel $m) => $m->toArray(), $this->lastResult ?? []
+            fn(AbstractModel $m) => $m->toArray(), $this->lastResult
         );
     }
 
