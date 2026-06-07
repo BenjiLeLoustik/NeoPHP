@@ -230,10 +230,10 @@ class Logger
         $replace = [
             '{%datetime%}' => (new DateTime())->format('Y-m-d H:i:s'),
             '{%level_name%}' => $level,
-            '{%level_code%}' => self::LEVELS[$level],
+            '{%level_code%}' => (string) self::LEVELS[$level],
             '{%origin%}' => $origin,
             '{%message%}' => $message,
-            '{%context%}' => $context ? (string)json_encode($context, JSON_UNESCAPED_UNICODE) : '',
+            '{%context%}' => $context ? (string) json_encode($context, JSON_UNESCAPED_UNICODE) : '',
         ];
 
         return str_replace(array_keys($replace), array_values($replace), $format);
