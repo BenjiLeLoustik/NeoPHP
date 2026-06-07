@@ -158,7 +158,7 @@ PHP;
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd"
     bootstrap="bootstrap.php"
     colors="true"
     stopOnFailure="false"
@@ -171,12 +171,6 @@ PHP;
             <directory>Middleware</directory>
         </testsuite>
     </testsuites>
-
-    <coverage>
-        <report>
-            <html outputDirectory="../Storage/reports/coverage"/>
-        </report>
-    </coverage>
 
     <source>
         <include>
