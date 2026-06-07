@@ -31,6 +31,25 @@ final class ExtensionViewExtension implements TwigExtensionInterface
     public function getFunctions(): array
     {
         return [
+            'array_get' => ['callable' => fn(array $a, string $k, mixed $d = null) => $this->array->get($a, $k, $d), 'options' => []],
+            'array_has' => ['callable' => fn(array $a, string $k) => $this->array->has($a, $k), 'options' => []],
+            'array_first' => ['callable' => fn(array $a, mixed $d = null) => $this->array->first($a, $d), 'options' => []],
+            'array_last' => ['callable' => fn(array $a, mixed $d = null) => $this->array->last($a, $d), 'options' => []],
+            'array_flatten' => ['callable' => fn(array $a, ?int $d = null) => $this->array->flatten($a, $d), 'options' => []],
+            'array_pluck' => ['callable' => fn(array $a, string $k) => $this->array->pluck($a, $k), 'options' => []],
+            'array_unique' => ['callable' => fn(array $a) => $this->array->unique($a), 'options' => []],
+            'array_chunk' => ['callable' => fn(array $a, int $s) => $this->array->chunk($a, $s), 'options' => []],
+            'array_compact' => ['callable' => fn(array $a) => $this->array->compact($a), 'options' => []],
+            'array_key_by' => ['callable' => fn(array $a, string $k) => $this->array->keyBy($a, $k), 'options' => []],
+            'array_group_by'=> ['callable' => fn(array $a, string $k) => $this->array->groupBy($a, $k), 'options' => []],
+            'array_where' => ['callable' => fn(array $a, string $k, mixed $v) => $this->array->where($a, $k, $v), 'options' => []],
+            'array_sort_by' => ['callable' => fn(array $a, string $k, string $dir = 'asc') => $this->array->sortBy($a, $k, $dir), 'options' => []],
+            'array_sum' => ['callable' => fn(array $a, ?string $k = null) => $this->array->sum($a, $k), 'options' => []],
+            'array_avg' => ['callable' => fn(array $a, ?string $k = null) => $this->array->avg($a, $k), 'options' => []],
+            'array_min' => ['callable' => fn(array $a, ?string $k = null) => $this->array->min($a, $k), 'options' => []],
+            'array_max' => ['callable' => fn(array $a, ?string $k = null) => $this->array->max($a, $k), 'options' => []],
+            'array_count' => ['callable' => fn(array $a, ?string $k = null) => $this->array->count($a, $k), 'options' => []],
+
             'slugify' => ['callable' => fn(string $text) => $this->string->slugify($text), 'options' => []],
             'camel_case' => ['callable' => fn(string $text) => $this->string->camelCase($text), 'options' => []],
             'snake_case' => ['callable' => fn(string $text) => $this->string->snakeCase($text), 'options' => []],
@@ -87,6 +106,15 @@ final class ExtensionViewExtension implements TwigExtensionInterface
     public function getFilters(): array
     {
         return [
+            'array_pluck' => ['callable' => fn(array $a, string $k) => $this->array->pluck($a, $k), 'options' => []],
+            'array_unique' => ['callable' => fn(array $a) => $this->array->unique($a), 'options' => []],
+            'array_flatten' => ['callable' => fn(array $a, ?int $d = null) => $this->array->flatten($a, $d), 'options' => []],
+            'array_compact' => ['callable' => fn(array $a) => $this->array->compact($a), 'options' => []],
+            'array_reverse' => ['callable' => fn(array $a) => $this->array->reverse($a), 'options' => []],
+            'array_sort_by' => ['callable' => fn(array $a, string $k, string $dir = 'asc') => $this->array->sortBy($a, $k, $dir), 'options' => []],
+            'array_sum' => ['callable' => fn(array $a, ?string $k = null) => $this->array->sum($a, $k), 'options' => []],
+            'array_count' => ['callable' => fn(array $a, ?string $k = null) => $this->array->count($a, $k), 'options' => []],
+
             'slugify' => ['callable' => fn(string $text) => $this->string->slugify($text), 'options' => []],
             'camel_case' => ['callable' => fn(string $text) => $this->string->camelCase($text), 'options' => []],
             'snake_case' => ['callable' => fn(string $text) => $this->string->snakeCase($text), 'options' => []],
