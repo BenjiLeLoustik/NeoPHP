@@ -28,7 +28,7 @@ class SecurityModule extends AbstractModule
 
     public function register(Container $container): void
     {
-        $container->set(PasswordManager::class, fn(Container $c) => new PasswordManager($c));
+        $container->set(PasswordManager::class, fn() => new PasswordManager());
         $container->set(CsrfTokenManager::class, fn() => new CsrfTokenManager());
         $container->set(AuthManager::class, fn(Container $c) => new AuthManager($c));
         $container->set(MiddlewareHandler::class, fn(Container $c) => new MiddlewareHandler($c));
