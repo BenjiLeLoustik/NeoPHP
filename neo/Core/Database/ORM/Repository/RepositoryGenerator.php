@@ -9,13 +9,11 @@ use Neo\Core\DI\Container;
 class RepositoryGenerator
 {
     protected Container $container;
-    private string $appName;
     private string $repoDir;
 
     public function __construct(Container $container)
     {
         $this->container = $container;
-        $this->appName = $this->container->get('application');
         $this->repoDir = $this->container->get('repositoryPath');
 
         if (!is_dir($this->repoDir) && !mkdir($this->repoDir, 0777, true) && !is_dir($this->repoDir)) {
