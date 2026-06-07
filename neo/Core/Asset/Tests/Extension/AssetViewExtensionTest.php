@@ -15,7 +15,7 @@ class AssetViewExtensionTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->handler   = $this->createStub(AssetHandler::class);
+        $this->handler = $this->createStub(AssetHandler::class);
         $this->extension = new AssetViewExtension($this->handler);
     }
 
@@ -57,7 +57,7 @@ class AssetViewExtensionTest extends TestCase
 
         $extension = new AssetViewExtension($handler);
         $functions = $extension->getFunctions();
-        $result    = ($functions['asset']['callable'])('/css/app.css');
+        $result = ($functions['asset']['callable'])('/css/app.css');
 
         $this->assertSame('/builds/app/assets/css/app-abc123.min.css', $result);
     }

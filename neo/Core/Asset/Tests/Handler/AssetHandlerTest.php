@@ -21,10 +21,10 @@ class AssetHandlerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->tmpDir     = sys_get_temp_dir() . '/neo_asset_handler_' . uniqid();
+        $this->tmpDir = sys_get_temp_dir() . '/neo_asset_handler_' . uniqid();
         $this->sourcesDir = $this->tmpDir . '/assets/';
-        $this->buildsDir  = $this->tmpDir . '/builds/';
-        $this->publicDir  = $this->tmpDir . '/public';
+        $this->buildsDir = $this->tmpDir . '/builds/';
+        $this->publicDir = $this->tmpDir . '/public';
 
         mkdir($this->sourcesDir, 0777, true);
         mkdir($this->buildsDir, 0777, true);
@@ -63,11 +63,11 @@ class AssetHandlerTest extends TestCase
     {
         $container = $this->createStub(Container::class);
         $container->method('get')->willReturnCallback(fn($key) => match($key) {
-            Config::class      => $config,
-            'application'      => 'testapp',
-            'assetsPath'       => $sourcesDir,
-            'publicPath'       => $publicDir,
-            'buildsPath'       => $buildsDir,
+            Config::class => $config,
+            'application' => 'testapp',
+            'assetsPath' => $sourcesDir,
+            'publicPath' => $publicDir,
+            'buildsPath' => $buildsDir,
             'manifestFilename' => 'manifest.json',
         });
 
@@ -99,10 +99,6 @@ class AssetHandlerTest extends TestCase
     {
         return new AssetHandler($this->container);
     }
-
-    // -------------------------------------------------------------------------
-    // Manifest
-    // -------------------------------------------------------------------------
 
     public function testHandlerInstantiatesWithoutManifest(): void
     {
@@ -141,16 +137,12 @@ class AssetHandlerTest extends TestCase
         }
     }
 
-    // -------------------------------------------------------------------------
-    // getAssetPath — env dev
-    // -------------------------------------------------------------------------
-
     public function testGetAssetPathCompilesCssFile(): void
     {
         $this->createSourceFile('/css/app.css', 'body { margin: 0; padding: 0; }');
 
         $handler = $this->makeHandler();
-        $result  = $handler->getAssetPath('/css/app.css');
+        $result = $handler->getAssetPath('/css/app.css');
 
         $this->assertStringStartsWith('/builds/testapp/assets/', $result);
         $this->assertStringContainsString('.min.css', $result);
@@ -161,7 +153,7 @@ class AssetHandlerTest extends TestCase
         $this->createSourceFile('/js/app.js', 'function hello() { return "world"; }');
 
         $handler = $this->makeHandler();
-        $result  = $handler->getAssetPath('/js/app.js');
+        $result = $handler->getAssetPath('/js/app.js');
 
         $this->assertStringStartsWith('/builds/testapp/assets/', $result);
         $this->assertStringContainsString('.min.js', $result);
@@ -172,7 +164,7 @@ class AssetHandlerTest extends TestCase
         $this->createSourceFile('/css/app.less', '@color: #fff; body { color: @color; }');
 
         $handler = $this->makeHandler();
-        $result  = $handler->getAssetPath('/css/app.less');
+        $result = $handler->getAssetPath('/css/app.less');
 
         $this->assertStringStartsWith('/builds/testapp/assets/', $result);
         $this->assertStringContainsString('.css', $result);
@@ -183,7 +175,7 @@ class AssetHandlerTest extends TestCase
         $this->createSourceFile('/fonts/font.woff2', 'fake-binary-content');
 
         $handler = $this->makeHandler();
-        $result  = $handler->getAssetPath('/fonts/font.woff2');
+        $result = $handler->getAssetPath('/fonts/font.woff2');
 
         $this->assertStringStartsWith('/builds/testapp/assets/', $result);
         $this->assertStringContainsString('.woff2', $result);
@@ -202,8 +194,8 @@ class AssetHandlerTest extends TestCase
         $this->createSourceFile('/css/app.css', 'body { margin: 0; }');
 
         $handler = $this->makeHandler();
-        $first   = $handler->getAssetPath('/css/app.css');
-        $second  = $handler->getAssetPath('/css/app.css');
+        $first = $handler->getAssetPath('/css/app.css');
+        $second = $handler->getAssetPath('/css/app.css');
 
         $this->assertSame($first, $second);
     }
@@ -213,12 +205,12 @@ class AssetHandlerTest extends TestCase
         $this->createSourceFile('/css/app.css', 'body { margin: 0; }');
 
         $handler = $this->makeHandler();
-        $first   = $handler->getAssetPath('/css/app.css');
+        $first = $handler->getAssetPath('/css/app.css');
 
         $this->createSourceFile('/css/app.css', 'body { margin: 0; color: red; }');
 
         $handler2 = $this->makeHandler();
-        $second   = $handler2->getAssetPath('/css/app.css');
+        $second = $handler2->getAssetPath('/css/app.css');
 
         $this->assertNotSame($first, $second);
     }
@@ -241,11 +233,11 @@ class AssetHandlerTest extends TestCase
     {
         $this->createSourceFile('/css/app.css', 'body { margin: 0; }');
 
-        $handler  = $this->makeHandler();
+        $handler = $this->makeHandler();
         $firstUrl = $handler->getAssetPath('/css/app.css');
 
         $oldFile = $this->publicDir . '/' . ltrim($firstUrl, '/');
-        $oldDir  = dirname($oldFile);
+        $oldDir = dirname($oldFile);
         if (!is_dir($oldDir)) {
             mkdir($oldDir, 0777, true);
         }
@@ -253,16 +245,12 @@ class AssetHandlerTest extends TestCase
 
         $this->createSourceFile('/css/app.css', 'body { color: green; }');
 
-        $handler2  = $this->makeHandler();
+        $handler2 = $this->makeHandler();
         $secondUrl = $handler2->getAssetPath('/css/app.css');
 
         $this->assertNotSame($firstUrl, $secondUrl);
         $this->assertFileDoesNotExist($oldFile);
     }
-
-    // -------------------------------------------------------------------------
-    // getAssetPath — env prod
-    // -------------------------------------------------------------------------
 
     public function testGetAssetPathInProdReturnsManifestEntry(): void
     {
@@ -272,7 +260,7 @@ class AssetHandlerTest extends TestCase
         file_put_contents($manifestDir . 'manifest.json', json_encode($manifest));
 
         $handler = new AssetHandler($this->makeProdContainer());
-        $result  = $handler->getAssetPath('/css/app.css');
+        $result = $handler->getAssetPath('/css/app.css');
 
         $this->assertSame('/builds/testapp/assets/css/app-abc123.min.css', $result);
     }
@@ -280,7 +268,7 @@ class AssetHandlerTest extends TestCase
     public function testGetAssetPathInProdFallsBackWhenNotInManifest(): void
     {
         $handler = new AssetHandler($this->makeProdContainer());
-        $result  = $handler->getAssetPath('/css/unknown.css');
+        $result = $handler->getAssetPath('/css/unknown.css');
 
         $this->assertSame('/builds/testapp/assets/css/unknown.css', $result);
     }
