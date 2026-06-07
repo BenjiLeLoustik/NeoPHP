@@ -70,7 +70,7 @@ final class JwtManager
             );
         }
 
-        $data = json_decode($this->base64UrlEncode($payload), true);
+        $data = json_decode($this->base64UrlDecode($payload), true);
 
         if (!$data) {
             throw new JwtException(
