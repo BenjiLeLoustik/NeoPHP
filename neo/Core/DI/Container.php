@@ -193,33 +193,6 @@ class Container implements ContainerInterface
         return false;
     }
 
-    private function resolveChildControllerParams(
-        \ReflectionMethod $constructor,
-        array $extraParams = []
-    ): array {
-        $resolved = [];
-
-        foreach ($constructor->getParameters() as $param) {
-            $name = $param->getName();
-
-            $type = $param->getType();
-            if ($type instanceof ReflectionNamedType
-                && $type->getName() === Container::class
-            ) {
-                continue;
-            }
-
-            if (array_key_exists($name, $extraParams)) {
-                $resolved[] = $extraParams[$name];
-                continue;
-            }
-
-            $resolved[] = $this->resolveParameter($param);
-        }
-
-        return $resolved;
-    }
-
     private function resolveParameters(ReflectionFunctionAbstract $method, array $extraParams = []): array
     {
         $resolved = [];
