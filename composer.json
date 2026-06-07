@@ -25,10 +25,10 @@
         "ext-simplexml": "*",
         "phpmailer/phpmailer": "^7.1",
         "ext-fileinfo": "*",
-        "predis/predis": "3"
+        "predis/predis": "3.5"
     },
     "require-dev": {
-        "phpunit/phpunit": "12.5.8",
+        "phpunit/phpunit": "13.2",
         "phpstan/phpstan": "^2.1"
     },
     "autoload": {
