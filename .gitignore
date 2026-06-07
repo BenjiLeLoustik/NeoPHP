@@ -18,3 +18,5 @@ Thumbs.dbt
 # Tailwind CLI
 tailwindcss.exe
 tailwind.config.js
+
+/var/
