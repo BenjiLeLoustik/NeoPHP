@@ -60,6 +60,7 @@ MODULES=(
     "Asset"
     "Application"
     "Console"
+    "Controller"
 )
 
 RESET="\033[0m"
