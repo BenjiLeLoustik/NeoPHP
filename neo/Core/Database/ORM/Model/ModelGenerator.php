@@ -191,7 +191,7 @@ PHP;
                     $default = ' = ' . (($col['default'] ?? false) ? 'true' : 'false');
                 } elseif ($col['type'] === 'int' || $col['type'] === 'float') {
                     $default = ' = ' . ($col['default'] ?? 0);
-                } elseif (isset($col['default']) && $col['default'] !== null) {
+                } elseif (isset($col['default'])) {
                     $default = ' = ' . var_export($col['default'], true);
                 }
             }
