@@ -25,13 +25,21 @@ class ApplicationPathsTest extends TestCase
 
         $this->container = $this->createStub(Container::class);
         $this->container->method('get')->willReturnCallback(
-            fn($key) => $this->registered[$key] ?? null
+            fn($key) => $this->reg((string) $key)
         );
         $this->container->method('set')->willReturnCallback(
             function ($key, $value): void {
-                $this->registered[$key] = $value;
+                $this->registered[(string) $key] = $value;
             }
         );
+    }
+
+    /** @return mixed */
+    private function reg(string $key): mixed
+    {
+        /** @var array<string, mixed> $data */
+        $data = $this->registered;
+        return $data[$key] ?? null;
     }
 
     protected function tearDown(): void
@@ -68,7 +76,8 @@ class ApplicationPathsTest extends TestCase
 
             public function register(): void
             {
-                $appName = $this->container->get('application');
+                /** @var string $appName */
+                $appName  = $this->container->get('application');
                 $basePath = $this->fakeBase;
 
                 $this->container->set('basePath', $basePath);
@@ -113,7 +122,7 @@ class ApplicationPathsTest extends TestCase
         $paths = $this->makePaths('TestApp');
         $paths->register();
 
-        $this->assertStringEndsWith('public_html', $this->registered['publicPath']);
+        $this->assertStringEndsWith('public_html', (string) $this->registered['publicPath']);
     }
 
     public function testResolvesPublicWhenNoPublicHtml(): void
@@ -121,7 +130,7 @@ class ApplicationPathsTest extends TestCase
         $paths = $this->makePaths('TestApp');
         $paths->register();
 
-        $this->assertStringEndsWith('public', $this->registered['publicPath']);
+        $this->assertStringEndsWith('public', (string) $this->registered['publicPath']);
     }
 
     public function testFallsBackToPublicPathStringWhenNeitherExists(): void
@@ -131,7 +140,7 @@ class ApplicationPathsTest extends TestCase
         $paths = $this->makePaths('TestApp');
         $paths->register();
 
-        $this->assertStringEndsWith('/public', $this->registered['publicPath']);
+        $this->assertStringEndsWith('/public', (string) $this->registered['publicPath']);
     }
 
     public function testRegistersBasePath(): void
@@ -147,7 +156,7 @@ class ApplicationPathsTest extends TestCase
         $paths = $this->makePaths('TestApp');
         $paths->register();
 
-        $this->assertStringContainsString('/builds/', $this->registered['buildsPath']);
+        $this->assertStringContainsString('/builds/', (string) $this->registered['buildsPath']);
     }
 
     public function testRegistersSrcPath(): void
@@ -163,10 +172,10 @@ class ApplicationPathsTest extends TestCase
         $paths = $this->makePaths('MyApp');
         $paths->register();
 
-        $this->assertStringContainsString('MyApp', $this->registered['storagePath']);
-        $this->assertStringContainsString('MyApp', $this->registered['configsPath']);
-        $this->assertStringContainsString('MyApp', $this->registered['viewsPath']);
-        $this->assertStringContainsString('MyApp', $this->registered['assetsPath']);
+        $this->assertStringContainsString('MyApp', (string) $this->registered['storagePath']);
+        $this->assertStringContainsString('MyApp', (string) $this->registered['configsPath']);
+        $this->assertStringContainsString('MyApp', (string) $this->registered['viewsPath']);
+        $this->assertStringContainsString('MyApp', (string) $this->registered['assetsPath']);
     }
 
     public function testRegistersNamespaces(): void
@@ -174,10 +183,10 @@ class ApplicationPathsTest extends TestCase
         $paths = $this->makePaths('MyApp');
         $paths->register();
 
-        $this->assertStringContainsString('MyApp', $this->registered['controllerNamespace']);
-        $this->assertStringContainsString('MyApp', $this->registered['modelNamespace']);
-        $this->assertStringContainsString('MyApp', $this->registered['repositoryNamespace']);
-        $this->assertStringContainsString('MyApp', $this->registered['formNamespace']);
+        $this->assertStringContainsString('MyApp', (string) $this->registered['controllerNamespace']);
+        $this->assertStringContainsString('MyApp', (string) $this->registered['modelNamespace']);
+        $this->assertStringContainsString('MyApp', (string) $this->registered['repositoryNamespace']);
+        $this->assertStringContainsString('MyApp', (string) $this->registered['formNamespace']);
     }
 
     public function testRegistersManifestFilename(): void
@@ -193,7 +202,7 @@ class ApplicationPathsTest extends TestCase
         $paths = $this->makePaths('MyApp');
         $paths->register();
 
-        $this->assertStringEndsWith('/', $this->registered['assetsPath']);
+        $this->assertStringEndsWith('/', (string) $this->registered['assetsPath']);
     }
 
     public function testBuildsPathEndsWithSlash(): void
@@ -201,7 +210,7 @@ class ApplicationPathsTest extends TestCase
         $paths = $this->makePaths('MyApp');
         $paths->register();
 
-        $this->assertStringEndsWith('/', $this->registered['buildsPath']);
+        $this->assertStringEndsWith('/', (string) $this->registered['buildsPath']);
     }
 
     public function testRegistersTestConfigsPathWhenGlobalSet(): void
