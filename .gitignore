@@ -20,3 +20,4 @@ tailwindcss.exe
 tailwind.config.js
 
 /var/
+**/.phpunit.result.cache
