@@ -2,17 +2,10 @@
 
 namespace Neo\Core\Security\Auth;
 
-use Neo\Core\DI\Container;
-
 final class PasswordManager
 {
-    private Container $container;
     private const DEFAULT_ALGO = PASSWORD_DEFAULT;
     private const DEFAULT_OPTIONS = [ 'cost' => 12 ];
-
-    public function __construct(Container $container) {
-        $this->container = $container;
-    }
 
     public function hash(string $plainPassword): string
     {
