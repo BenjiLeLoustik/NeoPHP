@@ -66,6 +66,7 @@ MODULES=(
     "Error"
     "Event"
     "Module"
+    "Profiler"
 )
 
 RESET="\033[0m"
