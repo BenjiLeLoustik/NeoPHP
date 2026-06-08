@@ -9,7 +9,7 @@ use Neo\Core\Translation\Interface\TranslatorInterface;
 use Neo\Core\Translation\Exception\TranslationException;
 use Neo\Core\Utils\Config\Config;
 
-final class TranslationManager implements TranslatorInterface
+class TranslationManager implements TranslatorInterface
 {
     protected Container $container;
     private string $locale;
