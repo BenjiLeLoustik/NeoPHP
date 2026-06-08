@@ -65,8 +65,12 @@ MODULES=(
     "DI"
     "Error"
     "Event"
+    "Http"
+    "Extension"
     "Module"
     "Profiler"
+    "Routing"
+    "View"
 )
 
 RESET="\033[0m"
