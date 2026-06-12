@@ -33,11 +33,12 @@ class App
         (new ApplicationDetector($this->container))->detect();
         (new ApplicationPaths($this->container))->register();
 
-        (new ModuleManager($this->container))
-            ->discover(__DIR__ . '/Core')
-            ->boot();
+        $moduleManager = new ModuleManager($this->container)
+            ->discover(__DIR__ . '/Core');
 
         if (php_sapi_name() !== 'cli') {
+            $moduleManager->boot();
+
             $this->container->get(Request::class)
                 ->enablePreviousUrlTracking(
                     $this->container->get(Session::class)
