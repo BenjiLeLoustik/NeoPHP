@@ -5,11 +5,9 @@ namespace Neo\Core\Console;
 
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Console\Interface\CommandInterface;
-use Neo\Core\Console\Attribute\Command;
+use Neo\Core\Console\Attribute\Command as CommandAttribute;
 use Neo\Core\DI\Container;
-use RecursiveIteratorIterator;
-use RecursiveDirectoryIterator;
-use ReflectionClass;
+use Neo\Core\Tools\Scanner\AttributeScanner;
 
 class ConsoleHandler
 {
@@ -25,45 +23,30 @@ class ConsoleHandler
             __DIR__ . '/../../../neo',
         ];
 
+        $scanner = AttributeScanner::scan(CommandAttribute::class)
+            ->withSuffix('.php')
+            ->onClasses();
+
         foreach ($basePaths as $basePath) {
-            if (!is_dir($basePath)) {
-                continue;
-            }
-
-            $iterator = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($basePath)
-            );
-
-            foreach ($iterator as $file) {
-                if (!$file->isFile() || $file->getExtension() !== 'php') {
-                    continue;
-                }
-
-                if (
-                    !str_contains($file->getPathname(), DIRECTORY_SEPARATOR . 'Commands' . DIRECTORY_SEPARATOR)
-                )
-                {
-                    continue;
-                }
-
-                require_once $file->getPathname();
+            if (is_dir($basePath)) {
+                $scanner->inSubfolder($basePath, 'Commands');
             }
         }
 
-        foreach (get_declared_classes() as $class) {
-            if (!is_subclass_of($class, CommandInterface::class)) {
+        foreach ($scanner->getResults() as $scannedCommand) {
+            /** @var \ReflectionClass $reflection */
+            $reflection = $scannedCommand['class'];
+            /** @var CommandAttribute $attribute */
+            $attribute = $scannedCommand['attribute'];
+
+            $class = $reflection->getName();
+
+            if (!$reflection->implementsInterface(CommandInterface::class)) {
                 continue;
             }
 
-            $reflection = new ReflectionClass($class);
-            $attributes = $reflection->getAttributes(Command::class);
-
-            if (empty($attributes)) {
-                continue;
-            }
-
-            $attribute = $attributes[0]->newInstance();
             $instance = new $class($this->container);
+
             $name = $attribute->name ?? $instance->getName();
             $description = $attribute->description ?? $instance->getDescription();
             $category = $attribute->category ?? 'other';
