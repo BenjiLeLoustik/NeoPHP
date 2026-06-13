@@ -7,11 +7,11 @@ use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Csrf\CsrfTokenManager;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
-final class SecurityViewExtension implements TwigExtensionInterface
+final readonly class SecurityViewExtension implements TwigExtensionInterface
 {
     public function __construct(
-        private readonly AuthManager $auth,
-        private readonly CsrfTokenManager $csrf,
+        private AuthManager $auth,
+        private CsrfTokenManager $csrf,
     ) {}
 
     public function getFunctions(): array

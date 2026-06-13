@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Security\Csrf;
 
+use Random\RandomException;
+
 class CsrfTokenManager
 {
-    private const SESSION_KEY = '_csrf_tokens';
+    private const string SESSION_KEY = '_csrf_tokens';
 
     public function __construct()
     {
@@ -18,6 +20,9 @@ class CsrfTokenManager
         }
     }
 
+    /**
+     * @throws RandomException
+     */
     public function generateToken(string $id, int $expiry = 3600): CsrfToken
     {
         $value = bin2hex(random_bytes(32));

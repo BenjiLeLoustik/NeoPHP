@@ -7,8 +7,14 @@ class RouteCollection
 {
     private array $routes = [];
 
-    public function add(string $method, string $path, string $name, string $controller, string $action, array $requirements = []): void
-    {
+    public function add(
+        string $method,
+        string $path,
+        string $name,
+        string $controller,
+        string $action,
+        array $requirements = []
+    ): void {
         $path = '/' . trim($path, '/');
         $this->routes[$method][$path] = [
             'name' => $name,

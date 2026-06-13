@@ -3,11 +3,17 @@ declare(strict_types=1);
 
 namespace Neo\Core\Extension\Number;
 
+use Random\RandomException;
+
 class NumberExtension
 {
 
-    public function format(int|float $number, int $decimals = 2, string $decimal = '.', string $thousands = ','): string
-    {
+    public function format(
+        int|float $number,
+        int $decimals = 2,
+        string $decimal = '.',
+        string $thousands = ','
+    ): string {
         return number_format($number, $decimals, $decimal, $thousands);
     }
 
@@ -69,6 +75,9 @@ class NumberExtension
         return (int) floor($value);
     }
 
+    /**
+     * @throws RandomException
+     */
     public function random(int $min = 0, int $max = PHP_INT_MAX): int
     {
         return random_int($min, $max);

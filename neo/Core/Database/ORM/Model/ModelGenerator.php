@@ -6,6 +6,8 @@ namespace Neo\Core\Database\ORM\Model;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class ModelGenerator
 {
@@ -13,6 +15,11 @@ class ModelGenerator
     private string $appName;
     private string $modelDir;
 
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     * @throws DatabaseException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -28,12 +35,18 @@ class ModelGenerator
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function generate(string $table, array $columns, bool $write = true): string
     {
         $className = $this->convertToClassName($table);
         $file = "{$this->modelDir}/$className.php";
 
-        $modelData = ['table' => $table, 'columns' => []];
+        $modelData = [
+            'table' => $table,
+            'columns' => []
+        ];
 
         $header = <<<PHP
 <?php
@@ -82,7 +95,10 @@ PHP;
         $type = $this->convertColumnType($col['type']);
         $nullable = ($col['nullable'] || $type === '\\DateTime');
 
-        if (($col['key'] ?? '') === 'PRI' && str_contains(strtolower($col['extra'] ?? ''), 'auto_increment')) {
+        if (
+            ($col['key'] ?? '') === 'PRI'
+            && str_contains(strtolower($col['extra'] ?? ''), 'auto_increment')
+        ) {
             $nullable = true;
             $default = null;
         } else {
@@ -107,12 +123,30 @@ PHP;
     private function convertColumnType(string $sqlType): string
     {
         $sqlType = strtolower($sqlType);
-        if (str_contains($sqlType, 'enum')) return 'string';
-        if (str_contains($sqlType, 'point')) return 'string';
-        if (str_contains($sqlType, 'int')) return 'int';
-        if (str_contains($sqlType, 'float') || str_contains($sqlType, 'double') || str_contains($sqlType, 'decimal')) return 'float';
-        if (str_contains($sqlType, 'bool')) return 'bool';
-        if (str_contains($sqlType, 'datetime') || str_contains($sqlType, 'timestamp') || str_contains($sqlType, 'date')) return '\\DateTime';
+        if (str_contains($sqlType, 'enum')) {
+            return 'string';
+        }
+
+        if (str_contains($sqlType, 'point')) {
+            return 'string';
+        }
+
+        if (str_contains($sqlType, 'int')) {
+            return 'int';
+        }
+
+        if (str_contains($sqlType, 'float') || str_contains($sqlType, 'double') || str_contains($sqlType, 'decimal')) {
+            return 'float';
+        }
+
+        if (str_contains($sqlType, 'bool')) {
+            return 'bool';
+        }
+
+        if (str_contains($sqlType, 'datetime') || str_contains($sqlType, 'timestamp') || str_contains($sqlType, 'date')) {
+            return '\\DateTime';
+        }
+
         return 'string';
     }
 
@@ -133,7 +167,9 @@ PHP;
 
         foreach ($lines as $line) {
             $trim = trim($line);
-            if ($trim === '' || preg_match('/protected\s+static\s+\?string\s+\$table/', $trim)) continue;
+            if ($trim === '' || preg_match('/protected\s+static\s+\?string\s+\$table/', $trim)) {
+                continue;
+            }
 
             if (preg_match('/^\s*(\/\*\*[\s\S]*?\*\/|#\[[\w\\\\\(\):, ]+\]|#[\w\\\\\(\)]+)\s*$/', $trim)) {
                 $buffer[] = $line;
@@ -158,13 +194,18 @@ PHP;
 
                 $buffer = [];
             } else {
-                if (!empty($trim)) $buffer[] = $line;
+                if (!empty($trim)) {
+                    $buffer[] = $line;
+                }
             }
         }
 
         return [$header, $contentArray];
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function writeModelFile(string $file, string $className, array $modelData, string $header = ''): string
     {
         $hasHidden = isset($modelData['columns']['hidden']);

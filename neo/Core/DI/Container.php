@@ -58,6 +58,9 @@ class Container implements ContainerInterface
         $this->instances[$id] = $object;
     }
 
+    /**
+     * @throws ContainerException
+     */
     public function get(string $id): mixed
     {
         if (isset($this->bindings[$id])) {
@@ -94,6 +97,9 @@ class Container implements ContainerInterface
             || class_exists($id);
     }
 
+    /**
+     * @throws ContainerException
+     */
     public function make(string $id, array $parameters = []): object
     {
         if (isset($this->bindings[$id])) {
@@ -103,6 +109,10 @@ class Container implements ContainerInterface
         return $this->resolveClass($id, $parameters);
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     private function resolveClass(string $class, array $extraParams = []): object
     {
         if (isset($this->resolving[$class])) {
@@ -170,7 +180,6 @@ class Container implements ContainerInterface
 
                     try {
                         $prop = $ref->getProperty($name);
-                        $prop->setAccessible(true);
                         $prop->setValue($instance, $value);
                     } catch (\ReflectionException) {}
                 }
@@ -202,6 +211,9 @@ class Container implements ContainerInterface
         return false;
     }
 
+    /**
+     * @throws ContainerException
+     */
     private function resolveParameters(ReflectionFunctionAbstract $method, array $extraParams = []): array
     {
         $resolved = [];
@@ -220,6 +232,9 @@ class Container implements ContainerInterface
         return $resolved;
     }
 
+    /**
+     * @throws ContainerException
+     */
     private function resolveParameter(ReflectionParameter $param): mixed
     {
         $type = $param->getType();
@@ -255,6 +270,10 @@ class Container implements ContainerInterface
         );
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     public function call(callable $callable, array $extraParams = []): mixed
     {
         if (is_array($callable)) {
@@ -296,7 +315,8 @@ class Container implements ContainerInterface
     {
         $ids = $this->tags[$tag] ?? [];
         return array_map(
-         fn(string $id) => $this->get($id), $ids
+            /** @throws ContainerException */
+            fn(string $id) => $this->get($id), $ids
         );
     }
 }

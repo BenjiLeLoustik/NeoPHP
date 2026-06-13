@@ -22,7 +22,9 @@ use Neo\Core\DI\Container;
 )]
 final class DatabaseMigrationMigrateCommand extends AbstractCommand
 {
-    public function __construct(private Container $container) {}
+    public function __construct(
+        private readonly Container $container
+    ) {}
 
     public function execute(array $args): void
     {

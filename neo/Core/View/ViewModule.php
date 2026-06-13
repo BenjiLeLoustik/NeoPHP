@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\View;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\AbstractModule;
 use Neo\Core\Utils\Config\ConfigModule;
 
@@ -21,6 +22,9 @@ class ViewModule extends AbstractModule
         $container->set(View::class, fn(Container $c) => new View($c));
     }
 
+    /**
+     * @throws ContainerException
+     */
     protected function resolveDependencies(): void
     {
         $view = $this->get(View::class);

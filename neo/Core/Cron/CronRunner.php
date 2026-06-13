@@ -12,10 +12,13 @@ use Throwable;
 class CronRunner
 {
     public function __construct(
-        private Container $container
+        private readonly Container $container
     )
     {}
 
+    /**
+     * @throws CronException
+     */
     public function run(array $jobs): void
     {
         foreach ($jobs as $job) {
@@ -65,6 +68,11 @@ class CronRunner
         }
     }
 
+    /**
+     * @throws \DateInvalidTimeZoneException
+     * @throws \DateMalformedStringException
+     * @throws CronException
+     */
     private function isDue(string $expression, string $timezone): bool
     {
         $parts = explode(' ', trim($expression));

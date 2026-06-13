@@ -4,10 +4,13 @@ declare(strict_types=1);
 namespace Neo\Core\Security\Middleware;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Client\Flash\Flash;
 use Neo\Core\Http\Response\Response;
 use Neo\Core\Routing\Attribute\Maintenance;
 use Neo\Core\Routing\Attribute\RateLimit;
+use Neo\Core\Routing\Exception\RouteNotFoundException;
 use Neo\Core\Routing\Router;
 use Neo\Core\Security\Middleware\Attribute\Middleware as MiddlewareAttribute;
 use Neo\Core\Security\Middleware\Default\RateLimitMiddleware;
@@ -30,6 +33,10 @@ class MiddlewareHandler
         $this->container = $container;
     }
 
+    /**
+     * @throws MiddlewareException
+     * @throws ContainerException
+     */
     public function run(string $controller, ?string $method = null): void
     {
         $this->lastController = $controller;
@@ -83,6 +90,11 @@ class MiddlewareHandler
         }
     }
 
+    /**
+     * @throws MiddlewareException
+     * @throws FrameworkException
+     * @throws RouteNotFoundException
+     */
     private function handleFailure(
         string $message,
         string $onError,
@@ -119,6 +131,9 @@ class MiddlewareHandler
         $this->errors[$controller][$method][$middleware][] = $message;
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     private function getMiddlewares(string $controller, ?string $method = null): array
     {
         $all = [];
@@ -208,6 +223,10 @@ class MiddlewareHandler
         return $this->executed[$middlewareClass] ?? [];
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     private function checkMaintenance(string $controller, ?string $method): void
     {
         $ref = new ReflectionClass($controller);

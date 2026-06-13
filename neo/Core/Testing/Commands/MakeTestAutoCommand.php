@@ -9,6 +9,7 @@ use Neo\Core\Console\Helper\Args;
 use Neo\Core\Console\Helper\Input;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\DI\Container;
+use Neo\Core\Testing\Exception\TestingException;
 use Neo\Core\Testing\Generator\TestGenerator;
 use Neo\Core\Testing\Scaffold\TestScaffolder;
 
@@ -19,8 +20,13 @@ use Neo\Core\Testing\Scaffold\TestScaffolder;
 )]
 final class MakeTestAutoCommand extends AbstractCommand
 {
-    public function __construct(private Container $container) {}
+    public function __construct(
+        private readonly Container $container
+    ) {}
 
+    /**
+     * @throws TestingException
+     */
     public function execute(array $args): void
     {
         $project = Args::option($args, '--project');
@@ -46,7 +52,7 @@ final class MakeTestAutoCommand extends AbstractCommand
             return;
         }
 
-        (new TestScaffolder())->ensure($basePath, $project);
+        new TestScaffolder()->ensure($basePath, $project);
 
         Output::title("Scanning #[Test] attributes in project '$project'");
 

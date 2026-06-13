@@ -5,6 +5,7 @@ namespace Neo\Core\Testing;
 
 use Neo\App;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
 abstract class TestCase extends PHPUnitTestCase
@@ -27,6 +28,9 @@ abstract class TestCase extends PHPUnitTestCase
         parent::tearDown();
     }
 
+    /**
+     * @throws ContainerException
+     */
     protected function get(string $id): mixed
     {
         return $this->container->get($id);

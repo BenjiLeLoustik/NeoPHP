@@ -11,7 +11,9 @@ class RouterCollector implements CollectorInterface
     private ?string $action = null;
     private array $params = [];
 
-    public function __construct(private readonly Router $router) {}
+    public function __construct(
+        private readonly Router $router
+    ) {}
 
     public function getName(): string
     {

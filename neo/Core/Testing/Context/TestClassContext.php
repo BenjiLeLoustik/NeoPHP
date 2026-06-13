@@ -5,17 +5,17 @@ namespace Neo\Core\Testing\Context;
 
 use Neo\Core\Testing\Enum\TestType;
 
-class TestClassContext
+readonly class TestClassContext
 {
     public function __construct(
-        public readonly string $fqcn,
-        public readonly string $shortName,
-        public readonly string $namespace,
-        public readonly TestType $type,
-        public readonly array $methods,
-        public readonly array $cases = [],
-        public readonly array $dataset = [],
-        public readonly bool $skip = false,
-        public readonly ?string $customExtends = null,
+        public string   $fqcn,
+        public string   $shortName,
+        public string   $namespace,
+        public TestType $type,
+        public array    $methods,
+        public array    $cases = [],
+        public array    $dataset = [],
+        public bool     $skip = false,
+        public ?string  $customExtends = null,
     ){}
 }

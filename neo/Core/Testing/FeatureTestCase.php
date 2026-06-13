@@ -9,6 +9,8 @@ use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 abstract class FeatureTestCase extends PHPUnitTestCase
 {
@@ -65,14 +67,15 @@ abstract class FeatureTestCase extends PHPUnitTestCase
             $response->setStatusCode($e->getCode() ?: 500);
             $response->setContent($e->getMessage());
             return $response;
+        } catch (\JsonException|NotFoundExceptionInterface|ContainerExceptionInterface $e) {
         }
     }
 
     private function buildRequest(string $method, string $uri, array $body, array $headers): Request
     {
-        $parsed  = parse_url($uri);
-        $path    = $parsed['path'] ?? '/';
-        $query   = [];
+        $parsed = parse_url($uri);
+        $path = $parsed['path'] ?? '/';
+        $query = [];
 
         if (!empty($parsed['query'])) {
             parse_str($parsed['query'], $query);

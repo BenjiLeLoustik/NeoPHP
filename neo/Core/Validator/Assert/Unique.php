@@ -86,7 +86,6 @@ class Unique extends Constraint
 
         if ($refClass->hasProperty('table')) {
             $prop = $refClass->getProperty('table');
-            $prop->setAccessible(true);
             return $prop->getValue($object);
         }
 

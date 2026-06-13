@@ -3,6 +3,7 @@
 namespace Neo\Core\Module;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\Interface\ModuleInterface;
 
 class AbstractModule implements Interface\ModuleInterface
@@ -24,6 +25,9 @@ class AbstractModule implements Interface\ModuleInterface
         $this->resolveDependencies();
     }
 
+    /**
+     * @throws ContainerException
+     */
     protected function get(string $abstract): mixed
     {
         return $this->container->get($abstract);

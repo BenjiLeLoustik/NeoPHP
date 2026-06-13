@@ -18,6 +18,9 @@ class DatabaseManager
         $this->pdo = DatabaseConnection::getPdo();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function query(string $sql, array $params = []): PDOStatement
     {
         try {
@@ -43,17 +46,26 @@ class DatabaseManager
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function fetch(string $sql, array $params = []): ?array
     {
         $result = $this->query($sql, $params)->fetch();
         return $result !== false ? $result : null;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function fetchAll(string $sql, array $params = []): array
     {
         return $this->query($sql, $params)->fetchAll();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function execute(string $sql, array $params = []): bool
     {
         try {

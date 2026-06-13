@@ -11,7 +11,9 @@ class TranslationCollector implements CollectorInterface, TranslationCollectorIn
     private array $hits   = [];
     private array $misses = [];
 
-    public function __construct(private readonly TranslationManager $manager) {}
+    public function __construct(
+        private readonly TranslationManager $manager
+    ) {}
 
     public function getName(): string
     {

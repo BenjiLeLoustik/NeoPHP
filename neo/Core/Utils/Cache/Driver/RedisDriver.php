@@ -14,6 +14,9 @@ class RedisDriver implements CacheDriverInterface
     private int $defaultTtl;
     private string $prefix;
 
+    /**
+     * @throws CacheException
+     */
     public function __construct(array $config, int $defaultTtl = 3600)
     {
         $this->defaultTtl = $defaultTtl;

@@ -10,6 +10,8 @@ use Neo\Core\Database\ORM\Model\ModelGenerator;
 use Neo\Core\Database\ORM\Repository\RepositoryGenerator;
 use Neo\Core\DI\Container;
 use Neo\Core\Utils\Config\Config;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class ORM
 {
@@ -19,6 +21,9 @@ class ORM
     private RepositoryGenerator $repositoryGenerator;
     private FormGenerator $formGenerator;
 
+    /**
+     * @throws DatabaseException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -28,16 +33,17 @@ class ORM
         $this->formGenerator = new FormGenerator($this->container);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function generate(): void
     {
-        $this->run(
-            generateModels: true,
-            generateRepositories: true,
-            generateForms: true,
-            force: false,
-        );
+        $this->run();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function generateSelective(
         bool $generateModels = true,
         bool $generateRepositories = true,
@@ -53,6 +59,11 @@ class ORM
         );
     }
 
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     * @throws DatabaseException
+     */
     private function run(
         bool $generateModels = true,
         bool $generateRepositories = true,

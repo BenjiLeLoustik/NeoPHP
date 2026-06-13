@@ -5,6 +5,9 @@ namespace Neo\Core\Http\Response;
 
 class JsonResponse extends Response
 {
+    /**
+     * @throws \JsonException
+     */
     public function __construct(array|object $data, int $statusCode = 200)
     {
         $this->setStatusCode($statusCode);

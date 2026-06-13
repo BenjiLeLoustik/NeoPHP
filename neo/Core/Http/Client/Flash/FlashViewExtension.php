@@ -6,9 +6,9 @@ namespace Neo\Core\Http\Client\Flash;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 use Twig\Markup;
 
-final class FlashViewExtension implements TwigExtensionInterface
+final readonly class FlashViewExtension implements TwigExtensionInterface
 {
-    public function __construct(private readonly Flash $flash) {}
+    public function __construct(private Flash $flash) {}
 
     public function getFunctions(): array
     {

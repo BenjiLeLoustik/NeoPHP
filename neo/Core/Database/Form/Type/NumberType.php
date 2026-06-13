@@ -45,7 +45,7 @@ HTML;
         $cast = $field?->getOption('cast');
 
         return match ($cast) {
-            'int'   => (int) $value,
+            'int' => (int) $value,
             'float' => (float) $value,
             default => is_numeric($value) ? $value + 0 : $value,
         };

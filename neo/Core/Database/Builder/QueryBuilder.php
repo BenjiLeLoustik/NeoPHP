@@ -24,17 +24,26 @@ class QueryBuilder
     private array $groupBy = [];
     private PDO $pdo;
 
+    /**
+     * @throws DatabaseException
+     */
     public function __construct()
     {
         $this->pdo = DatabaseConnection::getPdo();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function table(string $table): self
     {
         $this->table = $this->sanitizeIdentifier($table);
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function sanitizeIdentifier(string $name): string
     {
         if (!preg_match('/^[a-zA-Z0-9_]+$/', $name)) {
@@ -47,6 +56,9 @@ class QueryBuilder
         return $name;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function sanitizeColumn(string $column): string
     {
         if ($column === '*') {
@@ -68,6 +80,9 @@ class QueryBuilder
         return $column;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function sanitizeJoinOn(string $on): string
     {
         if (!preg_match('/^[a-zA-Z0-9_.=\s]+$/', $on)) {
@@ -81,6 +96,9 @@ class QueryBuilder
         return $on;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function sanitizeOperator(string $operator): string
     {
         $allowed = ['=', '!=', '<', '<=', '>', '>=', 'LIKE'];
@@ -96,6 +114,9 @@ class QueryBuilder
         return strtoupper($operator);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function select(array $columns = ['*']): self
     {
         if ($columns !== ['*']) {
@@ -119,6 +140,9 @@ class QueryBuilder
         return $this->params;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function where(string|array $column, string $operator, mixed $value): self
     {
         $operator = $this->sanitizeOperator($operator);
@@ -136,11 +160,17 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function andWhere(string|array $column, string $operator, mixed $value): self
     {
         return $this->where($column, $operator, $value);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function orWhere(string|array $column, string $operator, mixed $value): self
     {
         $operator = $this->sanitizeOperator($operator);
@@ -158,6 +188,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function whereLike(string|array $column, mixed $value): self
     {
         $conditions = [];
@@ -174,6 +207,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function orWhereLike(string|array $column, mixed $value): self
     {
         $conditions = [];
@@ -190,6 +226,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function whereWord(string|array $column, mixed $word): self
     {
         $conditions = [];
@@ -206,6 +245,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function orWhereWord(string|array $column, mixed $word): self
     {
         $conditions = [];
@@ -222,6 +264,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function whereIn(string $column, array $values): self
     {
         $column = $this->sanitizeColumn($column);
@@ -235,6 +280,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function whereNull(string $column): self
     {
         $column = $this->sanitizeColumn($column);
@@ -242,6 +290,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function whereNotNull(string $column): self
     {
         $column = $this->sanitizeColumn($column);
@@ -267,6 +318,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function between(string $column, mixed $from, mixed $to): self
     {
         $column = $this->sanitizeColumn($column);
@@ -278,6 +332,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function join(string $table, string $on): self
     {
         $table = $this->sanitizeIdentifier($table);
@@ -287,6 +344,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function leftJoin(string $table, string $on): self
     {
         $table = $this->sanitizeIdentifier($table);
@@ -296,6 +356,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function orderBy(string $column, string $direction = 'ASC'): self
     {
         $direction = strtoupper($direction);
@@ -312,6 +375,9 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function groupBy(string $column): self
     {
         $column = $this->sanitizeColumn($column);
@@ -387,6 +453,9 @@ class QueryBuilder
         return $sql;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function get(): array
     {
         try {
@@ -406,6 +475,9 @@ class QueryBuilder
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function first(): ?array
     {
         $this->limit(1);
@@ -413,12 +485,18 @@ class QueryBuilder
         return $results[0] ?? null;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function firstModel(string $modelClass): ?AbstractModel
     {
         $row = $this->first();
         return $row ? new $modelClass($row) : null;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function count(): int
     {
         try {
@@ -456,6 +534,9 @@ class QueryBuilder
         return $this->buildSelect();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function insert(array $data): bool
     {
         try {
@@ -489,12 +570,18 @@ class QueryBuilder
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function insertGetId(array $data): string
     {
         $this->insert($data);
         return $this->pdo->lastInsertId();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function update(array $data): bool
     {
         if (!$this->where) {
@@ -540,6 +627,9 @@ class QueryBuilder
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function delete(): bool
     {
         if (!$this->where) {
@@ -590,9 +680,13 @@ class QueryBuilder
                 code: 500,
                 previous: $e
             );
+        } catch (DatabaseException $e) {
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function paginate(int $perPage = 15, ?int $page = null, ?int $total = null): PaginationBuilder
     {
         $page = max(1, $page ?? (int) ($_GET['page'] ?? 1));
@@ -625,12 +719,18 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function getModels(string $modelClass): array
     {
         $rows = $this->get();
         return array_map(fn($row) => new $modelClass($row), $rows);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function beginTransaction(): void
     {
         try {
@@ -645,6 +745,9 @@ class QueryBuilder
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function commit(): void
     {
         try {
@@ -659,6 +762,9 @@ class QueryBuilder
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function rollback(): void
     {
         try {
@@ -675,6 +781,9 @@ class QueryBuilder
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function transaction(callable $callback): mixed
     {
         $this->beginTransaction();

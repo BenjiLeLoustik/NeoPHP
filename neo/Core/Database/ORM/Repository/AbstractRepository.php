@@ -25,6 +25,9 @@ abstract class AbstractRepository
     protected bool $includeTrashed = false;
     protected bool $onlyTrashed = false;
 
+    /**
+     * @throws DatabaseException
+     */
     public function __construct(?string $modelClass = null)
     {
         if ($modelClass !== null) {
@@ -42,7 +45,7 @@ abstract class AbstractRepository
         $this->pdo = DatabaseConnection::getPdo();
         $this->table = $this->modelClass::getTable();
         $this->primaryKey = $this->modelClass::getPrimaryKey();
-        $this->builder = (new QueryBuilder())->table($this->table);
+        $this->builder = new QueryBuilder()->table($this->table);
     }
 
     protected function resetState(): void
@@ -50,7 +53,7 @@ abstract class AbstractRepository
         $this->includeTrashed = false;
         $this->onlyTrashed = false;
         $this->with = [];
-        $this->builder = (new QueryBuilder())->table($this->table);
+        $this->builder = new QueryBuilder()->table($this->table);
     }
 
     public function with(string|array $relations): self
@@ -99,6 +102,9 @@ abstract class AbstractRepository
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function restore(int|string $id): bool
     {
         if (!$this->softDelete) {
@@ -119,6 +125,9 @@ abstract class AbstractRepository
         return $restored;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function forceDelete(int|string $id): bool
     {
         $success = $this->builder
@@ -151,7 +160,7 @@ abstract class AbstractRepository
 
     public function qb(): QueryBuilder
     {
-        $qb = (new QueryBuilder())->table($this->table);
+        $qb = new QueryBuilder()->table($this->table);
 
         if ($this->softDelete) {
             $col = $this->table . '.deleted_at';
@@ -224,6 +233,9 @@ abstract class AbstractRepository
         return $this;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function findBy(
         string $column,
         mixed $value,
@@ -308,6 +320,9 @@ abstract class AbstractRepository
         return $this->qb()->where($this->primaryKey, '=', $id)->update($data);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function delete(int|string|AbstractModel $target): bool
     {
         $id = $target instanceof AbstractModel
@@ -343,6 +358,9 @@ abstract class AbstractRepository
         return $data;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function query(string $sql, array $params = []): PDOStatement
     {
         try {
@@ -391,6 +409,9 @@ abstract class AbstractRepository
         return $tree;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function eagerLoadTree(array $models, array $tree): void
     {
         foreach ($tree as $relation => $nested) {
@@ -424,6 +445,9 @@ abstract class AbstractRepository
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     protected function eagerLoadRelations(AbstractModel $model): AbstractModel
     {
         if (empty($this->with)) {
@@ -453,6 +477,9 @@ abstract class AbstractRepository
         return $model;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function loadNestedRelations(mixed $rel, array $chain): void
     {
         if (empty($chain)) {
@@ -503,6 +530,9 @@ abstract class AbstractRepository
         return $this->toArray();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function paginate(int $perPage = 15, ?int $page = null): PaginationBuilder
     {
         $page = max(1, $page ?? (int)($_GET['page'] ?? 1));

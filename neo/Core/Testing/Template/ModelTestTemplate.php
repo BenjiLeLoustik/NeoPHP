@@ -34,6 +34,9 @@ class {$testClassName} extends {$extends}
 PHP;
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     private function buildFromConstraints(TestClassContext $ctx): string
     {
         $lines = [];
@@ -60,7 +63,7 @@ PHP;
             $propName = $prop->getName();
 
             foreach ($constraints as $attrRef) {
-                $constraintShort = (new \ReflectionClass($attrRef->getName()))->getShortName();
+                $constraintShort = new \ReflectionClass($attrRef->getName())->getShortName();
                 $testName = 'test_' . $propName . '_fails_' . strtolower($constraintShort);
 
                 $lines[] = <<<PHP

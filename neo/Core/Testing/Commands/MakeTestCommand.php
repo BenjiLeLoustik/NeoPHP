@@ -17,7 +17,7 @@ use Neo\Core\Testing\Scaffold\TestScaffolder;
 )]
 final class MakeTestCommand extends AbstractCommand
 {
-    private const VALID_TYPES = ['unit', 'feature', 'database', 'middleware'];
+    private const array VALID_TYPES = ['unit', 'feature', 'database', 'middleware'];
 
     public function execute(array $args): void
     {
@@ -63,7 +63,7 @@ final class MakeTestCommand extends AbstractCommand
 
         $testName = $this->normalizeTestName($testName);
 
-        (new TestScaffolder())->ensure($basePath, $project);
+        new TestScaffolder()->ensure($basePath, $project);
         $this->generateTest($basePath, $project, $testName, $type, $force);
     }
 
@@ -98,7 +98,6 @@ final class MakeTestCommand extends AbstractCommand
     private function buildTestContent(string $namespace, string $testName, string $type, string $project): string
     {
         return match ($type) {
-            'unit' => $this->unitTemplate($namespace, $testName, $project),
             'feature' => $this->featureTemplate($namespace, $testName, $project),
             'database' => $this->databaseTemplate($namespace, $testName, $project),
             'middleware' => $this->middlewareTemplate($namespace, $testName, $project),

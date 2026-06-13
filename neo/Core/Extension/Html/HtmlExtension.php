@@ -33,16 +33,16 @@ class HtmlExtension
 
     public function excerpt(string $html, string $query, int $radius = 100, string $suffix = '...'): string
     {
-        $text     = $this->strip($html);
+        $text = $this->strip($html);
         $position = mb_stripos($text, $query);
 
         if ($position === false) {
             return mb_substr($text, 0, $radius * 2) . $suffix;
         }
 
-        $start  = max(0, $position - $radius);
+        $start = max(0, $position - $radius);
         $length = mb_strlen($query) + ($radius * 2);
-        $slice  = mb_substr($text, $start, $length);
+        $slice = mb_substr($text, $start, $length);
 
         return ($start > 0 ? $suffix : '') . trim($slice) . $suffix;
     }

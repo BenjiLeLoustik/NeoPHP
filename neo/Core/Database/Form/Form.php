@@ -21,7 +21,7 @@ class Form
     private array $errors = [];
     private CsrfTokenManager $csrfManager;
     private string $csrfFieldName = '_csrf';
-    private $ignoredFields = ['submit', '_csrf', 'csrf_token', 'reset'];
+    private array $ignoredFields = ['submit', '_csrf', 'csrf_token', 'reset'];
     private array $removedConstraints = [];
     private array $addedConstraints = [];
     private array $excludedFromPopulate = [];
@@ -55,13 +55,12 @@ class Form
             foreach ($this->fields as $field) {
                 $name = $field->getName();
 
+                $rawValue = $data->$name;
                 if ($field->getType() instanceof CollectionType) {
-                    $rawValue = $data->$name;
                     $field->setValue($this->normalizeCollectionValue($rawValue));
                     continue;
                 }
 
-                $rawValue = $data->$name;
                 if ($rawValue !== null) {
                     $field->setValue($rawValue);
                 }
@@ -156,7 +155,6 @@ class Form
             $ref = new \ReflectionObject($this->data);
             if ($ref->hasProperty('data')) {
                 $propData = $ref->getProperty('data');
-                $propData->setAccessible(true);
                 $internalData = $propData->getValue($this->data);
                 $internalData[$name] = $this->data->$name ?? $value;
                 $propData->setValue($this->data, $internalData);
@@ -255,7 +253,6 @@ class Form
 
             if ($ref->hasProperty('data')) {
                 $propData = $ref->getProperty('data');
-                $propData->setAccessible(true);
                 $raw = $propData->getValue($this->data);
                 $internalData = is_array($raw) ? $raw : (array)$raw;
             }

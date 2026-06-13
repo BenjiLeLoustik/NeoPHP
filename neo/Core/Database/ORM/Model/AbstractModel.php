@@ -112,6 +112,9 @@ abstract class AbstractModel
         unset(self::$instanceCache[static::class . ':' . $id]);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function __get(string $name): mixed
     {
         if ($this->hasRelation($name)) {
@@ -134,7 +137,6 @@ abstract class AbstractModel
 
         try {
             $prop = new \ReflectionProperty($this, $name);
-            $prop->setAccessible(true);
             $value = $this->castValue($prop, $value);
             $prop->setValue($this, $value);
         } catch (\ReflectionException) {}
@@ -150,7 +152,7 @@ abstract class AbstractModel
     public static function getTable(): string
     {
         return static::$table
-            ?? strtolower((new \ReflectionClass(static::class))->getShortName()) . 's';
+            ?? strtolower(new \ReflectionClass(static::class)->getShortName()) . 's';
     }
 
     public static function getPrimaryKey(): string
@@ -169,7 +171,6 @@ abstract class AbstractModel
         $relations = [];
 
         foreach ($ref->getProperties() as $prop) {
-            $prop->setAccessible(true);
 
             $attrs = [
                 ...$prop->getAttributes(HasOne::class),
@@ -203,6 +204,9 @@ abstract class AbstractModel
         }));
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public static function getRelationTarget(string $relationName): ?string
     {
         $ref  = new \ReflectionClass(static::class);
@@ -218,6 +222,9 @@ abstract class AbstractModel
         return !empty($attrs) ? $attrs[0]->newInstance()->target : null;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function loadRelation(
         string $name,
         bool $includeTrashed = false,
@@ -327,6 +334,9 @@ abstract class AbstractModel
         return new static($row);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function loadRelations(array $relations): void
     {
         foreach ($relations as $name) {
@@ -340,6 +350,9 @@ abstract class AbstractModel
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function loadAllRelations(
         bool $recursive = true,
         array &$loaded = [],
@@ -376,6 +389,9 @@ abstract class AbstractModel
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function relation(string $name): mixed
     {
         if (!$this->hasRelation($name)) return null;
@@ -483,7 +499,6 @@ abstract class AbstractModel
 
             if (property_exists($this, $key)) {
                 $prop = new \ReflectionProperty($this, $key);
-                $prop->setAccessible(true);
                 $prop->setValue($this, $value);
             }
 
@@ -518,7 +533,7 @@ abstract class AbstractModel
 
             $tableColumns = $columnsCache[$table];
             $isInsert = empty($this->$pk);
-            $now = (new \DateTime())->format('Y-m-d H:i:s');
+            $now = new \DateTime()->format('Y-m-d H:i:s');
 
             if ($isInsert) {
                 if (in_array('created_at', $tableColumns) && !isset($data['created_at'])) $data['created_at'] = $now;
@@ -555,6 +570,9 @@ abstract class AbstractModel
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function saveRelation(string $relationName, array $entries): void
     {
         $relations = $this->getRelations();
@@ -706,7 +724,6 @@ abstract class AbstractModel
             if (in_array($name, $this->getInternalProperties(), true)) continue;
             if (in_array($name, $relations, true)) continue;
 
-            $prop->setAccessible(true);
             $value = $prop->getValue($this);
 
             if ($value instanceof self) continue;
@@ -768,6 +785,9 @@ abstract class AbstractModel
             : ($includeTrashed ? '1=1' : "$column IS NULL");
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public static function eagerLoad(
         array $models,
         string $relation,

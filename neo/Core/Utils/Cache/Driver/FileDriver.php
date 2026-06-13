@@ -11,6 +11,9 @@ class FileDriver implements CacheDriverInterface
     private string $directory;
     private int $defaultTtl;
 
+    /**
+     * @throws CacheException
+     */
     public function __construct(string $directory, int $defaultTtl = 3600)
     {
         $this->directory = $directory;
@@ -28,6 +31,9 @@ class FileDriver implements CacheDriverInterface
         }
     }
 
+    /**
+     * @throws CacheException
+     */
     public function get(string $key, mixed $default = null): mixed
     {
         $file = $this->path($key);
@@ -61,6 +67,9 @@ class FileDriver implements CacheDriverInterface
         return $data['content'];
     }
 
+    /**
+     * @throws CacheException
+     */
     public function set(string $key, mixed $value, ?int $ttl = null): void
     {
         $data = [
@@ -78,6 +87,9 @@ class FileDriver implements CacheDriverInterface
         }
     }
 
+    /**
+     * @throws CacheException
+     */
     public function delete(string $key): void
     {
         $file = $this->path($key);
@@ -91,6 +103,9 @@ class FileDriver implements CacheDriverInterface
         }
     }
 
+    /**
+     * @throws CacheException
+     */
     public function clear(): void
     {
         $files = glob($this->directory . '/*.cache') ?: [];
@@ -106,6 +121,9 @@ class FileDriver implements CacheDriverInterface
         }
     }
 
+    /**
+     * @throws CacheException
+     */
     public function has(string $key): bool
     {
         $file = $this->path($key);
@@ -114,7 +132,7 @@ class FileDriver implements CacheDriverInterface
             return false;
         }
 
-        $raw  = file_get_contents($file);
+        $raw = file_get_contents($file);
         $data = $raw !== false ? unserialize($raw, ['allowed_classes' => true]) : null;
 
         if (!is_array($data) || !isset($data['expires_at'])) {

@@ -5,6 +5,7 @@ namespace Neo\Core\Utils\Logger;
 
 use DateTime;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Utils\Config\Config;
 use ZipArchive;
@@ -17,7 +18,7 @@ class Logger
     protected string $archiveDirectory;
     protected string $currentChannel = 'app';
 
-    private const LEVELS = [
+    private const array LEVELS = [
         'DEBUG' => 100,
         'INFO' => 200,
         'NOTICE' => 250,
@@ -28,6 +29,9 @@ class Logger
         'EMERGENCY' => 600,
     ];
 
+    /**
+     * @throws ContainerException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -146,7 +150,7 @@ class Logger
         $rotationType = $this->config['rotation']['type'] ?? 'daily';
 
         if ($rotationType === 'daily') {
-            $date = (new DateTime())->format('Y-m-d');
+            $date = new DateTime()->format('Y-m-d');
             return "{$this->logDirectory}/{$fileName}-{$date}.{$extension}";
         }
 
@@ -228,7 +232,7 @@ class Logger
         $format = $this->config['log_format'] ?? '[{%datetime%}][{%level_name%}] {%message%}';
 
         $replace = [
-            '{%datetime%}' => (new DateTime())->format('Y-m-d H:i:s'),
+            '{%datetime%}' => new DateTime()->format('Y-m-d H:i:s'),
             '{%level_name%}' => $level,
             '{%level_code%}' => (string) self::LEVELS[$level],
             '{%origin%}' => $origin,

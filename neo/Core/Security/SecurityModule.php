@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Security;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\ClientModule;
 use Neo\Core\Http\HttpModule;
 use Neo\Core\Module\AbstractModule;
@@ -40,6 +41,9 @@ class SecurityModule extends AbstractModule
         $container->tag(SecurityViewExtension::class, 'twig.extension');
     }
 
+    /**
+     * @throws ContainerException
+     */
     protected function resolveDependencies(): void
     {
         $this->get(PasswordManager::class);

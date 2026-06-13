@@ -5,21 +5,33 @@ namespace Neo;
 
 use Neo\Core\Application\ApplicationDetector;
 use Neo\Core\Application\ApplicationPaths;
+use Neo\Core\Application\Exception\ApplicationException;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\Event\RequestEvent;
 use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
+use Neo\Core\Module\Exception\ModuleException;
 use Neo\Core\Module\ModuleManager;
 use Neo\Core\Routing\Router;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class App
 {
     private Container $container;
 
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ModuleException
+     * @throws ContainerExceptionInterface
+     * @throws ApplicationException
+     * @throws ContainerException
+     */
     public function __construct()
     {
         $this->container = new Container();
@@ -30,8 +42,8 @@ class App
             : Request::fromGlobals()
         );
 
-        (new ApplicationDetector($this->container))->detect();
-        (new ApplicationPaths($this->container))->register();
+        new ApplicationDetector($this->container)->detect();
+        new ApplicationPaths($this->container)->register();
 
         $moduleManager = new ModuleManager($this->container)
             ->discover(__DIR__ . '/Core');
@@ -46,6 +58,12 @@ class App
         }
     }
 
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     * @throws \JsonException
+     * @throws ContainerException
+     */
     public function run(): Response
     {
         AbstractModel::clearIdentityMap();

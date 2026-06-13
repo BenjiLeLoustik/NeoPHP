@@ -15,6 +15,9 @@ class FormBuilder
     private Form $form;
     private AbstractModel $model;
 
+    /**
+     * @throws DatabaseException
+     */
     public function __construct(AbstractModel|string $model)
     {
         if (is_string($model)) {
@@ -43,6 +46,9 @@ class FormBuilder
         return $this;
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public function auto(array $fieldTypes = [], array $excludeFields = []): self
     {
         $refClass = new \ReflectionClass($this->model);

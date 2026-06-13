@@ -18,6 +18,9 @@ class ConsoleHandler
     public function __construct(private Container $container)
     {}
 
+    /**
+     * @throws \ReflectionException
+     */
     private function loadCommands(): void
     {
         $basePaths = [
@@ -78,6 +81,9 @@ class ConsoleHandler
         ksort($this->commands);
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public function run(array $argv): void
     {
         array_shift($argv);

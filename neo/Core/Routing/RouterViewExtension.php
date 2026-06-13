@@ -5,9 +5,9 @@ namespace Neo\Core\Routing;
 
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
-final class RouterViewExtension implements TwigExtensionInterface
+final readonly class RouterViewExtension implements TwigExtensionInterface
 {
-    public function __construct(private readonly Router $router) {}
+    public function __construct(private Router $router) {}
 
     public function getFunctions(): array
     {

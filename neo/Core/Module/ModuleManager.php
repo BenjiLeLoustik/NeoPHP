@@ -57,6 +57,9 @@ class ModuleManager
         return $this;
     }
 
+    /**
+     * @throws ModuleException
+     */
     public function boot(): void
     {
         $ordered = $this->resolveDependencyOrder($this->modules);
@@ -98,6 +101,7 @@ class ModuleManager
     /**
      * @param class-string<ModuleInterface>[] $modules
      * @return class-string<ModuleInterface>[]
+     * @throws ModuleException
      */
     private function resolveDependencyOrder(array $modules): array
     {

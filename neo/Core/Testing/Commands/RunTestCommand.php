@@ -71,7 +71,7 @@ final class RunTestCommand extends AbstractCommand
         }
 
         $phpunitBin = ROOT_DIR . '/vendor/bin/phpunit';
-        $xmlConfig  = "$testsPath/phpunit.xml";
+        $xmlConfig = "$testsPath/phpunit.xml";
 
         $cmd = escapeshellarg($phpunitBin);
         $cmd .= ' --configuration ' . escapeshellarg($xmlConfig);

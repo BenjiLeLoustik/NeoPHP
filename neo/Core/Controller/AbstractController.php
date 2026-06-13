@@ -40,6 +40,9 @@ abstract class AbstractController
         $this->methods[$name] = $resolver;
     }
 
+    /**
+     * @throws AbstractControllerException
+     */
     public function __call(string $name, array $arguments): mixed
     {
         if (isset($this->methods[$name])) {
@@ -60,17 +63,28 @@ abstract class AbstractController
         );
 
         foreach ($iterator as $file) {
-            if (!$file->isFile() || $file->getExtension() !== 'php') continue;
-            if (!str_ends_with($file->getFilename(), 'ControllerExtension.php')) continue;
+            if (!$file->isFile() || $file->getExtension() !== 'php') {
+                continue;
+            }
+
+            if (!str_ends_with($file->getFilename(), 'ControllerExtension.php')) {
+                continue;
+            }
 
             $fqcn = $this->resolveFqcn($file->getRealPath());
-            if ($fqcn === null) continue;
+            if ($fqcn === null) {
+                continue;
+            }
 
             require_once $file->getRealPath();
-            if (!class_exists($fqcn)) continue;
+            if (!class_exists($fqcn)) {
+                continue;
+            }
 
             $ref = new \ReflectionClass($fqcn);
-            if ($ref->isAbstract() || !$ref->implementsInterface(ControllerExtensionInterface::class)) continue;
+            if ($ref->isAbstract() || !$ref->implementsInterface(ControllerExtensionInterface::class)) {
+                continue;
+            }
 
             /** @var ControllerExtensionInterface $extension */
             $extension = new $fqcn();
@@ -81,14 +95,18 @@ abstract class AbstractController
     private function resolveFqcn(string $filePath): ?string
     {
         $src = file_get_contents($filePath);
-        if ($src === false) return null;
+        if ($src === false) {
+            return null;
+        }
 
         $namespace = '';
         if (preg_match('/namespace\s+([^;]+);/i', $src, $m)) {
             $namespace = trim($m[1]);
         }
 
-        if (!preg_match('/class\s+([A-Za-z0-9_]+)/i', $src, $m)) return null;
+        if (!preg_match('/class\s+([A-Za-z0-9_]+)/i', $src, $m)) {
+            return null;
+        }
 
         return $namespace !== '' ? $namespace . '\\' . trim($m[1]) : trim($m[1]);
     }

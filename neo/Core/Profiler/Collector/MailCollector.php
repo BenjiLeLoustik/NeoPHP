@@ -6,7 +6,9 @@ use Neo\Core\Utils\Mailer\Mailer;
 
 class MailCollector implements CollectorInterface
 {
-    public function __construct(private readonly Mailer $mailer) {}
+    public function __construct(
+        private readonly Mailer $mailer
+    ) {}
 
     public function getName(): string
     {

@@ -10,12 +10,19 @@ use Neo\Core\Utils\Config\Config;
 use Neo\Core\View\View;
 use PDO;
 use PDOException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class DatabaseConnection
 {
     protected Container $container;
     private static ?PDO $connection = null;
 
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     * @throws DatabaseException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -64,6 +71,9 @@ class DatabaseConnection
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public static function getPdo(): PDO
     {
         if (self::$connection === null) {

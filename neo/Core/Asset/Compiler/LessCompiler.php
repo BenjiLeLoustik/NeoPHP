@@ -7,6 +7,9 @@ use Neo\Core\Asset\Compiler\Interface\CompilerInterface;
 
 class LessCompiler implements CompilerInterface
 {
+    /**
+     * @throws \Less_Exception_Parser
+     */
     public function compile(string $source, string $target): void
     {
         $parser = new \Less_Parser();
