@@ -656,8 +656,13 @@ class QueryBuilder
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function countDistinct(string $column): int
     {
+        $result = 0;
+
         try {
             $column = $this->sanitizeColumn($column);
             $sql = "SELECT COUNT(DISTINCT $column) FROM {$this->table}";
@@ -671,7 +676,7 @@ class QueryBuilder
             $stmt = $this->pdo->prepare($sql);
             $this->executeTracked($stmt, $this->params, $sql);
 
-            return (int) $stmt->fetchColumn();
+            $result = (int) $stmt->fetchColumn();
 
         } catch (PDOException $e) {
             throw new DatabaseException(
@@ -680,8 +685,9 @@ class QueryBuilder
                 code: 500,
                 previous: $e
             );
-        } catch (DatabaseException $e) {
         }
+
+        return $result;
     }
 
     /**

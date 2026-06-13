@@ -68,6 +68,10 @@ abstract class FeatureTestCase extends PHPUnitTestCase
             $response->setContent($e->getMessage());
             return $response;
         } catch (\JsonException|NotFoundExceptionInterface|ContainerExceptionInterface $e) {
+            $response = new Response();
+            $response->setStatusCode(500);
+            $response->setContent($e->getMessage());
+            return $response;
         }
     }
 
