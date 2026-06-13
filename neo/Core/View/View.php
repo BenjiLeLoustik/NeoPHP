@@ -100,7 +100,7 @@ class View
     {
         try {
             return $this->twig->render($template, $params);
-        } catch (\Twig\Error\LoaderError $e) {
+        } catch (\Twig\Error\LoaderError|RuntimeError|SyntaxError $e) {
             return null;
         } catch (RuntimeError|SyntaxError $e) {
         }
