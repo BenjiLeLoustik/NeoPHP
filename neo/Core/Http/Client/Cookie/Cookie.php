@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Http\Client\Cookie;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Utils\Config\Config;
 
 class Cookie
@@ -11,6 +12,9 @@ class Cookie
     protected Container $container;
     protected array $config;
 
+    /**
+     * @throws ContainerException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -71,8 +75,8 @@ class Cookie
             '',
             [
                 'expires' => time() - 3600,
-                'path'    => $this->config['path'],
-                'domain'  => $this->config['domain'],
+                'path' => $this->config['path'],
+                'domain' => $this->config['domain'],
             ]
         );
 

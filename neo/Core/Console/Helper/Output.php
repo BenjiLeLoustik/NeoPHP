@@ -5,24 +5,24 @@ namespace Neo\Core\Console\Helper;
 
 final class Output
 {
-    private const RESET = "\033[0m";
-    private const BOLD = "\033[1m";
-    private const DIM = "\033[2m";
+    private const string RESET = "\033[0m";
+    private const string BOLD = "\033[1m";
+    private const string DIM = "\033[2m";
 
-    private const BLACK = "\033[30m";
-    private const RED = "\033[31m";
-    private const GREEN = "\033[32m";
-    private const YELLOW = "\033[33m";
-    private const BLUE = "\033[34m";
-    private const MAGENTA = "\033[35m";
-    private const CYAN = "\033[36m";
-    private const WHITE = "\033[37m";
+    private const string BLACK = "\033[30m";
+    private const string RED = "\033[31m";
+    private const string GREEN = "\033[32m";
+    private const string YELLOW = "\033[33m";
+    private const string BLUE = "\033[34m";
+    private const string MAGENTA = "\033[35m";
+    private const string CYAN = "\033[36m";
+    private const string WHITE = "\033[37m";
 
-    private const BG_RED = "\033[41m";
-    private const BG_GREEN = "\033[42m";
-    private const BG_YELLOW = "\033[43m";
-    private const BG_BLUE = "\033[44m";
-    private const BG_CYAN = "\033[46m";
+    private const string BG_RED = "\033[41m";
+    private const string BG_GREEN = "\033[42m";
+    private const string BG_YELLOW = "\033[43m";
+    private const string BG_BLUE = "\033[44m";
+    private const string BG_CYAN = "\033[46m";
 
     public static function success(string $message): void
     {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Profiler;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Event\EventModule;
 use Neo\Core\Event\Event\ResponseEvent;
@@ -46,6 +47,9 @@ class ProfilerModule extends AbstractModule
     public function register(Container $container): void
     {}
 
+    /**
+     * @throws ContainerException
+     */
     protected function resolveDependencies(): void
     {
         if (php_sapi_name() === 'cli') {

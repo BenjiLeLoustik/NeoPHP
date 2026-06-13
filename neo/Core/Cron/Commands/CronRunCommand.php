@@ -8,6 +8,7 @@ use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Helper\Output;
 use Neo\Core\Cron\CronRunner;
 use Neo\Core\Cron\CronScanner;
+use Neo\Core\Cron\Exception\CronException;
 use Neo\Core\DI\Container;
 
 #[Command(
@@ -18,9 +19,12 @@ use Neo\Core\DI\Container;
 final class CronRunCommand extends AbstractCommand
 {
     public function __construct(
-        private Container $container
+        private readonly Container $container
     ) {}
 
+    /**
+     * @throws CronException
+     */
     public function execute(array $args): void
     {
         try {

@@ -22,14 +22,18 @@ class TestGenerator
     private string $testsPath;
     private string $testNamespace;
 
-    public function __construct(private Container $container)
-    {
+    public function __construct(
+        private readonly Container $container
+    ) {
         $this->appName = $this->container->get('application');
         $this->srcPath = $this->container->get('srcPath') . '/' . $this->appName;
         $this->testsPath = $this->srcPath . '/Tests';
         $this->testNamespace = 'Neo\\Src\\' . $this->appName . '\\Tests';
     }
 
+    /**
+     * @throws TestingException
+     */
     public function generate(
         bool $force = false,
         ?string $onlyType  = null,
@@ -86,7 +90,10 @@ class TestGenerator
             $generated[] = str_replace($this->srcPath . '/', '', $file);
         }
 
-        return ['generated' => $generated, 'skipped' => $skipped];
+        return [
+            'generated' => $generated,
+            'skipped' => $skipped
+        ];
     }
 
     private function renderTemplate(TestClassContext $ctx): string
@@ -99,11 +106,11 @@ class TestGenerator
             && !str_contains($ctx->fqcn, 'Controller');
 
         return match(true) {
-            $isModel => (new ModelTestTemplate())->render($ctx, $testNamespace),
-            $ctx->type === TestType::Database => (new DatabaseTestTemplate())->render($ctx, $testNamespace),
-            $ctx->type === TestType::Feature => (new FeatureTestTemplate())->render($ctx, $testNamespace),
-            $ctx->type === TestType::Middleware => (new MiddlewareTestTemplate())->render($ctx, $testNamespace),
-            default => (new UnitTestTemplate())->render($ctx, $testNamespace),
+            $isModel => new ModelTestTemplate()->render($ctx, $testNamespace),
+            $ctx->type === TestType::Database => new DatabaseTestTemplate()->render($ctx, $testNamespace),
+            $ctx->type === TestType::Feature => new FeatureTestTemplate()->render($ctx, $testNamespace),
+            $ctx->type === TestType::Middleware => new MiddlewareTestTemplate()->render($ctx, $testNamespace),
+            default => new UnitTestTemplate()->render($ctx, $testNamespace),
         };
     }
 }

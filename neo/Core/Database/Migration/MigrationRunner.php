@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace Neo\Core\Database\Migration;
 
 use Neo\Core\Database\DatabaseManager;
+use Neo\Core\Database\Exception\DatabaseException;
 
 final class MigrationRunner
 {
-    private const TABLE = 'neo_migrations';
+    private const string TABLE = 'neo_migrations';
 
     public function __construct(private DatabaseManager $db)
     {
@@ -40,6 +41,9 @@ final class MigrationRunner
         );
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function getLastBatch(): int
     {
         $row = $this->db->fetch(sprintf(
@@ -70,8 +74,14 @@ final class MigrationRunner
         return array_filter($files, fn(string $f) => !isset($applied[basename($f, '.php')]));
     }
 
-    public function run(string $migrationsPath, bool $dryRun = false, ?MigrationSchemaSnapshot $snapshot = null): array
-    {
+    /**
+     * @throws DatabaseException
+     */
+    public function run(
+        string $migrationsPath,
+        bool $dryRun = false,
+        ?MigrationSchemaSnapshot $snapshot = null
+    ): array {
         $pending = $this->getPending($migrationsPath);
 
         if (count($pending) === 0) {
@@ -106,6 +116,9 @@ final class MigrationRunner
         return $ran;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function rollback(string $migrationsPath, ?MigrationSchemaSnapshot $snapshot = null): array
     {
         $lastBatch = $this->getLastBatch();

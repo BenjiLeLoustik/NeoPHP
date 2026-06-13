@@ -4,17 +4,22 @@ declare(strict_types=1);
 namespace Neo\Core\Utils\Config;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Utils\Config\Exception\ConfigException;
 
 class Config
 {
-    private const CONFIG_EXTENSION = '.config.php';
-    private const CONFIG_TEST_EXTENSION = '.config.test.php';
+    private const string CONFIG_EXTENSION = '.config.php';
+    private const string CONFIG_TEST_EXTENSION = '.config.test.php';
 
     private array $configs = [];
     private array $current = [];
     private Container $container;
 
+    /**
+     * @throws ContainerException
+     * @throws ConfigException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -28,6 +33,9 @@ class Config
         }
     }
 
+    /**
+     * @throws ConfigException
+     */
     private function loadConfigurations(string $configDir): void
     {
         $pattern = rtrim($configDir, '/\\') . DIRECTORY_SEPARATOR . '*' . self::CONFIG_EXTENSION;
@@ -50,6 +58,9 @@ class Config
         }
     }
 
+    /**
+     * @throws ConfigException
+     */
     private function loadTestConfiguration(string $testConfigDir): void
     {
         $pattern = rtrim($testConfigDir, '/\\') . DIRECTORY_SEPARATOR . '*' . self::CONFIG_TEST_EXTENSION;
@@ -88,6 +99,9 @@ class Config
         return $base;
     }
 
+    /**
+     * @throws ConfigException
+     */
     public function from(string $key): self
     {
         if (!isset($this->configs[$key])) {
@@ -103,6 +117,9 @@ class Config
         return $this;
     }
 
+    /**
+     * @throws ConfigException
+     */
     public function get(string $path, mixed $default = null): mixed
     {
         $this->assertSelected();
@@ -119,12 +136,18 @@ class Config
         return $value;
     }
 
+    /**
+     * @throws ConfigException
+     */
     public function all(): array
     {
         $this->assertSelected();
         return $this->current;
     }
 
+    /**
+     * @throws ConfigException
+     */
     private function assertSelected(): void
     {
         if (empty($this->current)) {

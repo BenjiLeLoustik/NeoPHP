@@ -5,9 +5,11 @@ namespace Neo\Core\Profiler\Toolbar;
 
 use Neo\Core\Profiler\Profiler;
 
-class Toolbar
+readonly class Toolbar
 {
-    public function __construct(private readonly Profiler $profiler) {}
+    public function __construct(
+        private Profiler $profiler
+    ) {}
 
     public function render(): string
     {

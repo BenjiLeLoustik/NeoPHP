@@ -4,9 +4,11 @@ declare(strict_types=1);
 namespace Neo\Core\Security\Auth\Guard;
 
 use Neo\Core\Database\DatabaseConnection;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Auth\Exception\AuthException;
+use Neo\Core\Security\Auth\Exception\JwtException;
 use Neo\Core\Security\Auth\JwtManager;
 use Neo\Core\Security\Auth\PasswordManager;
 
@@ -15,15 +17,18 @@ final class TokenGuard implements GuardInterface
     private ?array $payload = null;
 
     public function __construct(
-        private Request $request,
-        private JwtManager $jwtManager,
-        private PasswordManager $passwordManager,
-        private string $model,
-        private string $identifier,
-        private string $password,
-        private array $role = []
+        private readonly Request $request,
+        private readonly JwtManager $jwtManager,
+        private readonly PasswordManager $passwordManager,
+        private readonly string $model,
+        private readonly string $identifier,
+        private readonly string $password,
+        private readonly array $role = []
     ) {}
 
+    /**
+     * @throws AuthException
+     */
     public function attempt(array $credentials): bool
     {
         $identifierField = $this->identifier;
@@ -75,6 +80,10 @@ final class TokenGuard implements GuardInterface
         return $this->jwtManager->isValid($token);
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws AuthException
+     */
     public function user(): ?AbstractModel
     {
         if (!$this->check()) {
@@ -102,6 +111,10 @@ final class TokenGuard implements GuardInterface
         return new $modelClass($row);
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws AuthException
+     */
     public function hasRole(string $role): bool
     {
         if (empty($this->role)) {
@@ -148,6 +161,10 @@ final class TokenGuard implements GuardInterface
         ]);
     }
 
+    /**
+     * @throws AuthException
+     * @throws JwtException
+     */
     public function getPayload(): array
     {
         if ($this->payload === null) {
@@ -178,6 +195,10 @@ final class TokenGuard implements GuardInterface
         return substr($header, 7);
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws AuthException
+     */
     private function findByIdentifier(mixed $value): ?AbstractModel
     {
         $modelClass = $this->model;

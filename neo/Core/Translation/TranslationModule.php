@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Translation;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\ClientModule;
 use Neo\Core\Module\AbstractModule;
 use Neo\Core\Utils\Config\ConfigModule;
@@ -27,6 +28,9 @@ class TranslationModule extends AbstractModule
         $container->tag(TranslationViewExtension::class, 'twig.extension');
     }
 
+    /**
+     * @throws ContainerException
+     */
     protected function resolveDependencies(): void
     {
         TranslationRegistry::registerPath(

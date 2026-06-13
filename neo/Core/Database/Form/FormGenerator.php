@@ -6,12 +6,19 @@ namespace Neo\Core\Database\Form;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class FormGenerator
 {
     protected Container $container;
     private string $formDir;
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     * @throws DatabaseException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -26,6 +33,11 @@ class FormGenerator
         }
     }
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     * @throws DatabaseException
+     */
     public function generate(string $modelClass): string
     {
         $modelParts = explode('\\', $modelClass);

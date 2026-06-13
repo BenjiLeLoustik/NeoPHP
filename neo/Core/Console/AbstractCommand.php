@@ -27,7 +27,7 @@ class AbstractCommand implements CommandInterface
 
     public function getName(): string
     {
-        $attr = (new \ReflectionClass($this))
+        $attr = new \ReflectionClass($this)
             ->getAttributes(Command::class)[0] ?? null;
 
         return $attr?->newInstance()->name ?? '';
@@ -35,7 +35,7 @@ class AbstractCommand implements CommandInterface
 
     public function getDescription(): string
     {
-        $attr = (new \ReflectionClass($this))
+        $attr = new \ReflectionClass($this)
             ->getAttributes(Command::class)[0] ?? null;
 
         return $attr?->newInstance()->description ?? '';

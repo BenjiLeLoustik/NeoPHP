@@ -5,9 +5,11 @@ namespace Neo\Core\Security\Auth;
 
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Auth\Exception\AuthException;
+use Neo\Core\Security\Auth\Exception\JwtException;
 use Neo\Core\Security\Auth\Guard\GuardInterface;
 use Neo\Core\Security\Auth\Guard\SessionGuard;
 use Neo\Core\Security\Auth\Guard\TokenGuard;
@@ -19,6 +21,10 @@ class AuthManager
     private ?GuardInterface $guard = null;
     private array $config;
 
+    /**
+     * @throws ContainerException
+     * @throws AuthException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -42,18 +48,27 @@ class AuthManager
         $this->guard = $this->resolveGuard();
     }
 
+    /**
+     * @throws AuthException
+     */
     public function attempt(array $credentials): bool
     {
         $this->ensureEnabled();
         return $this->guard->attempt($credentials);
     }
 
+    /**
+     * @throws AuthException
+     */
     public function login(AbstractModel $user): void
     {
         $this->ensureEnabled();
         $this->guard->login($user);
     }
 
+    /**
+     * @throws AuthException
+     */
     public function logout(): void
     {
         $this->ensureEnabled();
@@ -78,6 +93,9 @@ class AuthManager
         return $this->guard->hasRole($role);
     }
 
+    /**
+     * @throws AuthException
+     */
     public function generateToken(AbstractModel $user): string
     {
         $this->ensureEnabled();
@@ -93,6 +111,10 @@ class AuthManager
         return $this->guard->generateToken($user);
     }
 
+    /**
+     * @throws ContainerException
+     * @throws JwtException
+     */
     private function resolveGuard(): GuardInterface
     {
         $guardType = $this->config['guard'] ?? 'session';
@@ -124,6 +146,9 @@ class AuthManager
         };
     }
 
+    /**
+     * @throws AuthException
+     */
     private function ensureEnabled(): void
     {
         if ($this->guard === null) {

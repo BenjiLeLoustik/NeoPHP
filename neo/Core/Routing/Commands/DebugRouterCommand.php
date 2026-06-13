@@ -18,7 +18,7 @@ use Neo\Core\Routing\Router;
 )]
 final class DebugRouterCommand extends AbstractCommand
 {
-    private const METHOD_COLORS = [
+    private const array METHOD_COLORS = [
         'GET' => 'green',
         'POST' => 'yellow',
         'PUT' => 'cyan',
@@ -27,7 +27,7 @@ final class DebugRouterCommand extends AbstractCommand
     ];
 
     public function __construct(
-        private Container $container
+        private readonly Container $container
     ) {}
 
     public function execute(array $args): void

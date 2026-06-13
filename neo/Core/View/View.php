@@ -4,10 +4,13 @@ declare(strict_types=1);
 namespace Neo\Core\View;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\View\Exception\ViewException;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 use Twig\Environment;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use Twig\Extension\CoreExtension;
 use Twig\Extension\DebugExtension;
 use Twig\Extra\Intl\IntlExtension;
@@ -20,6 +23,9 @@ class View
     protected Container $container;
     private Environment $twig;
 
+    /**
+     * @throws ContainerException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -59,6 +65,9 @@ class View
         $this->twig->addGlobal('app', $appConfig);
     }
 
+    /**
+     * @throws ViewException
+     */
     public function render(string $template, array $params = []): string
     {
         try {
@@ -93,6 +102,7 @@ class View
             return $this->twig->render($template, $params);
         } catch (\Twig\Error\LoaderError $e) {
             return null;
+        } catch (RuntimeError|SyntaxError $e) {
         }
     }
 

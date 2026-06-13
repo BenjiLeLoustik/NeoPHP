@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Security\Auth\Guard;
 
 use Neo\Core\Database\DatabaseConnection;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Security\Auth\Exception\AuthException;
@@ -11,17 +12,20 @@ use Neo\Core\Security\Auth\PasswordManager;
 
 final class SessionGuard implements GuardInterface
 {
-    private const SESSION_KEY = '_auth_user_id';
+    private const string SESSION_KEY = '_auth_user_id';
 
     public function __construct(
-        private Session $session,
-        private PasswordManager $passwordManager,
-        private string $model,
-        private string $identifier,
-        private string $password,
-        private array $role = []
+        private readonly Session $session,
+        private readonly PasswordManager $passwordManager,
+        private readonly string $model,
+        private readonly string $identifier,
+        private readonly string $password,
+        private readonly array $role = []
     ) {}
 
+    /**
+     * @throws AuthException
+     */
     public function attempt(array $credentials): bool
     {
         $identifierField = $this->identifier;
@@ -102,6 +106,9 @@ final class SessionGuard implements GuardInterface
         return new $modelClass($row);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function hasRole(string $role): bool
     {
         if (empty($this->role)) {
@@ -139,6 +146,10 @@ final class SessionGuard implements GuardInterface
         return $roleModel->{$field} === $role;
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws AuthException
+     */
     private function findByIdentifier(mixed $value): ?AbstractModel
     {
         $modelClass = $this->model;

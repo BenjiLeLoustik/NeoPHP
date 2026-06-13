@@ -5,7 +5,9 @@ namespace Neo\Core\Testing;
 
 use Neo\App;
 use Neo\Core\Database\DatabaseConnection;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use PDO;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
@@ -15,6 +17,10 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
     protected PDO $pdo;
     protected static ?App $app = null;
 
+    /**
+     * @throws DatabaseException
+     * @throws ContainerException
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -39,6 +45,9 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
         parent::tearDown();
     }
 
+    /**
+     * @throws ContainerException
+     */
     protected function get(string $id): mixed
     {
         return $this->container->get($id);

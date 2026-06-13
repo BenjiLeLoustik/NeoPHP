@@ -4,11 +4,17 @@ declare(strict_types=1);
 namespace Neo\Core\Database\Migration;
 
 use Neo\Core\Database\DatabaseIntrospector;
+use Neo\Core\Database\Exception\DatabaseException;
 
 final class MigrationGenerator
 {
-    public function __construct(private DatabaseIntrospector $introspector) {}
+    public function __construct(
+        private readonly DatabaseIntrospector $introspector
+    ) {}
 
+    /**
+     * @throws DatabaseException
+     */
     public function generate(string $migrationsPath, string $name): string
     {
         if (!is_dir($migrationsPath)) {
@@ -52,6 +58,9 @@ PHP;
         return $file;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function buildUpBody(array $tables): string
     {
         $lines = [];

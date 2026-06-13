@@ -37,8 +37,8 @@ class PathExtension
 
     public function relative(string $from, string $to): string
     {
-        $from  = explode(DIRECTORY_SEPARATOR, $this->normalize($from));
-        $to    = explode(DIRECTORY_SEPARATOR, $this->normalize($to));
+        $from = explode(DIRECTORY_SEPARATOR, $this->normalize($from));
+        $to = explode(DIRECTORY_SEPARATOR, $this->normalize($to));
         $common = 0;
 
         foreach ($from as $i => $part) {
@@ -49,7 +49,7 @@ class PathExtension
             }
         }
 
-        $up   = array_fill(0, count($from) - $common, '..');
+        $up = array_fill(0, count($from) - $common, '..');
         $down = array_slice($to, $common);
 
         return implode(DIRECTORY_SEPARATOR, array_merge($up, $down)) ?: '.';
@@ -82,7 +82,7 @@ class PathExtension
 
     public function withoutExtension(string $path): string
     {
-        $dir  = $this->dirname($path);
+        $dir = $this->dirname($path);
         $name = $this->filename($path);
         return $dir !== '.' ? $dir . DIRECTORY_SEPARATOR . $name : $name;
     }

@@ -7,7 +7,9 @@ use Neo\Core\Security\Auth\AuthManager;
 
 class AuthCollector implements CollectorInterface
 {
-    public function __construct(private readonly AuthManager $auth) {}
+    public function __construct(
+        private readonly AuthManager $auth
+    ) {}
 
     public function getName(): string
     {

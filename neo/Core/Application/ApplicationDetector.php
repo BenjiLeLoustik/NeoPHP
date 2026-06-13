@@ -5,6 +5,8 @@ namespace Neo\Core\Application;
 use Neo\Core\Application\Exception\ApplicationException;
 use Neo\Core\DI\Container;
 use Neo\Core\Http\Request;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class ApplicationDetector
 {
@@ -12,6 +14,9 @@ class ApplicationDetector
         private readonly Container $container
     ){}
 
+    /**
+     * @throws ApplicationException
+     */
     public function detect(): void
     {
         if (php_sapi_name() === 'cli') {
@@ -22,6 +27,9 @@ class ApplicationDetector
         $this->detectFromHttp();
     }
 
+    /**
+     * @throws ApplicationException
+     */
     private function detectFromCli(): void
     {
         if (!empty($GLOBALS['_NEO_TEST_PROJECT'])) {
@@ -50,6 +58,11 @@ class ApplicationDetector
         $this->container->set('application', $project);
     }
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws ApplicationException
+     * @throws NotFoundExceptionInterface
+     */
     private function detectFromHttp(): void
     {
         $request = $this->container->get(Request::class);

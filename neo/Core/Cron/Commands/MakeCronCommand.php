@@ -17,7 +17,7 @@ use Neo\Core\Console\Helper\Output;
 )]
 final class MakeCronCommand extends AbstractCommand
 {
-    private const COMMON_EXPRESSIONS = [
+    private const array COMMON_EXPRESSIONS = [
         '* * * * *',
         '0 * * * *',
         '0 0 * * *',

@@ -12,6 +12,9 @@ final class JwtManager
     private int $expiration;
     private string $algorithm;
 
+    /**
+     * @throws JwtException
+     */
     public function __construct(string $secret, int $expiration = 3600, string $algorithm = 'HS256')
     {
         if (empty($secret)) {
@@ -45,6 +48,9 @@ final class JwtManager
         return "$header.$payload.$signature";
     }
 
+    /**
+     * @throws JwtException
+     */
     public function decode(string $token): array
     {
         $parts = explode('.', $token);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Event;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\Attribute\AsListener;
 use Neo\Core\Event\Contract\EventInterface;
 use Neo\Core\Event\Contract\EventSubscriberInterface;
@@ -31,6 +32,10 @@ class EventDispatcher
         }
     }
 
+    /**
+     * @throws EventException
+     * @throws ContainerException
+     */
     private function scanListeners(): void
     {
         $cacheFile = $this->container->get('storagePath') . '/var/cache/events/listeners.php';
@@ -119,6 +124,10 @@ class EventDispatcher
         }
     }
 
+    /**
+     * @throws EventException
+     * @throws ContainerException
+     */
     public function dispatch(EventInterface $event): EventInterface
     {
         $eventClass = get_class($event);
@@ -128,13 +137,11 @@ class EventDispatcher
         $t0 = microtime(true);
 
         foreach ($listeners as $meta) {
-            if ($event->isPropagationStopped()) break;
-
-            if (isset($meta['instance'])) {
-                $listener = $meta['instance'];
-            } else {
-                $listener = $this->container->get($meta['class']);
+            if ($event->isPropagationStopped()) {
+                break;
             }
+
+            $listener = $meta['instance'] ?? $this->container->get($meta['class']);
 
             $method = $meta['method'] ?? 'handle';
 
@@ -159,8 +166,12 @@ class EventDispatcher
         return $event;
     }
 
-    public function addListener(string $eventClass, string $listenerClass, int $priority = 0, string $method = 'handle'): void
-    {
+    public function addListener(
+        string $eventClass,
+        string $listenerClass,
+        int $priority = 0,
+        string $method = 'handle'
+    ): void {
         $this->listeners[$eventClass][] = array(
             'class' => $listenerClass,
             'method' => $method,

@@ -13,6 +13,9 @@ final class TranslationWriter
         $this->loader = $loader;
     }
 
+    /**
+     * @throws TranslationException
+     */
     public function ensure(
         string $locale,
         string $file,
@@ -46,6 +49,9 @@ final class TranslationWriter
         }
     }
 
+    /**
+     * @throws TranslationException
+     */
     private function createFile(string $filePath): void
     {
         $dir = dirname($filePath);
@@ -79,6 +85,9 @@ final class TranslationWriter
         return true;
     }
 
+    /**
+     * @throws TranslationException
+     */
     private function writeKey(
         string $filePath,
         array $translations,
@@ -100,6 +109,9 @@ final class TranslationWriter
         $this->dumpPhpFile($filePath, $translations);
     }
 
+    /**
+     * @throws TranslationException
+     */
     private function dumpPhpFile(string $filePath, array $translations): void
     {
         $content = "<?php\n\nreturn " . $this->arrayToPhp($translations) . ";\n";

@@ -3,13 +3,19 @@
 namespace Neo\Core\Application;
 
 use Neo\Core\DI\Container;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
-class ApplicationPaths
+readonly class ApplicationPaths
 {
     public function __construct(
-        protected readonly Container $container
+        protected Container $container
     ) {}
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
     public function register(): void
     {
         $appName  = $this->container->get('application');

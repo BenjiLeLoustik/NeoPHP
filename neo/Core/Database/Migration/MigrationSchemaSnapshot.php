@@ -5,14 +5,15 @@ namespace Neo\Core\Database\Migration;
 
 use Neo\Core\Database\DatabaseIntrospector;
 use Neo\Core\Database\DatabaseManager;
+use Neo\Core\Database\Exception\DatabaseException;
 
 final class MigrationSchemaSnapshot
 {
-    private const TABLE = 'neo_schema_snapshots';
+    private const string TABLE = 'neo_schema_snapshots';
 
     public function __construct(
-        private DatabaseManager $db,
-        private DatabaseIntrospector $introspector
+        private readonly DatabaseManager $db,
+        private readonly DatabaseIntrospector $introspector
     ) {
         $this->ensureTable();
     }
@@ -67,6 +68,9 @@ final class MigrationSchemaSnapshot
         return $last !== $this->getCurrentHash();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function buildDump(): string
     {
         $tables = $this->introspector->getTables();

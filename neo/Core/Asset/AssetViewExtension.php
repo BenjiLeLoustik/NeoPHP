@@ -5,9 +5,9 @@ namespace Neo\Core\Asset;
 
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
-final class AssetViewExtension implements TwigExtensionInterface
+final readonly class AssetViewExtension implements TwigExtensionInterface
 {
-    public function __construct(private readonly AssetHandler $handler) {}
+    public function __construct(private AssetHandler $handler) {}
 
     public function getFunctions(): array
     {

@@ -5,6 +5,7 @@ namespace Neo\Core\Testing;
 
 use Neo\App;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
@@ -30,6 +31,9 @@ abstract class MiddlewareTestCase extends PHPUnitTestCase
         parent::tearDown();
     }
 
+    /**
+     * @throws ContainerException
+     */
     protected function get(string $id): mixed
     {
         return $this->container->get($id);
@@ -40,6 +44,9 @@ abstract class MiddlewareTestCase extends PHPUnitTestCase
         $this->container->set($id, fn() => $value);
     }
 
+    /**
+     * @throws ContainerException
+     */
     protected function makeMiddleware(string $middlewareClass, array $params = []): MiddlewareInterface
     {
         $instance = empty($params)

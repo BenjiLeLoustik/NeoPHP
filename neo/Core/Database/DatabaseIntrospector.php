@@ -13,11 +13,17 @@ class DatabaseIntrospector
 {
     private PDO $pdo;
 
+    /**
+     * @throws DatabaseException
+     */
     public function __construct(Container $container)
     {
         $this->pdo = DatabaseConnection::getPdo();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function getTables(): array
     {
         try {
@@ -48,6 +54,9 @@ class DatabaseIntrospector
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function getColumns(string $table): array
     {
         try {

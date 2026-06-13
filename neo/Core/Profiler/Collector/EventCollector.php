@@ -9,7 +9,9 @@ class EventCollector implements CollectorInterface
 {
     private array $events = [];
 
-    public function __construct(private readonly EventDispatcher $dispatcher) {}
+    public function __construct(
+        private readonly EventDispatcher $dispatcher
+    ) {}
 
     public function getName(): string
     {

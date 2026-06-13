@@ -9,6 +9,8 @@ use Neo\Core\Asset\Compiler\LessCompiler;
 use Neo\Core\Asset\Exception\AssetException;
 use Neo\Core\DI\Container;
 use Neo\Core\Utils\Config\Config;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class AssetHandler
 {
@@ -21,6 +23,11 @@ class AssetHandler
     private string $env;
     private string $publicPath;
 
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     * @throws AssetException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -37,6 +44,9 @@ class AssetHandler
         $this->loadManifest();
     }
 
+    /**
+     * @throws AssetException
+     */
     private function loadManifest(): void
     {
         if (!file_exists($this->manifestPath)) {
@@ -56,6 +66,9 @@ class AssetHandler
         $this->manifest = json_decode($json, true) ?: [];
     }
 
+    /**
+     * @throws AssetException
+     */
     private function saveManifest(): void
     {
         $dir = dirname($this->manifestPath);
@@ -82,6 +95,9 @@ class AssetHandler
         }
     }
 
+    /**
+     * @throws AssetException
+     */
     public function getAssetPath(string $path): string
     {
         if ($this->env === 'prod') {
@@ -111,6 +127,9 @@ class AssetHandler
         return $this->compile($path);
     }
 
+    /**
+     * @throws AssetException
+     */
     private function compile(string $path): string
     {
         $ext = pathinfo($path, PATHINFO_EXTENSION);

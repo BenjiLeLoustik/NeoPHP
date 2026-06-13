@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Error;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Event\ExceptionEvent;
 use Neo\Core\Event\EventDispatcher;
@@ -79,6 +80,9 @@ class ErrorHandler
         set_error_handler([$this, 'handleError']);
     }
 
+    /**
+     * @throws ContainerException
+     */
     public function handleException(\Throwable $e): never
     {
         $env = $this->getEnv();
@@ -144,6 +148,9 @@ class ErrorHandler
         exit;
     }
 
+    /**
+     * @throws ContainerException
+     */
     public function handleError(int $errno, string $errstr, string $errfile, int $errline): bool
     {
         if (!(error_reporting() & $errno)) {

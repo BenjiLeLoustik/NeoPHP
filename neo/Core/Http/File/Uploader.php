@@ -4,17 +4,24 @@ declare(strict_types=1);
 namespace Neo\Core\Http\File;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\File\Exception\UploaderException;
 
 class Uploader
 {
     private string $assetsPath;
 
+    /**
+     * @throws ContainerException
+     */
     public function __construct(Container $container)
     {
         $this->assetsPath = rtrim($container->get('assetsPath'), '/');
     }
 
+    /**
+     * @throws UploaderException
+     */
     public function upload(
         UploadedFile $file,
         string $name,
@@ -24,7 +31,7 @@ class Uploader
         if (!$file->isValid()) {
             throw new UploaderException(
                 title: 'Invalid File',
-                message: sprintf('Invalid uploaded file.'),
+                message: 'Invalid uploaded file.',
                 code: 500,
             );
         }
@@ -65,7 +72,7 @@ class Uploader
         if (!move_uploaded_file($file->getTempPath(), $destination)) {
             throw new UploaderException(
                 title: 'Upload Failed',
-                message: sprintf('Upload failed.'),
+                message: 'Upload failed.',
                 code: 500,
                 context: []
             );

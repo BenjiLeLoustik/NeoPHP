@@ -3,6 +3,7 @@
 namespace Neo\Core\Utils\Config;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\AbstractModule;
 
 class ConfigModule extends AbstractModule
@@ -17,6 +18,9 @@ class ConfigModule extends AbstractModule
         $container->set(Config::class, fn(Container $c) => new Config($c));
     }
 
+    /**
+     * @throws ContainerException
+     */
     protected function resolveDependencies(): void
     {
         $this->get(Config::class);

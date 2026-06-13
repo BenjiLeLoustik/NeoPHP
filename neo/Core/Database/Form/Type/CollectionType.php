@@ -62,15 +62,15 @@ class CollectionType extends AbstractType
         foreach ($entryFields as $fieldName => $fieldConfig) {
             [$typeClass, $options] = $this->resolveFieldConfig($fieldConfig);
 
-            $inputName    = sprintf('%s[%s][%s]', $collectionName, $index, $fieldName);
-            $inputId      = sprintf('%s_%s_%s', $collectionName, $index, $fieldName);
-            $inputType    = $this->resolveHtmlInputType($typeClass);
-            $value        = self::escape((string)($values[$fieldName] ?? $options['value'] ?? ''));
-            $labelText    = self::escape($options['label'] ?? ucfirst($fieldName));
-            $extraAttrs   = $this->buildExtraAttrs($options);
+            $inputName = sprintf('%s[%s][%s]', $collectionName, $index, $fieldName);
+            $inputId = sprintf('%s_%s_%s', $collectionName, $index, $fieldName);
+            $inputType = $this->resolveHtmlInputType($typeClass);
+            $value = self::escape((string)($values[$fieldName] ?? $options['value'] ?? ''));
+            $labelText = self::escape($options['label'] ?? ucfirst($fieldName));
+            $extraAttrs = $this->buildExtraAttrs($options);
 
-            $errorKey     = sprintf('%s[%s][%s]', $collectionName, $index, $fieldName);
-            $fieldErrors  = $collectionErrors[$errorKey] ?? [];
+            $errorKey = sprintf('%s[%s][%s]', $collectionName, $index, $fieldName);
+            $fieldErrors = $collectionErrors[$errorKey] ?? [];
             $controlClass = 'form-control' . (!empty($fieldErrors) ? ' form-control--error' : '');
 
             $html .= '<div class="form-field">';
@@ -98,8 +98,8 @@ class CollectionType extends AbstractType
 
         $html .= sprintf(
             '<button type="button" class="collection-remove" aria-label="%s">%s</button>',
-            strip_tags($deleteLabel), // aria-label sans HTML
-            $deleteLabel              // contenu brut
+            strip_tags($deleteLabel),
+            $deleteLabel
         );
 
         $html .= '</div>'; // collection-entry
@@ -119,7 +119,7 @@ class CollectionType extends AbstractType
 
     public function getEntries(FormField $field): array
     {
-        $entries    = $field->getValue() ?? [];
+        $entries = $field->getValue() ?? [];
         $normalized = [];
 
         foreach ($entries as $entry) {
@@ -157,15 +157,13 @@ class CollectionType extends AbstractType
         }
 
         $modelClass = $field?->getOption('entry_model');
-        $result     = [];
+        $result = [];
 
         foreach ($value as $entry) {
             if (!is_array($entry)) {
                 continue;
             }
 
-            // On garde l'entrée même si certains champs sont vides,
-            // la validation s'en chargera
             if ($modelClass !== null && class_exists($modelClass)) {
                 $result[] = new $modelClass($entry);
             } else {
@@ -178,10 +176,10 @@ class CollectionType extends AbstractType
 
     public function validateEntries(FormField $field, Validator $validator): array
     {
-        $entries    = $field->getValue() ?? [];
-        $name       = $field->getName();
+        $entries = $field->getValue() ?? [];
+        $name = $field->getName();
         $modelClass = $field->getOption('entry_model');
-        $errors     = [];
+        $errors = [];
 
         if ($modelClass === null || !class_exists($modelClass)) {
             return [];
@@ -195,7 +193,7 @@ class CollectionType extends AbstractType
             $entryErrors = $validator->validate($model);
 
             foreach ($entryErrors as $fieldName => $messages) {
-                $key          = sprintf('%s[%d][%s]', $name, $index, $fieldName);
+                $key = sprintf('%s[%d][%s]', $name, $index, $fieldName);
                 $errors[$key] = $messages;
             }
         }
@@ -220,8 +218,8 @@ class CollectionType extends AbstractType
             str_ends_with($typeClass, 'NumberType') => 'number',
             str_ends_with($typeClass, 'EmailType')  => 'email',
             str_ends_with($typeClass, 'HiddenType') => 'hidden',
-            str_ends_with($typeClass, 'DateType')   => 'date',
-            default                                 => 'text',
+            str_ends_with($typeClass, 'DateType') => 'date',
+            default => 'text',
         };
     }
 

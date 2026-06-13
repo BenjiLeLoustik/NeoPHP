@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Utils\Mailer;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Logger\Logger;
 use Neo\Core\View\View;
@@ -23,8 +24,12 @@ class Mailer
     private bool $enabled;
     private array $config;
 
-    public function __construct(private Container $container)
-    {
+    /**
+     * @throws ContainerException
+     */
+    public function __construct(
+        private readonly Container $container
+    ){
         $this->config = $container->get(Config::class)->from('mailer')->all();
         $this->enabled = $this->config['enabled'] ?? false;
     }
@@ -48,6 +53,9 @@ class Mailer
         return $this;
     }
 
+    /**
+     * @throws ContainerException
+     */
     public function template(string $template, array $data = []): static
     {
         $this->body = $this->container->get(View::class)->render($template, $data);
@@ -56,22 +64,34 @@ class Mailer
 
     public function cc(string $address, string $name = ''): static
     {
-        $this->cc[] = ['address' => $address, 'name' => $name];
+        $this->cc[] = [
+            'address' => $address,
+            'name' => $name
+        ];
         return $this;
     }
 
     public function bcc(string $address, string $name = ''): static
     {
-        $this->bcc[] = ['address' => $address, 'name' => $name];
+        $this->bcc[] = [
+            'address' => $address,
+            'name' => $name
+        ];
         return $this;
     }
 
     public function attach(string $path, string $name = ''): static
     {
-        $this->attachments[] = ['path' => $path, 'name' => $name];
+        $this->attachments[] = [
+            'path' => $path,
+            'name' => $name
+        ];
         return $this;
     }
 
+    /**
+     * @throws ContainerException
+     */
     public function send(): bool
     {
         if (!$this->enabled) {

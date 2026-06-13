@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Routing;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
 use Neo\Core\Profiler\Profiler;
@@ -24,6 +25,9 @@ class Router
     private string $controllersPath;
     private ?string $currentRouteName = null;
 
+    /**
+     * @throws ContainerException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -33,11 +37,17 @@ class Router
         $this->scanControllers();
     }
 
+    /**
+     * @throws ContainerException
+     */
     private function isDebug(): bool
     {
         return $this->container->get(Config::class)->from('app')->get('environment') === 'dev';
     }
 
+    /**
+     * @throws ContainerException
+     */
     private function scanControllers(): void
     {
         $cacheFile = $this->container->get('storagePath') . '/var/cache/router/routes.php';
@@ -134,6 +144,10 @@ class Router
         }
     }
 
+    /**
+     * @throws RouterException
+     * @throws RouteNotFoundException
+     */
     public function dispatch(Request $request, Response $response): Response
     {
         $method = strtoupper($request->getMethod());
@@ -208,6 +222,9 @@ class Router
         return false;
     }
 
+    /**
+     * @throws RouterException
+     */
     private function invokeHandler(array $routeInfo, array $params): mixed
     {
         try {

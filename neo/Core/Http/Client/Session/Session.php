@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Http\Client\Session;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Utils\Config\Config;
 
@@ -12,6 +13,10 @@ class Session
     protected Container $container;
     protected array $config;
 
+    /**
+     * @throws FrameworkException
+     * @throws ContainerException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -26,6 +31,10 @@ class Session
         }
     }
 
+    /**
+     * @throws FrameworkException
+     * @throws ContainerException
+     */
     protected function configureSession(): void
     {
         if (!$this->config['enabled']) {
@@ -49,7 +58,7 @@ class Session
             if (!is_dir($savePath) && !mkdir($savePath, 0777, true) && !is_dir($savePath)) {
                 throw new FrameworkException(
                     title: 'Session Storage Error',
-                    message: "Impossible de créer le répertoire de stockage des sessions '{$savePath}'.",
+                    message: sprintf("Failed to create the session storage directory '%s'.", $savePath),
                     code: 500
                 );
             }

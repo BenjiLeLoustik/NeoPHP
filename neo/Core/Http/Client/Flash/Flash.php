@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Http\Client\Flash;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Utils\Config\Config;
@@ -14,6 +15,9 @@ class Flash
     private array $config;
     private string $flashKey;
 
+    /**
+     * @throws ContainerException
+     */
     public function __construct(Container $container)
     {
         $configObj = $container->get(Config::class);
@@ -32,6 +36,9 @@ class Flash
         }
     }
 
+    /**
+     * @throws FrameworkException
+     */
     public function add(string $type, string $message): void
     {
         if (!in_array($type, $this->config['types'], true)) {

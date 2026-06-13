@@ -3,6 +3,7 @@
 namespace Neo\Core\Translation;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Translation\Interface\TranslationCollectorInterface;
 use Neo\Core\Translation\Interface\TranslatorInterface;
@@ -19,6 +20,9 @@ class TranslationManager implements TranslatorInterface
     private bool $enabled;
     private ?TranslationCollectorInterface $collector = null;
 
+    /**
+     * @throws ContainerException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -32,6 +36,10 @@ class TranslationManager implements TranslatorInterface
         $this->writer = new TranslationWriter($this->loader);
     }
 
+    /**
+     * @throws TranslationException
+     * @throws ContainerException
+     */
     public function setLocale(string $locale, int $lifetime = 31536000): void
     {
         $translationConfig = $this->container
@@ -58,6 +66,9 @@ class TranslationManager implements TranslatorInterface
         $cookie->set('lang', $locale, time() + $lifetime, '/', null, false, true);
     }
 
+    /**
+     * @throws TranslationException
+     */
     public function translate(
         string $key,
         ?string $defaultMessage = null,
@@ -126,6 +137,9 @@ class TranslationManager implements TranslatorInterface
         return $this->locale;
     }
 
+    /**
+     * @throws ContainerException
+     */
     public function getLocales(): array
     {
         return $this->container
@@ -139,6 +153,9 @@ class TranslationManager implements TranslatorInterface
         return $this->enabled;
     }
 
+    /**
+     * @throws TranslationException
+     */
     public function registerKeyIfNotExists(
         string $key,
         ?string $value = null,

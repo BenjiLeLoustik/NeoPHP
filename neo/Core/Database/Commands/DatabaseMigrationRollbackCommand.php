@@ -22,7 +22,9 @@ use Neo\Core\DI\Container;
 )]
 final class DatabaseMigrationRollbackCommand extends AbstractCommand
 {
-    public function __construct(private Container $container) {}
+    public function __construct(
+        private Container $container
+    ) {}
 
     public function execute(array $args): void
     {

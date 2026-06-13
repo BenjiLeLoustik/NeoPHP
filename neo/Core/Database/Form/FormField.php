@@ -13,7 +13,7 @@ class FormField
     private AbstractType $type;
     private array $options;
     private array $errors = [];
-    private $value = null;
+    private mixed $value = null;
     private array $wrapperAttributes = [];
     private array $collectionErrors = [];
 

@@ -8,6 +8,9 @@ final class TranslationLoader
 {
     private array $cache = [];
 
+    /**
+     * @throws TranslationException
+     */
     public function load(string $locale, string $file): array
     {
         $cacheKey = "$locale.$file";

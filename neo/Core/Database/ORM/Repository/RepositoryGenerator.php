@@ -5,12 +5,19 @@ namespace Neo\Core\Database\ORM\Repository;
 
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class RepositoryGenerator
 {
     protected Container $container;
     private string $repoDir;
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     * @throws DatabaseException
+     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -25,6 +32,11 @@ class RepositoryGenerator
         }
     }
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws DatabaseException
+     * @throws NotFoundExceptionInterface
+     */
     public function generate(string $modelClass, bool $force = false): string
     {
         $modelParts = explode('\\', $modelClass);

@@ -2,10 +2,12 @@
 
 namespace Neo\Core\Security\Auth;
 
+use Random\RandomException;
+
 final class PasswordManager
 {
-    private const DEFAULT_ALGO = PASSWORD_DEFAULT;
-    private const DEFAULT_OPTIONS = [ 'cost' => 12 ];
+    private const string DEFAULT_ALGO = PASSWORD_DEFAULT;
+    private const array DEFAULT_OPTIONS = [ 'cost' => 12 ];
 
     public function hash(string $plainPassword): string
     {
@@ -22,7 +24,11 @@ final class PasswordManager
         return password_needs_rehash($plainPassword, self::DEFAULT_ALGO, self::DEFAULT_OPTIONS);
     }
 
-    public function generate(int $length = 12) {
+    /**
+     * @throws RandomException
+     */
+    public function generate(int $length = 12): string
+    {
         return bin2hex(random_bytes($length));
     }
 

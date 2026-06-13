@@ -10,6 +10,10 @@ use DateTimeZone;
 class DateExtension
 {
 
+    /**
+     * @throws \DateMalformedStringException
+     * @throws \DateInvalidTimeZoneException
+     */
     public function now(string $timezone = 'UTC'): DateTimeImmutable
     {
         return new DateTimeImmutable('now', new DateTimeZone($timezone));
@@ -23,21 +27,30 @@ class DateExtension
 
     public function fromTimestamp(int $timestamp): DateTimeImmutable
     {
-        return (new DateTimeImmutable())->setTimestamp($timestamp);
+        return new DateTimeImmutable()->setTimestamp($timestamp);
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function format(DateTimeInterface|string $date, string $format = 'd/m/Y'): string
     {
         $dt = $date instanceof DateTimeInterface ? $date : new DateTimeImmutable($date);
         return $dt->format($format);
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function toTimestamp(DateTimeInterface|string $date): int
     {
         $dt = $date instanceof DateTimeInterface ? $date : new DateTimeImmutable($date);
         return $dt->getTimestamp();
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function humanDiff(DateTimeInterface|string $date, ?DateTimeInterface $reference = null): string
     {
         $dt  = $date instanceof DateTimeInterface ? $date : new DateTimeImmutable($date);
@@ -55,6 +68,9 @@ class DateExtension
         };
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function diffInDays(DateTimeInterface|string $from, DateTimeInterface|string $to): int
     {
         $from = $from instanceof DateTimeInterface ? $from : new DateTimeImmutable($from);
@@ -62,6 +78,9 @@ class DateExtension
         return (int) $from->diff($to)->days;
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function diffInHours(DateTimeInterface|string $from, DateTimeInterface|string $to): int
     {
         $from = $from instanceof DateTimeInterface ? $from : new DateTimeImmutable($from);
@@ -69,6 +88,9 @@ class DateExtension
         return (int) (($to->getTimestamp() - $from->getTimestamp()) / 3600);
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function diffInMinutes(DateTimeInterface|string $from, DateTimeInterface|string $to): int
     {
         $from = $from instanceof DateTimeInterface ? $from : new DateTimeImmutable($from);
@@ -76,6 +98,9 @@ class DateExtension
         return (int) (($to->getTimestamp() - $from->getTimestamp()) / 60);
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function addDays(DateTimeInterface|string $date, int $days): DateTimeImmutable
     {
         $dt = $date instanceof DateTimeInterface
@@ -84,6 +109,9 @@ class DateExtension
         return $dt->modify("+{$days} days");
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function subDays(DateTimeInterface|string $date, int $days): DateTimeImmutable
     {
         $dt = $date instanceof DateTimeInterface
@@ -92,6 +120,9 @@ class DateExtension
         return $dt->modify("-{$days} days");
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function addMonths(DateTimeInterface|string $date, int $months): DateTimeImmutable
     {
         $dt = $date instanceof DateTimeInterface
@@ -100,6 +131,9 @@ class DateExtension
         return $dt->modify("+{$months} months");
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function addYears(DateTimeInterface|string $date, int $years): DateTimeImmutable
     {
         $dt = $date instanceof DateTimeInterface
@@ -108,6 +142,9 @@ class DateExtension
         return $dt->modify("+{$years} years");
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function isPast(DateTimeInterface|string $date): bool
     {
         $dt = $date instanceof DateTimeInterface
@@ -116,6 +153,9 @@ class DateExtension
         return $dt < new DateTimeImmutable();
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function isFuture(DateTimeInterface|string $date): bool
     {
         $dt = $date instanceof DateTimeInterface
@@ -124,6 +164,9 @@ class DateExtension
         return $dt > new DateTimeImmutable();
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function isToday(DateTimeInterface|string $date): bool
     {
         $dt = $date instanceof DateTimeInterface
@@ -132,6 +175,9 @@ class DateExtension
         return $dt->format('Y-m-d') === (new DateTimeImmutable())->format('Y-m-d');
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function isWeekend(DateTimeInterface|string $date): bool
     {
         $dt = $date instanceof DateTimeInterface
@@ -140,6 +186,9 @@ class DateExtension
         return in_array((int) $dt->format('N'), [6, 7]);
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function isLeapYear(DateTimeInterface|string|int $date): bool
     {
         $year = is_int($date)
@@ -148,17 +197,28 @@ class DateExtension
         return (int) date('L', mktime(0, 0, 0, 1, 1, (int) $year)) === 1;
     }
 
-    public function isBetween(DateTimeInterface|string $date, DateTimeInterface|string $from, DateTimeInterface|string $to): bool
-    {
+    /**
+     * @throws \DateMalformedStringException
+     */
+    public function isBetween(
+        DateTimeInterface|string $date,
+        DateTimeInterface|string $from,
+        DateTimeInterface|string $to
+    ): bool {
         $dt = $date instanceof DateTimeInterface ? $date : new DateTimeImmutable($date);
         $from = $from instanceof DateTimeInterface ? $from : new DateTimeImmutable($from);
         $to = $to instanceof DateTimeInterface ? $to : new DateTimeImmutable($to);
         return $dt >= $from && $dt <= $to;
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function addBusinessDays(DateTimeInterface|string $date, int $days): DateTimeImmutable
     {
-        $dt = $date instanceof DateTimeInterface ? DateTimeImmutable::createFromInterface($date) : new DateTimeImmutable($date);
+        $dt = $date instanceof DateTimeInterface
+            ? DateTimeImmutable::createFromInterface($date)
+            : new DateTimeImmutable($date);
         $added = 0;
 
         while ($added < $days) {
@@ -171,6 +231,9 @@ class DateExtension
         return $dt;
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function countBusinessDays(DateTimeInterface|string $from, DateTimeInterface|string $to): int
     {
         $from = $from instanceof DateTimeInterface
@@ -192,6 +255,9 @@ class DateExtension
         return $count;
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function age(DateTimeInterface|string $birthdate): int
     {
         $dt = $birthdate instanceof DateTimeInterface
