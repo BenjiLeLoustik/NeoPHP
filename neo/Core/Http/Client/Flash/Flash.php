@@ -12,7 +12,16 @@ use Neo\Core\Utils\Config\Config;
 class Flash
 {
     private Session $session;
+
+    /**
+     * @var array{
+     *     session_key: string,
+     *     auto_expire: bool,
+     *     types: array<int, string>
+     * }
+     */
     private array $config;
+
     private string $flashKey;
 
     /**
@@ -55,6 +64,9 @@ class Flash
         $this->session->set($this->flashKey, $messages);
     }
 
+    /**
+     * @return array<int, array{type: string, message: string}>
+     */
     public function getAll(): array
     {
         $messages = $this->session->get($this->flashKey, []);

@@ -10,6 +10,12 @@ final readonly class FlashViewExtension implements TwigExtensionInterface
 {
     public function __construct(private Flash $flash) {}
 
+    /**
+     * @return array<string, array{
+     *     callable: callable,
+     *     options: array<string, array<int, string>>
+     * }>
+     */
     public function getFunctions(): array
     {
         return [
@@ -20,6 +26,9 @@ final readonly class FlashViewExtension implements TwigExtensionInterface
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getFilters(): array
     {
         return [];

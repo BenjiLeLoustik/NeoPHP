@@ -6,7 +6,10 @@ namespace Neo\Core\Http\Response;
 class Response
 {
     protected int $statusCode = 200;
+
+    /** @var array<string, string> */
     protected array $headers = [];
+
     protected string $content = '';
 
     public function setStatusCode(int $code): static
@@ -42,6 +45,9 @@ class Response
         return $this->statusCode;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getHeaders(): array
     {
         return $this->headers;

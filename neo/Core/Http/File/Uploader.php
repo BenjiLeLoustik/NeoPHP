@@ -20,6 +20,7 @@ class Uploader
     }
 
     /**
+     * @param array<int, string> $allowedExtensions
      * @throws UploaderException
      */
     public function upload(

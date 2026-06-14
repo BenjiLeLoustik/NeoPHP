@@ -3,10 +3,13 @@ declare(strict_types=1);
 
 namespace Neo\Core\Http\Response;
 
+use JsonException;
+
 class JsonResponse extends Response
 {
     /**
-     * @throws \JsonException
+     * @param array<string, mixed>|object $data
+     * @throws JsonException
      */
     public function __construct(array|object $data, int $statusCode = 200)
     {
