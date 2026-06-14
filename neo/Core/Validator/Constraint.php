@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Neo\Core\Validator;
 
-#[\Attribute(\Attribute::TARGET_PROPERTY)]
 abstract class Constraint
 {
     public string $message;
