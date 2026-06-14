@@ -17,6 +17,7 @@ class CronRunner
     {}
 
     /**
+     * @param list<array{expression: string, timezone: string, lock: bool, class: class-string, method: string}> $jobs
      * @throws CronException
      */
     public function run(array $jobs): void

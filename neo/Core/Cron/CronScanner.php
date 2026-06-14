@@ -10,6 +10,9 @@ use ReflectionMethod;
 
 class CronScanner
 {
+    /**
+     * @return list<array{class: class-string, method: string, expression: string, description: string, timezone: string, lock: bool}>
+     */
     public function scan(string $cronsPath): array
     {
         $jobs = [];
