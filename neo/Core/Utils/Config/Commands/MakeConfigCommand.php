@@ -74,6 +74,9 @@ final class MakeConfigCommand extends AbstractCommand
         Output::success("'$configName.config.php' generated successfully.");
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function collectEntries(): array
     {
         $flat = [];
@@ -92,6 +95,11 @@ final class MakeConfigCommand extends AbstractCommand
 
         return $this->expandDotKeys($flat);
     }
+
+    /**
+     * @param array<string, mixed> $flat
+     * @return array<string, mixed>
+     */
 
     private function expandDotKeys(array $flat): array
     {
@@ -114,6 +122,9 @@ final class MakeConfigCommand extends AbstractCommand
         return $result;
     }
 
+    /**
+     * @param array<string, mixed> $entries
+     */
     private function buildFileContent(string $configName, string $project, array $entries): string
     {
         $filePath = "./src/$project/Config/$configName.config.php";
@@ -129,6 +140,9 @@ return $body;
 PHP;
     }
 
+    /**
+     * @param array<string, mixed> $entries
+     */
     private function buildArray(array $entries, int $depth): string
     {
         if (empty($entries)) {

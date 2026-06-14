@@ -9,6 +9,9 @@ use Neo\Core\Validator\Assert\NotBlank;
 
 class Validator
 {
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function validate(object $model, ?Form $form = null): array
     {
         $errors = [];
@@ -57,6 +60,10 @@ class Validator
         return $errors;
     }
 
+    /**
+     * @param array<int, Constraint> $constraints
+     * @param array<string, array<int, string>> $errors
+     */
     private function runConstraints(
         array $constraints,
         mixed $value,

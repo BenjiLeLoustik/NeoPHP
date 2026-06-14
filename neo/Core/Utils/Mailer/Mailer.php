@@ -14,14 +14,28 @@ use PHPMailer\PHPMailer\PHPMailer;
 class Mailer
 {
     private string $to = '';
+
     private string $toName = '';
+
     private string $subject = '';
+
     private string $body = '';
+
+    /** @var array<string, mixed> */
     private array $cc = [];
+
+    /** @var array<string, mixed> */
     private array $bcc = [];
+
+    /** @var array<string, mixed> */
     private array $attachments = [];
+
+    /** @var array<int, array<string, mixed>> */
     private array $sentMails = [];
+
     private bool $enabled;
+
+    /** @var array<string, mixed> */
     private array $config;
 
     /**
@@ -54,6 +68,7 @@ class Mailer
     }
 
     /**
+     * @param array<string, mixed> $data
      * @throws ContainerException
      */
     public function template(string $template, array $data = []): static
@@ -171,6 +186,9 @@ class Mailer
         }
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getSentMails(): array
     {
         return $this->sentMails;

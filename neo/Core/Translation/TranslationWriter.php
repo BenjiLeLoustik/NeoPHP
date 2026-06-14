@@ -14,6 +14,7 @@ final class TranslationWriter
     }
 
     /**
+     * @param list<string> $segments
      * @throws TranslationException
      */
     public function ensure(
@@ -73,6 +74,10 @@ final class TranslationWriter
         }
     }
 
+    /**
+     * @param array<string, mixed> $array
+     * @param list<string> $segments
+     */
     private function hasKey(array $array, array $segments): bool
     {
         foreach ($segments as $segment) {
@@ -86,6 +91,8 @@ final class TranslationWriter
     }
 
     /**
+     * @param list<string> $segments
+     * @param array<string, mixed> $translations
      * @throws TranslationException
      */
     private function writeKey(
@@ -110,6 +117,7 @@ final class TranslationWriter
     }
 
     /**
+     * @param array<string, mixed> $translations
      * @throws TranslationException
      */
     private function dumpPhpFile(string $filePath, array $translations): void
@@ -125,6 +133,11 @@ final class TranslationWriter
         }
     }
 
+    /**
+     * @param array $array
+     * @param int $level
+     * @return string
+     */
     private function arrayToPhp(array $array, int $level = 0): string
     {
         $indent = str_repeat('    ', $level);

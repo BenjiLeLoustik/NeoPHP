@@ -15,6 +15,7 @@ class RedisDriver implements CacheDriverInterface
     private string $prefix;
 
     /**
+     * @param array{host?: string, port?: int, password?: string|null, database?: int, prefix?: string} $config
      * @throws CacheException
      */
     public function __construct(array $config, int $defaultTtl = 3600)

@@ -7,7 +7,9 @@ use Neo\Core\Utils\Cache\Driver\Interface\CacheDriverInterface;
 
 class ArrayDriver implements CacheDriverInterface
 {
+    /** @var array<string, array{content: mixed, expires_at: int}> */
     private array $store = [];
+
     private int $defaultTtl;
 
     public function __construct(int $defaultTtl = 3600)

@@ -13,9 +13,14 @@ use ZipArchive;
 class Logger
 {
     protected Container $container;
+
+    /** @var array<string, mixed> */
     protected array $config;
+
     protected string $logDirectory;
+
     protected string $archiveDirectory;
+
     protected string $currentChannel = 'app';
 
     private const array LEVELS = [
@@ -64,6 +69,9 @@ class Logger
         return $clone;
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function log(string $level, string $message, array $context = [], string $origin = 'system'): void
     {
         if (!$this->isEnabled()) {
@@ -96,41 +104,65 @@ class Logger
         file_put_contents($filePath, $entry . PHP_EOL, FILE_APPEND | LOCK_EX);
     }
 
+    /**
+     * @param array<string, mixed> $ctx
+     */
     public function debug(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
         $this->log('DEBUG', $msg, $ctx, $origin);
     }
 
+    /**
+     * @param array<string, mixed> $ctx
+     */
     public function info(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
         $this->log('INFO', $msg, $ctx, $origin);
     }
 
+    /**
+     * @param array<string, mixed> $ctx
+     */
     public function notice(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
         $this->log('NOTICE', $msg, $ctx, $origin);
     }
 
+    /**
+     * @param array<string, mixed> $ctx
+     */
     public function warning(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
         $this->log('WARNING', $msg, $ctx, $origin);
     }
 
+    /**
+     * @param array<string, mixed> $ctx
+     */
     public function error(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
         $this->log('ERROR', $msg, $ctx, $origin);
     }
 
+    /**
+     * @param array<string, mixed> $ctx
+     */
     public function critical(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
         $this->log('CRITICAL', $msg, $ctx, $origin);
     }
 
+    /**
+     * @param array<string, mixed> $ctx
+     */
     public function alert(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
         $this->log('ALERT', $msg, $ctx, $origin);
     }
 
+    /**
+     * @param array<string, mixed> $ctx
+     */
     public function emergency(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
         $this->log('EMERGENCY', $msg, $ctx, $origin);
@@ -227,6 +259,9 @@ class Logger
         unlink($file);
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     private function formatMessage(string $level, string $message, array $context, string $origin): string
     {
         $format = $this->config['log_format'] ?? '[{%datetime%}][{%level_name%}] {%message%}';

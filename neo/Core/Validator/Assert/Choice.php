@@ -9,6 +9,7 @@ use Neo\Core\Validator\Constraint;
 class Choice extends Constraint
 {
     public function __construct(
+        /** @var array<int|string, mixed> */
         public array $choices,
         string $message = ""
     ) {
