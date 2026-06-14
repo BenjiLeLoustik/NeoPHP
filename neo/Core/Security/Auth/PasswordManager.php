@@ -32,6 +32,9 @@ final class PasswordManager
         return bin2hex(random_bytes($length));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getInfo(string $hash): array
     {
         return password_get_info($hash);

@@ -9,6 +9,9 @@ final readonly class RouterViewExtension implements TwigExtensionInterface
 {
     public function __construct(private Router $router) {}
 
+    /**
+     * @return array<string, array{callable: callable, options: array<string, mixed>}>
+     */
     public function getFunctions(): array
     {
         return [
@@ -23,6 +26,9 @@ final readonly class RouterViewExtension implements TwigExtensionInterface
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getFilters(): array
     {
         return [];

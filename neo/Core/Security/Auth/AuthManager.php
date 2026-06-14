@@ -18,12 +18,16 @@ use Neo\Core\Utils\Config\Config;
 class AuthManager
 {
     private Container $container;
+
     private ?GuardInterface $guard = null;
+
+    /** @var array<string, mixed> */
     private array $config;
 
     /**
      * @throws ContainerException
      * @throws AuthException
+     * @throws JwtException
      */
     public function __construct(Container $container)
     {
@@ -49,6 +53,7 @@ class AuthManager
     }
 
     /**
+     * @param array<string, mixed> $credentials
      * @throws AuthException
      */
     public function attempt(array $credentials): bool

@@ -10,11 +10,11 @@ use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\RedirectResponse;
 
 /**
- * @method string getRoutePath(string $routeName, array $params = [])
- * @method string getRedirectBack(?string $fallbackRoute = null, array $routeParams = [])
- * @method \Neo\Core\Http\Response\RedirectResponse redirectToRoute(string $routeName, array $params = [])
+ * @method string getRoutePath(string $routeName, array<string, string> $params = [])
+ * @method string getRedirectBack(?string $fallbackRoute = null, array<string, string> $routeParams = [])
+ * @method \Neo\Core\Http\Response\RedirectResponse redirectToRoute(string $routeName, array<string, string> $params = [])
  * @method \Neo\Core\Http\Response\RedirectResponse redirectToPath(string $path, int $code = 302)
- * @method \Neo\Core\Http\Response\RedirectResponse redirectBack(?string $fallbackRoute = null, array $routeParams = [], int $code = 302)
+ * @method \Neo\Core\Http\Response\RedirectResponse redirectBack(?string $fallbackRoute = null, array<string, string> $routeParams = [], int $code = 302)
  */
 class RouterControllerExtension implements ControllerExtensionInterface
 {

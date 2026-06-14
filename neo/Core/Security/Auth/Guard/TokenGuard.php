@@ -14,8 +14,12 @@ use Neo\Core\Security\Auth\PasswordManager;
 
 final class TokenGuard implements GuardInterface
 {
+    /** @var array<string, mixed>|null */
     private ?array $payload = null;
 
+    /**
+     * @param array<string, mixed> $role
+     */
     public function __construct(
         private readonly Request $request,
         private readonly JwtManager $jwtManager,
@@ -28,6 +32,7 @@ final class TokenGuard implements GuardInterface
 
     /**
      * @throws AuthException
+     * @throws DatabaseException
      */
     public function attempt(array $credentials): bool
     {
@@ -83,6 +88,7 @@ final class TokenGuard implements GuardInterface
     /**
      * @throws DatabaseException
      * @throws AuthException
+     * @throws JwtException
      */
     public function user(): ?AbstractModel
     {
@@ -162,6 +168,7 @@ final class TokenGuard implements GuardInterface
     }
 
     /**
+     * @return array<string, mixed>
      * @throws AuthException
      * @throws JwtException
      */
