@@ -4,6 +4,7 @@ namespace Neo\Core\Translation;
 
 final class TranslationRegistry
 {
+    /** @var list<string> */
     private static array $paths = [];
 
     public static function registerPath(string $path): void
@@ -11,6 +12,9 @@ final class TranslationRegistry
         self::$paths[] = rtrim($path, '/');
     }
 
+    /**
+     * @return list<string>
+     */
     public static function getPaths(): array
     {
         return self::$paths;

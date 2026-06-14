@@ -12,6 +12,9 @@ use ReflectionMethod;
 
 class TestScanner
 {
+    /**
+     * @return array<int, TestClassContext>
+     */
     public function scan(string $srcPath): array
     {
         $contexts = [];
@@ -90,6 +93,10 @@ class TestScanner
         return $contexts;
     }
 
+    /**
+     * @param ReflectionClass<object> $refClass
+     * @return array<int, TestMethodContext>
+     */
     private function scanMethods(ReflectionClass $refClass): array
     {
         $methods = [];

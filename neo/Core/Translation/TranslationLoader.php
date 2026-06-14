@@ -6,9 +6,11 @@ use Neo\Core\Translation\Exception\TranslationException;
 
 final class TranslationLoader
 {
+    /** @var array<string, array<string, mixed>> */
     private array $cache = [];
 
     /**
+     * @return array<string, mixed>
      * @throws TranslationException
      */
     public function load(string $locale, string $file): array

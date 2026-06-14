@@ -67,6 +67,7 @@ class TranslationManager implements TranslatorInterface
     }
 
     /**
+     * @param array<string, mixed> $replace
      * @throws TranslationException
      */
     public function translate(
@@ -123,6 +124,9 @@ class TranslationManager implements TranslatorInterface
         return is_string($value) ? $value : $key;
     }
 
+    /**
+     * @param array<string, mixed> $replace
+     */
     private function replace(string $text, array $replace): string
     {
         foreach ($replace as $key => $value) {
@@ -138,6 +142,7 @@ class TranslationManager implements TranslatorInterface
     }
 
     /**
+     * @return array<string, mixed>
      * @throws ContainerException
      */
     public function getLocales(): array

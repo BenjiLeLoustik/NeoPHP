@@ -66,6 +66,9 @@ PHP;
         return implode("\n\n", $lines);
     }
 
+    /**
+     * @param array<string, mixed> $dataset
+     */
     private function buildFixture(array $dataset): string
     {
         if (empty($dataset)) {
