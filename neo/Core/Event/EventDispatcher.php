@@ -14,6 +14,14 @@ use Neo\Core\Utils\Config\Config;
 
 class EventDispatcher
 {
+    /**
+     * @var array<class-string, list<array{
+     * class: class-string,
+     * priority: int,
+     * method?: string|array{0: string, 1?: int},
+     * instance?: object
+     * }>>
+     */
     private array $listeners = [];
     private Container $container;
 
@@ -203,6 +211,11 @@ class EventDispatcher
         }
     }
 
+    /**
+     * @return ($eventClass is null
+     * ? array<class-string, list<array{class: class-string, priority: int, method?: string|array{0: string, 1?: int}, instance?: object}>>
+     * : list<array{class: class-string, priority: int, method?: string|array{0: string, 1?: int}, instance?: object}>)
+     */
     public function getListeners(?string $eventClass = null): array
     {
         if ($eventClass !== null) {
