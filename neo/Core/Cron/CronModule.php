@@ -9,6 +9,9 @@ use Neo\Core\Utils\Logger\LoggerModule;
 
 class CronModule extends AbstractModule
 {
+    /**
+     * @return list<class-string>
+     */
     public function dependencies(): array
     {
         return [
