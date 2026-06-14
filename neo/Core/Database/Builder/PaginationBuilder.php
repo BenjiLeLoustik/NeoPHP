@@ -5,11 +5,15 @@ namespace Neo\Core\Database\Builder;
 
 class PaginationBuilder
 {
+    /** @var array<int, mixed> */
     private array $items;
     private int $total;
     private int $perPage;
     private int $currentPage;
 
+    /**
+     * @param array<int, mixed> $items
+     */
     public function __construct(
         array $items,
         int $total,
@@ -22,6 +26,9 @@ class PaginationBuilder
         $this->currentPage = $currentPage;
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     public function getItems(): array
     {
         return $this->items;
@@ -57,6 +64,9 @@ class PaginationBuilder
         return $this->currentPage > 1;
     }
 
+    /**
+     * @return array{items: array<int, mixed>, total: int, per_page: int, current_page: int, last_page: int, has_next: bool, has_previous: bool}
+     */
     public function toArray(): array
     {
         return [

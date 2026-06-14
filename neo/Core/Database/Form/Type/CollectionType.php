@@ -45,14 +45,24 @@ class CollectionType extends AbstractType
         return $html;
     }
 
+    /**
+     * @param string $collectionName
+     * @param string $index
+     * @param array<string, mixed> $entryFields
+     * @param bool $allowDelete
+     * @param string $deleteLabel
+     * @param array<string, mixed> $values
+     * @param array<string, array<int, string>> $collectionErrors
+     * @return string
+     */
     public function renderEntry(
         string $collectionName,
         string $index,
-        array  $entryFields,
-        bool   $allowDelete,
+        array $entryFields,
+        bool $allowDelete,
         string $deleteLabel,
-        array  $values = [],
-        array  $collectionErrors = []
+        array $values = [],
+        array $collectionErrors = []
     ): string {
         $html = sprintf(
             '<div class="collection-entry" data-entry-index="%s">',
@@ -117,6 +127,9 @@ class CollectionType extends AbstractType
         );
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getEntries(FormField $field): array
     {
         $entries = $field->getValue() ?? [];
@@ -135,6 +148,9 @@ class CollectionType extends AbstractType
         return $normalized;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getEntryFields(FormField $field): array
     {
         return $field->getOption('entry_fields', []);
@@ -150,6 +166,9 @@ class CollectionType extends AbstractType
         return $field->getOption('allow_delete', true);
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     public function normalize(mixed $value, ?FormField $field = null): array
     {
         if (!is_array($value)) {
@@ -174,6 +193,9 @@ class CollectionType extends AbstractType
         return $result;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function validateEntries(FormField $field, Validator $validator): array
     {
         $entries = $field->getValue() ?? [];
@@ -201,6 +223,10 @@ class CollectionType extends AbstractType
         return $errors;
     }
 
+    /**
+     * @param mixed $config
+     * @return array{0: string, 1: array<string, mixed>}
+     */
     private function resolveFieldConfig(mixed $config): array
     {
         if (is_string($config)) {
@@ -223,6 +249,9 @@ class CollectionType extends AbstractType
         };
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     private function buildExtraAttrs(array $options): string
     {
         $ignored = ['label', 'value', 'type', 'attr', 'attrs'];

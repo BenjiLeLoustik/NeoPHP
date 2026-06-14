@@ -9,6 +9,7 @@ use Neo\Core\Database\Form\FormField;
 use Neo\Core\Database\Form\Type\AbstractType;
 use Neo\Core\Database\Form\Type\TextType;
 use Neo\Core\Database\ORM\Model\AbstractModel;
+use ReflectionException;
 
 class FormBuilder
 {
@@ -38,6 +39,12 @@ class FormBuilder
         $this->form->setData($this->model);
     }
 
+    /**
+     * @param string $name
+     * @param string|AbstractType $type
+     * @param array<string, mixed> $options
+     * @return FormBuilder
+     */
     public function add(string $name, string|AbstractType $type, array $options = []): self
     {
         $typeInstance = is_string($type) ? new $type() : $type;
@@ -47,7 +54,9 @@ class FormBuilder
     }
 
     /**
-     * @throws \ReflectionException
+     * @param array<string, string|array{0: string, 1: array<string, mixed>}> $fieldTypes
+     * @param array<int, string> $excludeFields
+     * @throws ReflectionException
      */
     public function auto(array $fieldTypes = [], array $excludeFields = []): self
     {
@@ -92,8 +101,8 @@ class FormBuilder
                 if (is_string($fieldTypes[$name])) {
                     $typeClass = $fieldTypes[$name];
                 } elseif (is_array($fieldTypes[$name])) {
-                    $typeClass = $fieldTypes[$name][0] ?? TextType::class;
-                    $options = array_merge($options, $fieldTypes[$name][1] ?? []);
+                    $typeClass = $fieldTypes[$name][0];
+                    $options = array_merge($options, $fieldTypes[$name][1]);
                 }
             }
 

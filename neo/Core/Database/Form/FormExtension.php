@@ -13,6 +13,9 @@ class FormExtension
         return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
 
+    /**
+     * @param array<string, string|int|float|bool> $attrs
+     */
     private static function buildAttributes(array $attrs): string
     {
         $html = '';
@@ -22,10 +25,14 @@ class FormExtension
         return $html;
     }
 
+    /**
+     * @param array{action?: string, method?: string, attr?: array<string, string|int|float|bool>} $params
+     */
     public static function formStart(Form $form, array $params = []): string
     {
         $action = self::escape((string) ($params['action'] ?? ''));
         $method = self::escape((string) ($params['method'] ?? 'POST'));
+        /** @phpstan-ignore-next-line */
         $attrs = !empty($params['attr']) && is_array($params['attr'])
             ? self::buildAttributes($params['attr'])
             : '';
@@ -47,6 +54,9 @@ class FormExtension
         );
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public static function formWidget(Form $form, string $fieldName, array $options = []): string
     {
         $field = $form->getField($fieldName);
@@ -105,17 +115,26 @@ class FormExtension
         );
     }
 
+    /**
+     * @return array<int, string>
+     */
     public static function formErrors(Form $form, string $fieldName): array
     {
         $field = $form->getField($fieldName);
         return $field ? $field->getErrors() : [];
     }
 
+    /**
+     * @return array<int, string>
+     */
     public static function globalErrors(Form $form): array
     {
         return $form->getErrors();
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     public static function collectionEntries(Form $form, string $fieldName): array
     {
         $field = $form->getField($fieldName);
@@ -236,6 +255,9 @@ class FormExtension
         return sprintf('<label for="%s">%s</label>', $inputId, $labelText);
     }
 
+    /**
+     * @return array<int, string>
+     */
     public static function collectionError(Form $form, string $fieldName, string|int $index, string $entryFieldName): array
     {
         $field = $form->getField($fieldName);
@@ -247,10 +269,14 @@ class FormExtension
         return $field->getCollectionErrors()[$errorKey] ?? [];
     }
 
+    /**
+     * @param array{action?: string, method?: string, attr?: array<string, string|int|float|bool>} $params
+     */
     public static function fullForm(Form $form, array $params = []): string
     {
         $action = self::escape((string) ($params['action'] ?? ''));
         $method = self::escape((string) ($params['method'] ?? 'POST'));
+        /** @phpstan-ignore-next-line */
         $attrs = !empty($params['attr']) && is_array($params['attr'])
             ? self::buildAttributes($params['attr'])
             : '';

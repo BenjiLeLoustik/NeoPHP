@@ -13,16 +13,31 @@ use PDOException;
 
 class QueryBuilder
 {
-    private string $table = '';
+    /** @var array<int, string> */
     private array $select = [];
+
+    /** @var array<int, array{0: string, 1: string}> */
     private array $where = [];
+
+    /** @var array<string, mixed> */
     private array $params = [];
+
+    /** @var array<int, string> */
     private array $orderBy = [];
+
     private ?int $limit = null;
+
     private ?int $offset = null;
+
+    /** @var array<int, string> */
     private array $joins = [];
+
+    /** @var array<int, string> */
     private array $groupBy = [];
+
     private PDO $pdo;
+
+    private string $table = '';
 
     /**
      * @throws DatabaseException
@@ -115,6 +130,7 @@ class QueryBuilder
     }
 
     /**
+     * @param array<int, string> $columns
      * @throws DatabaseException
      */
     public function select(array $columns = ['*']): self
@@ -135,12 +151,16 @@ class QueryBuilder
         return $base . '_' . count($this->params);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getParams(): array
     {
         return $this->params;
     }
 
     /**
+     * @param string|array<int, string> $column
      * @throws DatabaseException
      */
     public function where(string|array $column, string $operator, mixed $value): self
@@ -161,6 +181,7 @@ class QueryBuilder
     }
 
     /**
+     * @param string|array<int, string> $column
      * @throws DatabaseException
      */
     public function andWhere(string|array $column, string $operator, mixed $value): self
@@ -169,6 +190,7 @@ class QueryBuilder
     }
 
     /**
+     * @param string|array<int, string> $column
      * @throws DatabaseException
      */
     public function orWhere(string|array $column, string $operator, mixed $value): self
@@ -189,6 +211,7 @@ class QueryBuilder
     }
 
     /**
+     * @param string|array<int, string> $column
      * @throws DatabaseException
      */
     public function whereLike(string|array $column, mixed $value): self
@@ -208,6 +231,7 @@ class QueryBuilder
     }
 
     /**
+     * @param string|array<int, string> $column
      * @throws DatabaseException
      */
     public function orWhereLike(string|array $column, mixed $value): self
@@ -227,6 +251,7 @@ class QueryBuilder
     }
 
     /**
+     * @param string|array<int, string> $column
      * @throws DatabaseException
      */
     public function whereWord(string|array $column, mixed $word): self
@@ -246,6 +271,7 @@ class QueryBuilder
     }
 
     /**
+     * @param string|array<int, string> $column
      * @throws DatabaseException
      */
     public function orWhereWord(string|array $column, mixed $word): self
@@ -265,6 +291,7 @@ class QueryBuilder
     }
 
     /**
+     * @param array<int, mixed> $values
      * @throws DatabaseException
      */
     public function whereIn(string $column, array $values): self
@@ -454,6 +481,7 @@ class QueryBuilder
     }
 
     /**
+     * @return array<int, array<string, mixed>>
      * @throws DatabaseException
      */
     public function get(): array
@@ -476,6 +504,7 @@ class QueryBuilder
     }
 
     /**
+     * @return array<string, mixed>|null
      * @throws DatabaseException
      */
     public function first(): ?array
@@ -535,6 +564,7 @@ class QueryBuilder
     }
 
     /**
+     * @param array<string, mixed> $data
      * @throws DatabaseException
      */
     public function insert(array $data): bool
@@ -571,6 +601,7 @@ class QueryBuilder
     }
 
     /**
+     * @param array<string, mixed> $data
      * @throws DatabaseException
      */
     public function insertGetId(array $data): string
@@ -580,6 +611,7 @@ class QueryBuilder
     }
 
     /**
+     * @param array<string, mixed> $data
      * @throws DatabaseException
      */
     public function update(array $data): bool
@@ -726,6 +758,9 @@ class QueryBuilder
     }
 
     /**
+     * @template T of AbstractModel
+     * @param class-string<T> $modelClass
+     * @return array<int, T>
      * @throws DatabaseException
      */
     public function getModels(string $modelClass): array
@@ -814,6 +849,9 @@ class QueryBuilder
         }
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     private function executeTracked(\PDOStatement $stmt, array $params, string $sql): bool
     {
         $t0 = microtime(true);

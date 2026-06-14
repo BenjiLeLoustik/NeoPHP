@@ -10,13 +10,26 @@ use ReflectionClass;
 class FormField
 {
     private string $name;
+
     private AbstractType $type;
+
+    /** @var array<string, mixed> */
     private array $options;
+
+    /** @var array<int, string> */
     private array $errors = [];
+
     private mixed $value = null;
+
+    /** @var array<string, string> */
     private array $wrapperAttributes = [];
+
+    /** @var array<string, array<int, string>> */
     private array $collectionErrors = [];
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function __construct(string $name, AbstractType $type, array $options = [])
     {
         $this->name = $name;
@@ -60,21 +73,34 @@ class FormField
         return $this->type->type;
     }
 
+    /**
+     * @param array<string, mixed> $choices
+     */
     public function setChoices(array $choices): void
     {
         $this->options['choices'] = $choices;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getChoices(): array
     {
         return $this->options['choices'] ?? [];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getOptions(): array
     {
         return $this->options;
     }
 
+    /**
+     * @param string $key
+     * @param mixed $value
+     */
     public function setOption(string $key, mixed $value): void
     {
         $this->options[$key] = $value;
@@ -84,6 +110,9 @@ class FormField
         }
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function setOptions(array $options): void
     {
         $this->options = $options;
@@ -110,11 +139,17 @@ class FormField
         return $this->options['label'] ?? ucfirst($this->name);
     }
 
+    /**
+     * @param array<int, string> $errors
+     */
     public function setErrors(array $errors): void
     {
         $this->errors = $errors;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getErrors(): array
     {
         return $this->errors;
@@ -130,6 +165,9 @@ class FormField
         return $this->type->render($this);
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function withOptions(array $options): self
     {
         $clone = clone $this;
@@ -161,6 +199,9 @@ class FormField
         return $clone;
     }
 
+    /**
+     * @param array<string, string> $attrs
+     */
     public function setWrapperAttributes(array $attrs): void
     {
         $this->wrapperAttributes = $attrs;
@@ -171,11 +212,17 @@ class FormField
         $this->wrapperAttributes[$key] = $value;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getWrapperAttributes(): array
     {
         return $this->wrapperAttributes;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getAttributes(): array
     {
         return $this->options['attrs'] ?? [];
@@ -186,6 +233,9 @@ class FormField
         $this->collectionErrors[$key][] = $message;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function getCollectionErrors(): array
     {
         return $this->collectionErrors;
@@ -210,6 +260,9 @@ class FormField
             : false;
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     public function getEntries(): array
     {
         return $this->type instanceof CollectionType
@@ -217,6 +270,9 @@ class FormField
             : [];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getEntryFields(): array
     {
         return $this->type instanceof CollectionType
@@ -236,6 +292,9 @@ class FormField
         $this->collectionErrors = [];
     }
 
+    /**
+     * @param array<string, string> $attrs
+     */
     public function setAtrributes(array $attrs): void
     {
         $this->options['attrs'] = array_merge(

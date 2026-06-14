@@ -12,17 +12,32 @@ use PDO;
 use PDOException;
 use PDOStatement;
 
+/**
+ * @template T of AbstractModel
+ */
 abstract class AbstractRepository
 {
+    /** @var class-string<T> */
     protected string $modelClass;
+
     protected string $table;
+
     protected string $primaryKey;
+
     protected PDO $pdo;
+
     protected QueryBuilder $builder;
+
+    /** @var array<int, T> */
     protected array $lastResult = [];
+
+    /** @var array<string, array{nested: array<int, array<int, string>>, withTrashed: bool, onlyTrashed: bool}> */
     protected array $with = [];
+
     protected bool $softDelete = true;
+
     protected bool $includeTrashed = false;
+
     protected bool $onlyTrashed = false;
 
     /**
@@ -56,6 +71,10 @@ abstract class AbstractRepository
         $this->builder = new QueryBuilder()->table($this->table);
     }
 
+    /**
+     * @param string|array<int, string> $relations
+     * @return self<T>
+     */
     public function with(string|array $relations): self
     {
         foreach ((array)$relations as $relation) {
@@ -70,6 +89,10 @@ abstract class AbstractRepository
         return $this;
     }
 
+    /**
+     * @param string $relation
+     * @return self<T>
+     */
     public function withTrashed(string $relation): self
     {
         $this->with($relation);
@@ -79,6 +102,10 @@ abstract class AbstractRepository
         return $this;
     }
 
+    /**
+     * @param string $relation
+     * @return self<T>
+     */
     public function onlyTrashed(string $relation): self
     {
         $this->with($relation);
@@ -88,17 +115,25 @@ abstract class AbstractRepository
         return $this;
     }
 
+    /**
+     * @return self<T>
+     */
     public function withTrashedModels(): self
     {
         $this->includeTrashed = true;
         $this->onlyTrashed = false;
+
         return $this;
     }
 
+    /**
+     * @return self<T>
+     */
     public function onlyTrashedModels(): self
     {
         $this->includeTrashed = true;
         $this->onlyTrashed = true;
+
         return $this;
     }
 
@@ -340,6 +375,10 @@ abstract class AbstractRepository
             ->delete();
     }
 
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
     private function ensureTimestamps(array $data, bool $isCreate = false, bool $isDelete = false): array
     {
         $now = date('Y-m-d H:i:s');
@@ -359,6 +398,7 @@ abstract class AbstractRepository
     }
 
     /**
+     * @param array<string, mixed> $params
      * @throws DatabaseException
      */
     public function query(string $sql, array $params = []): PDOStatement
@@ -386,6 +426,9 @@ abstract class AbstractRepository
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function buildWithTree(): array
     {
         $tree = [];
@@ -410,6 +453,8 @@ abstract class AbstractRepository
     }
 
     /**
+     * @param array<int, T> $models
+     * @param array<string, mixed> $tree
      * @throws DatabaseException
      */
     private function eagerLoadTree(array $models, array $tree): void
@@ -478,6 +523,8 @@ abstract class AbstractRepository
     }
 
     /**
+     * @param mixed $rel
+     * @param array<int, string> $chain
      * @throws DatabaseException
      */
     private function loadNestedRelations(mixed $rel, array $chain): void
@@ -508,16 +555,25 @@ abstract class AbstractRepository
         }
     }
 
+    /**
+     * @return array<int, T>
+     */
     public function getModels(): array
     {
         return $this->lastResult;
     }
 
+    /**
+     * @return T|null
+     */
     public function getModel(): ?AbstractModel
     {
         return $this->lastResult[0] ?? null;
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function toArray(): array
     {
         return array_map(
@@ -525,6 +581,9 @@ abstract class AbstractRepository
         );
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function toList(): array
     {
         return $this->toArray();
@@ -557,6 +616,9 @@ abstract class AbstractRepository
         );
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     protected function hydrateSingle(array $row): AbstractModel
     {
         $model = new $this->modelClass($row);
@@ -564,19 +626,28 @@ abstract class AbstractRepository
         return $model;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $rows
+     */
     protected function hydrateMany(array $rows): void
     {
-        $this->lastResult = array_map(
-            fn($r) => $this->modelClass::hydrateRow($r),
+        /** @var array<int, T> $results */
+        $results = array_map(
+            fn(array $r): AbstractModel => $this->modelClass::hydrateRow($r),
             $rows
         );
+        $this->lastResult = $results;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $rows
+     */
     protected function hydrateJoined(array $rows, string $relationName): void
     {
         $targetClass = $this->modelClass::getRelationTarget($relationName);
 
-        $this->lastResult = array_map(function ($row) use ($relationName, $targetClass) {
+        /** @var array<int, T> $results */
+        $results = array_map(function (array $row) use ($relationName, $targetClass): AbstractModel {
             $model = new $this->modelClass($row);
             $relData = [];
 
@@ -592,5 +663,7 @@ abstract class AbstractRepository
 
             return $model;
         }, $rows);
+
+        $this->lastResult = $results;
     }
 }

@@ -19,6 +19,7 @@ class DatabaseManager
     }
 
     /**
+     * @param array<string, mixed> $params
      * @throws DatabaseException
      */
     public function query(string $sql, array $params = []): PDOStatement
@@ -47,6 +48,8 @@ class DatabaseManager
     }
 
     /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>|null
      * @throws DatabaseException
      */
     public function fetch(string $sql, array $params = []): ?array
@@ -56,6 +59,8 @@ class DatabaseManager
     }
 
     /**
+     * @param array<string, mixed> $params
+     * @return array<int, array<string, mixed>>
      * @throws DatabaseException
      */
     public function fetchAll(string $sql, array $params = []): array
@@ -64,6 +69,7 @@ class DatabaseManager
     }
 
     /**
+     * @param array<string|int, mixed> $params
      * @throws DatabaseException
      */
     public function execute(string $sql, array $params = []): bool

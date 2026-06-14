@@ -7,6 +7,9 @@ use Neo\Core\View\Interface\TwigExtensionInterface;
 
 final class DatabaseViewExtension implements TwigExtensionInterface
 {
+    /**
+     * @return array<string, array{callable: callable, options: array<string, mixed>}>
+     */
     public function getFunctions(): array
     {
         return [
@@ -17,6 +20,9 @@ final class DatabaseViewExtension implements TwigExtensionInterface
         ];
     }
 
+    /**
+     * @return array<string, array{callable: callable, options: array<string, mixed>}>
+     */
     public function getFilters(): array
     {
         return [];

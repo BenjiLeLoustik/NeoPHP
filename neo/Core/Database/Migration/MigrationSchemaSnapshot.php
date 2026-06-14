@@ -31,17 +31,29 @@ final class MigrationSchemaSnapshot
         ", self::TABLE));
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function take(): void
     {
         $dump = $this->buildDump();
         $hash = hash('sha256', $dump);
 
         $this->db->execute(
-            sprintf('INSERT INTO `%s` (schema_hash, schema_dump) VALUES (?, ?)', self::TABLE),
-            [$hash, $dump]
+            sprintf(
+                'INSERT INTO `%s` (schema_hash, schema_dump) VALUES (:hash, :dump)',
+                self::TABLE
+            ),
+            [
+                'hash' => $hash,
+                'dump' => $dump
+            ]
         );
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function getLastHash(): ?string
     {
         $row = $this->db->fetch(sprintf(
@@ -52,11 +64,17 @@ final class MigrationSchemaSnapshot
         return $row['schema_hash'] ?? null;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function getCurrentHash(): string
     {
         return hash('sha256', $this->buildDump());
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function hasChanged(): bool
     {
         $last = $this->getLastHash();

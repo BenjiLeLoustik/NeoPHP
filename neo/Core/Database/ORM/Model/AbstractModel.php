@@ -16,19 +16,43 @@ use PDOException;
 abstract class AbstractModel
 {
     protected static ?string $table = null;
+
     protected static string $primaryKey = 'id';
+
+    /** @var array<string, mixed> */
     protected array $data = [];
+
+    /** @var array<string, mixed> */
     protected array $relationsCache = [];
+
+    /** @var array<string, AbstractModel> */
     private static array $instanceCache = [];
+
     protected bool $withTrashedRelations = false;
+
     protected bool $onlyTrashedRelations = false;
+
+    /** @var array<int, string> */
     protected array $fillable = [];
+
     protected bool $trackIdentity = true;
+
     protected bool $timestamps = true;
+
     protected bool $isLoadingRelations = false;
-    private static array $loadingGuard = [];
+
+    /** @var array<int, string> */
+    protected static array $loadingGuard = [];
+
+    /** @var array<int, string> */
     protected array $hidden = [];
 
+    /**
+     * @param array<string, mixed> $data
+     * @param bool $autoLoadRelations
+     * @param array<int, string> $relationsToLoad
+     * @throws DatabaseException
+     */
     public function __construct(array $data = [], bool $autoLoadRelations = false, array $relationsToLoad = [])
     {
         $ref = new \ReflectionObject($this);
@@ -64,6 +88,9 @@ abstract class AbstractModel
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getRelationsCache(): array
     {
         return $this->relationsCache;
@@ -74,6 +101,9 @@ abstract class AbstractModel
         self::$instanceCache = [];
     }
 
+    /**
+     * @return array<int, string>
+     */
     private function getInternalProperties(): array
     {
         return [
@@ -102,9 +132,18 @@ abstract class AbstractModel
         self::$instanceCache[$key] = $this;
     }
 
+    /**
+     * @return static|null
+     */
     public static function getIdentity(int|string $id): ?self
     {
-        return self::$instanceCache[static::class . ':' . $id] ?? null;
+        $key = static::class . ':' . $id;
+        if (!isset(self::$instanceCache[$key])) {
+            return null;
+        }
+
+        /** @var static */
+        return self::$instanceCache[$key];
     }
 
     public static function removeIdentity(int|string $id): void
@@ -160,6 +199,9 @@ abstract class AbstractModel
         return static::$primaryKey;
     }
 
+    /**
+     * @return array<string, object>
+     */
     public function getRelations(): array
     {
         static $cache = [];
@@ -192,6 +234,10 @@ abstract class AbstractModel
         return isset($this->getRelations()[$name]);
     }
 
+    /**
+     * @param array<int, AbstractModel> $items
+     * @return array<int, AbstractModel>
+     */
     protected function filterTrashed(array $items, bool $include, bool $only): array
     {
         return array_values(array_filter($items, function ($item) use ($include, $only) {
@@ -329,12 +375,17 @@ abstract class AbstractModel
         }
     }
 
+    /**
+     * @param array<string, mixed> $row
+     * @throws DatabaseException
+     */
     public static function hydrateRow(array $row): static
     {
         return new static($row);
     }
 
     /**
+     * @param array<int, string> $relations
      * @throws DatabaseException
      */
     public function loadRelations(array $relations): void
@@ -351,6 +402,7 @@ abstract class AbstractModel
     }
 
     /**
+     * @param array<string, bool> $loaded
      * @throws DatabaseException
      */
     public function loadAllRelations(
@@ -421,6 +473,10 @@ abstract class AbstractModel
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $stack
+     * @return array<string, mixed>
+     */
     public function toArray(
         array $stack = [],
         int $depth = 0,
@@ -466,6 +522,9 @@ abstract class AbstractModel
         return $result;
     }
 
+    /**
+     * @param array<string, bool> $loaded
+     */
     public function toModel(array &$loaded = [], int $depth = 0, int $maxDepth = 5): self
     {
         $pk  = static::getPrimaryKey();
@@ -489,6 +548,9 @@ abstract class AbstractModel
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function fill(array $data): void
     {
         $relations = array_keys($this->getRelations());
@@ -571,6 +633,7 @@ abstract class AbstractModel
     }
 
     /**
+     * @param array<int, AbstractModel|array<string, mixed>> $entries
      * @throws DatabaseException
      */
     public function saveRelation(string $relationName, array $entries): void
@@ -711,6 +774,9 @@ abstract class AbstractModel
         return $cache[$target] = (bool)$stmt->fetch();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toDatabase(): array
     {
         $data = [];
@@ -786,6 +852,7 @@ abstract class AbstractModel
     }
 
     /**
+     * @param array<int, AbstractModel> $models
      * @throws DatabaseException
      */
     public static function eagerLoad(

@@ -22,6 +22,7 @@ class DatabaseIntrospector
     }
 
     /**
+     * @return array<int, string>
      * @throws DatabaseException
      */
     public function getTables(): array
@@ -55,6 +56,7 @@ class DatabaseIntrospector
     }
 
     /**
+     * @return array<int, array{name: string, type: string, nullable: bool, default: mixed, key: string, extra: string}>
      * @throws DatabaseException
      */
     public function getColumns(string $table): array

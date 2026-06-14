@@ -36,6 +36,7 @@ class ModelGenerator
     }
 
     /**
+     * @param array<int, array<string, mixed>> $columns
      * @throws DatabaseException
      */
     public function generate(string $table, array $columns, bool $write = true): string
@@ -90,6 +91,11 @@ PHP;
         return $this->writeModelFile($file, $className, $modelData, $header);
     }
 
+    /**
+     * @param array<string, mixed> $col
+     * @param array<string, mixed>|null $existing
+     * @return array<string, mixed>
+     */
     private function createColumnArray(array $col, ?array $existing = null): array
     {
         $type = $this->convertColumnType($col['type']);
@@ -150,6 +156,9 @@ PHP;
         return 'string';
     }
 
+    /**
+     * @return array{0: string, 1: array{columns: array<string, array<string, mixed>>}}
+     */
     private function parseExistingFile(string $content): array
     {
         $header = '';
@@ -204,6 +213,7 @@ PHP;
     }
 
     /**
+     * @param array{table: string, columns: array<string, array<string, mixed>>} $modelData
      * @throws DatabaseException
      */
     private function writeModelFile(string $file, string $className, array $modelData, string $header = ''): string
