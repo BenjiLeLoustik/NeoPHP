@@ -8,6 +8,9 @@ use Neo\Core\Module\AbstractModule;
 
 class EventModule extends AbstractModule
 {
+    /**
+     * @return list<class-string>
+     */
     public function dependencies(): array
     {
         return [];
