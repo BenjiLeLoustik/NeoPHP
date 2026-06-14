@@ -11,8 +11,8 @@ use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Response\Response;
 
 /**
- * @method \Neo\Core\Http\Response\Response render(string $template, array $params = [])
- * @method string template(string $template, array $params = [])
+ * @method \Neo\Core\Http\Response\Response render(string $template, array<string, mixed> $params = [])
+ * @method string template(string $template, array<string, mixed> $params = [])
  */
 class ViewControllerExtension implements ControllerExtensionInterface
 {
