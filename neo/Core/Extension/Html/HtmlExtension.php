@@ -67,6 +67,9 @@ class HtmlExtension
         return trim($html ?? '');
     }
 
+    /**
+     * @param array<string, mixed> $attributes
+     */
     public function tag(string $tag, string $content, array $attributes = []): string
     {
         $attrs = '';
@@ -77,6 +80,9 @@ class HtmlExtension
         return sprintf('<%s%s>%s</%s>', $tag, $attrs, $content, $tag);
     }
 
+    /**
+     * @param array<string, mixed> $attributes
+     */
     public function selfClosingTag(string $tag, array $attributes = []): string
     {
         $attrs = '';

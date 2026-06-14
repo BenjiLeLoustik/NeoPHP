@@ -5,6 +5,9 @@ namespace Neo\Core\Extension\Url;
 
 class UrlExtension
 {
+    /**
+     * @return array<string, string|int>
+     */
     public function parse(string $url): array
     {
         return parse_url($url) ?: [];
@@ -30,6 +33,9 @@ class UrlExtension
         return $this->parse($url)['query'] ?? '';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function queryParams(string $url): array
     {
         $query = $this->queryString($url);
@@ -42,6 +48,9 @@ class UrlExtension
         return $this->parse($url)['fragment'] ?? '';
     }
 
+    /**
+     * @param array<string, mixed> $parts
+     */
     public function build(array $parts): string
     {
         $url = '';
@@ -75,6 +84,9 @@ class UrlExtension
         return $url;
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function addQueryParams(string $url, array $params): string
     {
         $existing = $this->queryParams($url);
@@ -91,6 +103,9 @@ class UrlExtension
         return empty($params) ? $base : $base . '?' . http_build_query($params);
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function buildQuery(array $params): string
     {
         return http_build_query($params);

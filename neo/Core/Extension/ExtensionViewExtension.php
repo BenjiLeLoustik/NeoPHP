@@ -28,6 +28,9 @@ final class ExtensionViewExtension implements TwigExtensionInterface
         private readonly UrlExtension $url,
     ) {}
 
+    /**
+     * @return array<string, array{callable: callable, options: array<string, mixed>}>
+     */
     public function getFunctions(): array
     {
         return [
@@ -103,6 +106,9 @@ final class ExtensionViewExtension implements TwigExtensionInterface
         ];
     }
 
+    /**
+     * @return array<string, array{callable: callable, options: array<string, mixed>}>
+     */
     public function getFilters(): array
     {
         return [
