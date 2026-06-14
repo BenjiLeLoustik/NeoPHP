@@ -5,6 +5,9 @@ namespace Neo\Core\Console\Helper;
 
 final class Args
 {
+    /**
+     * @param list<string> $args
+     */
     public static function option(array $args, string $option): ?string
     {
         $count = count($args);
@@ -22,11 +25,17 @@ final class Args
         return null;
     }
 
+    /**
+     * @param list<string> $args
+     */
     public static function flag(array $args, string $flag): bool
     {
         return in_array($flag, $args, true);
     }
 
+    /**
+     * @param list<string> $args
+     */
     public static function positional(array $args, int $index): ?string
     {
         $positionals = array_values(
@@ -36,6 +45,10 @@ final class Args
         return $positionals[$index] ?? null;
     }
 
+    /**
+     * @param list<string> $args
+     * @return list<string>
+     */
     public static function positionals(array $args): array
     {
         return array_values(

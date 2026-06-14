@@ -13,6 +13,7 @@ use ReflectionClass;
 
 class ConsoleHandler
 {
+    /** @var array<string, array{instance: CommandInterface, description: string, category: string}> */
     private array $commands = [];
 
     public function __construct(private Container $container)
@@ -82,6 +83,7 @@ class ConsoleHandler
     }
 
     /**
+     * @param list<string> $argv
      * @throws \ReflectionException
      */
     public function run(array $argv): void

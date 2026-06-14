@@ -32,13 +32,14 @@ final class Input
         return in_array($answer, ['y', 'yes', 'o', 'oui'], true);
     }
 
+    /**
+     * @param list<string> $choices
+     */
     public static function choice(string $question, array $choices, ?string $default = null): string
     {
         echo Output::colorize($question, 'bold') . "\n";
 
-        $indexed = array_values($choices);
-
-        foreach ($indexed as $i => $choice) {
+        foreach ($choices as $i => $choice) {
             $number = Output::colorize('  [' . ($i + 1) . '] ', 'dim');
 
             if ($default === $choice) {
@@ -59,22 +60,24 @@ final class Input
 
         $index = ((int) $answer) - 1;
 
-        if (!isset($indexed[$index])) {
+        if (!isset($choices[$index])) {
             Output::error('Invalid choice.');
             return self::choice($question, $choices, $default);
         }
 
-        return $indexed[$index];
+        return $choices[$index];
     }
 
+    /**
+     * @param list<string> $choices
+     * @return list<string>
+     */
     public static function multiChoice(string $question, array $choices): array
     {
         echo Output::colorize($question, 'bold') . "\n";
         echo Output::colorize('  (separate multiple choices with commas, e.g. 1,3)', 'dim') . "\n";
 
-        $indexed = array_values($choices);
-
-        foreach ($indexed as $i => $choice) {
+        foreach ($choices as $i => $choice) {
             echo Output::colorize('  [' . ($i + 1) . '] ', 'dim') . $choice . "\n";
         }
 
@@ -90,8 +93,8 @@ final class Input
         foreach (explode(',', $answer) as $raw) {
             $index = ((int) trim($raw)) - 1;
 
-            if (isset($indexed[$index])) {
-                $selected[] = $indexed[$index];
+            if (isset($choices[$index])) {
+                $selected[] = $choices[$index];
             }
         }
 
@@ -114,6 +117,9 @@ final class Input
         return $value;
     }
 
+    /**
+     * @param list<string> $suggestions
+     */
     public static function autocomplete(string $question, array $suggestions, ?string $default = null): string
     {
         $hint = $default !== null

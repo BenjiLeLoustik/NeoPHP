@@ -8,6 +8,9 @@ use Neo\Core\Console\Interface\CommandInterface;
 class AbstractCommand implements CommandInterface
 {
 
+    /**
+     * @return list<string>
+     */
     protected function getAvailableProjects(): array
     {
         $srcDir = ROOT_DIR . '/src/';
@@ -22,6 +25,9 @@ class AbstractCommand implements CommandInterface
         );
     }
 
+    /**
+     * @param array<int|string, mixed> $args
+     */
     public function execute(array $args): void
     {}
 

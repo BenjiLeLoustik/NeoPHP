@@ -16,6 +16,9 @@ use Neo\Core\Console\Helper\Output;
 )]
 final class ComposerRequireCommand extends AbstractCommand
 {
+    /**
+     * @param array<int|string, mixed> $args
+     */
     public function execute(array $args): void
     {
         $positionals = Args::positionals($args);
