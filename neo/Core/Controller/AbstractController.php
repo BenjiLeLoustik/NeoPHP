@@ -24,6 +24,7 @@ abstract class AbstractController
 {
     protected Container $container;
 
+    /** @var array<string, \Closure> */
     private array $methods = [];
 
     public function __construct(?Container $container = null)
@@ -41,6 +42,7 @@ abstract class AbstractController
     }
 
     /**
+     * @param list<mixed> $arguments
      * @throws AbstractControllerException
      */
     public function __call(string $name, array $arguments): mixed
