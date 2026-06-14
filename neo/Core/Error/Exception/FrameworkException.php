@@ -8,8 +8,13 @@ use Throwable;
 class FrameworkException extends \Exception
 {
     private string $title;
+
+    /** @var array<string, mixed> */
     private array $context;
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function __construct(
         string $title,
         string $message,
@@ -28,6 +33,9 @@ class FrameworkException extends \Exception
         return $this->title;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getContext(): array
     {
         return $this->context;
@@ -38,7 +46,7 @@ class FrameworkException extends \Exception
         return new self(
             $title,
             $e->getMessage(),
-            $e->getCode(),
+            (int) $e->getCode(),
             [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
