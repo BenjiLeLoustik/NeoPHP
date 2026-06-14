@@ -108,6 +108,9 @@ PHP;
         Output::success("Listener '$listener' generated for event '$event' in project '$project'.");
     }
 
+    /**
+     * @return list<string>
+     */
     private function getAvailableEvents(string $project): array
     {
         $eventDir = ROOT_DIR . "/src/$project/App/Event";
