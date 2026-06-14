@@ -29,6 +29,10 @@ final class MigrationRunner
         ", self::TABLE));
     }
 
+    /**
+     * @return array<string, array{migration: string, batch: int, applied_at: string}>
+     * @throws DatabaseException
+     */
     public function getApplied(): array
     {
         return array_column(
@@ -54,6 +58,10 @@ final class MigrationRunner
         return (int) ($row['last_batch'] ?? 0);
     }
 
+    /**
+     * @param string $migrationsPath
+     * @return array<int, string>
+     */
     public function getMigrationFiles(string $migrationsPath): array
     {
         if (!is_dir($migrationsPath)) {
@@ -66,6 +74,11 @@ final class MigrationRunner
         return $files;
     }
 
+    /**
+     * @param string $migrationsPath
+     * @return array<int, string>
+     * @throws DatabaseException
+     */
     public function getPending(string $migrationsPath): array
     {
         $applied = $this->getApplied();
@@ -75,6 +88,7 @@ final class MigrationRunner
     }
 
     /**
+     * @return array<int, string>
      * @throws DatabaseException
      */
     public function run(
@@ -101,8 +115,8 @@ final class MigrationRunner
                 $instance->up($this->db);
 
                 $this->db->execute(
-                    sprintf('INSERT INTO `%s` (migration, batch) VALUES (?, ?)', self::TABLE),
-                    [$className, $batch]
+                    sprintf('INSERT INTO `%s` (migration, batch) VALUES (:migration, :batch)', self::TABLE),
+                    ['migration' => $className, 'batch' => $batch]
                 );
             }
 
@@ -117,6 +131,7 @@ final class MigrationRunner
     }
 
     /**
+     * @return array<int, string>
      * @throws DatabaseException
      */
     public function rollback(string $migrationsPath, ?MigrationSchemaSnapshot $snapshot = null): array
@@ -128,8 +143,8 @@ final class MigrationRunner
         }
 
         $rows = $this->db->fetchAll(
-            sprintf('SELECT migration FROM `%s` WHERE batch = ? ORDER BY id DESC', self::TABLE),
-            [$lastBatch]
+            sprintf('SELECT migration FROM `%s` WHERE batch = :batch ORDER BY id DESC', self::TABLE),
+            ['batch' => $lastBatch]
         );
 
         $rolledBack = [];
@@ -146,8 +161,8 @@ final class MigrationRunner
             }
 
             $this->db->execute(
-                sprintf('DELETE FROM `%s` WHERE migration = ?', self::TABLE),
-                [$className]
+                sprintf('DELETE FROM `%s` WHERE migration = :migration', self::TABLE),
+                ['migration' => $className]
             );
 
             $rolledBack[] = $className;

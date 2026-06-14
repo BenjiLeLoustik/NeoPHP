@@ -14,6 +14,9 @@ use Neo\Core\View\ViewModule;
 
 class DatabaseModule extends AbstractModule
 {
+    /**
+     * @return array<int, class-string>
+     */
     public function dependencies(): array
     {
         return [

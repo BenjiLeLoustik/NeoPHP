@@ -12,6 +12,12 @@ final class FormViewExtension implements TwigExtensionInterface
         private readonly TranslationManager $translator
     ) {}
 
+    /**
+     * @return array<string, array{
+     * callable: callable,
+     * options?: array{is_safe?: array<int, string>}
+     * }>
+     */
     public function getFunctions(): array
     {
         return [
@@ -99,6 +105,9 @@ final class FormViewExtension implements TwigExtensionInterface
         ];
     }
 
+    /**
+     * @return array<string, callable>
+     */
     public function getFilters(): array
     {
         return [];

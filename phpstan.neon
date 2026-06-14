@@ -6,6 +6,7 @@ parameters:
 
     tmpDir: var/phpstan
 
+    treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: false
 
     ignoreErrors:

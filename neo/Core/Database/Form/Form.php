@@ -12,18 +12,34 @@ use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Csrf\CsrfTokenManager;
 use Neo\Core\Validator\Validator;
+use Random\RandomException;
 
 class Form
 {
+    /** @var array<string, FormField> */
     private array $fields = [];
+
     private ?object $data = null;
+
     private bool $submitted = false;
+
+    /** @var array<int, string> */
     private array $errors = [];
+
     private CsrfTokenManager $csrfManager;
+
     private string $csrfFieldName = '_csrf';
+
+    /** @var array<int, string> */
     private array $ignoredFields = ['submit', '_csrf', 'csrf_token', 'reset'];
+
+    /** @var array<string, array<int, string>> */
     private array $removedConstraints = [];
+
+    /** @var array<string, array<int, object>> */
     private array $addedConstraints = [];
+
+    /** @var array<int, string> */
     private array $excludedFromPopulate = [];
 
     public function __construct()
@@ -31,6 +47,9 @@ class Form
         $this->csrfManager = new CsrfTokenManager();
     }
 
+    /**
+     * @throws RandomException
+     */
     public function addCsrfField(): void
     {
         if (!isset($this->fields[$this->csrfFieldName])) {
@@ -68,6 +87,9 @@ class Form
         }
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     private function normalizeCollectionValue(mixed $value): array
     {
         if (!is_array($value) && !($value instanceof \Traversable)) {
@@ -86,6 +108,9 @@ class Form
         return $result;
     }
 
+    /**
+     * @param array<int, string> $fields
+     */
     public function excludeFromPopulate(array $fields): void
     {
         $this->excludedFromPopulate = array_merge($this->excludedFromPopulate, $fields);
@@ -174,6 +199,9 @@ class Form
         }
     }
 
+    /**
+     * @return array<string, FormField>
+     */
     public function getFields(): array
     {
         return $this->fields;
@@ -340,6 +368,9 @@ class Form
         $this->errors[] = $message;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getErrors(): array
     {
         return $this->errors;
@@ -363,7 +394,7 @@ class Form
 
     public function get(string $name): mixed
     {
-        return $this->fields[$name]?->getValue();
+        return isset($this->fields[$name]) ? $this->fields[$name]->getValue() : null;
     }
 
     public function addConstraint(string $fieldName, object $constraint): void
@@ -371,6 +402,9 @@ class Form
         $this->addedConstraints[$fieldName][] = $constraint;
     }
 
+    /**
+     * @return array<int, object>
+     */
     public function getAddedConstraints(string $fieldName): array
     {
         return $this->addedConstraints[$fieldName] ?? [];

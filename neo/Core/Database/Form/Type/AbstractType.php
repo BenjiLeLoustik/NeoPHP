@@ -21,11 +21,18 @@ abstract class AbstractType
         return htmlspecialchars($field->getId(), ENT_QUOTES, 'UTF-8');
     }
 
+    /**
+     * @return array<int, string>
+     */
     protected function getDefaultIgnored(): array
     {
         return ['label', 'value', 'id', 'autocomplete', 'attr', 'attrs'];
     }
 
+    /**
+     * @param array<int, string> $extraIgnored
+     * @return array<string, mixed>
+     */
     protected function collectAttrs(FormField $field, array $extraIgnored = []): array
     {
         $ignored = array_merge($this->getDefaultIgnored(), $extraIgnored);
@@ -50,6 +57,9 @@ abstract class AbstractType
         return $attrs;
     }
 
+    /**
+     * @param array<string, mixed> $attrs
+     */
     protected function buildAttributes(array $attrs): string
     {
         $booleanAttrs = ['required', 'disabled', 'readonly', 'checked', 'multiple', 'autofocus'];

@@ -59,6 +59,7 @@ PHP;
     }
 
     /**
+     * @param array<int, string> $tables
      * @throws DatabaseException
      */
     private function buildUpBody(array $tables): string
@@ -110,6 +111,9 @@ PHP;
         return implode("\n\n", $lines);
     }
 
+    /**
+     * @param array<int, string> $tables
+     */
     private function buildDownBody(array $tables): string
     {
         $lines = [];
