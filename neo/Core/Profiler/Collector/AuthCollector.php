@@ -16,6 +16,9 @@ class AuthCollector implements CollectorInterface
         return 'auth';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function collect(): array
     {
         if (!$this->auth->check()) {

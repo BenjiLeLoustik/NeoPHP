@@ -5,6 +5,15 @@ namespace Neo\Core\Profiler\Collector;
 
 class LogCollector implements CollectorInterface
 {
+    /**
+     * @var array<int, array{
+     *     level: string,
+     *     message: string,
+     *     context: array<string, mixed>,
+     *     origin: string,
+     *     time: float
+     * }>
+     */
     private array $entries = [];
 
     public function getName(): string
@@ -12,6 +21,9 @@ class LogCollector implements CollectorInterface
         return 'logs';
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function record(string $level, string $message, array $context, string $origin): void
     {
         $this->entries[] = [
@@ -23,6 +35,9 @@ class LogCollector implements CollectorInterface
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function collect(): array
     {
         $byLevel = [];

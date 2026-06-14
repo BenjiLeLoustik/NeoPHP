@@ -8,7 +8,10 @@ use Neo\Core\Routing\Router;
 class RouterCollector implements CollectorInterface
 {
     private ?string $controller = null;
+
     private ?string $action = null;
+
+    /** @var array<string, mixed> */
     private array $params = [];
 
     public function __construct(
@@ -20,6 +23,9 @@ class RouterCollector implements CollectorInterface
         return 'router';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function setMatchedRoute(string $controller, string $action, array $params): void
     {
         $this->controller = $controller;
@@ -27,6 +33,9 @@ class RouterCollector implements CollectorInterface
         $this->params = $params;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function collect(): array
     {
         return [

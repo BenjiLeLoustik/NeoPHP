@@ -15,6 +15,9 @@ class MailCollector implements CollectorInterface
         return 'mail';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function collect(): array
     {
         $mails = $this->mailer->getSentMails();

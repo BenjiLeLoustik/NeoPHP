@@ -7,6 +7,7 @@ use Neo\Core\Event\EventDispatcher;
 
 class EventCollector implements CollectorInterface
 {
+    /** @var array<int, array{event: string, listeners: array<int, string>, duration: float}> */
     private array $events = [];
 
     public function __construct(
@@ -18,6 +19,9 @@ class EventCollector implements CollectorInterface
         return 'events';
     }
 
+    /**
+     * @param array<int, string> $listeners
+     */
     public function record(string $eventClass, array $listeners, float $duration): void
     {
         $this->events[] = [
@@ -27,6 +31,9 @@ class EventCollector implements CollectorInterface
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function collect(): array
     {
         $registered = [];

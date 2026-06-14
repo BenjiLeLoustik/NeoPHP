@@ -5,8 +5,12 @@ namespace Neo\Core\Routing;
 
 class RouteCollection
 {
+    /** @var array<string, array<string, array{name: string, controller: string, action: string, requirements: array<string, string>}>> */
     private array $routes = [];
 
+    /**
+     * @param array<string, string> $requirements
+     */
     public function add(
         string $method,
         string $path,
@@ -30,6 +34,9 @@ class RouteCollection
         return isset($this->routes[$method][$path]);
     }
 
+    /**
+     * @return array<string, array<string, array{name: string, controller: string, action: string, requirements: array<string, string>}>>
+     */
     public function all(): array
     {
         return $this->routes;

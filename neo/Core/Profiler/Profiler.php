@@ -7,8 +7,12 @@ use Neo\Core\Profiler\Collector\CollectorInterface;
 class Profiler
 {
     private static ?self $instance = null;
+
+    /** @var array<string, CollectorInterface> */
     private array $collectors = [];
+
     private float $startTime;
+
     private int $startMemory;
 
     private function __construct()
@@ -40,6 +44,10 @@ class Profiler
         $this->collectors[$collector->getName()] = $collector;
     }
 
+    /**
+     * @param string $name
+     * @return CollectorInterface|null
+     */
     public function getCollector(string $name): ?CollectorInterface
     {
         return $this->collectors[$name] ?? null;
@@ -70,6 +78,9 @@ class Profiler
         return memory_get_peak_usage(true);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function collect(): array
     {
         $data = [

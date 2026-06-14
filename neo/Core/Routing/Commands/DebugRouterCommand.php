@@ -80,6 +80,10 @@ final class DebugRouterCommand extends AbstractCommand
         $this->renderTable($rows, $project, $filterMethod, $filterName, $filterPath);
     }
 
+    /**
+     * @param array<string, array<string, array{name: string, controller: string, action: string}>> $routes
+     * @return array<int, array{method: string, path: string, name: string, controller: string, action: string}>
+     */
     private function filterRoutes(
         array $routes,
         ?string $filterMethod,
@@ -113,6 +117,9 @@ final class DebugRouterCommand extends AbstractCommand
         return $rows;
     }
 
+    /**
+     * @param array<int, array{method: string, path: string, name: string, controller: string, action: string}> $rows
+     */
     private function renderTable(
         array $rows,
         string $project,
