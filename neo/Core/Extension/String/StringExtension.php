@@ -136,6 +136,10 @@ class StringExtension
         return str_ends_with($text, $suffix);
     }
 
+    /**
+     * @param string|array<array-key, string> $search
+     * @param string|array<array-key, string> $replace
+     */
     public function replace(string $text, string|array $search, string|array $replace): string
     {
         return str_replace($search, $replace, $text);
@@ -186,6 +190,9 @@ class StringExtension
         return htmlspecialchars($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
+    /**
+     * @param array<int, string> $allowed
+     */
     public function stripTags(string $text, array $allowed = []): string
     {
         return strip_tags($text, $allowed);

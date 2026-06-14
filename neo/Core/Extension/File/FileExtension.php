@@ -97,12 +97,18 @@ class FileExtension
         return file_put_contents($path, $content, $flags) !== false;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function readLines(string $path): array
     {
         if (!file_exists($path)) return [];
         return file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
     }
 
+    /**
+     * @return array<array-key, mixed>|null
+     */
     public function readJson(string $path): array|null
     {
         $content = $this->read($path);
@@ -112,6 +118,9 @@ class FileExtension
         return is_array($decoded) ? $decoded : null;
     }
 
+    /**
+     * @param array<array-key, mixed> $data
+     */
     public function writeJson(string $path, array $data, bool $pretty = true): bool
     {
         $flags = $pretty ? JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE : JSON_UNESCAPED_UNICODE;
@@ -159,11 +168,17 @@ class FileExtension
         return rmdir($path);
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function listFiles(string $directory, ?string $extension = null): array
     {
         if (!is_dir($directory)) return [];
 
-        $files = array_filter(scandir($directory), fn($f) => is_file($directory . DIRECTORY_SEPARATOR . $f));
+        /** @var array<int, string> $scanned */
+        $scanned = scandir($directory);
+
+        $files = array_filter($scanned, fn($f) => is_file($directory . DIRECTORY_SEPARATOR . $f));
 
         if ($extension !== null) {
             $files = array_filter($files, fn($f) => $this->extension($f) === strtolower($extension));

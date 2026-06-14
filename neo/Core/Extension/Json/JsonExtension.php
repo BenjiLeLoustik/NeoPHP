@@ -69,6 +69,9 @@ class JsonExtension
         return $this->encode($merged);
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function diff(string $json1, string $json2): array
     {
         $a = $this->decode($json1) ?? [];
@@ -76,12 +79,19 @@ class JsonExtension
         return array_diff_assoc($b, $a);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function flatten(string $json, string $separator = '.'): array
     {
         $data = $this->decode($json) ?? [];
         return $this->flattenArray($data, '', $separator);
     }
 
+    /**
+     * @param array<array-key, mixed> $array
+     * @return array<string, mixed>
+     */
     private function flattenArray(array $array, string $prefix, string $separator): array
     {
         $result = [];
@@ -98,6 +108,9 @@ class JsonExtension
         return $result;
     }
 
+    /**
+     * @return array<int, int|string>
+     */
     public function keys(string $json): array
     {
         $data = $this->decode($json);
@@ -109,11 +122,17 @@ class JsonExtension
         return $this->get($json, $key, '__NOT_FOUND__') !== '__NOT_FOUND__';
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function toArray(string $json): array
     {
         return $this->decode($json) ?? [];
     }
 
+    /**
+     * @param array<array-key, mixed> $data
+     */
     public function fromArray(array $data, bool $pretty = false): string|false
     {
         return $this->encode($data, $pretty);
