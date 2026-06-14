@@ -30,6 +30,9 @@ final class JwtManager
         $this->algorithm = $algorithm;
     }
 
+    /**
+     * @param array<string, mixed> $payload
+     */
     public function generate(array $payload = []): string
     {
         $header = $this->base64UrlEncode(json_encode([
@@ -49,6 +52,7 @@ final class JwtManager
     }
 
     /**
+     * @return array<string, mixed>
      * @throws JwtException
      */
     public function decode(string $token): array

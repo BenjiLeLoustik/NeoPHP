@@ -53,6 +53,9 @@ class Profiler
         return $this->collectors[$name] ?? null;
     }
 
+    /**
+     * @return array<string, CollectorInterface>
+     */
     public function getCollectors(): array
     {
         return $this->collectors;

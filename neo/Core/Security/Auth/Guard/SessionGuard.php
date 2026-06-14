@@ -14,6 +14,9 @@ final class SessionGuard implements GuardInterface
 {
     private const string SESSION_KEY = '_auth_user_id';
 
+    /**
+     * @param array<string, mixed> $role
+     */
     public function __construct(
         private readonly Session $session,
         private readonly PasswordManager $passwordManager,
@@ -24,7 +27,9 @@ final class SessionGuard implements GuardInterface
     ) {}
 
     /**
+     * @param array<string, mixed> $credentials
      * @throws AuthException
+     * @throws DatabaseException
      */
     public function attempt(array $credentials): bool
     {

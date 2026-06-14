@@ -7,6 +7,9 @@ use Neo\Core\Database\ORM\Model\AbstractModel;
 
 interface GuardInterface
 {
+    /**
+     * @param array<string, mixed> $credentials
+     */
     public function attempt(array $credentials): bool;
 
     public function login(AbstractModel $user): void;
