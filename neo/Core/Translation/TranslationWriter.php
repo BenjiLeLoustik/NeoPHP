@@ -134,7 +134,7 @@ final class TranslationWriter
     }
 
     /**
-     * @param array $array
+     * @param array<string|int, mixed> $array
      * @param int $level
      * @return string
      */

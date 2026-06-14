@@ -60,7 +60,7 @@ class TestScanner
 
             $classAttr = $refClass->getAttributes(Test::class)[0] ?? null;
 
-            /** @var array<int, TestMethodContext> $methodCtxs */
+            /** @var list<TestMethodContext> $methodCtxs */
             $methodCtxs = $this->scanMethods($refClass);
 
             if ($classAttr === null && empty($methodCtxs)) {

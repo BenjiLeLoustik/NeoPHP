@@ -17,6 +17,7 @@ readonly class TestClassContext
         public string $shortName,
         public string $namespace,
         public TestType $type,
+        /** @var array<int, TestMethodContext> */
         public array $methods,
         public array $cases = [],
         public array $dataset = [],
