@@ -10,6 +10,9 @@ use Neo\Core\Utils\Config\ConfigModule;
 
 class ErrorModule extends AbstractModule
 {
+    /**
+     * @return list<class-string>
+     */
     public function dependencies(): array
     {
         return [
