@@ -6,8 +6,6 @@ Framework PHP 8.1+ centré sur :
 - une CLI interne dans `bin/neo`
 - des projets applicatifs isolés dans `src/<Projet>/`
 
-Ce dépôt contient le moteur du framework et un projet d'exemple dans `src/Test/`.
-
 NeoPHP vise un autre point d'équilibre que Symfony ou Laravel. 
 L'objectif n'est pas d'empiler des couches, des bundles ou un ecosysteme très large, mais de fournir un noyau PHP lisible, compact et directement exploitable pour construire une application complete sans sortir du depot. 
 Le framework mise sur une structure simple, une CLI integrée, des modules coeur autodétéctes et un workflow multi-projets qui reste explicite.
