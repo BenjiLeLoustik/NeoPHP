@@ -11,6 +11,9 @@ class AbstractModule implements Interface\ModuleInterface
 
     protected Container $container;
 
+    /**
+     * @return array<class-string>
+     */
     public function dependencies(): array
     {
         return [];

@@ -187,6 +187,10 @@ class Router
         );
     }
 
+    /**
+     * @param array<string, string> $params
+     * @param array<string, string> $requirements
+     */
     private function match(string $route, string $path, array &$params, array $requirements = []): bool
     {
         $route = '/' . trim($route, '/');
@@ -223,6 +227,8 @@ class Router
     }
 
     /**
+     * @param array<string, mixed> $routeInfo
+     * @param array<string, string> $params
      * @throws RouterException
      */
     private function invokeHandler(array $routeInfo, array $params): mixed
@@ -284,6 +290,9 @@ class Router
         }
     }
 
+    /**
+     * @param array<string, string> $params
+     */
     public function generateUrl(string $name, array $params = []): string
     {
         foreach ($this->routes->all() as $methodRoutes) {

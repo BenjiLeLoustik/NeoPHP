@@ -14,6 +14,9 @@ class RequestCollector implements CollectorInterface
         return 'request';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function collect(): array
     {
         return [

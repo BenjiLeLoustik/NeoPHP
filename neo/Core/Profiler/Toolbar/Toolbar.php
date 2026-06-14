@@ -349,6 +349,9 @@ readonly class Toolbar
 HTML;
     }
 
+    /**
+     * @param array<string, mixed> $t
+     */
     private function renderTranslation(array $t): string
     {
         if (!$t['enabled']) {
@@ -428,6 +431,9 @@ HTML;
         return $misses > 0 ? '#fbbf24' : '#4ade80';
     }
 
+    /**
+     * @param array<string, mixed> $auth
+     */
     private function renderAuth(array $auth): string
     {
         if (!$auth['authenticated']) {
@@ -462,6 +468,10 @@ HTML;
 HTML;
     }
 
+    /**
+     * @param array<string, mixed> $request
+     * @param array<string, mixed> $router
+     */
     private function renderRequest(array $request, array $router): string
     {
         $route = htmlspecialchars($router['route'] ?? '—');
@@ -507,6 +517,9 @@ HTML;
 HTML;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $queries
+     */
     private function renderQueries(array $queries): string
     {
         if (empty($queries)) {
@@ -539,6 +552,9 @@ HTML;
 HTML;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $events
+     */
     private function renderEvents(array $events): string
     {
         if (empty($events)) {
@@ -569,6 +585,9 @@ HTML;
 HTML;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $entries
+     */
     private function renderLogs(array $entries): string
     {
         if (empty($entries)) {
@@ -604,6 +623,9 @@ HTML;
 HTML;
     }
 
+    /**
+     * @param array<string, mixed> $mail
+     */
     private function renderMail(array $mail): string
     {
         if ($mail['count'] === 0) {
@@ -658,6 +680,9 @@ HTML;
         return $failed > 0 ? '#f87171' : '#4ade80';
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $entries
+     */
     private function logBadgeColor(array $entries): string
     {
         $worst = 0;

@@ -5,6 +5,13 @@ namespace Neo\Core\Profiler\Collector;
 
 class QueryCollector implements CollectorInterface
 {
+    /**
+     * @var array<int, array{
+     *     sql: string,
+     *     params: array<string, mixed>,
+     *     duration: float
+     * }>
+     */
     private array $queries = [];
 
     public function getName(): string
@@ -12,6 +19,9 @@ class QueryCollector implements CollectorInterface
         return 'database';
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function record(string $sql, array $params, float $duration): void
     {
         $this->queries[] = [
@@ -21,6 +31,9 @@ class QueryCollector implements CollectorInterface
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function collect(): array
     {
         $total = array_sum(

@@ -3,12 +3,16 @@ declare(strict_types=1);
 
 namespace Neo\Core\Profiler\Collector;
 
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Translation\Interface\TranslationCollectorInterface;
 use Neo\Core\Translation\TranslationManager;
 
 class TranslationCollector implements CollectorInterface, TranslationCollectorInterface
 {
+    /** @var array<int, array{key: string, result: string}> */
     private array $hits   = [];
+
+    /** @var array<int, array{key: string, result: string}> */
     private array $misses = [];
 
     public function __construct(
@@ -29,6 +33,10 @@ class TranslationCollector implements CollectorInterface, TranslationCollectorIn
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     * @throws ContainerException
+     */
     public function collect(): array
     {
         $locale = $this->manager->getLocale();
