@@ -10,16 +10,26 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionFunctionAbstract;
 use ReflectionNamedType;
 use ReflectionParameter;
 
 class Container implements ContainerInterface
 {
+    /** @var array<string, mixed> */
     private array $definitions = [];
+
+    /** @var array<string, object> */
     private array $instances = [];
+
+    /** @var array<string, string> */
     private array $bindings = [];
+
+    /** @var array<string, bool> */
     private array $resolving = [];
+
+    /** @var array<string, list<string>> */
     private array $tags = [];
     private static ?self $instance = null;
 
@@ -98,7 +108,9 @@ class Container implements ContainerInterface
     }
 
     /**
+     * @param array<string, mixed> $parameters
      * @throws ContainerException
+     * @throws ReflectionException
      */
     public function make(string $id, array $parameters = []): object
     {
@@ -110,7 +122,8 @@ class Container implements ContainerInterface
     }
 
     /**
-     * @throws \ReflectionException
+     * @param array<string, mixed> $extraParams
+     * @throws ReflectionException
      * @throws ContainerException
      */
     private function resolveClass(string $class, array $extraParams = []): object
@@ -181,7 +194,7 @@ class Container implements ContainerInterface
                     try {
                         $prop = $ref->getProperty($name);
                         $prop->setValue($instance, $value);
-                    } catch (\ReflectionException) {}
+                    } catch (ReflectionException) {}
                 }
 
                 return $instance;
@@ -199,6 +212,9 @@ class Container implements ContainerInterface
         }
     }
 
+    /**
+     * @param ReflectionClass<object> $ref
+     */
     private function isAbstractController(ReflectionClass $ref): bool
     {
         $parent = $ref->getParentClass();
@@ -212,6 +228,8 @@ class Container implements ContainerInterface
     }
 
     /**
+     * @param array<string, mixed> $extraParams
+     * @return list<mixed>
      * @throws ContainerException
      */
     private function resolveParameters(ReflectionFunctionAbstract $method, array $extraParams = []): array
@@ -271,7 +289,8 @@ class Container implements ContainerInterface
     }
 
     /**
-     * @throws \ReflectionException
+     * @param array<string, mixed> $extraParams
+     * @throws ReflectionException
      * @throws ContainerException
      */
     public function call(callable $callable, array $extraParams = []): mixed
@@ -289,16 +308,25 @@ class Container implements ContainerInterface
         return call_user_func_array($callable, $params);
     }
 
+    /**
+     * @return list<string>
+     */
     public function getDefinitions(): array
     {
         return array_keys($this->definitions);
     }
 
+    /**
+     * @return list<string>
+     */
     public function getInstances(): array
     {
         return array_keys($this->instances);
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getBindings(): array
     {
         return $this->bindings;
@@ -311,6 +339,9 @@ class Container implements ContainerInterface
         }
     }
 
+    /**
+     * @return list<mixed>
+     */
     public function tagged(string $tag): array
     {
         $ids = $this->tags[$tag] ?? [];
