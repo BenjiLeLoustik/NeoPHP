@@ -24,6 +24,9 @@ final class MakeDeploymentCommand extends AbstractCommand
         'deploy.config.php',
     ];
 
+    /**
+     * @param array<int|string, mixed> $args
+     */
     public function execute(array $args): void
     {
         $this->startTime = microtime(true);
@@ -379,6 +382,10 @@ final class MakeDeploymentCommand extends AbstractCommand
         return @file_get_contents($url, false, $ctx);
     }
 
+    /**
+     * @param list<string> $exclude
+     * @param array<int, array{0: string, 1: string, 2: string}> $list
+     */
     private function collectFiles(
         string $local,
         string $remote,
@@ -443,6 +450,9 @@ final class MakeDeploymentCommand extends AbstractCommand
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function buildMergedComposer(string $project): array
     {
         $rootComposerPath = ROOT_DIR . 'composer.json';
@@ -565,11 +575,17 @@ final class MakeDeploymentCommand extends AbstractCommand
             ]) . "\n";
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     private function generateConfigFile(array $config): string
     {
         return "<?php\ndeclare(strict_types=1);\n\nreturn " . var_export($config, true) . ";\n";
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     private function validateConfig(array $config): bool
     {
         $required = [

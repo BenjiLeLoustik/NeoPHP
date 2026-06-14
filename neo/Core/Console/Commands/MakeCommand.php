@@ -19,6 +19,9 @@ class MakeCommand extends AbstractCommand
 
     private const CATEGORIES = ['app', 'other', 'testing', 'cron', 'config', 'debug'];
 
+    /**
+     * @param array<int|string, mixed> $args
+     */
     public function execute(array $args): void
     {
         $commandName = Args::positional($args, 0);

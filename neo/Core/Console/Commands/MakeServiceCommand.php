@@ -17,6 +17,9 @@ use Neo\Core\Console\Helper\Output;
 )]
 final class MakeServiceCommand extends AbstractCommand
 {
+    /**
+     * @param array<int|string, mixed> $args
+     */
     public function execute(array $args): void
     {
         $service = Args::positional($args, 0);

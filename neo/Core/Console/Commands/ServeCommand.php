@@ -16,6 +16,9 @@ use Neo\Core\Console\Helper\Output;
 )]
 final class ServeCommand extends AbstractCommand
 {
+    /**
+     * @param array<int|string, mixed> $args
+     */
     public function execute(array $args): void
     {
         $projectArg = Args::positional($args, 0);
@@ -47,6 +50,9 @@ final class ServeCommand extends AbstractCommand
         $this->runProject($selected, $projects);
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $projects
+     */
     private function runProject(string $project, array $projects): void
     {
         if (!isset($projects[$project])) {
@@ -71,6 +77,9 @@ final class ServeCommand extends AbstractCommand
         passthru("php -S $access -t public");
     }
 
+    /**
+     * @return array<string, array<string, mixed>>
+     */
     private function getProjects(): array
     {
         $src = ROOT_DIR . 'src/';
