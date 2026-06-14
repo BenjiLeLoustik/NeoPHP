@@ -16,6 +16,9 @@ use Neo\Core\Console\Helper\Output;
 )]
 final class ProjectCreateCommand extends AbstractCommand
 {
+    /**
+     * @param array<int|string, mixed> $args
+     */
     public function execute(array $args): void
     {
         $originalName = Args::positional($args, 0);
@@ -724,6 +727,9 @@ PHP;
         Output::muted('Root composer.json updated.');
     }
 
+    /**
+     * @return array{0: string, 1: int}
+     */
     private function getAvailableHostPort(): array
     {
         $usedPorts = [];
