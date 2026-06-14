@@ -9,6 +9,9 @@ final readonly class AssetViewExtension implements TwigExtensionInterface
 {
     public function __construct(private AssetHandler $handler) {}
 
+    /**
+     * @return array<string, array{callable: \Closure, options: array<string, mixed>}>
+     */
     public function getFunctions(): array
     {
         return [
@@ -19,6 +22,9 @@ final readonly class AssetViewExtension implements TwigExtensionInterface
         ];
     }
 
+    /**
+     * @return array<string, array{callable: \Closure, options: array<string, mixed>}>
+     */
     public function getFilters(): array
     {
         return [];

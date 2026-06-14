@@ -19,6 +19,7 @@ class AssetHandler
     private string $currentApplication;
     private string $buildPath;
     private string $manifestPath;
+    /** @var array<string, string> */
     private array $manifest = [];
     private string $env;
     private string $publicPath;

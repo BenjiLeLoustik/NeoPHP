@@ -9,6 +9,9 @@ use Neo\Core\View\ViewModule;
 
 class AssetModule extends AbstractModule
 {
+    /**
+     * @return list<class-string>
+     */
     public function dependencies(): array
     {
         return [
