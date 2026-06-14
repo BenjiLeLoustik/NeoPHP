@@ -33,26 +33,44 @@ abstract class FeatureTestCase extends PHPUnitTestCase
         parent::tearDown();
     }
 
+    /**
+     * @param array<string, string> $headers
+     */
     protected function get(string $uri, array $headers = []): Response
     {
         return $this->request('GET', $uri, [], $headers);
     }
 
+    /**
+     * @param array<string, mixed> $body
+     * @param array<string, string> $headers
+     */
     protected function post(string $uri, array $body = [], array $headers = []): Response
     {
         return $this->request('POST', $uri, $body, $headers);
     }
 
+    /**
+     * @param array<string, mixed> $body
+     * @param array<string, string> $headers
+     */
     protected function put(string $uri, array $body = [], array $headers = []): Response
     {
         return $this->request('PUT', $uri, $body, $headers);
     }
 
+    /**
+     * @param array<string, string> $headers
+     */
     protected function delete(string $uri, array $headers = []): Response
     {
         return $this->request('DELETE', $uri, [], $headers);
     }
 
+    /**
+     * @param array<string, mixed> $body
+     * @param array<string, string> $headers
+     */
     protected function request(string $method, string $uri, array $body = [], array $headers = []): Response
     {
         $request = $this->buildRequest($method, $uri, $body, $headers);
@@ -75,6 +93,10 @@ abstract class FeatureTestCase extends PHPUnitTestCase
         }
     }
 
+    /**
+     * @param array<string, mixed> $body
+     * @param array<string, string> $headers
+     */
     private function buildRequest(string $method, string $uri, array $body, array $headers): Request
     {
         $parsed = parse_url($uri);

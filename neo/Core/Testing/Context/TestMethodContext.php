@@ -5,6 +5,10 @@ namespace Neo\Core\Testing\Context;
 
 readonly class TestMethodContext
 {
+    /**
+     * @param array<int, mixed> $cases
+     * @param array<string, mixed> $dataset
+     */
     public function __construct(
         public string $name,
         public array $cases = [],
