@@ -59,6 +59,8 @@ class TestScanner
             $refClass = new ReflectionClass($fqcn);
 
             $classAttr = $refClass->getAttributes(Test::class)[0] ?? null;
+
+            /** @var array<int, TestMethodContext> $methodCtxs */
             $methodCtxs = $this->scanMethods($refClass);
 
             if ($classAttr === null && empty($methodCtxs)) {

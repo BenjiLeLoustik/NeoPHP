@@ -11,6 +11,9 @@ class TranslationViewExtension implements TwigExtensionInterface
         private readonly TranslationManager $translator
     ){}
 
+    /**
+     * @return array<string, array{callable: callable, options: array<string, mixed>}>
+     */
     public function getFunctions(): array
     {
         return [
@@ -37,6 +40,9 @@ class TranslationViewExtension implements TwigExtensionInterface
         ];
     }
 
+    /**
+     * @return array<string, array{callable: callable, options: array<string, mixed>}>
+     */
     public function getFilters(): array
     {
         return [

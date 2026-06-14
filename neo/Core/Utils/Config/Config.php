@@ -10,10 +10,15 @@ use Neo\Core\Utils\Config\Exception\ConfigException;
 class Config
 {
     private const string CONFIG_EXTENSION = '.config.php';
+
     private const string CONFIG_TEST_EXTENSION = '.config.test.php';
 
+    /** @var array<string, mixed> */
     private array $configs = [];
+
+    /** @var array<string, mixed> */
     private array $current = [];
+
     private Container $container;
 
     /**
@@ -86,6 +91,11 @@ class Config
         }
     }
 
+    /**
+     * @param array<string, mixed> $base
+     * @param array<string, mixed> $override
+     * @return array<string, mixed>
+     */
     private function deepMerge(array $base, array $override): array
     {
         foreach ($override as $key => $value) {
@@ -137,6 +147,7 @@ class Config
     }
 
     /**
+     * @return array<string, mixed>
      * @throws ConfigException
      */
     public function all(): array

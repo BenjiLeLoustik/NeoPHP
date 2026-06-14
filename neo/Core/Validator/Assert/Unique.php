@@ -11,10 +11,17 @@ use ReflectionClass;
 class Unique extends Constraint
 {
     private ?string $table;
+
     private ?string $column;
+
+    /** @var array<string, mixed> */
     private array $conditions;
+
     private ?int $excludedId;
 
+    /**
+     * @param array<string, mixed> $conditions
+     */
     public function __construct(
         string $message = '',
         ?string $table = null,
