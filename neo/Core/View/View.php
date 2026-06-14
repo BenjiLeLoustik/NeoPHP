@@ -66,6 +66,7 @@ class View
     }
 
     /**
+     * @param array<string, mixed> $params
      * @throws ViewException
      */
     public function render(string $template, array $params = []): string
@@ -96,6 +97,9 @@ class View
         }
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function renderIfExists(string $template, array $params = []): ?string
     {
         try {
