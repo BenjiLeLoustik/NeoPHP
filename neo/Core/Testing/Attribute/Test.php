@@ -24,13 +24,20 @@ class Test
 
     public ?string $extends = null;
 
+    /**
+     * @param string $type
+     * @param list<array<string, mixed>> $cases
+     * @param string|null $route
+     * @param string $httpMethod
+     * @param array<string, mixed> $dataset
+     * @param bool $skip
+     * @param string|null $extends
+     */
     public function __construct(
         string $type = 'auto',
-        /** @param list<array<string, mixed>> $cases */
         array $cases = [],
         ?string $route = null,
         string $httpMethod = 'GET',
-        /** @param array<string, mixed> $dataset */
         array $dataset = [],
         bool $skip = false,
         ?string $extends = null

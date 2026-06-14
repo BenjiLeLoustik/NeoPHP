@@ -9,6 +9,7 @@ use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
+use ReflectionException;
 
 abstract class MiddlewareTestCase extends PHPUnitTestCase
 {
@@ -45,7 +46,9 @@ abstract class MiddlewareTestCase extends PHPUnitTestCase
     }
 
     /**
+     * @param array<string, mixed> $params
      * @throws ContainerException
+     * @throws ReflectionException
      */
     protected function makeMiddleware(string $middlewareClass, array $params = []): MiddlewareInterface
     {
