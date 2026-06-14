@@ -15,6 +15,9 @@ use Neo\Core\Console\Helper\Output;
 )]
 final class ProjectSyncCommand extends AbstractCommand
 {
+    /**
+     * @param array<int|string, mixed> $args
+     */
     public function execute(array $args): void
     {
         $runComposer = Args::flag($args, '--run-composer');

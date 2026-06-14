@@ -17,6 +17,9 @@ use Neo\Core\Console\Helper\Output;
 )]
 final class ProjectDeleteCommand extends AbstractCommand
 {
+    /**
+     * @param array<int|string, mixed> $args
+     */
     public function execute(array $args): void
     {
         $project = Args::positional($args, 0);
