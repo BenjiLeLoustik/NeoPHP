@@ -32,6 +32,7 @@ class TestGenerator
     }
 
     /**
+     * @return array{generated: array<int, string>, skipped: array<int, string>}
      * @throws TestingException
      */
     public function generate(

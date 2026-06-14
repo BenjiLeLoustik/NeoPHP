@@ -9,13 +9,26 @@ use Attribute;
 class Middleware
 {
     public string $use;
+
     public string $message;
+
     public string $onError;
+
     public ?string $redirect;
+
+    /** @var array<string, mixed> */
     public array $params;
 
-    public function __construct(string $use, string $message = '', string $onError = 'block', ?string $redirect = null, array $params = [])
-    {
+    /**
+     * @param array<string, mixed> $params
+     */
+    public function __construct(
+        string $use,
+        string $message = '',
+        string $onError = 'block',
+        ?string $redirect = null,
+        array $params = []
+    ) {
         $this->use = $use;
         $this->message = $message;
         $this->onError = $onError;

@@ -58,6 +58,9 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
         $this->container->set($id, fn() => $value);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     protected function insertFixture(string $table, array $data): int|string
     {
         $columns = implode(', ', array_keys($data));
@@ -69,6 +72,10 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
         return $this->pdo->lastInsertId();
     }
 
+    /**
+     * @param array<int, mixed> $bindings
+     * @return array<int, array<string, mixed>>
+     */
     protected function fetchAll(string $table, string $where = '', array $bindings = []): array
     {
         $sql = "SELECT * FROM $table";
@@ -80,6 +87,9 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     protected function assertDatabaseHas(string $table, array $data): void
     {
         $conditions = implode(' AND ', array_map(fn($k) => "$k = :$k", array_keys($data)));
@@ -94,6 +104,9 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
         );
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     protected function assertDatabaseMissing(string $table, array $data): void
     {
         $conditions = implode(' AND ', array_map(fn($k) => "$k = :$k", array_keys($data)));

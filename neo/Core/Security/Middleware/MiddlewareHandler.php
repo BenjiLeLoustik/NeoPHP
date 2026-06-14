@@ -18,14 +18,21 @@ use Neo\Core\Security\Middleware\Exception\MiddlewareException;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
 use Neo\Core\View\View;
 use ReflectionClass;
+use ReflectionException;
 use Throwable;
 
 class MiddlewareHandler
 {
     private Container $container;
+
+    /** @var array<string, array<string, array<string, array<int, string>>>> */
     private array $errors = [];
+
+    /** @var array<string, array<int, bool>> */
     private array $executed = [];
+
     private ?string $lastController = null;
+
     private ?string $lastMethod = null;
 
     public function __construct(Container $container)
@@ -36,6 +43,7 @@ class MiddlewareHandler
     /**
      * @throws MiddlewareException
      * @throws ContainerException
+     * @throws ReflectionException
      */
     public function run(string $controller, ?string $method = null): void
     {
@@ -132,7 +140,15 @@ class MiddlewareHandler
     }
 
     /**
-     * @throws \ReflectionException
+     * @return array<int, array{
+     *     class: class-string,
+     *     message: string,
+     *     onError: string,
+     *     redirect: ?string,
+     *     isClass: bool,
+     *     params: array<string, mixed>
+     * }>
+     * @throws ReflectionException
      */
     private function getMiddlewares(string $controller, ?string $method = null): array
     {
@@ -180,6 +196,16 @@ class MiddlewareHandler
         return $all;
     }
 
+    /**
+     * @return array{
+     *     class: class-string,
+     *     message: string,
+     *     onError: string,
+     *     redirect: ?string,
+     *     isClass: bool,
+     *     params: array<string, mixed>
+     * }
+     */
     private function buildRateLimitMeta(RateLimit $attr, bool $isClass): array
     {
         return [
@@ -196,6 +222,9 @@ class MiddlewareHandler
         ];
     }
 
+    /**
+     * @return list<string>
+     */
     public function getErrors(?string $middlewareClass = null): array
     {
         if ($this->lastController === null) return [];
@@ -218,13 +247,16 @@ class MiddlewareHandler
         return !empty($this->getErrors());
     }
 
+    /**
+     * @return list<bool>
+     */
     public function getMiddleware(string $middlewareClass): array
     {
         return $this->executed[$middlewareClass] ?? [];
     }
 
     /**
-     * @throws \ReflectionException
+     * @throws ReflectionException
      * @throws ContainerException
      */
     private function checkMaintenance(string $controller, ?string $method): void
