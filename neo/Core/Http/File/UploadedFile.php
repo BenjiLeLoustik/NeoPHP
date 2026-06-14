@@ -5,8 +5,24 @@ namespace Neo\Core\Http\File;
 
 class UploadedFile
 {
+    /**
+     * @var array{
+     *     name: string,
+     *     tmp_name: string,
+     *     size: int,
+     *     error: int
+     * }
+     */
     private array $file;
 
+    /**
+     * @param array{
+     *     name: string,
+     *     tmp_name: string,
+     *     size: int,
+     *     error: int
+     * } $file
+     */
     public function __construct(array $file)
     {
         $this->file = $file;

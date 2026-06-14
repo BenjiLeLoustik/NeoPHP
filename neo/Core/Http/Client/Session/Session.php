@@ -11,6 +11,21 @@ use Neo\Core\Utils\Config\Config;
 class Session
 {
     protected Container $container;
+
+    /**
+     * @var array{
+     *     enabled: bool,
+     *     name: string,
+     *     lifetime: int,
+     *     secure: bool,
+     *     http_only: bool,
+     *     same_site: string,
+     *     storage: array{
+     *         enabled: bool,
+     *         handler: string
+     *     }
+     * }
+     */
     protected array $config;
 
     /**
@@ -88,6 +103,9 @@ class Session
         unset($_SESSION[$key]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function all(): array
     {
         return $_SESSION;

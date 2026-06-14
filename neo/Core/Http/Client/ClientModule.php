@@ -16,6 +16,9 @@ use Neo\Core\View\ViewModule;
 
 class ClientModule extends AbstractModule
 {
+    /**
+     * @return array<class-string>
+     */
     public function dependencies(): array
     {
         return [

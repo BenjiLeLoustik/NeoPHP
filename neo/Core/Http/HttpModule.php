@@ -11,6 +11,9 @@ use Neo\Core\Utils\Config\ConfigModule;
 
 class HttpModule extends AbstractModule
 {
+    /**
+     * @return array<class-string>
+     */
     public function dependencies(): array
     {
         return [

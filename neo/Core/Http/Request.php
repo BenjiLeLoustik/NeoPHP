@@ -10,14 +10,33 @@ use Neo\Core\Http\File\UploadedFile;
 class Request
 {
     private string $method;
+
     private string $path;
+
+    /** @var array<string, mixed> */
     private array $query;
+
+    /** @var array<string, mixed> */
     private array $body;
+
+    /** @var array<string, string> */
     private array $headers;
+
+    /** @var array<string, mixed> */
     private array $server;
+
+    /** @var array<string, array<string, mixed>> */
     private array $files;
+
     private Session $session;
 
+    /**
+     * @param array<string, mixed> $query
+     * @param array<string, mixed> $body
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $server
+     * @param array<string, array<string, mixed>> $files
+     */
     private function __construct(
         string $method,
         string $path,
@@ -90,6 +109,15 @@ class Request
         return $path === '/' ? '/' : rtrim($path, '/');
     }
 
+    /**
+     * @param string $method
+     * @param string $path
+     * @param array<string, mixed> $query
+     * @param array<string, mixed> $body
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $server
+     * @return Request
+     */
     public static function fromArray(
         string $method,
         string $path,
@@ -115,6 +143,9 @@ class Request
         return new UploadedFile($this->files[$key]);
     }
 
+    /**
+     * @return array<string, array<string, mixed>>
+     */
     public function allFiles(): array
     {
         return $this->files;
@@ -130,24 +161,31 @@ class Request
         return $this->path;
     }
 
-    public function query(string $key, $default = null)
+    public function query(string $key, mixed $default = null): mixed
     {
         return $this->query[$key] ?? $default;
     }
 
-    public function body(?string $key = null, $default = null)
+    public function body(?string $key = null, mixed $default = null): mixed
     {
         if ($key === null) {
             return $this->body;
         }
+
         return $this->body[$key] ?? $default;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function allQuery(): array
     {
         return $this->query;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function allBody(): array
     {
         return $this->body;
@@ -161,22 +199,31 @@ class Request
         return $this->body[$key] ?? $default;
     }
 
-    public function header(string $name, $default = null)
+    public function header(string $name, mixed $default = null): mixed
     {
         return $this->headers[$name] ?? $default;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function headers(): array
     {
         return $this->headers;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function server(): array
     {
         return $this->server;
     }
 
-    public function getContent()
+    /**
+     * @return string|array<mixed>
+     */
+    public function getContent(): string|array
     {
         $rawInput = file_get_contents('php://input') ?: '';
         $contentType = $this->header('Content-Type', '');
@@ -250,11 +297,17 @@ class Request
         return null;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getPostAll(): array
     {
         return $this->body;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getServer(): array
     {
         return $this->server;

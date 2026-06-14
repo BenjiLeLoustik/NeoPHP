@@ -10,6 +10,18 @@ use Neo\Core\Utils\Config\Config;
 class Cookie
 {
     protected Container $container;
+
+    /**
+     * @var array{
+     *     prefix: string,
+     *     lifetime: int,
+     *     path: string,
+     *     domain: string,
+     *     secure: bool,
+     *     http_only: bool,
+     *     same_site: string
+     * }
+     */
     protected array $config;
 
     /**
@@ -83,6 +95,9 @@ class Cookie
         unset($_COOKIE[$name]);
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function all(): array
     {
         return $_COOKIE;
