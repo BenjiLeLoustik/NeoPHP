@@ -76,6 +76,9 @@ final class MakeConfigCommand extends AbstractCommand
         return ExitCode::SUCCESS;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function collectEntries(): array
     {
         $flat = [];
@@ -87,6 +90,10 @@ final class MakeConfigCommand extends AbstractCommand
         return $this->expandDotKeys($flat);
     }
 
+    /**
+     * @param array<string, mixed> $flat
+     * @return array<string, mixed>
+     */
     private function expandDotKeys(array $flat): array
     {
         $result = [];
@@ -102,12 +109,18 @@ final class MakeConfigCommand extends AbstractCommand
         return $result;
     }
 
+    /**
+     * @param array<string, mixed> $entries
+     */
     private function buildFileContent(string $name, string $proj, array $entries): string
     {
         $body = $this->buildArray($entries, 1);
         return "<?php\ndeclare(strict_types=1);\n\n// ./src/$proj/Config/$name.config.php\n\nreturn $body;";
     }
 
+    /**
+     * @param array<string, mixed> $entries
+     */
     private function buildArray(array $entries, int $depth): string
     {
         $indent = str_repeat('    ', $depth);
