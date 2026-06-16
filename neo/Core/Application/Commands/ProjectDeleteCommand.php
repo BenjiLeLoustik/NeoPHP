@@ -30,6 +30,7 @@ final class ProjectDeleteCommand extends AbstractCommand
     public function do(Input $input, Output $output): ExitCode
     {
         $project = $input->getArgument('projectName');
+        $project = Fs::pascalCase($project);
 
         Output::warning("You are about to delete project '$project'. This action is irreversible.");
         if (!Input::confirm('Confirm deletion?', false)) {
@@ -49,7 +50,9 @@ final class ProjectDeleteCommand extends AbstractCommand
             $composer = json_decode(file_get_contents($composerPath), true);
             if ($composer !== null) {
                 $projectComposerPath = ROOT_DIR . "src/$project/composer.json";
-                $packageName = file_exists($projectComposerPath) ? (json_decode(file_get_contents($projectComposerPath), true)['name'] ?? null) : null;
+                $packageName = file_exists($projectComposerPath)
+                    ? (json_decode(file_get_contents($projectComposerPath), true)['name'] ?? null)
+                    : null;
 
                 if ($packageName && isset($composer['require'][$packageName])) {
                     unset($composer['require'][$packageName]);
