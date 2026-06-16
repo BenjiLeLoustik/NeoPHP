@@ -116,7 +116,7 @@ PHP;
         return ExitCode::SUCCESS;
     }
 
-    private function resolveEvent(string $project): ?string
+    private function resolveEvent(string $project): string
     {
         $eventDir = ROOT_DIR . "/src/$project/App/Event";
         if (!is_dir($eventDir)) return Input::ask('Event name ?');
@@ -124,7 +124,9 @@ PHP;
         $files = glob($eventDir . '/*Event.php') ?: [];
         $choices = array_map(fn($f) => basename($f, '.php'), $files);
 
-        return !empty($choices) ? Input::choice('Event to listen to ?', $choices) : Input::ask('Event name ?');
+        return !empty($choices)
+            ? Input::choice('Event to listen to ?', $choices)
+            : Input::ask('Event name ?');
     }
 
     private function normalizeListenerName(string $input): string
