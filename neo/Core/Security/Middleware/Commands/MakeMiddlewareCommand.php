@@ -59,7 +59,9 @@ final class MakeMiddlewareCommand extends AbstractCommand
         $force = (bool) $input->getOption('force');
 
         $middleware = $this->normalizeMiddlewareName($middleware);
-        $directory = $directory !== '' ? Fs::normalizeDir($directory) : null;
+        $directory = $directory !== null && $directory !== ''
+            ? Fs::normalizeDir($directory)
+            : null;
 
         $basePath = ROOT_DIR . "/src/$project/App/Middlewares";
         $namespace = "Neo\\Src\\$project\\App\\Middlewares";
