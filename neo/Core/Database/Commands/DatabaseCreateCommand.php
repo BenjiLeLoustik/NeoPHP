@@ -5,55 +5,53 @@ namespace Neo\Core\Database\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 use PDO;
 use PDOException;
 
 #[Command(
     name: 'database:create',
     description: 'Create the database defined in database.config.php for a project',
-    category: 'Database'
+    category: 'Database',
 )]
 final class DatabaseCreateCommand extends AbstractCommand
 {
-
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $project = Args::option($args, '--project');
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
+    }
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
-
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
-
-            $project = Input::choice('Target project ?', $projects);
-        }
-
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
         $configPath = ROOT_DIR . "/src/$project/Config/database.config.php";
 
         if (!file_exists($configPath)) {
-            Output::error("No database.config.php found for project '$project'.");
-            return;
+            Output::error("No database.config.php found.");
+            return ExitCode::FAILURE;
         }
 
         $config = include $configPath;
 
         if (!($config['enabled'] ?? false)) {
-            Output::warning("Database is disabled in database.config.php for project '$project'.");
-            return;
+            Output::warning("Database is disabled.");
+            return ExitCode::SUCCESS;
         }
 
         $use = $config['use'] ?? 'default';
         $connection = $config['connections'][$use] ?? null;
 
         if (!$connection) {
-            Output::error("Connection '$use' not found in database.config.php.");
-            return;
+            Output::error("Connection '$use' not found.");
+            return ExitCode::FAILURE;
         }
 
         $driver = $connection['driver'] ?? 'mysql';
@@ -65,54 +63,41 @@ final class DatabaseCreateCommand extends AbstractCommand
         $charset = $connection['charset'] ?? 'utf8mb4';
 
         if (!$dbname) {
-            Output::error("No 'dbname' defined in database.config.php.");
-            return;
+            Output::error("No 'dbname' defined.");
+            return ExitCode::FAILURE;
         }
 
-        Output::newLine();
         Output::label('Driver', $driver);
         Output::label('Host', "$host:$port");
         Output::label('Database', $dbname);
         Output::label('User', $user);
-        Output::newLine();
 
         if (!Input::confirm("Create database '$dbname' ?", false)) {
             Output::muted('Cancelled.');
-            return;
+            return ExitCode::SUCCESS;
         }
 
         try {
             $dsn = sprintf('%s:host=%s;port=%d;charset=%s', $driver, $host, $port, $charset);
+            $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
-            $pdo = new PDO($dsn, $user, $pass, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            ]);
-
-            $pdo->exec(
-                sprintf(
-                    'CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET %s COLLATE %s',
-                    $dbname,
-                    $charset,
-                    $charset . '_unicode_ci'
-                )
-            );
+            $pdo->exec(sprintf(
+                'CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET %s COLLATE %s',
+                $dbname,
+                $charset,
+                $charset . '_unicode_ci'
+            ));
 
             Output::success("Database '$dbname' created successfully.");
-
+            return ExitCode::SUCCESS;
         } catch (PDOException $e) {
             Output::error('Database creation failed: ' . $e->getMessage());
+            return ExitCode::FAILURE;
         }
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

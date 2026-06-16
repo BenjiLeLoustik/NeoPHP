@@ -5,71 +5,76 @@ namespace Neo\Core\Security\Middleware\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Helper\Fs;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputArgument;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: 'make:middleware',
     description: 'Create a Middleware for a project',
-    category: 'Middleware'
+    category: 'Middleware',
 )]
 final class MakeMiddlewareCommand extends AbstractCommand
 {
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $middleware = Args::positional($args, 0);
-        $project = Args::option($args, '--project');
-        $directory = Args::option($args, '-d') ?? Args::option($args, '--dir');
-        $force = Args::flag($args, '--force');
+        $this->addArgument(
+            name: 'middleware',
+            description: 'Middleware class name',
+            mode: InputArgument::OPTIONAL,
+        );
 
-        if (!$middleware) {
-            $middleware = Input::ask('Middleware name ?', 'Auth');
-            if (!$middleware) {
-                Output::error('Middleware name is required.');
-                return;
-            }
-        }
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
+        $this->addOption(
+            name: 'dir',
+            shortcut: 'd',
+            mode: InputOption::REQUIRED,
+            description: 'Sub-folder',
+        );
 
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
+        $this->addOption(
+            name: 'force',
+            shortcut: null,
+            mode: InputOption::NONE,
+            description: 'Overwrite file',
+        );
+    }
 
-            $project = Input::choice('Target project ?', $projects);
-        }
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $middleware = $input->getArgument('middleware') ?? Input::ask('Middleware name ?', 'Auth');
+        if (!$middleware) return ExitCode::INVALID;
 
-        if (!$directory) {
-            $raw = Input::ask('Sub-folder ? (leave empty to skip)', '');
-            $directory = $raw !== '' ? $raw : null;
-        }
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $directory = $input->getOption('dir');
+        $force = (bool) $input->getOption('force');
 
         $middleware = $this->normalizeMiddlewareName($middleware);
-        $directory = $directory ? Fs::normalizeDir($directory) : null;
+        $directory = $directory !== '' ? Fs::normalizeDir($directory) : null;
 
         $basePath = ROOT_DIR . "/src/$project/App/Middlewares";
-
-        if ($directory) {
-            $basePath .= "/$directory";
-        }
-
-        Fs::ensureDir($basePath);
-
-        $path = "$basePath/$middleware.php";
-
-        if (file_exists($path) && !$force) {
-            Output::warning("Middleware already exists. Use --force to overwrite.");
-            return;
-        }
-
         $namespace = "Neo\\Src\\$project\\App\\Middlewares";
 
         if ($directory) {
+            $basePath .= "/$directory";
             $namespace .= '\\' . str_replace('/', '\\', $directory);
+        }
+
+        Fs::ensureDir($basePath);
+        $path = "$basePath/$middleware.php";
+
+        if (file_exists($path) && !$force) {
+            Output::warning("Middleware already exists.");
+            return ExitCode::FAILURE;
         }
 
         $content = <<<PHP
@@ -91,34 +96,19 @@ final class $middleware implements MiddlewareInterface
 PHP;
 
         file_put_contents($path, $content);
-        Output::success("Middleware '$middleware' generated for project '$project'.");
+        Output::success("Middleware '$middleware' generated.");
+
+        return ExitCode::SUCCESS;
     }
 
     private function normalizeMiddlewareName(string $input): string
     {
-        $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
-        $input = str_replace(' ', '', ucwords($input));
-
-        if (!str_ends_with($input, 'Middleware')) {
-            $input .= 'Middleware';
-        }
-
-        return $input;
+        $input = str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)));
+        return str_ends_with($input, 'Middleware') ? $input : $input . 'Middleware';
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('<MiddlewareName>', '"Middleware" suffix added automatically');
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('-d, --dir <directory>', 'Create inside a sub-folder (e.g. Security)');
-        Output::option('--force', 'Overwrite existing file');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} Auth --project=MyApp");
-        Output::example("php bin/neo {$this->getName()} Auth -d Security --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

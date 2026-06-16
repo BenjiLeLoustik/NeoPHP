@@ -5,9 +5,10 @@ namespace Neo\Core\Database\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\DatabaseIntrospector;
 use Neo\Core\Database\DatabaseManager;
@@ -18,36 +19,42 @@ use Neo\Core\DI\Container;
 #[Command(
     name: 'database:migration:rollback',
     description: 'Rollback the last batch of migrations for a project',
-    category: 'Database'
+    category: 'Database',
 )]
 final class DatabaseMigrationRollbackCommand extends AbstractCommand
 {
     public function __construct(
-        private Container $container
+        private readonly Container $container
     ) {}
 
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $project = Args::option($args, '--project');
-        $force = Args::flag($args, '--force');
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
+        $this->addOption(
+            name: 'force',
+            shortcut: null,
+            mode: InputOption::NONE,
+            description: 'Skip confirmation',
+        );
+    }
 
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
-
-            $project = Input::choice('Target project ?', $projects);
-        }
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $force = (bool) $input->getOption('force');
 
         $basePath = ROOT_DIR . "/src/$project";
         $migrationsPath = "$basePath/Database/Migrations";
 
         if (!is_dir($basePath)) {
-            Output::error("Project '$project' does not exist inside ./src/");
-            return;
+            Output::error("Project '$project' not found.");
+            return ExitCode::FAILURE;
         }
 
         try {
@@ -55,8 +62,8 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
             $this->container->get(DatabaseConnection::class);
 
             if (!DatabaseConnection::isConnected()) {
-                Output::error('Database is not connected. Check database.config.php.');
-                return;
+                Output::error('Database not connected.');
+                return ExitCode::FAILURE;
             }
 
             $db = new DatabaseManager();
@@ -65,8 +72,8 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
             $lastBatch = $runner->getLastBatch();
 
             if ($lastBatch === 0) {
-                Output::warning('Nothing to rollback. No migrations have been applied.');
-                return;
+                Output::warning('Nothing to rollback.');
+                return ExitCode::SUCCESS;
             }
 
             $applied = $runner->getApplied();
@@ -77,30 +84,26 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
             foreach ($inBatch as $name => $row) {
                 $file = $migrationsPath . '/' . $name . '.php';
                 $exists = file_exists($file);
-                $warn = $exists ? '' : Output::colorize('  [file missing — only untracked]', 'yellow');
+                $warn = $exists ? '' : Output::colorize('  [file missing]', 'yellow');
                 Output::muted("  · $name$warn");
             }
 
-            Output::newLine();
-
             if (!$force && !Input::confirm(count($inBatch) . ' migration(s) will be rolled back. Continue ?', false)) {
                 Output::muted('Cancelled.');
-                return;
+                return ExitCode::SUCCESS;
             }
 
             $rolledBack = $runner->rollback($migrationsPath, $snapshot);
-
-            Output::newLine();
-
             foreach ($rolledBack as $name) {
                 Output::success("Rolled back: $name");
             }
 
+            return ExitCode::SUCCESS;
         } catch (\Throwable $e) {
             Output::error('Rollback failed: ' . $e->getMessage());
+            return ExitCode::FAILURE;
         }
     }
-
 
     private function bootProjectContainer(string $project): void
     {
@@ -120,18 +123,8 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
         $this->container->set('formNamespace', "Neo\\Src\\$project\\App\\Forms");
     }
 
-
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('--force', 'Skip confirmation prompt');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} --project=MyApp");
-        Output::example("php bin/neo {$this->getName()} --project=MyApp --force");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

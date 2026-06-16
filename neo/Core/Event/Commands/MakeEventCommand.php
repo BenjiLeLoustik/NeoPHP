@@ -5,59 +5,65 @@ namespace Neo\Core\Event\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Helper\Fs;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputArgument;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: 'make:event',
     description: 'Create an Event class for a project',
-    category: 'Event'
+    category: 'Event',
 )]
 final class MakeEventCommand extends AbstractCommand
 {
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $event = Args::positional($args, 0);
-        $project = Args::option($args, '--project');
-        $force = Args::flag($args, '--force');
+        $this->addArgument(
+            name: 'event',
+            description: 'Event class name',
+            mode: InputArgument::OPTIONAL,
+        );
 
-        if (!$event) {
-            $event = Input::ask('Event name ?');
-            if (!$event) {
-                Output::error('Event name is required.');
-                return;
-            }
-        }
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
+        $this->addOption(
+            name: 'force',
+            shortcut: null,
+            mode: InputOption::NONE,
+            description: 'Overwrite file',
+        );
+    }
 
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $event = $input->getArgument('event') ?? Input::ask('Event name ?');
+        if (!$event) return ExitCode::INVALID;
 
-            $project = Input::choice('Target project ?', $projects);
-        }
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $force = (bool) $input->getOption('force');
 
         $event = $this->normalizeEventName($event);
         $basePath = ROOT_DIR . "/src/$project/App/Event";
 
         Fs::ensureDir($basePath);
-
         $path = "$basePath/$event.php";
 
         if (file_exists($path) && !$force) {
-            if (!Input::confirm("Event '$event' already exists. Overwrite ?", false)) {
+            if (!Input::confirm("Event '$event' exists. Overwrite ?", false)) {
                 Output::muted('Cancelled.');
-                return;
+                return ExitCode::SUCCESS;
             }
         }
 
         $namespace = "Neo\\Src\\$project\\App\\Event";
-
         $content = <<<PHP
 <?php
 declare(strict_types=1);
@@ -75,32 +81,19 @@ final class $event extends AbstractEvent
 PHP;
 
         file_put_contents($path, $content);
-        Output::success("Event '$event' generated for project '$project'.");
+        Output::success("Event '$event' generated.");
+
+        return ExitCode::SUCCESS;
     }
 
     private function normalizeEventName(string $input): string
     {
-        $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
-        $input = str_replace(' ', '', ucwords($input));
-
-        if (!str_ends_with($input, 'Event')) {
-            $input .= 'Event';
-        }
-
-        return $input;
+        $input = str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)));
+        return str_ends_with($input, 'Event') ? $input : $input . 'Event';
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('<EventName>', '"Event" suffix added automatically');
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('--force', 'Overwrite existing file');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} UserRegistered --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

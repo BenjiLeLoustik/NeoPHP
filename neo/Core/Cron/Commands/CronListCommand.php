@@ -5,15 +5,17 @@ namespace Neo\Core\Cron\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 use Neo\Core\Cron\CronScanner;
 use Neo\Core\DI\Container;
 
 #[Command(
     name: 'cron:list',
     description: 'List all registered cron jobs for a project',
-    category: 'Cron'
+    category: 'Cron',
 )]
 final class CronListCommand extends AbstractCommand
 {
@@ -21,22 +23,29 @@ final class CronListCommand extends AbstractCommand
         private readonly Container $container
     ) {}
 
-    public function execute(array $args): void
+    public function configure(): void
+    {
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
+    }
+
+    public function do(Input $input, Output $output): ExitCode
     {
         try {
             $cronsPath = $this->container->get('cronsPath');
         } catch (\Throwable) {
             $projects = $this->getAvailableProjects();
-
             if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
+                Output::error('No projects found.');
+                return ExitCode::FAILURE;
             }
 
-            Output::warning('You must pass --project=<name> to use this command.');
-            $project = Input::choice('Target project ?', $projects);
-            Output::muted("Re-run with: php bin/neo {$this->getName()} --project=$project");
-            return;
+            $project = $input->getOption('project') ?? Input::choice('Target project ?', $projects);
+            $cronsPath = ROOT_DIR . "/src/$project/Cron";
         }
 
         $scanner = new CronScanner();
@@ -44,7 +53,7 @@ final class CronListCommand extends AbstractCommand
 
         if (empty($jobs)) {
             Output::muted('No cron jobs found.');
-            return;
+            return ExitCode::SUCCESS;
         }
 
         Output::title('Registered Cron Jobs');
@@ -57,16 +66,6 @@ final class CronListCommand extends AbstractCommand
         }
 
         Output::newLine();
-    }
-
-    public function getHelp(): string
-    {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} --project=MyApp");
-
-        return '';
+        return ExitCode::SUCCESS;
     }
 }

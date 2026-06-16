@@ -5,15 +5,17 @@ namespace Neo\Core\Cron\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Helper\Fs;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputArgument;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: 'make:cron',
     description: 'Create a Cron class for a project',
-    category: 'Cron'
+    category: 'Cron',
 )]
 final class MakeCronCommand extends AbstractCommand
 {
@@ -25,56 +27,59 @@ final class MakeCronCommand extends AbstractCommand
         '0 0 1 * *',
     ];
 
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $cron = Args::positional($args, 0);
-        $project = Args::option($args, '--project');
-        $expression = Args::option($args, '--expression');
-        $force = Args::flag($args, '--force');
+        $this->addArgument(
+            name: 'cron',
+            description: 'Cron class name',
+            mode: InputArgument::OPTIONAL,
+        );
 
-        if (!$cron) {
-            $cron = Input::ask('Cron name ?');
-            if (!$cron) {
-                Output::error('Cron name is required.');
-                return;
-            }
-        }
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
+        $this->addOption(
+            name: 'expression',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Cron expression',
+        );
 
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
+        $this->addOption(
+            name: 'force',
+            shortcut: null,
+            mode: InputOption::NONE,
+            description: 'Overwrite file',
+        );
+    }
 
-            $project = Input::choice('Target project ?', $projects);
-        }
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $cron = $input->getArgument('cron') ?? Input::ask('Cron name ?');
+        if (!$cron) return ExitCode::INVALID;
 
-        if (!$expression) {
-            $expression = Input::autocomplete(
-                'Cron expression ?',
-                self::COMMON_EXPRESSIONS,
-                '* * * * *'
-            );
-        }
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $expression = $input->getOption('expression') ?? Input::autocomplete('Cron expression ?', self::COMMON_EXPRESSIONS, '* * * * *');
+        $force = (bool) $input->getOption('force');
 
         $cron = $this->normalizeCronName($cron);
         $basePath = ROOT_DIR . "/src/$project/App/Crons";
 
         Fs::ensureDir($basePath);
-
         $path = "$basePath/$cron.php";
 
         if (file_exists($path) && !$force) {
             if (!Input::confirm("Cron '$cron' already exists. Overwrite ?", false)) {
                 Output::muted('Cancelled.');
-                return;
+                return ExitCode::SUCCESS;
             }
         }
 
         $namespace = "Neo\\Src\\$project\\App\\Crons";
-
         $content = <<<PHP
 <?php
 declare(strict_types=1);
@@ -97,34 +102,19 @@ final class $cron
 PHP;
 
         file_put_contents($path, $content);
-        Output::success("Cron '$cron' generated for project '$project'.");
+        Output::success("Cron '$cron' generated.");
+
+        return ExitCode::SUCCESS;
     }
 
     private function normalizeCronName(string $input): string
     {
-        $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
-        $input = str_replace(' ', '', ucwords($input));
-
-        if (!str_ends_with($input, 'Cron')) {
-            $input .= 'Cron';
-        }
-
-        return $input;
+        $input = str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)));
+        return str_ends_with($input, 'Cron') ? $input : $input . 'Cron';
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('<CronName>', '"Cron" suffix added automatically');
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('--expression=<expr>', 'Cron expression (interactive autocomplete if omitted)');
-        Output::option('--force', 'Overwrite existing file');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} CleanLogs --project=MyApp");
-        Output::example("php bin/neo {$this->getName()} CleanLogs --expression='0 0 * * *' --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

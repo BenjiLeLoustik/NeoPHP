@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console\Helper;
 
+use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -15,7 +16,7 @@ final class Fs
         }
 
         $it = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
+            new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::CHILD_FIRST
         );
 
@@ -33,7 +34,7 @@ final class Fs
         }
 
         $it = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
+            new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::CHILD_FIRST
         );
 
@@ -53,6 +54,7 @@ final class Fs
     {
         $string = preg_replace('/[^a-zA-Z0-9]+/', ' ', $string);
         $string = ucwords(strtolower(trim($string)));
+
         return str_replace(' ', '', $string);
     }
 

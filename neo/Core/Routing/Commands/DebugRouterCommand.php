@@ -5,16 +5,17 @@ namespace Neo\Core\Routing\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
 use Neo\Core\Routing\Router;
 
 #[Command(
     name: 'debug:router',
     description: 'Display all registered routes for a project',
-    category: 'Router'
+    category: 'Router',
 )]
 final class DebugRouterCommand extends AbstractCommand
 {
@@ -30,79 +31,84 @@ final class DebugRouterCommand extends AbstractCommand
         private readonly Container $container
     ) {}
 
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $project = Args::option($args, '--project');
-        $filterMethod = Args::option($args, '--method');
-        $filterName = Args::option($args, '--name');
-        $filterPath = Args::option($args, '--path');
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
+        $this->addOption(
+            name: 'method',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Filter by HTTP method',
+        );
 
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
+        $this->addOption(
+            name: 'name',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Filter by name',
+        );
 
-            $project = Input::choice('Target project ?', $projects);
-        }
+        $this->addOption(
+            name: 'path',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Filter by path',
+        );
+    }
+
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $filterMethod = $input->getOption('method');
+        $filterName = $input->getOption('name');
+        $filterPath = $input->getOption('path');
 
         $srcPath = ROOT_DIR . "/src/$project";
-
         if (!is_dir($srcPath)) {
-            Output::error("Project '$project' not found in src/.");
-            return;
+            Output::error("Project '$project' not found.");
+            return ExitCode::FAILURE;
         }
 
         $this->container->set('controllerNamespace', "Neo\\Src\\$project\\App\\Controllers");
-        $this->container->set('controllersPath', $srcPath . '/App/Controllers');
-        $this->container->set('storagePath', $srcPath . '/Storage');
-        $this->container->set('configsPath', $srcPath . '/Config');
+        $this->container->set('controllersPath', "$srcPath/App/Controllers");
+        $this->container->set('storagePath', "$srcPath/Storage");
+        $this->container->set('configsPath', "$srcPath/Config");
 
         try {
             $router = $this->container->get(Router::class);
         } catch (\Throwable $e) {
             Output::error('Unable to load Router: ' . $e->getMessage());
-            return;
+            return ExitCode::FAILURE;
         }
 
         $routes = $router->getRoutes()->all();
         $rows = $this->filterRoutes($routes, $filterMethod, $filterName, $filterPath);
 
         if (empty($rows)) {
-            Output::warning('No routes found matching the given filters.');
-            return;
+            Output::warning('No routes found.');
+            return ExitCode::SUCCESS;
         }
 
         usort($rows, fn($a, $b) => strcmp($a['path'], $b['path']));
-
         $this->renderTable($rows, $project, $filterMethod, $filterName, $filterPath);
+
+        return ExitCode::SUCCESS;
     }
 
-    /**
-     * @param array<string, array<string, array{name: string, controller: string, action: string}>> $routes
-     * @return array<int, array{method: string, path: string, name: string, controller: string, action: string}>
-     */
-    private function filterRoutes(
-        array $routes,
-        ?string $filterMethod,
-        ?string $filterName,
-        ?string $filterPath
-    ): array {
+    private function filterRoutes(array $routes, ?string $m, ?string $n, ?string $p): array
+    {
         $rows = [];
-
         foreach ($routes as $method => $methodRoutes) {
             foreach ($methodRoutes as $path => $info) {
-                if ($filterMethod && strtoupper($filterMethod) !== strtoupper($method)) {
-                    continue;
-                }
-                if ($filterName && !str_contains($info['name'], $filterName)) {
-                    continue;
-                }
-                if ($filterPath && !str_contains($path, $filterPath)) {
-                    continue;
-                }
+                if ($m && strtoupper($m) !== strtoupper($method)) continue;
+                if ($n && !str_contains($info['name'], $n)) continue;
+                if ($p && !str_contains($path, $p)) continue;
 
                 $rows[] = [
                     'method' => $method,
@@ -113,32 +119,12 @@ final class DebugRouterCommand extends AbstractCommand
                 ];
             }
         }
-
         return $rows;
     }
 
-    /**
-     * @param array<int, array{method: string, path: string, name: string, controller: string, action: string}> $rows
-     */
-    private function renderTable(
-        array $rows,
-        string $project,
-        ?string $filterMethod,
-        ?string $filterName,
-        ?string $filterPath
-    ): void {
-        $title = sprintf('Routes for %s (%d)', $project, count($rows));
-
-        $filters = array_filter([
-            $filterMethod ? 'method=' . strtoupper($filterMethod) : null,
-            $filterName ? 'name~' . $filterName : null,
-            $filterPath ? 'path~' . $filterPath : null,
-        ]);
-
-        if (!empty($filters)) {
-            $title .= Output::colorize('  filters: ' . implode(', ', $filters), 'dim');
-        }
-
+    private function renderTable(array $rows, string $project, ?string $m, ?string $n, ?string $p): void
+    {
+        $title = "Routes for $project (" . count($rows) . ")";
         Output::title($title);
 
         foreach ($rows as $row) {
@@ -148,28 +134,13 @@ final class DebugRouterCommand extends AbstractCommand
             $name = Output::colorize(str_pad($row['name'], 35), 'dim');
             $ctrl = Output::colorize($row['controller'] . '::' . $row['action'], 'dim');
 
-            echo "  {$method} {$path} {$name} {$ctrl}\n";
+            echo "  $method $path $name $ctrl\n";
         }
-
-        Output::newLine();
-        Output::muted(count($rows) . ' route(s) listed.');
         Output::newLine();
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('--method=<method>', 'Filter by HTTP method (GET, POST, PUT, PATCH, DELETE)');
-        Output::option('--name=<name>', 'Filter by route name (partial match)');
-        Output::option('--path=<path>', 'Filter by path (partial match)');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} --project=MyApp");
-        Output::example("php bin/neo {$this->getName()} --project=MyApp --method=GET");
-        Output::example("php bin/neo {$this->getName()} --project=MyApp --name=user");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }
