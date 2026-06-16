@@ -101,6 +101,10 @@ final class DebugRouterCommand extends AbstractCommand
         return ExitCode::SUCCESS;
     }
 
+    /**
+     * @param array<string, array<string, array{name: string, controller: string, action: string}>> $routes
+     * @return list<array{method: string, path: string, name: string, controller: string, action: string}>
+     */
     private function filterRoutes(array $routes, ?string $m, ?string $n, ?string $p): array
     {
         $rows = [];
@@ -122,6 +126,9 @@ final class DebugRouterCommand extends AbstractCommand
         return $rows;
     }
 
+    /**
+     * @param list<array{method: string, path: string, name: string, controller: string, action: string}> $rows
+     */
     private function renderTable(array $rows, string $project, ?string $m, ?string $n, ?string $p): void
     {
         $title = "Routes for $project (" . count($rows) . ")";
