@@ -4,6 +4,7 @@ namespace Neo\Core\Cron;
 
 use DateTime;
 use DateTimeZone;
+use Neo\Core\Console\Output\Output;
 use Neo\Core\Cron\Exception\CronException;
 use Neo\Core\DI\Container;
 use Neo\Core\Utils\Logger\Logger;
@@ -45,7 +46,13 @@ class CronRunner
             }
 
             try {
-                $instance = $this->container->get($job['class']);
+
+                try {
+                    $instance = $this->container->get($job['class']);
+                } catch (\Throwable) {
+                    $instance = new ($job['class'])();
+                }
+
                 $method = $job['method'];
                 $instance->$method();
 
@@ -124,5 +131,12 @@ class CronRunner
         try {
             $this->container->get(Logger::class)->$level($message, [], 'Cron');
         } catch (\Throwable) {}
+
+        match ($level) {
+            'info' => Output::info($message),
+            'warning' => Output::warning($message),
+            'error' => Output::error($message),
+            default => Output::muted($message),
+        };
     }
 }
