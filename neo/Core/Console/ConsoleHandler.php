@@ -120,6 +120,16 @@ class ConsoleHandler
         }
 
         $input = new Input($rawArgs, $instance->getArgumentDefinitions(), $instance->getOptionDefinitions());
+
+        foreach ($instance->getArgumentDefinitions() as $argDef) {
+            if ($argDef->isRequired() && $input->getArgument($argDef->getName()) === null) {
+                Output::error("Missing required argument: <{$argDef->getName()}>");
+                Output::newLine();
+                $instance->renderHelp();
+                return ExitCode::FAILURE;
+            }
+        }
+
         $output = new Output();
 
         return $instance->do($input, $output);
