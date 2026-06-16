@@ -39,12 +39,15 @@ final class CronRunCommand extends AbstractCommand
         try {
             $cronsPath = $this->container->get('cronsPath');
         } catch (\Throwable) {
-            $project = $input->getOption('project');
-            if (!$project) {
-                Output::error('Project is required.');
+            $projects = $this->getAvailableProjects();
+
+            if (empty($projects)) {
+                Output::error('No projects found.');
                 return ExitCode::FAILURE;
             }
-            $cronsPath = ROOT_DIR . "/src/$project/Cron";
+
+            $project = $input->getOption('project') ?? Input::choice('Target project ?', $projects);
+            $cronsPath = ROOT_DIR . "/src/$project/App/Crons";
         }
 
         $scanner = new CronScanner();
@@ -56,6 +59,7 @@ final class CronRunCommand extends AbstractCommand
         }
 
         $runner = new CronRunner($this->container);
+
         $runner->run($jobs);
 
         return ExitCode::SUCCESS;
