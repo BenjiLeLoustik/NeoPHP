@@ -107,6 +107,11 @@ final class MakeControllerCommand extends AbstractCommand
             ? "return \$this->jsonSuccess(['success' => true]);"
             : "return \$this->render('pages/$routePath/index.html.twig', []);";
 
+        $returnType = $isApi ? 'JsonResponse' : 'Response';
+        $useStatement = $isApi
+            ? 'use Neo\Core\Http\Response\JsonResponse;'
+            : 'use Neo\Core\Http\Response\Response;';
+
         $content = <<<PHP
 <?php
 declare(strict_types=1);
@@ -116,12 +121,13 @@ namespace $namespace;
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Routing\Attribute\MainRoute;
 use Neo\Core\Routing\Attribute\Route;
+$useStatement
 
 #[MainRoute(path: '/$routePath', name: '$routeName')]
 final class $controller extends AbstractController
 {
     #[Route(path: '/', name: 'index', methods: ['GET'])]
-    public function index()
+    public function index(): $returnType
     {
         $methodBody
     }
