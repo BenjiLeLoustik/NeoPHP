@@ -45,7 +45,7 @@ final class CronListCommand extends AbstractCommand
             }
 
             $project = $input->getOption('project') ?? Input::choice('Target project ?', $projects);
-            $cronsPath = ROOT_DIR . "/src/$project/Cron";
+            $cronsPath = ROOT_DIR . "/src/$project/App/Crons";
         }
 
         $scanner = new CronScanner();
