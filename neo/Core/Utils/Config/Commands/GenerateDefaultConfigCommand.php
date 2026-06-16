@@ -55,6 +55,7 @@ final class GenerateDefaultConfigCommand extends AbstractCommand
                 Output::skip($filename);
                 continue;
             }
+
             $generator();
             Output::success("$filename generated.");
         }
@@ -64,22 +65,109 @@ final class GenerateDefaultConfigCommand extends AbstractCommand
 
     private function generateDatabaseConfig(string $path, string $name): void
     {
-        file_put_contents($path . 'database.config.php', "<?php\ndeclare(strict_types=1);\n\nreturn [\n    'enabled' => false,\n    'connections' => [\n        'default' => ['driver' => 'mysql', 'host' => 'localhost', 'port' => 3306, 'user' => '', 'pass' => '', 'dbname' => '', 'charset' => 'utf8mb4', 'prefix' => ''],\n    ],\n];");
+        $content = <<<PHP
+<?php
+declare(strict_types=1);
+
+// ./src/$name/Config/database.config.php
+
+return [
+    'enabled' => false,
+    'use'     => "default",
+
+    'connections' => [
+        'default' => [
+            'driver'  => "mysql",
+            'host'    => "localhost",
+            'port'    => 3306,
+            'user'    => "",
+            'pass'    => "",
+            'dbname'  => "",
+            'charset' => "utf8mb4",
+            'prefix'  => "",
+        ],
+    ],
+];
+PHP;
+
+        file_put_contents($path . 'database.config.php', $content);
     }
 
     private function generateDeployConfig(string $path, string $name): void
     {
-        file_put_contents($path . 'deploy.config.php', "<?php\ndeclare(strict_types=1);\n\nreturn [\n    'ftp' => ['host' => '', 'user' => '', 'pass' => ''],\n    'remote' => ['domain' => '', 'framework_dir' => '', 'public_dir' => ''],\n];");
+        $content = <<<PHP
+<?php
+declare(strict_types=1);
+
+// ./src/$name/Config/deploy.config.php
+
+return [
+    'ftp' => [
+        'host' => '',
+        'user' => '',
+        'pass' => '',
+    ],
+    'remote' => [
+        'domain'        => '',
+        'framework_dir' => '',
+        'public_dir'    => '',
+    ],
+];
+PHP;
+
+        file_put_contents($path . 'deploy.config.php', $content);
     }
 
     private function generateAPIConfig(string $path, string $name): void
     {
-        file_put_contents($path . 'api.config.php', "<?php\ndeclare(strict_types=1);\n\nreturn [\n    // API configurations\n];");
+        $content = <<<PHP
+<?php
+declare(strict_types=1);
+
+// ./src/$name/Config/api.config.php
+
+return [
+    // 'stripe' => [
+    //     'key'    => '',
+    //     'secret' => '',
+    // ],
+];
+PHP;
+
+        file_put_contents($path . 'api.config.php', $content);
     }
 
     private function generateMailerConfig(string $path, string $name): void
     {
-        file_put_contents($path . 'mailer.config.php', "<?php\ndeclare(strict_types=1);\n\nreturn [\n    'enabled' => false,\n    'default' => 'smtp',\n    'drivers' => [\n        'smtp' => ['host' => '', 'port' => 587, 'encryption' => 'tls', 'username' => '', 'password' => ''],\n    ],\n    'from' => ['address' => '', 'name' => '$name'],\n];");
+        $content = <<<PHP
+<?php
+declare(strict_types=1);
+
+// ./src/$name/Config/mailer.config.php
+
+return [
+    'enabled' => false,
+
+    'default' => 'smtp',
+
+    'drivers' => [
+        'smtp' => [
+            'host'       => '',
+            'port'       => 587,
+            'encryption' => 'tls',
+            'username'   => '',
+            'password'   => '',
+        ],
+    ],
+
+    'from' => [
+        'address' => '',
+        'name'    => '$name',
+    ],
+];
+PHP;
+
+        file_put_contents($path . 'mailer.config.php', $content);
     }
 
     protected function getAvailableProjects(): array
