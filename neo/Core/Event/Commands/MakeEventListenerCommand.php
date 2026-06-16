@@ -5,62 +5,70 @@ namespace Neo\Core\Event\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Helper\Fs;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputArgument;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: 'make:event:listener',
     description: 'Create a Listener for an Event in a project',
-    category: 'Event'
+    category: 'Event',
 )]
 final class MakeEventListenerCommand extends AbstractCommand
 {
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $listener = Args::positional($args, 0);
-        $project = Args::option($args, '--project');
-        $event = Args::option($args, '--event');
-        $priority = (int) (Args::option($args, '--priority') ?? 0);
-        $force = Args::flag($args, '--force');
+        $this->addArgument(
+            name: 'listener',
+            description: 'Listener class name',
+            mode: InputArgument::OPTIONAL,
+        );
 
-        if (!$listener) {
-            $listener = Input::ask('Listener name ?');
-            if (!$listener) {
-                Output::error('Listener name is required.');
-                return;
-            }
-        }
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
+        $this->addOption(
+            name: 'event',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Event to listen to',
+        );
 
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
+        $this->addOption(
+            name: 'priority',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Listener priority',
+        );
 
-            $project = Input::choice('Target project ?', $projects);
-        }
+        $this->addOption(
+            name: 'force',
+            shortcut: null,
+            mode: InputOption::NONE,
+            description: 'Overwrite file',
+        );
+    }
+
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $listener = $input->getArgument('listener') ?? Input::ask('Listener name ?');
+        if (!$listener) return ExitCode::INVALID;
+
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $event = $input->getOption('event') ?? $this->resolveEvent($project);
+        $priority = (int) ($input->getOption('priority') ?? Input::ask('Priority ?', '0'));
+        $force = (bool) $input->getOption('force');
 
         if (!$event) {
-            $available = $this->getAvailableEvents($project);
-
-            if (!empty($available)) {
-                $event = Input::choice('Event to listen to ?', $available);
-            } else {
-                $event = Input::ask('Event to listen to ?');
-                if (!$event) {
-                    Output::error('Event name is required.');
-                    return;
-                }
-            }
-        }
-
-        if ($priority === 0) {
-            $raw = Input::ask('Listener priority ?', '0');
-            $priority = (int) $raw;
+            Output::error('Event name is required.');
+            return ExitCode::INVALID;
         }
 
         $listener = $this->normalizeListenerName($listener);
@@ -68,19 +76,17 @@ final class MakeEventListenerCommand extends AbstractCommand
         $basePath = ROOT_DIR . "/src/$project/App/Event/Listener";
 
         Fs::ensureDir($basePath);
-
         $path = "$basePath/$listener.php";
 
         if (file_exists($path) && !$force) {
-            if (!Input::confirm("Listener '$listener' already exists. Overwrite ?", false)) {
+            if (!Input::confirm("Listener '$listener' exists. Overwrite ?", false)) {
                 Output::muted('Cancelled.');
-                return;
+                return ExitCode::SUCCESS;
             }
         }
 
         $listenerNs = "Neo\\Src\\$project\\App\\Event\\Listener";
-        $eventNs = "Neo\\Src\\$project\\App\\Event";
-        $eventFqcn  = "$eventNs\\$event";
+        $eventFqcn = "Neo\\Src\\$project\\App\\Event\\$event";
 
         $content = <<<PHP
 <?php
@@ -105,66 +111,36 @@ final class $listener
 PHP;
 
         file_put_contents($path, $content);
-        Output::success("Listener '$listener' generated for event '$event' in project '$project'.");
+        Output::success("Listener '$listener' generated.");
+
+        return ExitCode::SUCCESS;
     }
 
-    /**
-     * @return list<string>
-     */
-    private function getAvailableEvents(string $project): array
+    private function resolveEvent(string $project): ?string
     {
         $eventDir = ROOT_DIR . "/src/$project/App/Event";
-
-        if (!is_dir($eventDir)) {
-            return [];
-        }
+        if (!is_dir($eventDir)) return Input::ask('Event name ?');
 
         $files = glob($eventDir . '/*Event.php') ?: [];
+        $choices = array_map(fn($f) => basename($f, '.php'), $files);
 
-        return array_map(
-            fn(string $file) => basename($file, '.php'),
-            $files
-        );
+        return !empty($choices) ? Input::choice('Event to listen to ?', $choices) : Input::ask('Event name ?');
     }
 
     private function normalizeListenerName(string $input): string
     {
-        $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
-        $input = str_replace(' ', '', ucwords($input));
-
-        if (!str_ends_with($input, 'Listener')) {
-            $input .= 'Listener';
-        }
-
-        return $input;
+        $input = str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)));
+        return str_ends_with($input, 'Listener') ? $input : $input . 'Listener';
     }
 
     private function normalizeEventName(string $input): string
     {
-        $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
-        $input = str_replace(' ', '', ucwords($input));
-
-        if (!str_ends_with($input, 'Event')) {
-            $input .= 'Event';
-        }
-
-        return $input;
+        $input = str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)));
+        return str_ends_with($input, 'Event') ? $input : $input . 'Event';
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('<ListenerName>', '"Listener" suffix added automatically');
-        Output::option('--event=<name>', 'Event to listen to — interactive selection from existing events if omitted');
-        Output::option('--priority=<n>', 'Listener priority (default: 0, higher = earlier)');
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('--force', 'Overwrite existing file');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} SendWelcomeEmail --event=UserRegistered --project=MyApp");
-        Output::example("php bin/neo {$this->getName()} SendWelcomeEmail --event=UserRegistered --priority=10 --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

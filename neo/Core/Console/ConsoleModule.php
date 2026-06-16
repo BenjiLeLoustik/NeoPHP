@@ -8,9 +8,7 @@ use Neo\Core\Module\AbstractModule;
 
 class ConsoleModule extends AbstractModule
 {
-    /**
-     * @return list<class-string>
-     */
+    /** @return list<class-string> */
     public function dependencies(): array
     {
         return [];

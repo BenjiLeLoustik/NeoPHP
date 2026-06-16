@@ -5,9 +5,10 @@ namespace Neo\Core\Database\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\DatabaseIntrospector;
 use Neo\Core\Database\ORM\ORM;
@@ -16,7 +17,7 @@ use Neo\Core\DI\Container;
 #[Command(
     name: 'database:generate',
     description: 'Generate Models and Repositories from the database schema',
-    category: 'Database'
+    category: 'Database',
 )]
 final class DatabaseGenerateCommand extends AbstractCommand
 {
@@ -24,36 +25,40 @@ final class DatabaseGenerateCommand extends AbstractCommand
         private readonly Container $container
     ) {}
 
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $project = Args::option($args, '--project');
-        $only = Args::option($args, '--only');
-        $force = Args::flag($args, '--force');
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
+        $this->addOption(
+            name: 'only',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target (all, models, repositories, forms)',
+        );
 
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
+        $this->addOption(
+            name: 'force',
+            shortcut: null,
+            mode: InputOption::NONE,
+            description: 'Overwrite files',
+        );
+    }
 
-            $project = Input::choice('Target project ?', $projects);
-        }
-
-        if (!$only) {
-            $only = Input::choice(
-                'What to generate ?',
-                ['all', 'models', 'repositories', 'forms'],
-                'all'
-            );
-        }
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $only = $input->getOption('only') ?? Input::choice('What to generate ?', ['all', 'models', 'repositories', 'forms'], 'all');
+        $force = (bool) $input->getOption('force');
 
         $srcPath = ROOT_DIR . "/src/$project";
-
         if (!is_dir($srcPath)) {
-            Output::error("Project '$project' not found in ./src/");
-            return;
+            Output::error("Project '$project' not found.");
+            return ExitCode::FAILURE;
         }
 
         $this->container->set('application', $project);
@@ -65,35 +70,27 @@ final class DatabaseGenerateCommand extends AbstractCommand
         $this->container->set('repositoryPath', "$srcPath/Repository");
         $this->container->set('modelPath', "$srcPath/Model");
         $this->container->set('formPath', "$srcPath/App/Forms");
+        $this->container->set('modelNamespace', "Neo\\Src\\$project\\Model");
+        $this->container->set('repositoryNamespace', "Neo\\Src\\$project\\Repository");
+        $this->container->set('formNamespace', "Neo\\Src\\$project\\App\\Forms");
 
-        $this->container->set('modelNamespace', 'Neo\\Src\\' . $project . '\\Model');
-        $this->container->set('repositoryNamespace', 'Neo\\Src\\' . $project . '\\Repository');
-        $this->container->set('formNamespace', 'Neo\\Src\\' . $project . '\\App\\Forms');
-
-        Output::newLine();
-        Output::title("Generating from database schema for '$project'");
-        Output::label('Target',  $only);
-        Output::label('Force',   $force ? 'yes' : 'no');
-        Output::newLine();
+        Output::title("Generating for '$project'");
 
         try {
             $this->container->get(DatabaseConnection::class);
-
             if (!DatabaseConnection::isConnected()) {
-                Output::error('Database is not connected. Check database.config.php.');
-                return;
+                Output::error('Database not connected.');
+                return ExitCode::FAILURE;
             }
 
             $introspector = new DatabaseIntrospector($this->container);
             $tables = $introspector->getTables();
-
             if (empty($tables)) {
-                Output::warning('No tables found in the database.');
-                return;
+                Output::warning('No tables found.');
+                return ExitCode::SUCCESS;
             }
 
-            Output::info(count($tables) . ' table(s) found : ' . implode(', ', $tables));
-            Output::newLine();
+            Output::info(count($tables) . ' table(s) found.');
 
             $orm = new ORM($this->container);
             $orm->generateSelective(
@@ -103,26 +100,16 @@ final class DatabaseGenerateCommand extends AbstractCommand
                 force: $force,
             );
 
-            Output::success("Generation completed for project '$project'.");
-
+            Output::success("Generation completed.");
+            return ExitCode::SUCCESS;
         } catch (\Throwable $e) {
             Output::error('Generation failed: ' . $e->getMessage());
+            return ExitCode::FAILURE;
         }
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('--only=<target>', 'What to generate: all, models, repositories, forms (default: all)');
-        Output::option('--force', 'Bypass lock file and overwrite existing files');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} --project=MyApp");
-        Output::example("php bin/neo {$this->getName()} --project=MyApp --only=models");
-        Output::example("php bin/neo {$this->getName()} --project=MyApp --only=repositories --force");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

@@ -1,16 +1,118 @@
 <?php
+declare(strict_types=1);
 
 namespace Neo\Core\Console;
 
 use Neo\Core\Console\Attribute\Command;
+use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputArgument;
+use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Interface\CommandInterface;
+use Neo\Core\Console\Output\Output;
 
-class AbstractCommand implements CommandInterface
+abstract class AbstractCommand implements CommandInterface
 {
+    /** @var list<InputArgument> */
+    private array $argumentDefinitions = [];
 
-    /**
-     * @return list<string>
-     */
+    /** @var list<InputOption> */
+    private array $optionDefinitions = [];
+
+    final protected function addArgument(
+        string $name,
+        string $description = '',
+        int $mode = InputArgument::OPTIONAL,
+        mixed $default = null,
+    ): static {
+        $this->argumentDefinitions[] = new InputArgument($name, $description, $mode, $default);
+
+        return $this;
+    }
+
+    final protected function addOption(
+        string $name,
+        ?string $shortcut = null,
+        int $mode = InputOption::NONE,
+        string $description = '',
+        mixed $default = null,
+    ): static {
+        $this->optionDefinitions[] = new InputOption($name, $shortcut, $mode, $description, $default);
+
+        return $this;
+    }
+
+    /** @return list<InputArgument> */
+    final public function getArgumentDefinitions(): array
+    {
+        return $this->argumentDefinitions;
+    }
+
+    /** @return list<InputOption> */
+    final public function getOptionDefinitions(): array
+    {
+        return $this->optionDefinitions;
+    }
+
+    public function configure(): void {}
+
+    abstract public function do(Input $input, Output $output): ExitCode;
+
+    final public function renderHelp(): void
+    {
+        Output::usage($this->getName(), $this->getDescription());
+
+        if ($this->argumentDefinitions !== []) {
+            echo Output::colorize("  Arguments:\n", 'bold');
+
+            foreach ($this->argumentDefinitions as $arg) {
+                Output::argument(
+                    '<' . $arg->getName() . '>',
+                    $arg->getDescription(),
+                    $arg->getModeLabel(),
+                );
+            }
+
+            Output::newLine();
+        }
+
+        if ($this->optionDefinitions !== []) {
+            echo Output::colorize("  Options:\n", 'bold');
+
+            foreach ($this->optionDefinitions as $opt) {
+                Output::option($opt->getSynopsis(), $opt->getDescription());
+            }
+
+            Output::newLine();
+        }
+
+        echo Output::colorize("  Global options:\n", 'bold');
+        Output::option('--help, -h', 'Show this help message');
+        Output::newLine();
+    }
+
+    public function getName(): string
+    {
+        $attr = new \ReflectionClass($this)->getAttributes(Command::class)[0] ?? null;
+
+        return $attr?->newInstance()->name ?? '';
+    }
+
+    public function getDescription(): string
+    {
+        $attr = new \ReflectionClass($this)->getAttributes(Command::class)[0] ?? null;
+
+        return $attr?->newInstance()->description ?? '';
+    }
+
+    public function getCategory(): string
+    {
+        $attr = new \ReflectionClass($this)->getAttributes(Command::class)[0] ?? null;
+
+        return $attr?->newInstance()->category ?? 'other';
+    }
+
+    /** @return list<string> */
     protected function getAvailableProjects(): array
     {
         $srcDir = ROOT_DIR . '/src/';
@@ -23,32 +125,5 @@ class AbstractCommand implements CommandInterface
             fn(string $dir) => basename($dir),
             glob($srcDir . '*', GLOB_ONLYDIR) ?: []
         );
-    }
-
-    /**
-     * @param array<int|string, mixed> $args
-     */
-    public function execute(array $args): void
-    {}
-
-    public function getName(): string
-    {
-        $attr = new \ReflectionClass($this)
-            ->getAttributes(Command::class)[0] ?? null;
-
-        return $attr?->newInstance()->name ?? '';
-    }
-
-    public function getDescription(): string
-    {
-        $attr = new \ReflectionClass($this)
-            ->getAttributes(Command::class)[0] ?? null;
-
-        return $attr?->newInstance()->description ?? '';
-    }
-
-    public function getHelp(): string
-    {
-        return '';
     }
 }

@@ -5,16 +5,18 @@ namespace Neo\Core\Cron\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 use Neo\Core\Cron\CronRunner;
 use Neo\Core\Cron\CronScanner;
-use Neo\Core\Cron\Exception\CronException;
 use Neo\Core\DI\Container;
 
 #[Command(
     name: 'cron:run',
     description: 'Run all due cron jobs for a project',
-    category: 'Cron'
+    category: 'Cron',
 )]
 final class CronRunCommand extends AbstractCommand
 {
@@ -22,17 +24,27 @@ final class CronRunCommand extends AbstractCommand
         private readonly Container $container
     ) {}
 
-    /**
-     * @throws CronException
-     */
-    public function execute(array $args): void
+    public function configure(): void
+    {
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
+    }
+
+    public function do(Input $input, Output $output): ExitCode
     {
         try {
             $cronsPath = $this->container->get('cronsPath');
         } catch (\Throwable) {
-            Output::error('You must pass --project=<name> to use this command.');
-            Output::muted("Example: php bin/neo {$this->getName()} --project=MyApp");
-            return;
+            $project = $input->getOption('project');
+            if (!$project) {
+                Output::error('Project is required.');
+                return ExitCode::FAILURE;
+            }
+            $cronsPath = ROOT_DIR . "/src/$project/Cron";
         }
 
         $scanner = new CronScanner();
@@ -40,22 +52,12 @@ final class CronRunCommand extends AbstractCommand
 
         if (empty($jobs)) {
             Output::muted('No cron jobs found.');
-            return;
+            return ExitCode::SUCCESS;
         }
 
         $runner = new CronRunner($this->container);
         $runner->run($jobs);
-    }
 
-    public function getHelp(): string
-    {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} --project=MyApp");
-        Output::example("* * * * * php bin/neo {$this->getName()} --project=MyApp");
-
-        return '';
+        return ExitCode::SUCCESS;
     }
 }

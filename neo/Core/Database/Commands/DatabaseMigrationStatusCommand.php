@@ -5,9 +5,10 @@ namespace Neo\Core\Database\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\DatabaseIntrospector;
 use Neo\Core\Database\DatabaseManager;
@@ -18,7 +19,7 @@ use Neo\Core\DI\Container;
 #[Command(
     name: 'database:migration:status',
     description: 'Show applied and pending migrations for a project',
-    category: 'Database'
+    category: 'Database',
 )]
 final class DatabaseMigrationStatusCommand extends AbstractCommand
 {
@@ -26,27 +27,26 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
         private readonly Container $container
     ) {}
 
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $project = Args::option($args, '--project');
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
+    }
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
-
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
-
-            $project = Input::choice('Target project ?', $projects);
-        }
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
 
         $basePath = ROOT_DIR . "/src/$project";
         $migrationsPath = "$basePath/Database/Migrations";
 
         if (!is_dir($basePath)) {
-            Output::error("Project '$project' does not exist inside ./src/");
-            return;
+            Output::error("Project '$project' not found.");
+            return ExitCode::FAILURE;
         }
 
         try {
@@ -54,8 +54,8 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
             $this->container->get(DatabaseConnection::class);
 
             if (!DatabaseConnection::isConnected()) {
-                Output::error('Database is not connected. Check database.config.php.');
-                return;
+                Output::error('Database not connected.');
+                return ExitCode::FAILURE;
             }
 
             $db = new DatabaseManager();
@@ -65,8 +65,8 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
             $files = $runner->getMigrationFiles($migrationsPath);
 
             if (empty($files) && empty($applied)) {
-                Output::warning("No migrations found in src/$project/Database/Migrations/");
-                return;
+                Output::warning('No migrations found.');
+                return ExitCode::SUCCESS;
             }
 
             Output::title("Migration status — $project");
@@ -86,8 +86,7 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
             foreach ($files as $file) {
                 $name = basename($file, '.php');
                 if (!isset($applied[$name])) {
-                    $status = Output::colorize('· pending', 'yellow');
-                    echo "  $status  $name\n";
+                    echo "  " . Output::colorize('· pending', 'yellow') . "  $name\n";
                 }
             }
 
@@ -98,14 +97,15 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
 
             if ($snapshot->hasChanged()) {
                 Output::newLine();
-                Output::warning('Schema has changed since last migration. Run database:migration:generate ?');
+                Output::warning('Schema has changed. Run database:migration:generate ?');
             }
 
+            return ExitCode::SUCCESS;
         } catch (\Throwable $e) {
             Output::error('Status check failed: ' . $e->getMessage());
+            return ExitCode::FAILURE;
         }
     }
-
 
     private function bootProjectContainer(string $project): void
     {
@@ -125,15 +125,8 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
         $this->container->set('formNamespace', "Neo\\Src\\$project\\App\\Forms");
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

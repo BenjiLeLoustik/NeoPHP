@@ -5,18 +5,18 @@ namespace Neo\Core\Testing\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
-use Neo\Core\Testing\Exception\TestingException;
 use Neo\Core\Testing\Generator\TestGenerator;
 use Neo\Core\Testing\Scaffold\TestScaffolder;
 
 #[Command(
     name: 'make:test:auto',
     description: 'Auto-generate test files from #[Test] attributes',
-    category: 'Testing'
+    category: 'Testing',
 )]
 final class MakeTestAutoCommand extends AbstractCommand
 {
@@ -24,37 +24,53 @@ final class MakeTestAutoCommand extends AbstractCommand
         private readonly Container $container
     ) {}
 
-    /**
-     * @throws TestingException
-     */
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $project = Args::option($args, '--project');
-        $force = Args::flag($args, '--force');
-        $onlyType = Args::option($args, '--only');
-        $dryRun = Args::flag($args, '--dry-run');
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
+        $this->addOption(
+            name: 'force',
+            shortcut: null,
+            mode: InputOption::NONE,
+            description: 'Overwrite test files',
+        );
 
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
+        $this->addOption(
+            name: 'only',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Only generate unit, feature, database, or middleware',
+        );
 
-            $project = Input::choice('Target project ?', $projects);
-        }
+        $this->addOption(
+            name: 'dry-run',
+            shortcut: null,
+            mode: InputOption::NONE,
+            description: 'Show result without writing files',
+        );
+    }
+
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $force = (bool) $input->getOption('force');
+        $onlyType = $input->getOption('only');
+        $dryRun = (bool) $input->getOption('dry-run');
 
         $basePath = ROOT_DIR . "/src/$project";
-
         if (!is_dir($basePath)) {
-            Output::error("Project '$project' does not exist inside ./src/");
-            return;
+            Output::error("Project '$project' not found.");
+            return ExitCode::FAILURE;
         }
 
-        new TestScaffolder()->ensure($basePath, $project);
+        (new TestScaffolder())->ensure($basePath, $project);
 
-        Output::title("Scanning #[Test] attributes in project '$project'");
+        Output::title("Scanning #[Test] attributes in '$project'");
 
         $generator = new TestGenerator($this->container);
         $result = $generator->generate(
@@ -80,26 +96,17 @@ final class MakeTestAutoCommand extends AbstractCommand
         }
 
         if (empty($result['generated']) && empty($result['skipped'])) {
-            Output::warning('No #[Test] attributes found. Add #[Test] to your classes or methods.');
+            Output::warning('No #[Test] attributes found.');
         }
 
         Output::separator();
         Output::success('Done.');
+
+        return ExitCode::SUCCESS;
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('--force', 'Overwrite existing test files');
-        Output::option('--only=<type>', 'Generate only a specific type (unit|feature|database|middleware)');
-        Output::option('--dry-run', 'Show what would be generated without creating files');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} --project=MyApp");
-        Output::example("php bin/neo {$this->getName()} --project=MyApp --only=database --dry-run");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

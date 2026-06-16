@@ -5,58 +5,52 @@ namespace Neo\Core\Utils\Cache\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Helper\Fs;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: 'cache:clear',
     description: 'Clear the cache of a project',
-    category: 'Cache'
+    category: 'Cache',
 )]
 final class CacheClearCommand extends AbstractCommand
 {
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $project = Args::option($args, '--project');
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
+    }
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
-
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
-
-            $project = Input::choice('Target project ?', $projects);
-        }
-
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
         $cacheDir = ROOT_DIR . "/src/$project/Storage/var/cache";
 
         if (!is_dir($cacheDir)) {
-            Output::warning("Cache directory for project '$project' does not exist.");
-            return;
+            Output::warning("Cache directory not found.");
+            return ExitCode::FAILURE;
         }
 
         if (!Input::confirm("Clear cache for '$project' ?", false)) {
             Output::muted('Cancelled.');
-            return;
+            return ExitCode::SUCCESS;
         }
 
         Fs::emptyDir($cacheDir);
-        Output::success("Cache cleared for project '$project'.");
+        Output::success("Cache cleared for '$project'.");
+
+        return ExitCode::SUCCESS;
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

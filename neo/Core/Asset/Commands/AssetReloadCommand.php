@@ -5,10 +5,11 @@ namespace Neo\Core\Asset\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Helper\Fs;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: 'asset:reload',
@@ -17,21 +18,25 @@ use Neo\Core\Console\Helper\Output;
 )]
 final class AssetReloadCommand extends AbstractCommand
 {
-    /**
-     * @param array<int|string, mixed> $args
-     */
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $project = Args::option($args, '--project');
+        $this->addOption(
+            name: 'project',
+            mode: InputOption::REQUIRED,
+            description: 'Project whose build folder should be deleted'
+        );
+    }
+
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $project = $input->getOption('project');
 
         if (!$project) {
             $projects = $this->getAvailableProjects();
-
             if (empty($projects)) {
-                Output::error('No projects found in ./public/builds/');
-                return;
+                Output::error('No projects found.');
+                return ExitCode::FAILURE;
             }
-
             $project = Input::choice('Which project do you want to reload ?', $projects);
         }
 
@@ -39,27 +44,17 @@ final class AssetReloadCommand extends AbstractCommand
 
         if (!is_dir($buildDir)) {
             Output::warning("Build folder for project '$project' does not exist.");
-            return;
+            return ExitCode::FAILURE;
         }
 
         if (!Input::confirm("Delete build folder for '$project' ?", false)) {
             Output::muted('Cancelled.');
-            return;
+            return ExitCode::SUCCESS;
         }
 
         Fs::deleteDir($buildDir);
         Output::success("Build folder deleted for project '$project'.");
-    }
 
-    public function getHelp(): string
-    {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('--project=<name>', 'Project whose build folder should be deleted (interactive selection if omitted)');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return ExitCode::SUCCESS;
     }
 }

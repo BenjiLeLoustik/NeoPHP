@@ -5,145 +5,107 @@ namespace Neo\Core\Testing\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputArgument;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: 'run:test',
     description: 'Run a targeted PHPUnit test for a project',
-    category: 'Testing'
+    category: 'Testing',
 )]
 final class RunTestCommand extends AbstractCommand
 {
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $testName = Args::positional($args, 0);
-        $project = Args::option($args, '--project');
-        $filter = Args::option($args, '--filter');
-        $type = Args::option($args, '--type');
+        $this->addArgument(
+            name: 'testName',
+            description: 'Test class name',
+            mode: InputArgument::OPTIONAL,
+        );
 
-        if (!$testName) {
-            $testName = Input::ask('Test name ?', 'ExampleTest');
-            if (!$testName) {
-                Output::error('Test name is required.');
-                return;
-            }
-        }
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
+        $this->addOption(
+            name: 'filter',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Method filter',
+        );
 
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
+        $this->addOption(
+            name: 'type',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Test type (unit, feature, database, middleware)',
+        );
+    }
 
-            $project = Input::choice('Target project ?', $projects);
-        }
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $testName = $input->getArgument('testName') ?? Input::ask('Test name ?');
+        if (!$testName) return ExitCode::INVALID;
+
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $filter = $input->getOption('filter');
+        $type = $input->getOption('type');
 
         $basePath = ROOT_DIR . "/src/$project";
         $testsPath = "$basePath/Tests";
 
-        if (!is_dir($basePath)) {
-            Output::error("Project '$project' does not exist inside ./src/");
-            return;
+        if (!is_dir($testsPath) || !file_exists(ROOT_DIR . '/vendor/bin/phpunit')) {
+            Output::error("Tests folder or PHPUnit not found.");
+            return ExitCode::FAILURE;
         }
 
-        if (!is_dir($testsPath)) {
-            Output::error("No Tests/ folder found in src/$project/. Run make:test first.");
-            return;
-        }
-
-        if (!$this->checkPhpUnit()) {
-            return;
-        }
-
-        if (!str_ends_with($testName, 'Test')) {
-            $testName .= 'Test';
-        }
-
+        $testName = str_ends_with($testName, 'Test') ? $testName : $testName . 'Test';
         $testFile = $this->findTestFile($testsPath, $testName, $type);
 
-        if ($testFile === null) {
-            Output::error("Test file '$testName.php' not found in src/$project/Tests/");
-            return;
+        if (!$testFile) {
+            Output::error("Test file '$testName.php' not found.");
+            return ExitCode::FAILURE;
         }
 
-        $phpunitBin = ROOT_DIR . '/vendor/bin/phpunit';
-        $xmlConfig = "$testsPath/phpunit.xml";
+        $cmd = [
+            ROOT_DIR . '/vendor/bin/phpunit',
+            '--configuration', "$testsPath/phpunit.xml",
+            escapeshellarg($testFile),
+            '--colors=always',
+            '--testdox'
+        ];
 
-        $cmd = escapeshellarg($phpunitBin);
-        $cmd .= ' --configuration ' . escapeshellarg($xmlConfig);
-        $cmd .= ' ' . escapeshellarg($testFile);
-        $cmd .= ' --colors=always --testdox';
-
-        if ($filter) {
-            $cmd .= ' --filter ' . escapeshellarg($filter);
-        }
+        if ($filter) array_push($cmd, '--filter', escapeshellarg($filter));
 
         Output::title("Running test: $testName");
-        passthru($cmd, $exitCode);
-        Output::separator();
+        passthru(implode(' ', $cmd), $exitCode);
 
-        match (true) {
-            $exitCode === 0 => Output::success('All tests passed.'),
-            $exitCode === 1 => Output::warning('Completed with warnings (code 1).'),
-            default => Output::error("Tests failed (code $exitCode)."),
-        };
+        return $exitCode === 0 ? ExitCode::SUCCESS : ExitCode::FAILURE;
     }
 
-    private function findTestFile(string $testsPath, string $testName, ?string $type): ?string
+    private function findTestFile(string $testsPath, string $name, ?string $type): ?string
     {
-        $searchDirs = $type
-            ? ["$testsPath/" . ucfirst(strtolower($type))]
-            : ["$testsPath/Unit", "$testsPath/Feature", "$testsPath/Database", "$testsPath/Middleware"];
+        $searchDirs = $type ? ["$testsPath/" . ucfirst(strtolower($type))] : glob("$testsPath/*", GLOB_ONLYDIR);
 
         foreach ($searchDirs as $dir) {
-            if (!is_dir($dir)) {
-                continue;
-            }
-
             $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
-
             foreach ($iterator as $file) {
-                if ($file->isFile()
-                    && $file->getExtension() === 'php'
-                    && $file->getBasename('.php') === $testName
-                ) {
+                if ($file->isFile() && $file->getBasename('.php') === $name) {
                     return $file->getRealPath();
                 }
             }
         }
-
         return null;
     }
 
-    private function checkPhpUnit(): bool
+    protected function getAvailableProjects(): array
     {
-        $phpunitBin = ROOT_DIR . '/vendor/bin/phpunit';
-
-        if (!file_exists($phpunitBin)) {
-            Output::error('PHPUnit not found. Run: composer require --dev phpunit/phpunit');
-            return false;
-        }
-
-        return true;
-    }
-
-    public function getHelp(): string
-    {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('<TestName>', 'Test class name (e.g. UserServiceTest)');
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('--filter=<method>', 'Filter on a specific test method');
-        Output::option('--type=<type>', 'Search only inside Tests/<Type>/ (unit|feature|database|middleware)');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} UserServiceTest --project=MyApp");
-        Output::example("php bin/neo {$this->getName()} UserServiceTest --filter=test_example --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }

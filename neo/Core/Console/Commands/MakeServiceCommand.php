@@ -5,10 +5,12 @@ namespace Neo\Core\Console\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Helper\Fs;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputArgument;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: 'app:make:service',
@@ -17,21 +19,46 @@ use Neo\Core\Console\Helper\Output;
 )]
 final class MakeServiceCommand extends AbstractCommand
 {
-    /**
-     * @param array<int|string, mixed> $args
-     */
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $service = Args::positional($args, 0);
-        $project = Args::option($args, '--project');
-        $directory = Args::option($args, '-d') ?? Args::option($args, '--dir');
-        $force = Args::flag($args, '--force');
+        $this->addArgument(
+            name: 'service',
+            description: 'Service name',
+            mode: InputArgument::OPTIONAL
+        );
+
+        $this->addOption(
+            name: 'project',
+            mode: InputOption::REQUIRED,
+            description: 'Target project inside ./src/'
+        );
+
+        $this->addOption(
+            name: 'dir',
+            shortcut: 'd',
+            mode: InputOption::REQUIRED,
+            description: 'Create inside a sub-folder (e.g. Utils)'
+        );
+
+        $this->addOption(
+            name: 'force',
+            mode: InputOption::NONE,
+            description: 'Overwrite existing file'
+        );
+    }
+
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $service = $input->getArgument('service');
+        $project = $input->getOption('project');
+        $directory = $input->getOption('dir');
+        $force = (bool) $input->getOption('force');
 
         if (!$service) {
             $service = Input::ask('Service name ?');
             if (!$service) {
                 Output::error('Service name is required.');
-                return;
+                return ExitCode::INVALID;
             }
         }
 
@@ -40,7 +67,7 @@ final class MakeServiceCommand extends AbstractCommand
 
             if (empty($projects)) {
                 Output::error('No projects found in ./src/');
-                return;
+                return ExitCode::FAILURE;
             }
 
             $project = Input::choice('Target project ?', $projects);
@@ -60,18 +87,16 @@ final class MakeServiceCommand extends AbstractCommand
         }
 
         Fs::ensureDir($basePath);
-
         $path = "$basePath/$service.php";
 
         if (file_exists($path) && !$force) {
             if (!Input::confirm("Service '$service' already exists. Overwrite ?", false)) {
                 Output::muted('Cancelled.');
-                return;
+                return ExitCode::SUCCESS;
             }
         }
 
         $namespace = "Neo\\Src\\$project\\App\\Services";
-
         if ($directory) {
             $namespace .= '\\' . str_replace('/', '\\', $directory);
         }
@@ -84,12 +109,17 @@ namespace $namespace;
 
 final class $service
 {
-    // TODO: add service logic
+    public function __construct()
+    {
+        // TODO: inject dependencies
+    }
 }
 PHP;
 
         file_put_contents($path, $content);
         Output::success("Service '$service' generated for project '$project'.");
+
+        return ExitCode::SUCCESS;
     }
 
     private function normalizeServiceName(string $input): string
@@ -97,26 +127,6 @@ PHP;
         $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
         $input = str_replace(' ', '', ucwords($input));
 
-        if (!str_ends_with($input, 'Service')) {
-            $input .= 'Service';
-        }
-
-        return $input;
-    }
-
-    public function getHelp(): string
-    {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('<ServiceName>', '"Service" suffix added automatically');
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('-d, --dir <directory>', 'Create inside a sub-folder (e.g. Utils)');
-        Output::option('--force', 'Overwrite existing file');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} Mail --project=MyApp");
-        Output::example("php bin/neo {$this->getName()} Mail -d Utils --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return str_ends_with($input, 'Service') ? $input : $input . 'Service';
     }
 }

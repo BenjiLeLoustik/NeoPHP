@@ -5,79 +5,77 @@ namespace Neo\Core\Database\Commands;
 
 use Neo\Core\Console\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Helper\Args;
+use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Helper\Fs;
-use Neo\Core\Console\Helper\Input;
-use Neo\Core\Console\Helper\Output;
+use Neo\Core\Console\Input\Input;
+use Neo\Core\Console\Input\InputArgument;
+use Neo\Core\Console\Input\InputOption;
+use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: 'make:crud',
-    description: 'Create a full CRUD (Controller + Twig views) for an entity',
-    category: 'Database'
+    description: 'Create a full CRUD for an entity',
+    category: 'Database',
 )]
 final class MakeCrudCommand extends AbstractCommand
 {
-    public function execute(array $args): void
+    public function configure(): void
     {
-        $entity = Args::positional($args, 0);
-        $project = Args::option($args, '--project');
-        $directory = Args::option($args, '-d') ?? Args::option($args, '--dir');
-        $force = Args::flag($args, '--force');
+        $this->addArgument(
+            name: 'entity',
+            description: 'Entity name',
+            mode: InputArgument::OPTIONAL,
+        );
 
-        if (!$entity) {
-            $entity = Input::ask('Entity name ?');
-            if (!$entity) {
-                Output::error('Entity name is required.');
-                return;
-            }
-        }
+        $this->addOption(
+            name: 'project',
+            shortcut: null,
+            mode: InputOption::REQUIRED,
+            description: 'Target project',
+        );
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
+        $this->addOption(
+            name: 'dir',
+            shortcut: 'd',
+            mode: InputOption::REQUIRED,
+            description: 'Sub-folder',
+        );
 
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return;
-            }
+        $this->addOption(
+            name: 'force',
+            shortcut: null,
+            mode: InputOption::NONE,
+            description: 'Overwrite files',
+        );
+    }
 
-            $project = Input::choice('Target project ?', $projects);
-        }
+    public function do(Input $input, Output $output): ExitCode
+    {
+        $entity = $input->getArgument('entity') ?? Input::ask('Entity name ?');
+        if (!$entity) return ExitCode::INVALID;
 
-        if (!$directory) {
-            $raw = Input::ask('Sub-folder ? (leave empty to skip)', '');
-            $directory = $raw !== '' ? $raw : null;
-        }
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $directory = $input->getOption('dir') ?? Input::ask('Sub-folder ?');
+        $force = (bool) $input->getOption('force');
 
         $entity = Fs::pascalCase($entity);
-        $directory = $directory ? Fs::normalizeDir($directory) : null;
+        $directory = $directory !== '' ? Fs::normalizeDir($directory) : null;
         $basePath = ROOT_DIR . "/src/$project";
 
         if (!is_dir($basePath)) {
-            Output::error("Project '$project' does not exist inside ./src/");
-            return;
+            Output::error("Project '$project' not found.");
+            return ExitCode::FAILURE;
         }
-
-        Output::newLine();
-        Output::title("Generating CRUD for '$entity'");
-        Output::label('Project', $project);
-        Output::label('Entity', $entity);
-        Output::label('Sub-folder', $directory ?? '—');
-        Output::newLine();
 
         $this->generateController($basePath, $project, $entity, $directory, $force);
         $this->generateViews($basePath, $entity, $directory, $force);
 
-        Output::newLine();
-        Output::success("CRUD '$entity' generated for project '$project'.");
+        Output::success("CRUD '$entity' generated.");
+        return ExitCode::SUCCESS;
     }
 
-    private function generateController(
-        string $basePath,
-        string $projectNs,
-        string $entity,
-        ?string $directory,
-        bool $force
-    ): void {
+    private function generateController(string $basePath, string $projectNs, string $entity, ?string $directory, bool $force): void
+    {
         $controllerDir = "$basePath/App/Controllers";
         $namespace = "Neo\\Src\\$projectNs\\App\\Controllers";
 
@@ -87,15 +85,11 @@ final class MakeCrudCommand extends AbstractCommand
         }
 
         Fs::ensureDir($controllerDir);
-
         $controllerName = $entity . 'Controller';
         $path = "$controllerDir/$controllerName.php";
 
         if (file_exists($path) && !$force) {
-            if (!Input::confirm("Controller '$controllerName' already exists. Overwrite ?", false)) {
-                Output::skip("Controller skipped.");
-                return;
-            }
+            if (!Input::confirm("Controller '$controllerName' exists. Overwrite ?", false)) return;
         }
 
         $routePath = $this->buildRoutePath($directory, $entity);
@@ -110,55 +104,49 @@ namespace $namespace;
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Routing\Attribute\MainRoute;
 use Neo\Core\Routing\Attribute\Route;
+use Neo\Core\Http\Response\Response;
 
 #[MainRoute(path: '/$routePath', name: '$routeName')]
 final class $controllerName extends AbstractController
 {
     #[Route(path: '/', name: 'index', methods: ['GET'])]
-    public function index(): \Neo\Core\Http\Response\Response
+    public function index(): Response
     {
         return \$this->render('pages/$routePath/index.html.twig', []);
     }
 
     #[Route(path: '/{id}', name: 'show', methods: ['GET'])]
-    public function show(int \$id): \Neo\Core\Http\Response\Response
+    public function show(int \$id): Response
     {
         return \$this->render('pages/$routePath/show.html.twig', ['id' => \$id]);
     }
 
     #[Route(path: '/create', name: 'create', methods: ['GET', 'POST'])]
-    public function create(): \Neo\Core\Http\Response\Response
+    public function create(): Response
     {
         return \$this->render('pages/$routePath/create.html.twig');
     }
 
     #[Route(path: '/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function update(int \$id): \Neo\Core\Http\Response\Response
+    public function update(int \$id): Response
     {
         return \$this->render('pages/$routePath/edit.html.twig', ['id' => \$id]);
     }
 
     #[Route(path: '/{id}/delete', name: 'delete', methods: ['POST'])]
-    public function delete(int \$id): \Neo\Core\Http\Response\Response
+    public function delete(int \$id): Response
     {
         return \$this->redirectToRoute('$routeName.index');
     }
 }
 PHP;
-
         file_put_contents($path, $content);
-        Output::muted("Controller created : $controllerName");
     }
 
-    private function generateViews(
-        string $basePath,
-        string $entity,
-        ?string $directory,
-        bool $force
-    ): void {
+    private function generateViews(string $basePath, string $entity, ?string $directory, bool $force): void
+    {
         $routePath = $this->buildRoutePath($directory, $entity);
         $dir = "$basePath/App/Views/pages/$routePath";
-
         Fs::ensureDir($dir);
 
         $views = [
@@ -170,51 +158,20 @@ PHP;
 
         foreach ($views as $name => $body) {
             $file = "$dir/$name.html.twig";
+            if (file_exists($file) && !$force) continue;
 
-            if (file_exists($file) && !$force) {
-                Output::skip("View already exists : $name.html.twig");
-                continue;
-            }
-
-            file_put_contents($file, <<<TWIG
-{% extends 'layouts/base_layout.html.twig' %}
-
-{% block content %}
-$body
-{% endblock %}
-TWIG);
-            Output::muted("View created : $name.html.twig");
+            file_put_contents($file, "{% extends 'layouts/base_layout.html.twig' %}\n\n{% block content %}\n$body\n{% endblock %}");
         }
     }
 
     private function buildRoutePath(?string $directory, string $entity): string
     {
         $base = lcfirst($entity);
-
-        if (!$directory) {
-            return $base;
-        }
-
-        return strtolower(trim($directory . '/' . $base, '/'));
+        return $directory ? strtolower(trim($directory . '/' . $base, '/')) : $base;
     }
 
-    public function getHelp(): string
+    protected function getAvailableProjects(): array
     {
-        Output::usage($this->getName(), $this->getDescription());
-        Output::option('<Entity>', 'Entity name (e.g. User)');
-        Output::option('--project=<name>', 'Target project inside ./src/ (interactive selection if omitted)');
-        Output::option('-d, --dir <directory>', 'Create inside a sub-folder (e.g. Admin)');
-        Output::option('--force', 'Overwrite existing files');
-        Output::newLine();
-        echo "  Generated:\n";
-        Output::muted('    Controllers/<Entity>Controller.php  (index, show, create, update, delete)');
-        Output::muted('    Views/pages/<entity>/               (index, show, create, edit)');
-        Output::newLine();
-        echo "  Examples:\n";
-        Output::example("php bin/neo {$this->getName()} User --project=MyApp");
-        Output::example("php bin/neo {$this->getName()} User -d Admin --force --project=MyApp");
-        Output::example("php bin/neo {$this->getName()}");
-
-        return '';
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }
