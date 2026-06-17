@@ -39,6 +39,15 @@ class Request
      */
     private const int|float INPUT_MAX_SIZE = 8 * 1024 * 1024;
 
+    /**
+     * @param string $method
+     * @param string $path
+     * @param array<string, mixed> $query
+     * @param array<string, mixed> $body
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $server
+     * @param array<string, array<string, mixed>> $files
+     */
     private function __construct(
         string $method,
         string $path,
@@ -254,7 +263,7 @@ class Request
     }
 
     /**
-     * @return string|array
+     * @return string|array<string, mixed>
      */
     public function getContent(): string|array
     {
