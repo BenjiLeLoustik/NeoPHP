@@ -37,6 +37,8 @@ class Request
      * @param array<string, mixed> $server
      * @param array<string, array<string, mixed>> $files
      */
+    private const int|float INPUT_MAX_SIZE = 8 * 1024 * 1024;
+
     private function __construct(
         string $method,
         string $path,
@@ -62,7 +64,7 @@ class Request
         $path = parse_url($uri, PHP_URL_PATH) ?: '/';
         $query = $_GET ?? [];
 
-        $rawInput = file_get_contents('php://input') ?: '';
+        $rawInput = self::readRawInput();
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 
         $body = [];
@@ -101,6 +103,37 @@ class Request
     public static function createEmpty(): self
     {
         return new self('CLI', '/', [], [], [], [], []);
+    }
+
+    private static function readRawInput(): string
+    {
+        $contentLength = isset($_SERVER['CONTENT_LENGTH'])
+            ? (int) $_SERVER['CONTENT_LENGTH']
+            : null;
+
+        if ($contentLength !== null && $contentLength > self::INPUT_MAX_SIZE) {
+            http_response_code(413);
+            exit('Request Entity Too Large');
+        }
+
+        $stream = fopen('php://input', 'rb');
+        if ($stream === false) {
+            return '';
+        }
+
+        $raw = stream_get_contents($stream, self::INPUT_MAX_SIZE + 1);
+        fclose($stream);
+
+        if ($raw === false) {
+            return '';
+        }
+
+        if (strlen($raw) > self::INPUT_MAX_SIZE) {
+            http_response_code(413);
+            exit('Request Entity Too Large');
+        }
+
+        return $raw;
     }
 
     private function sanitizePath(string $path): string
@@ -221,11 +254,11 @@ class Request
     }
 
     /**
-     * @return string|array<mixed>
+     * @return string|array
      */
     public function getContent(): string|array
     {
-        $rawInput = file_get_contents('php://input') ?: '';
+        $rawInput = self::readRawInput();
         $contentType = $this->header('Content-Type', '');
 
         if (stripos($contentType, 'application/json') !== false) {
