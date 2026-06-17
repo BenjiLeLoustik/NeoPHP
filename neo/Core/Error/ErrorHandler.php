@@ -175,8 +175,9 @@ class ErrorHandler
 
         $title = htmlspecialchars($exception->getTitle(), ENT_QUOTES, 'UTF-8');
 
-        $message = htmlspecialchars(
-            $isDev ? $exception->getMessage() : match(true) {
+        $rawMessage = $isDev
+            ? $exception->getMessage()
+            : match(true) {
                 $code === 404 => 'The page you are looking for could not be found.',
                 $code === 403 => 'You do not have permission to access this resource.',
                 $code === 401 => 'You must be authenticated to access this resource.',
@@ -186,9 +187,10 @@ class ErrorHandler
                 $code === 429 => 'Too many requests, please try again in a few moments.',
                 $code >= 500 => 'An internal error has occurred, please try again later.',
                 default => 'An unexpected error has occurred.',
-            },
-            ENT_QUOTES, 'UTF-8'
-        );
+            };
+        $message = htmlspecialchars($rawMessage, ENT_QUOTES, 'UTF-8');
+
+        $envSafe = htmlspecialchars($env, ENT_QUOTES, 'UTF-8');
 
         [$accent, $accentBg, $accentBorder] = match(true) {
             $code >= 500 => ['#c2410c', '#fff7ed', '#fed7aa'],
@@ -287,7 +289,7 @@ class ErrorHandler
 
         <div style="border-top:3px solid {$accent};background:#fff;border-bottom:1px solid #e5e7eb;padding:0.6rem 2rem;display:flex;align-items:center;justify-content:space-between;">
             <span style="font-size:0.75rem;font-weight:600;color:#9ca3af;letter-spacing:0.08em;text-transform:uppercase;">NeoPHP</span>
-            <span style="font-size:0.72rem;color:#d1d5db;font-family:monospace;">{$env}</span>
+            <span style="font-size:0.72rem;color:#d1d5db;font-family:monospace;">{$envSafe}</span>
         </div>
 
         <div style="max-width:900px;margin:0 auto;padding:3.5rem 2rem 5rem;">
