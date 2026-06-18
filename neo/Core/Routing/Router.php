@@ -53,8 +53,12 @@ class Router
         $cacheFile = $this->container->get('storagePath') . '/var/cache/router/routes.php';
 
         if (!$this->isDebug() && file_exists($cacheFile)) {
-            $this->routes = unserialize(file_get_contents($cacheFile));
-            return;
+            $json = file_get_contents($cacheFile);
+            if ($json !== false) {
+                $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+                $this->routes = RouteCollection::fromArray($data);
+                return;
+            }
         }
 
         $rii = new \RecursiveIteratorIterator(
@@ -138,9 +142,12 @@ class Router
         if (!$this->isDebug()) {
             $cacheDir = dirname($cacheFile);
             if (!is_dir($cacheDir)) {
-                mkdir($cacheDir, 0777, true);
+                mkdir($cacheDir, 0755, true);
             }
-            file_put_contents($cacheFile, serialize($this->routes));
+            file_put_contents(
+                $cacheFile,
+                json_encode($this->routes->toArray(), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
+            );
         }
     }
 

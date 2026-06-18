@@ -41,4 +41,22 @@ class RouteCollection
     {
         return $this->routes;
     }
+
+    /**
+     * @return array<string, array<string, array{name: string, controller: string, action: string, requirements: array<string, string>}>>
+     */
+    public function toArray(): array
+    {
+        return $this->routes;
+    }
+
+    /**
+     * @param array<string, array<string, array{name: string, controller: string, action: string, requirements: array<string, string>}>> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        $collection = new self();
+        $collection->routes = $data;
+        return $collection;
+    }
 }
