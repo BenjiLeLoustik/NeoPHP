@@ -147,6 +147,9 @@ class Request
 
     private function sanitizePath(string $path): string
     {
+        $path = preg_replace('#/\.\.(/|$)#', '/', $path);
+        $path = preg_replace('#/\.(/|$)#', '/', $path);
+
         $path = '/' . trim($path, '/');
         return $path === '/' ? '/' : rtrim($path, '/');
     }
