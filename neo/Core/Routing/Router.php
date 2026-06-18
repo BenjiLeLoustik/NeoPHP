@@ -50,7 +50,7 @@ class Router
      */
     private function scanControllers(): void
     {
-        $cacheFile = $this->container->get('storagePath') . '/var/cache/router/routes.php';
+        $cacheFile = $this->container->get('storagePath') . '/var/cache/router/routes.json';
 
         if (!$this->isDebug() && file_exists($cacheFile)) {
             $json = file_get_contents($cacheFile);
@@ -60,6 +60,8 @@ class Router
                 return;
             }
         }
+
+        $realControllersPath = realpath($this->controllersPath);
 
         $rii = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($this->controllersPath)
@@ -72,6 +74,14 @@ class Router
 
             $filePath = $file->getRealPath();
             if ($filePath === false) continue;
+
+            if ($realControllersPath === false || !str_starts_with($filePath, $realControllersPath . DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+
+            if (pathinfo($filePath, PATHINFO_EXTENSION) !== 'php') {
+                continue;
+            }
 
             $src = file_get_contents($filePath);
             if ($src === false) continue;
