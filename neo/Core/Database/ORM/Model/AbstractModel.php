@@ -582,7 +582,7 @@ abstract class AbstractModel
 
             static $columnsCache = [];
             if (!isset($columnsCache[$table])) {
-                $stmt = $pdo->query("DESCRIBE $table");
+                $stmt = $pdo->query("DESCRIBE `$table`");
                 if ($stmt === false) {
                     throw new DatabaseException(
                         title: 'Model Save Error',
@@ -595,25 +595,31 @@ abstract class AbstractModel
 
             $tableColumns = $columnsCache[$table];
             $isInsert = empty($this->$pk);
-            $now = new \DateTime()->format('Y-m-d H:i:s');
+            $now = (new \DateTime())->format('Y-m-d H:i:s');
 
             if ($isInsert) {
-                if (in_array('created_at', $tableColumns) && !isset($data['created_at'])) $data['created_at'] = $now;
-                if (in_array('updated_at', $tableColumns) && !isset($data['updated_at'])) $data['updated_at'] = $now;
+                if (in_array('created_at', $tableColumns) && !isset($data['created_at'])) {
+                    $data['created_at'] = $now;
+                }
+                if (in_array('updated_at', $tableColumns) && !isset($data['updated_at'])) {
+                    $data['updated_at'] = $now;
+                }
             } else {
-                if (in_array('updated_at', $tableColumns)) $data['updated_at'] = $now;
+                if (in_array('updated_at', $tableColumns)) {
+                    $data['updated_at'] = $now;
+                }
             }
 
             if ($isInsert) {
                 unset($data[$pk]);
-                $columns = implode(',', array_keys($data));
-                $placeholders = implode(',', array_fill(0, count($data), '?'));
-                $stmt = $pdo->prepare("INSERT INTO $table ($columns) VALUES ($placeholders)");
+                $columns = implode(', ', array_map(fn($c) => "`$c`", array_keys($data)));
+                $placeholders = implode(', ', array_fill(0, count($data), '?'));
+                $stmt = $pdo->prepare("INSERT INTO `$table` ($columns) VALUES ($placeholders)");
                 $stmt->execute(array_values($data));
                 $this->$pk = (int) $pdo->lastInsertId();
             } else {
-                $set = implode(', ', array_map(fn($col) => "$col = ?", array_keys($data)));
-                $stmt = $pdo->prepare("UPDATE $table SET $set WHERE $pk = ?");
+                $set = implode(', ', array_map(fn($col) => "`$col` = ?", array_keys($data)));
+                $stmt = $pdo->prepare("UPDATE `$table` SET $set WHERE `$pk` = ?");
                 $stmt->execute([...array_values($data), $this->$pk]);
             }
 
@@ -676,7 +682,7 @@ abstract class AbstractModel
         }
 
         $stmt = $pdo->prepare(
-            "SELECT {$targetPk} FROM {$table} WHERE {$foreignKey} = ? AND deleted_at IS NULL"
+            "SELECT `{$targetPk}` FROM `{$table}` WHERE `{$foreignKey}` = ? AND deleted_at IS NULL"
         );
 
         $stmt->execute([$parentId]);
@@ -686,19 +692,19 @@ abstract class AbstractModel
         $toDelete = array_diff($existingIds, $submittedIds);
 
         if (!empty($toDelete)) {
-            $placeholders = implode(',', array_fill(0, count($toDelete), '?'));
+            $placeholders = implode(', ', array_fill(0, count($toDelete), '?'));
             $now = date('Y-m-d H:i:s');
 
             $hasSoftDelete = $this->targetHasSoftDelete($target, $pdo);
 
             if ($hasSoftDelete) {
                 $stmt = $pdo->prepare(
-                    "UPDATE {$table} SET deleted_at = ? WHERE {$targetPk} IN ({$placeholders})"
+                    "UPDATE `{$table}` SET deleted_at = ? WHERE `{$targetPk}` IN ({$placeholders})"
                 );
                 $stmt->execute([$now, ...$toDelete]);
             } else {
                 $stmt = $pdo->prepare(
-                    "DELETE FROM {$table} WHERE {$targetPk} IN ({$placeholders})"
+                    "DELETE FROM `{$table}` WHERE `{$targetPk}` IN ({$placeholders})"
                 );
                 $stmt->execute([...$toDelete]);
             }
@@ -729,9 +735,9 @@ abstract class AbstractModel
 
                 $data['updated_at'] = $now;
 
-                $setParts = array_map(fn($col) => "{$col} = ?", array_keys($data));
+                $setParts = array_map(fn($col) => "`{$col}` = ?", array_keys($data));
                 $stmt = $pdo->prepare(
-                    "UPDATE {$table} SET " . implode(', ', $setParts) . " WHERE {$targetPk} = ?"
+                    "UPDATE `{$table}` SET " . implode(', ', $setParts) . " WHERE `{$targetPk}` = ?"
                 );
                 $stmt->execute([...array_values($data), $pk]);
 
@@ -743,11 +749,11 @@ abstract class AbstractModel
                 $data['created_at'] ??= $now;
                 $data['updated_at'] ??= $now;
 
-                $columns = implode(', ', array_keys($data));
+                $columns = implode(', ', array_map(fn($c) => "`$c`", array_keys($data)));
                 $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
                 $stmt = $pdo->prepare(
-                    "INSERT INTO {$table} ({$columns}) VALUES ({$placeholders})"
+                    "INSERT INTO `{$table}` ({$columns}) VALUES ({$placeholders})"
                 );
                 $stmt->execute(array_values($data));
 
