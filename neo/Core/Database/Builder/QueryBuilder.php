@@ -68,7 +68,7 @@ class QueryBuilder
                 code: 500
             );
         }
-        return $name;
+        return '`' . $name . '`';
     }
 
     /**
@@ -80,19 +80,23 @@ class QueryBuilder
             return $column;
         }
 
-        if (preg_match('/^[a-zA-Z0-9_]+\.\*$/', $column)) {
-            return $column;
+        if (preg_match('/^([a-zA-Z0-9_]+)\.\*$/', $column, $m)) {
+            return '`' . $m[1] . '`.*';
         }
 
-        if (!preg_match('/^[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)?$/', $column)) {
-            throw new DatabaseException(
-                title: 'Query Builder Error',
-                message: sprintf("Invalid SQL column: '%s'.", $column),
-                code: 500
-            );
+        if (preg_match('/^([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)$/', $column, $m)) {
+            return '`' . $m[1] . '`.`' . $m[2] . '`';
         }
 
-        return $column;
+        if (preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+            return '`' . $column . '`';
+        }
+
+        throw new DatabaseException(
+            title: 'Query Builder Error',
+            message: sprintf("Invalid SQL column: '%s'.", $column),
+            code: 500
+        );
     }
 
     /**
@@ -571,21 +575,23 @@ class QueryBuilder
     {
         try {
             $columns = array_keys($data);
-            $placeholders = array_map(fn($c) => ":$c", $columns);
+            $quotedColumns = array_map(fn($c) => '`' . $this->sanitizeIdentifier($c) . '`', $columns);
+            $placeholders = array_map(fn($c) => ':' . preg_replace('/[^a-zA-Z0-9_]/', '_', $c), $columns);
 
             $sql = sprintf(
                 'INSERT INTO %s (%s) VALUES (%s)',
                 $this->table,
-                implode(',', $columns),
-                implode(',', $placeholders)
+                implode(', ', $quotedColumns),
+                implode(', ', $placeholders)
             );
 
             $stmt = $this->pdo->prepare($sql);
 
             foreach ($data as $key => $value) {
+                $paramKey = ':' . preg_replace('/[^a-zA-Z0-9_]/', '_', $key);
                 $value === null
-                    ? $stmt->bindValue(":$key", null, PDO::PARAM_NULL)
-                    : $stmt->bindValue(":$key", $value);
+                    ? $stmt->bindValue($paramKey, null, PDO::PARAM_NULL)
+                    : $stmt->bindValue($paramKey, $value);
             }
 
             return $this->executeTracked($stmt, [], $sql);
@@ -629,8 +635,9 @@ class QueryBuilder
             $setParams = [];
 
             foreach ($data as $key => $value) {
-                $paramKey = 'set_' . $key;
-                $setParts[] = "$key = :$paramKey";
+                $quotedCol = '`' . $this->sanitizeIdentifier($key) . '`';
+                $paramKey = 'set_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $key);
+                $setParts[] = "$quotedCol = :$paramKey";
                 $setParams[$paramKey] = $value;
             }
 
