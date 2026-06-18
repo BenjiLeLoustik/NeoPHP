@@ -116,7 +116,7 @@ neo/Core/
 - [x] 🟢 **Valider les IPs** `X-Forwarded-For` avec `filter_var()` dans `Request.php` l.281-298 `branch: fix/validate-x-forwarded-for-ip`
 - [x] 🟢 **Fix path traversal** — ajouter `realpath()` + vérification de préfixe dans `Request::sanitizePath()` `branch: fix/path-traversal-sanitize-path`
 - [x] 🟡 **Quoter les identifiants SQL** avec des backticks dans `QueryBuilder.php` l.56, 77, 101-112 `branch: fix/sql-quote-identifiers-backticks`
-- [ ] 🟡 **Supprimer l'interpolation SQL directe** dans `AbstractModel.php` l.314-360 → utiliser des identifiants quotés `branch: fix/sql-remove-direct-interpolation`
+- [x] 🟡 **Supprimer l'interpolation SQL directe** dans `AbstractModel.php` l.314-360 → utiliser des identifiants quotés `branch: fix/sql-remove-direct-interpolation`
 - [ ] 🟡 **Remplacer `unserialize()`** par `json_decode()` pour le cache de routes dans `Router.php` l.56 `branch: fix/router-replace-unserialize-cache`
 - [ ] 🟡 **Sécuriser l'inclusion dynamique** `require_once $filePath` dans `Router.php` l.87 — valider la whitelist `branch: fix/router-dynamic-include-whitelist`
 - [ ] 🟡 **Ajouter CSRF** sur les formulaires d'authentification dans `AuthManager.php` `branch: feature/auth-csrf-protection`
