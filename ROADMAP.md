@@ -113,7 +113,7 @@ neo/Core/
 
 - [x] 🟢 **Échapper les messages d'exception** avec `htmlspecialchars()` dans `ErrorHandler.php` l.176-191 `branch: fix/xss-escape-exception-messages`
 - [x] 🟢 **Ajouter une limite de taille** sur `php://input` dans `Request.php` l.65 (ex : 8 Mo) `branch: fix/request-input-size-limit`
-- [ ] 🟢 **Valider les IPs** `X-Forwarded-For` avec `filter_var()` dans `Request.php` l.281-298 `branch: fix/validate-x-forwarded-for-ip`
+- [x] 🟢 **Valider les IPs** `X-Forwarded-For` avec `filter_var()` dans `Request.php` l.281-298 `branch: fix/validate-x-forwarded-for-ip`
 - [ ] 🟢 **Fix path traversal** — ajouter `realpath()` + vérification de préfixe dans `Request::sanitizePath()` `branch: fix/path-traversal-sanitize-path`
 - [ ] 🟡 **Quoter les identifiants SQL** avec des backticks dans `QueryBuilder.php` l.56, 77, 101-112 `branch: fix/sql-quote-identifiers-backticks`
 - [ ] 🟡 **Supprimer l'interpolation SQL directe** dans `AbstractModel.php` l.314-360 → utiliser des identifiants quotés `branch: fix/sql-remove-direct-interpolation`

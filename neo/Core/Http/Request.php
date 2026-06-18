@@ -331,8 +331,16 @@ class Request
 
         foreach ($ipHeaders as $header) {
             if (!empty($this->server[$header])) {
-                $ip = explode(',', $this->server[$header])[0];
-                return trim($ip);
+                $ip = trim(explode(',', $this->server[$header])[0]);
+                if (
+                    filter_var(
+                        $ip,
+                        FILTER_VALIDATE_IP,
+                        FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+                    ) !== false)
+                {
+                    return $ip;
+                }
             }
         }
 
