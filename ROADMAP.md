@@ -119,7 +119,7 @@ neo/Core/
 - [x] 🟡 **Supprimer l'interpolation SQL directe** dans `AbstractModel.php` l.314-360 → utiliser des identifiants quotés `branch: fix/sql-remove-direct-interpolation`
 - [x] 🟡 **Remplacer `unserialize()`** par `json_decode()` pour le cache de routes dans `Router.php` l.56 `branch: fix/router-replace-unserialize-cache`
 - [x] 🟡 **Sécuriser l'inclusion dynamique** `require_once $filePath` dans `Router.php` l.87 — valider la whitelist `branch: fix/router-dynamic-include-whitelist`
-- [ ] 🟡 **Ajouter CSRF** sur les formulaires d'authentification dans `AuthManager.php` `branch: feature/auth-csrf-protection`
+- [x] 🟡 **Ajouter CSRF** sur les formulaires d'authentification dans `AuthManager.php` `branch: feature/auth-csrf-protection`
 - [ ] 🟠 **Ajouter un timeout de session** dans `SessionGuard` `branch: feature/session-timeout`
 - [ ] 🟠 **Sécuriser les uploads** — validation MIME, limite de taille, assainissement du nom de fichier `branch: feature/secure-file-uploads`
 - [ ] 🟠 **Rate limiting** sur les tentatives de connexion (Middleware dédié ou dans `AuthManager`) `branch: feature/auth-rate-limiting`
