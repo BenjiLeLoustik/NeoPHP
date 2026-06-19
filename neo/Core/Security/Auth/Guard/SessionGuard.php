@@ -13,6 +13,8 @@ use Neo\Core\Security\Auth\PasswordManager;
 final class SessionGuard implements GuardInterface
 {
     private const string SESSION_KEY = '_auth_user_id';
+    private const string SESSION_LAST_ACTIVITY_KEY = '_auth_last_activity';
+    private const int DEFAULT_TIMEOUT = 1800;
 
     /**
      * @param array<string, mixed> $role
@@ -23,7 +25,8 @@ final class SessionGuard implements GuardInterface
         private readonly string $model,
         private readonly string $identifier,
         private readonly string $password,
-        private readonly array $role = []
+        private readonly array $role = [],
+        private readonly int $timeout = self::DEFAULT_TIMEOUT,
     ) {}
 
     /**
@@ -70,16 +73,30 @@ final class SessionGuard implements GuardInterface
         $pk = $user::getPrimaryKey();
         $this->session->regenerate();
         $this->session->set(self::SESSION_KEY, $user->{$pk});
+        $this->session->set(self::SESSION_LAST_ACTIVITY_KEY, time());
     }
 
     public function logout(): void
     {
         $this->session->remove(self::SESSION_KEY);
+        $this->session->remove(self::SESSION_LAST_ACTIVITY_KEY);
     }
 
     public function check(): bool
     {
-        return $this->session->has(self::SESSION_KEY);
+        if (!$this->session->has(self::SESSION_KEY)) {
+            return false;
+        }
+
+        $lastActivity = $this->session->get(self::SESSION_LAST_ACTIVITY_KEY, 0);
+
+        if ((time() - $lastActivity) > $this->timeout) {
+            $this->logout();
+            return false;
+        }
+
+        $this->session->set(self::SESSION_LAST_ACTIVITY_KEY, time());
+        return true;
     }
 
     public function user(): ?AbstractModel
