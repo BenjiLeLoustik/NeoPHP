@@ -122,7 +122,7 @@ neo/Core/
 - [ ] 🟡 **Ajouter CSRF** sur les formulaires d'authentification dans `AuthManager.php` `branch: feature/auth-csrf-protection`
 - [x] 🟠 **Ajouter un timeout de session** dans `SessionGuard` `branch: feature/session-timeout`
 - [ ] 🟠 **Sécuriser les uploads** — validation MIME, limite de taille, assainissement du nom de fichier `branch: feature/secure-file-uploads`
-- [ ] 🟠 **Rate limiting** sur les tentatives de connexion (Middleware dédié ou dans `AuthManager`) `branch: feature/auth-rate-limiting`
+- [x] 🟠 **Rate limiting** sur les tentatives de connexion (Middleware dédié ou dans `AuthManager`) `branch: feature/auth-rate-limiting`
 
 ---
 
