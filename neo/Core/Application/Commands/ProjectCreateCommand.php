@@ -301,6 +301,7 @@ return [
             'home'       => '',
             'secret'     => '',
             'expiration' => 3600,
+            'timeout'    => 1800,
             'algorithm'  => 'HS256',
         ],
     ],

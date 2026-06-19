@@ -146,7 +146,8 @@ class AuthManager
                 $this->config['model'],
                 $this->config['identifier'] ?? 'email',
                 $this->config['password'] ?? 'password',
-                $role
+                $role,
+                (int) ($options['timeout'] ?? 1800)
             ),
         };
     }
