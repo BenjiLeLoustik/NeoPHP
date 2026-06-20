@@ -9,16 +9,12 @@ use Neo\Core\Utils\Logger\Logger;
 
 class LogDriver implements DriverInterface
 {
-    /** @var array<string, mixed> $config */
-    private array $config;
 
     /**
      * @param array<string, mixed> $config
      */
     public function __construct(array $config)
-    {
-        $this->config = $config;
-    }
+    {}
 
     /**
      * @throws ContainerException
