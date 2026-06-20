@@ -168,6 +168,7 @@ class MiddlewareHandler
                 'redirect' => $i->redirect,
                 'isClass' => true,
                 'params' => $i->params,
+                'priority' => $i->priority,
             ];
         }
 
@@ -188,6 +189,7 @@ class MiddlewareHandler
                     'redirect' => $i->redirect,
                     'isClass' => false,
                     'params' => $i->params,
+                    'priority' => $i->priority,
                 ];
             }
 
@@ -196,6 +198,8 @@ class MiddlewareHandler
                 $all[] = $this->buildRateLimitMeta($i, false);
             }
         }
+
+        usort($all, fn($a, $b) => $b['priority'] <=> $a['priority']);
 
         return $all;
     }
@@ -223,6 +227,7 @@ class MiddlewareHandler
                 'decaySeconds' => $attr->decaySeconds,
                 'message' => $attr->message,
             ],
+            'priority' => 0,
         ];
     }
 
