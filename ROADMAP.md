@@ -134,7 +134,7 @@ neo/Core/
 - [x] 🟡 **Uniformiser la gestion d'erreurs** — exceptions partout, supprimer les `false`/`null` implicites  `branch: refactor/uniform-error-handling`
 - [x] 🟡 **Compiler les regex de routes une seule fois** et les mettre en cache  `branch: refactor/router-cache-compiled-regex`
 - [ ] 🟡 **Améliorer le typage** dans les zones utilisant `mixed` ou des tableaux non typés  `branch: refactor/improve-mixed-type-hints`
-- [ ] 🟠 **Remplacer le singleton statique du Container** par une injection via le kernel  `branch: refactor/container-remove-static-singleton`
+- [x] 🟠 **Remplacer le singleton statique du Container** par une injection via le kernel  `branch: refactor/container-remove-static-singleton`
 - [ ] 🟠 **Invalider l'identity map** (`AbstractModel::$instanceCache`) après les mutations en CLI  `branch: fix/model-invalidate-identity-map-cli`
 - [ ] 🟠 **Ajouter un système d'ordre explicite** pour l'exécution des middlewares  `branch: feature/middleware-explicit-order`
 - [ ] 🔴 **Séparer `AbstractModel`** en `Model` + `QueryScope` + `Relationships` (trop de responsabilités)  `branch: breaking/split-abstract-model`

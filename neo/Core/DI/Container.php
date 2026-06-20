@@ -31,20 +31,6 @@ class Container implements ContainerInterface
 
     /** @var array<string, list<string>> */
     private array $tags = [];
-    private static ?self $instance = null;
-
-    public function __construct()
-    {
-        self::$instance = $this;
-    }
-
-    public static function getInstance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
 
     public function set(string $id, mixed $value): void
     {
