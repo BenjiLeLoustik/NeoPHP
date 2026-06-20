@@ -177,7 +177,7 @@ neo/Core/
 - [ ] 🟠 **Logging avancé** — intégration Monolog, niveaux PSR-3, handlers multiples (fichier, Slack, DB…) `branch: feature/logging-monolog-psr3`
 - [ ] 🟠 **Versioning d'API** — support natif `/api/v1/`, `/api/v2/` dans le routeur `branch: feature/api-versioning`
 - [ ] 🔴 **Stockage de fichiers** — abstraction disque local / S3 / cloud `branch: feature/file-storage-abstraction`
-- [ ] 🔴 **Notifications** — Email, SMS, push via un système unifié `branch: feature/notifications-unified`
+- [x] 🔴 **Notifications** — Email, SMS, push via un système unifié `branch: feature/notifications-unified`
 - [ ] 🔴 **Multi-base de données** — support de plusieurs connexions PDO simultanées `branch: feature/multi-database-connections`
 
 ---
