@@ -35,6 +35,8 @@ class App
      */
     public function __construct()
     {
+        AbstractModel::clearIdentityMap();
+
         $this->container = new Container();
         $this->container->set(Container::class, fn() => $this->container);
 
@@ -69,8 +71,6 @@ class App
      */
     public function run(): Response
     {
-        AbstractModel::clearIdentityMap();
-
         $request = $this->container->get(Request::class);
         $response = $this->container->get(Response::class);
         $router = $this->container->get(Router::class);
