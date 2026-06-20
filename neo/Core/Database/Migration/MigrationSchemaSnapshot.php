@@ -80,7 +80,11 @@ final class MigrationSchemaSnapshot
         $last = $this->getLastHash();
 
         if ($last === null) {
-            return false;
+            throw new DatabaseException(
+                title: 'Migration Snapshot Error',
+                message: 'No schema snapshot found. Run a snapshot first.',
+                code: 404
+            );
         }
 
         return $last !== $this->getCurrentHash();
