@@ -268,7 +268,12 @@ class Router
             }
 
             $middlewareHandler = $this->container->get(MiddlewareHandler::class);
-            $middlewareHandler->run($routeInfo['controller'], $method);
+            $middlewareResponse = $middlewareHandler->run($routeInfo['controller'], $method);
+
+            if ($middlewareResponse !== null) {
+                $middlewareResponse->send();
+                return $middlewareResponse;
+            }
 
             $refMethod = new \ReflectionMethod($controller, $method);
             $resolved = [];

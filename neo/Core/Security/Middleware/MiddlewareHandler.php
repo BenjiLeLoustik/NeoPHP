@@ -45,12 +45,15 @@ class MiddlewareHandler
      * @throws ContainerException
      * @throws ReflectionException
      */
-    public function run(string $controller, ?string $method = null): void
+    public function run(string $controller, ?string $method = null): ?Response
     {
         $this->lastController = $controller;
         $this->lastMethod = $method;
 
-        $this->checkMaintenance($controller, $method);
+        $maintenanceResponse = $this->checkMaintenance($controller, $method);
+        if ($maintenanceResponse !== null) {
+            return $maintenanceResponse;
+        }
 
         $middlewares = $this->getMiddlewares($controller, $method);
 
@@ -68,8 +71,7 @@ class MiddlewareHandler
 
             if (!class_exists($middlewareClass)) {
                 $this->recordError($middlewareClass, $message, $onError);
-                $this->handleFailure($message, $onError, $redirect, $response, $flash, $router, $isClassMiddleware);
-                continue;
+                return $this->handleFailure($message, $onError, $redirect, $response, $flash, $router, $isClassMiddleware);
             }
 
             $middleware = empty($meta['params'])
@@ -78,8 +80,7 @@ class MiddlewareHandler
 
             if (!$middleware instanceof MiddlewareInterface) {
                 $this->recordError($middlewareClass, 'Middleware must implement MiddlewareInterface', $onError);
-                $this->handleFailure($message, $onError, $redirect, $response, $flash, $router, $isClassMiddleware);
-                continue;
+                return $this->handleFailure($message, $onError, $redirect, $response, $flash, $router, $isClassMiddleware);
             }
 
             try {
@@ -93,9 +94,11 @@ class MiddlewareHandler
 
             if (!$result) {
                 $this->recordError($middlewareClass, $message, $onError);
-                $this->handleFailure($message, $onError, $redirect, $response, $flash, $router, $isClassMiddleware);
+                return $this->handleFailure($message, $onError, $redirect, $response, $flash, $router, $isClassMiddleware);
             }
         }
+
+        return null;
     }
 
     /**
@@ -111,12 +114,11 @@ class MiddlewareHandler
         Flash $flash,
         Router $router,
         bool $isClassMiddleware
-    ): void {
+    ): ?Response {
         if ($redirect !== null) {
             $flash->add('warning', $message);
             $url = $router->generateUrl($redirect);
-            $response->setHeader('Location', $url)->setStatusCode(302)->send();
-            exit;
+            return $response->setHeader('Location', $url)->setStatusCode(302);
         }
 
         if ($onError === 'block') {
@@ -130,6 +132,8 @@ class MiddlewareHandler
         if ($onError === 'soft') {
             $flash->add('warning', $message);
         }
+
+        return null;
     }
 
     private function recordError(string $middleware, string $message, string $onError): void
@@ -259,7 +263,7 @@ class MiddlewareHandler
      * @throws ReflectionException
      * @throws ContainerException
      */
-    private function checkMaintenance(string $controller, ?string $method): void
+    private function checkMaintenance(string $controller, ?string $method): ?Response
     {
         $ref = new ReflectionClass($controller);
         $maintenance = null;
@@ -278,7 +282,7 @@ class MiddlewareHandler
             }
         }
 
-        if ($maintenance === null) return;
+        if ($maintenance === null) return null;
 
         $view = $this->container->get(View::class);
         $response = $this->container->get(Response::class);
@@ -289,12 +293,8 @@ class MiddlewareHandler
 
         $response->setStatusCode(503);
 
-        if ($rendered !== null) {
-            $response->setContent($rendered)->send();
-        } else {
-            $response->setContent($maintenance->message)->send();
-        }
-
-        exit;
+        return $rendered !== null
+            ? $response->setContent($rendered)
+            : $response->setContent($maintenance->message);
     }
 }
