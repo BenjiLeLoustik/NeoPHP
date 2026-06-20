@@ -180,6 +180,7 @@ return [
     
     // Add more API keys
 ];
+PHP;
 
         file_put_contents($path . 'api.config.php', $content);
     }
