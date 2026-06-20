@@ -19,6 +19,8 @@ class Middleware
     /** @var array<string, mixed> */
     public array $params;
 
+    public int $priority;
+
     /**
      * @param array<string, mixed> $params
      */
@@ -27,12 +29,14 @@ class Middleware
         string $message = '',
         string $onError = 'block',
         ?string $redirect = null,
-        array $params = []
+        array $params = [],
+        int $priority = 0
     ) {
         $this->use = $use;
         $this->message = $message;
         $this->onError = $onError;
         $this->redirect = $redirect;
         $this->params = $params;
+        $this->priority = $priority;
     }
 }
