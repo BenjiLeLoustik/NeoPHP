@@ -11,6 +11,16 @@ use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Input\InputArgument;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
+use Neo\Core\Utils\Config\ConfigTemplateWriter;
+use Neo\Core\Utils\Config\Templates\ApiConfigTemplate;
+use Neo\Core\Utils\Config\Templates\AppConfigTemplate;
+use Neo\Core\Utils\Config\Templates\CacheConfigTemplate;
+use Neo\Core\Utils\Config\Templates\DatabaseConfigTemplate;
+use Neo\Core\Utils\Config\Templates\DeployConfigTemplate;
+use Neo\Core\Utils\Config\Templates\LoggerConfigTemplate;
+use Neo\Core\Utils\Config\Templates\MailerConfigTemplate;
+use Neo\Core\Utils\Config\Templates\SessionConfigTemplate;
+use Neo\Core\Utils\Config\Templates\TwigConfigTemplate;
 
 #[Command(
     name: 'project:create',
@@ -92,15 +102,23 @@ final class ProjectCreateCommand extends AbstractCommand
             Fs::ensureDir($path . '/' . $directory);
         }
 
-        $this->generateAppConfig($path . '/Config/', $name, $host, $port);
-        $this->generateDatabaseConfig($path . '/Config/', $name);
-        $this->generateDeployConfig($path . '/Config/', $name);
-        $this->generateLoggerConfig($path . '/Config/', $name);
-        $this->generateCacheConfig($path . '/Config/', $name);
-        $this->generateTwigConfig($path . '/Config/', $name);
-        $this->generateSessionConfig($path . '/Config/', $name);
-        $this->generateAPIConfig($path . '/Config/', $name);
-        $this->generateMailerConfig($path . '/Config/', $name);
+        ConfigTemplateWriter::write(
+            templates: [
+                new AppConfigTemplate(),
+                new DatabaseConfigTemplate(),
+                new DeployConfigTemplate(),
+                new LoggerConfigTemplate(),
+                new CacheConfigTemplate(),
+                new TwigConfigTemplate(),
+                new SessionConfigTemplate(),
+                new ApiConfigTemplate(),
+            ],
+            configPath: $path . '/Config/',
+            projectName: $name,
+            context: ['host' => $host, 'port' => $port],
+            askOverwrite: false,
+        );
+
         $this->generateGitignore($path);
 
         if ($skeleton) {
@@ -251,363 +269,6 @@ TWIG;
 TWIG;
 
         file_put_contents($path . 'index.html.twig', $content);
-    }
-
-    private function generateAppConfig(string $path, string $name, string $host, int $port): void
-    {
-        $content = <<<PHP
-<?php
-declare(strict_types=1);
-
-// ./src/$name/Config/app.config.php
-
-return [
-    'general' => [
-        'name'        => "$name",
-        'description' => "Votre projet NeoPHP",
-    ],
-
-    'environment' => "dev",
-
-    'access' => "$host:$port",
-
-    'date' => [
-        'timezone' => 'Europe/Paris',
-    ],
-
-    'translation' => [
-        'enabled'           => true,
-        'default_locale'    => 'fr',
-        'available_locales' => [
-            'fr' => 'Français',
-            'en' => 'Anglais',
-        ],
-    ],
-
-    'auth' => [
-        'enabled'    => false,
-        'model'      => '',
-        'identifier' => '',
-        'password'   => '',
-        'guard'      => 'session',
-        'role'       => [
-            'model'       => '',
-            'foreign_key' => '',
-            'field'       => '',
-        ],
-        'options' => [
-            'login'      => '',
-            'logout'     => '',
-            'home'       => '',
-            'secret'     => '',
-            'expiration' => 3600,
-            'timeout'    => 1800,
-            'algorithm'  => 'HS256',
-        ],
-    ],
-];
-PHP;
-
-        file_put_contents($path . 'app.config.php', $content);
-    }
-
-    private function generateDatabaseConfig(string $path, string $name): void
-    {
-        $content = <<<PHP
-<?php
-declare(strict_types=1);
-
-// ./src/$name/Config/database.config.php
-
-return [
-    'enabled' => false,
-    'use'     => "default",
-
-    'connections' => [
-        'default' => [
-            'driver'  => "mysql",
-            'host'    => "localhost",
-            'port'    => 3306,
-            'user'    => "",
-            'pass'    => "",
-            'dbname'  => "",
-            'charset' => "utf8mb4",
-            'prefix'  => "",
-        ],
-    ],
-];
-PHP;
-
-        file_put_contents($path . 'database.config.php', $content);
-    }
-
-    private function generateDeployConfig(string $path, string $name): void
-    {
-        $content = <<<PHP
-<?php
-declare(strict_types=1);
-
-// ./src/$name/Config/deploy.config.php
-
-return [
-    'ftp' => [
-        'host' => '',
-        'user' => '',
-        'pass' => '',
-    ],
-    'remote' => [
-        'domain'        => '',
-        'framework_dir' => '',
-        'public_dir'    => '',
-    ],
-];
-PHP;
-
-        file_put_contents($path . 'deploy.config.php', $content);
-    }
-
-    private function generateLoggerConfig(string $path, string $name): void
-    {
-        $content = <<<PHP
-<?php
-declare(strict_types=1);
-
-// ./src/$name/Config/logger.config.php
-
-return [
-    'enabled' => false,
-
-    'channels' => [
-        'framework' => [
-            'enabled'   => false,
-            'name'      => 'framework',
-            'extension' => 'log',
-        ],
-    ],
-
-    'rotation' => [
-        'enabled'       => true,
-        'type'          => 'daily',
-        'max_file_size' => 5 * 1024 * 1024,
-    ],
-
-    'archive' => [
-        'enabled'   => true,
-        'extension' => 'zip',
-    ],
-
-    'log_format' => "[{%datetime%}][{%level_name%}][{%level_code%}] [{%origin%}] {%message%} {%context%}",
-    'min_level'  => 'DEBUG',
-];
-PHP;
-
-        file_put_contents($path . 'logger.config.php', $content);
-    }
-
-    private function generateCacheConfig(string $path, string $name): void
-    {
-        $content = <<<PHP
-<?php
-declare(strict_types=1);
-
-// ./src/$name/Config/cache.config.php
-
-return [
-    'enabled' => true,
-    'driver'  => 'files',
-    'ttl'     => 3600,
-
-    'drivers' => [
-        'files' => [
-            'path' => 'cache',
-        ],
-        'redis' => [
-            'host'     => '127.0.0.1',
-            'port'     => 6379,
-            'password' => null,
-            'database' => 0,
-            'prefix'   => '',
-        ],
-        'array' => [],
-    ],
-];
-PHP;
-
-        file_put_contents($path . 'cache.config.php', $content);
-    }
-
-    private function generateTwigConfig(string $path, string $name): void
-    {
-        $content = <<<PHP
-<?php
-declare(strict_types=1);
-
-// ./src/$name/Config/twig.config.php
-
-return [
-    'cache'            => true,
-    'debug'            => true,
-    'auto_reload'      => true,
-    'auto_escape'      => 'html',
-    'charset'          => 'UTF-8',
-    'strict_variables' => false,
-
-    'options' => [
-        'optimizations' => -1,
-    ],
-];
-PHP;
-
-        file_put_contents($path . 'twig.config.php', $content);
-    }
-
-    private function generateSessionConfig(string $path, string $name): void
-    {
-        $sessionName = strtoupper($name);
-        $cookieName  = strtolower($name);
-
-        $content = <<<PHP
-<?php
-declare(strict_types=1);
-
-// ./src/$name/Config/session.config.php
-
-return [
-    'session' => [
-        'enabled'   => true,
-        'name'      => '{$sessionName}_SESSION',
-        'lifetime'  => 3600,
-        'path'      => '/',
-        'domain'    => null,
-        'secure'    => false,
-        'http_only' => true,
-        'same_site' => 'Lax',
-
-        'storage' => [
-            'enabled' => true,
-            'handler' => 'files',
-        ],
-    ],
-
-    'cookie' => [
-        'prefix'    => '{$cookieName}_',
-        'path'      => '/',
-        'domain'    => null,
-        'secure'    => false,
-        'http_only' => true,
-        'same_site' => 'Lax',
-        'lifetime'  => 86400 * 30,
-    ],
-
-    'flash' => [
-        'session_key' => '_flash_{$cookieName}',
-        'types'       => ['success', 'error', 'warning', 'info'],
-        'auto_expire' => true,
-    ],
-];
-PHP;
-
-        file_put_contents($path . 'session.config.php', $content);
-    }
-
-    private function generateAPIConfig(string $path, string $name): void
-    {
-        $content = <<<PHP
-<?php
-declare(strict_types=1);
-
-// ./src/$name/Config/api.config.php
-
-return [
-    'mailer' => [
-        'enabled' => false,
-
-        'default' => 'smtp',
-
-        'drivers' => [
-            'smtp' => [
-                'host'       => '',
-                'port'       => 587,
-                'encryption' => 'tls',
-                'username'   => '',
-                'password'   => '',
-            ],
-        ],
-
-        'from' => [
-            'address' => '',
-            'name'    => '',
-        ],
-    ],
-    
-    'slack' => [
-        'enabled'     => false,
-        'webhook_url' => '',
-        'default'     => [
-            'channel'  => '',
-            'username' => '',
-            'icon'     => '',
-        ],
-    ],
-    
-    'sms' => [
-        'enabled' => false,
-
-        'default' => 'log',
-
-        'drivers' => [
-            'vonage' => [
-                'api_key'    => '',
-                'api_secret' => '',
-                'from'       => '',
-            ],
-            'twilio' => [
-                'account_sid' => '',
-                'auth_token'  => '',
-                'from'        => '',
-            ],
-            'log' => [],
-        ],
-    ],
-    
-    // Add more API keys
-];
-PHP;
-
-        file_put_contents($path . 'api.config.php', $content);
-    }
-
-    private function generateMailerConfig(string $path, string $name): void
-    {
-        $content = <<<PHP
-<?php
-declare(strict_types=1);
-
-// ./src/$name/Config/mailer.config.php
-
-return [
-    'enabled' => false,
-
-    'default' => 'smtp',
-
-    'drivers' => [
-        'smtp' => [
-            'host'       => '',
-            'port'       => 587,
-            'encryption' => 'tls',
-            'username'   => '',
-            'password'   => '',
-        ],
-    ],
-
-    'from' => [
-        'address' => '',
-        'name'    => '$name',
-    ],
-];
-PHP;
-
-        file_put_contents($path . 'mailer.config.php', $content);
     }
 
     private function generateGitignore(string $path): void
