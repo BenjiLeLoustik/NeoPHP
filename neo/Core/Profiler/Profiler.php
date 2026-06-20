@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Neo\Core\Profiler;
 
@@ -12,7 +13,6 @@ class Profiler
     private array $collectors = [];
 
     private float $startTime;
-
     private int $startMemory;
 
     private function __construct()
@@ -44,10 +44,6 @@ class Profiler
         $this->collectors[$collector->getName()] = $collector;
     }
 
-    /**
-     * @param string $name
-     * @return CollectorInterface|null
-     */
     public function getCollector(string $name): ?CollectorInterface
     {
         return $this->collectors[$name] ?? null;

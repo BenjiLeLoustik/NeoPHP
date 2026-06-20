@@ -9,24 +9,16 @@ use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Event\EventModule;
 use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Http\HttpModule;
-use Neo\Core\Http\Request;
 use Neo\Core\Module\AbstractModule;
-use Neo\Core\Profiler\Collector\AuthCollector;
-use Neo\Core\Profiler\Collector\EventCollector;
-use Neo\Core\Profiler\Collector\LogCollector;
-use Neo\Core\Profiler\Collector\NotificationCollector;
-use Neo\Core\Profiler\Collector\QueryCollector;
-use Neo\Core\Profiler\Collector\RequestCollector;
-use Neo\Core\Profiler\Collector\RouterCollector;
-use Neo\Core\Profiler\Collector\TranslationCollector;
+use Neo\Core\Profiler\Collector\CollectorInterface;
 use Neo\Core\Profiler\Toolbar\Toolbar;
-use Neo\Core\Routing\Router;
 use Neo\Core\Routing\RouterModule;
-use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\SecurityModule;
-use Neo\Core\Translation\TranslationManager;
 use Neo\Core\Translation\TranslationModule;
 use Neo\Core\Utils\Config\Config;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RegexIterator;
 
 class ProfilerModule extends AbstractModule
 {
@@ -53,7 +45,6 @@ class ProfilerModule extends AbstractModule
         }
 
         $env = $this->get(Config::class)->from('app')->get('environment') ?? 'prod';
-
         if ($env !== 'dev') {
             return;
         }
@@ -62,27 +53,60 @@ class ProfilerModule extends AbstractModule
             define('NEO_PROFILER_ENABLED', true);
         }
 
-        $request = $this->get(Request::class);
-        $router = $this->get(Router::class);
-        $dispatcher = $this->get(EventDispatcher::class);
-        $auth = $this->get(AuthManager::class);
-        $translator = $this->get(TranslationManager::class);
-
         $profiler = Profiler::getInstance();
-        $profiler->addCollector(new RequestCollector($request));
-        $profiler->addCollector(new RouterCollector($router));
-        $profiler->addCollector(new QueryCollector());
-        $profiler->addCollector(new EventCollector($dispatcher));
-        $profiler->addCollector(new LogCollector());
-        $profiler->addCollector(new AuthCollector($auth));
-        $profiler->addCollector(new NotificationCollector());
+        $dispatcher = $this->get(EventDispatcher::class);
 
-        $translationCollector = new TranslationCollector($translator);
-        $translator->setCollector($translationCollector);
-        $profiler->addCollector($translationCollector);
+        $this->registerCollectors($profiler);
 
         $toolbar = new Toolbar($profiler);
         $listener = new ProfilerResponseListener($toolbar);
         $dispatcher->addListenerInstance(ResponseEvent::class, $listener, 'onResponse');
+    }
+
+    /**
+     * @throws ContainerException
+     */
+    private function registerCollectors(Profiler $profiler): void
+    {
+        $coreDir = dirname(__DIR__);
+
+        $iterator = new RegexIterator(
+            new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($coreDir)
+            ),
+            '/^.+Collector\.php$/i',
+            RegexIterator::MATCH
+        );
+
+        foreach ($iterator as $file) {
+            $class = $this->fileToClass($file->getRealPath(), $coreDir);
+
+            if (!class_exists($class)) {
+                continue;
+            }
+
+            $ref = new \ReflectionClass($class);
+
+            if ($ref->isAbstract() || $ref->isInterface() || !$ref->implementsInterface(CollectorInterface::class)) {
+                continue;
+            }
+
+            /** @var CollectorInterface $collector */
+            $collector = $this->get($class);
+
+            if ($collector instanceof CollectorAwareInterface) {
+                $collector->boot($this->get(Container::class));
+            }
+
+            $profiler->addCollector($collector);
+        }
+    }
+
+    private function fileToClass(string $realPath, string $coreDir): string
+    {
+        $relative = str_replace([$coreDir . DIRECTORY_SEPARATOR, '.php'], ['', ''], $realPath);
+        $relative = str_replace(DIRECTORY_SEPARATOR, '\\', $relative);
+
+        return 'Neo\\Core\\' . $relative;
     }
 }

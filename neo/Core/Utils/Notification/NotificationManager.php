@@ -5,7 +5,6 @@ namespace Neo\Core\Utils\Notification;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Profiler\Collector\NotificationCollector;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Config\Exception\ConfigException;
