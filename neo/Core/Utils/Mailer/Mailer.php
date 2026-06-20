@@ -7,6 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Logger\Logger;
+use Neo\Core\Utils\Mailer\Exception\MailerException;
 use Neo\Core\View\View;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -182,7 +183,13 @@ class Mailer
             ], 'Mailer');
 
             $this->reset();
-            return false;
+
+            throw new MailerException(
+                title: 'Mailer Send Error',
+                message: sprintf("Failed to send email to '%s': %s", $this->to, $e->getMessage()),
+                code: 500,
+                previous: $e
+            );
         }
     }
 
