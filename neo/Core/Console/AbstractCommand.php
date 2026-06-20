@@ -10,6 +10,7 @@ use Neo\Core\Console\Input\InputArgument;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Output\Output;
+use Neo\Core\Utils\Scanner\AttributeScanner;
 
 abstract class AbstractCommand implements CommandInterface
 {
@@ -93,23 +94,27 @@ abstract class AbstractCommand implements CommandInterface
 
     public function getName(): string
     {
-        $attr = new \ReflectionClass($this)->getAttributes(Command::class)[0] ?? null;
-
-        return $attr?->newInstance()->name ?? '';
+        return $this->getCommandAttribute()?->name ?? '';
     }
 
     public function getDescription(): string
     {
-        $attr = new \ReflectionClass($this)->getAttributes(Command::class)[0] ?? null;
-
-        return $attr?->newInstance()->description ?? '';
+        return $this->getCommandAttribute()?->description ?? '';
     }
 
     public function getCategory(): string
     {
-        $attr = new \ReflectionClass($this)->getAttributes(Command::class)[0] ?? null;
+        return $this->getCommandAttribute()?->category ?? 'other';
+    }
 
-        return $attr?->newInstance()->category ?? 'other';
+    private function getCommandAttribute(): ?Command
+    {
+        $results = new AttributeScanner(static::class)
+            ->onClass()
+            ->withAttribute(Command::class)
+            ->scan();
+
+        return !empty($results) ? $results[0]['attribute'] : null;
     }
 
     /** @return list<string> */

@@ -8,9 +8,9 @@ use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
+use Neo\Core\Utils\Scanner\AttributeScanner;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use ReflectionClass;
 use ReflectionException;
 
 class ConsoleHandler
@@ -55,15 +55,19 @@ class ConsoleHandler
                 continue;
             }
 
-            $reflection = new ReflectionClass($class);
+            $results = new AttributeScanner($class)
+                ->onClass()
+                ->withAttribute(Command::class)
+                ->scan();
 
-            if ($reflection->isAbstract()) {
+            if (empty($results)) {
                 continue;
             }
 
-            $attributes = $reflection->getAttributes(Command::class);
+            /** @var \ReflectionClass<object> $refClass */
+            $refClass = $results[0]['reflection'];
 
-            if (empty($attributes)) {
+            if ($refClass->isAbstract()) {
                 continue;
             }
 
@@ -71,8 +75,6 @@ class ConsoleHandler
             $instance->configure();
 
             $name = $instance->getName();
-            $description = $instance->getDescription();
-            $category = $instance->getCategory();
 
             if ($name === '') {
                 continue;
@@ -80,8 +82,8 @@ class ConsoleHandler
 
             $this->commands[$name] = [
                 'instance' => $instance,
-                'description' => $description,
-                'category' => $category,
+                'description' => $instance->getDescription(),
+                'category' => $instance->getCategory(),
             ];
         }
 

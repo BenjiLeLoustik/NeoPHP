@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Routing;
 
+use JsonException;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Request;
@@ -14,7 +15,8 @@ use Neo\Core\Routing\Exception\RouteNotFoundException;
 use Neo\Core\Routing\Exception\RouterException;
 use Neo\Core\Security\Middleware\MiddlewareHandler;
 use Neo\Core\Utils\Config\Config;
-use ReflectionClass;
+use Neo\Core\Utils\Scanner\AttributeScanner;
+use ReflectionException;
 use ReflectionMethod;
 use Throwable;
 
@@ -53,6 +55,8 @@ class Router
 
     /**
      * @throws ContainerException
+     * @throws JsonException
+     * @throws ReflectionException
      */
     private function scanControllers(): void
     {
@@ -85,10 +89,6 @@ class Router
                 continue;
             }
 
-            if (pathinfo($filePath, PATHINFO_EXTENSION) !== 'php') {
-                continue;
-            }
-
             $src = file_get_contents($filePath);
             if ($src === false) continue;
 
@@ -100,6 +100,7 @@ class Router
             if (!preg_match('/class\s+([A-Za-z0-9_]+)/i', $src, $mClass)) {
                 continue;
             }
+
             $classShort = $mClass[1];
             $fqcn = $namespace !== '' ? $namespace . '\\' . $classShort : $classShort;
 
@@ -114,43 +115,51 @@ class Router
                 if (!class_exists($fqcn)) continue;
             }
 
-            $refClass = new ReflectionClass($fqcn);
+            $results = new AttributeScanner($fqcn)
+                ->onClass()
+                ->onMethods(ReflectionMethod::IS_PUBLIC)
+                ->scan();
 
-            $mainRouteAttr = $refClass->getAttributes(MainRouteAttribute::class);
             $prefixPath = '';
             $prefixName = '';
-            if (!empty($mainRouteAttr)) {
-                $mainRoute = $mainRouteAttr[0]->newInstance();
-                $prefixPath = rtrim($mainRoute->path, '/');
-                $prefixName = $mainRoute->name . '.';
+            foreach ($results as $entry) {
+                if ($entry['type'] === 'class' && $entry['attribute'] instanceof MainRouteAttribute) {
+                    $prefixPath = rtrim($entry['attribute']->path, '/');
+                    $prefixName = $entry['attribute']->name . '.';
+                    break;
+                }
             }
 
-            foreach ($refClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-                $routeAttrs = $method->getAttributes(RouteAttribute::class);
-                foreach ($routeAttrs as $attr) {
-                    $route = $attr->newInstance();
+            foreach ($results as $entry) {
+                if ($entry['type'] !== 'method' || !($entry['attribute'] instanceof RouteAttribute)) {
+                    continue;
+                }
 
-                    $path = $prefixPath . '/' . ltrim($route->path, '/');
-                    $name = $prefixName . $route->name;
+                $route = $entry['attribute'];
+                /** @var ReflectionMethod $refMethod */
+                $refMethod  = $entry['reflection'];
+                $action = $refMethod->getName();
 
-                    foreach ($route->methods as $httpMethod) {
-                        if ($this->isDebug() && $this->routes->has($httpMethod, $path)) {
-                            trigger_error(
-                                "Route conflict: [{$httpMethod}] {$path} is already defined. "
-                                . "Overwritten by {$fqcn}::{$method->getName()}.",
-                                E_USER_WARNING
-                            );
-                        }
+                $path = $prefixPath . '/' . ltrim($route->path, '/');
+                $name = $prefixName . $route->name;
 
-                        $this->routes->add(
-                            $httpMethod,
-                            $path,
-                            $name,
-                            $fqcn,
-                            $method->getName(),
-                            $route->requirements
+                foreach ($route->methods as $httpMethod) {
+                    if ($this->isDebug() && $this->routes->has($httpMethod, $path)) {
+                        trigger_error(
+                            "Route conflict: [{$httpMethod}] {$path} is already defined. "
+                            . "Overwritten by {$fqcn}::{$action}.",
+                            E_USER_WARNING
                         );
                     }
+
+                    $this->routes->add(
+                        $httpMethod,
+                        $path,
+                        $name,
+                        $fqcn,
+                        $action,
+                        $route->requirements
+                    );
                 }
             }
         }

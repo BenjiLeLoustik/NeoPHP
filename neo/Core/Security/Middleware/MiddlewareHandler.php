@@ -16,9 +16,10 @@ use Neo\Core\Security\Middleware\Attribute\Middleware as MiddlewareAttribute;
 use Neo\Core\Security\Middleware\Default\RateLimitMiddleware;
 use Neo\Core\Security\Middleware\Exception\MiddlewareException;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
+use Neo\Core\Utils\Scanner\AttributeScanner;
 use Neo\Core\View\View;
-use ReflectionClass;
 use ReflectionException;
+use ReflectionMethod;
 use Throwable;
 
 class MiddlewareHandler
@@ -157,45 +158,55 @@ class MiddlewareHandler
     private function getMiddlewares(string $controller, ?string $method = null): array
     {
         $all = [];
-        $ref = new ReflectionClass($controller);
 
-        foreach ($ref->getAttributes(MiddlewareAttribute::class) as $attr) {
-            $i = $attr->newInstance();
-            $all[] = [
-                'class' => $i->use,
-                'message' => $i->message,
-                'onError' => $i->onError,
-                'redirect' => $i->redirect,
-                'isClass' => true,
-                'params' => $i->params,
-                'priority' => $i->priority,
-            ];
-        }
+        $classResults = new AttributeScanner($controller)
+            ->onClass()
+            ->scan();
 
-        foreach ($ref->getAttributes(RateLimit::class) as $attr) {
-            $i = $attr->newInstance();
-            $all[] = $this->buildRateLimitMeta($i, true);
-        }
-
-        if ($method && $ref->hasMethod($method)) {
-            $refMethod = $ref->getMethod($method);
-
-            foreach ($refMethod->getAttributes(MiddlewareAttribute::class) as $attr) {
-                $i = $attr->newInstance();
+        foreach ($classResults as $entry) {
+            if ($entry['attribute'] instanceof MiddlewareAttribute) {
+                $i = $entry['attribute'];
                 $all[] = [
                     'class' => $i->use,
                     'message' => $i->message,
                     'onError' => $i->onError,
                     'redirect' => $i->redirect,
-                    'isClass' => false,
+                    'isClass' => true,
                     'params' => $i->params,
                     'priority' => $i->priority,
                 ];
+            } elseif ($entry['attribute'] instanceof RateLimit) {
+                $all[] = $this->buildRateLimitMeta($entry['attribute'], true);
             }
+        }
 
-            foreach ($refMethod->getAttributes(RateLimit::class) as $attr) {
-                $i = $attr->newInstance();
-                $all[] = $this->buildRateLimitMeta($i, false);
+        if ($method) {
+            $methodResults = new AttributeScanner($controller)
+                ->onMethods(ReflectionMethod::IS_PUBLIC)
+                ->scan();
+
+            foreach ($methodResults as $entry) {
+                /** @var ReflectionMethod $refMethod */
+                $refMethod = $entry['reflection'];
+
+                if ($refMethod->getName() !== $method) {
+                    continue;
+                }
+
+                if ($entry['attribute'] instanceof MiddlewareAttribute) {
+                    $i = $entry['attribute'];
+                    $all[] = [
+                        'class' => $i->use,
+                        'message'  => $i->message,
+                        'onError' => $i->onError,
+                        'redirect' => $i->redirect,
+                        'isClass' => false,
+                        'params' => $i->params,
+                        'priority' => $i->priority,
+                    ];
+                } elseif ($entry['attribute'] instanceof RateLimit) {
+                    $all[] = $this->buildRateLimitMeta($entry['attribute'], false);
+                }
             }
         }
 
@@ -270,24 +281,39 @@ class MiddlewareHandler
      */
     private function checkMaintenance(string $controller, ?string $method): ?Response
     {
-        $ref = new ReflectionClass($controller);
         $maintenance = null;
 
-        if ($method && $ref->hasMethod($method)) {
-            $attrs = $ref->getMethod($method)->getAttributes(Maintenance::class);
-            if (!empty($attrs)) {
-                $maintenance = $attrs[0]->newInstance();
+        if ($method) {
+            $methodResults = new AttributeScanner($controller)
+                ->onMethods(ReflectionMethod::IS_PUBLIC)
+                ->withAttribute(Maintenance::class)
+                ->scan();
+
+            foreach ($methodResults as $entry) {
+                /** @var ReflectionMethod $refMethod */
+                $refMethod = $entry['reflection'];
+
+                if ($refMethod->getName() === $method) {
+                    $maintenance = $entry['attribute'];
+                    break;
+                }
             }
         }
 
         if ($maintenance === null) {
-            $attrs = $ref->getAttributes(Maintenance::class);
-            if (!empty($attrs)) {
-                $maintenance = $attrs[0]->newInstance();
+            $classResults = new AttributeScanner($controller)
+                ->onClass()
+                ->withAttribute(Maintenance::class)
+                ->scan();
+
+            if (!empty($classResults)) {
+                $maintenance = $classResults[0]['attribute'];
             }
         }
 
-        if ($maintenance === null) return null;
+        if ($maintenance === null) {
+            return null;
+        }
 
         $view = $this->container->get(View::class);
         $response = $this->container->get(Response::class);

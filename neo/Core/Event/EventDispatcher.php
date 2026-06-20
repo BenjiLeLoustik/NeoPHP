@@ -11,6 +11,7 @@ use Neo\Core\Event\Contract\EventSubscriberInterface;
 use Neo\Core\Event\Exception\EventException;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Scanner\AttributeScanner;
 
 class EventDispatcher
 {
@@ -43,6 +44,7 @@ class EventDispatcher
     /**
      * @throws EventException
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     private function scanListeners(): void
     {
@@ -87,29 +89,32 @@ class EventDispatcher
 
             if (!class_exists($fqcn)) continue;
 
-            $ref   = new \ReflectionClass($fqcn);
-            $attrs = $ref->getAttributes(AsListener::class);
+            $results = new AttributeScanner($fqcn)
+                ->onClass()
+                ->withAttribute(AsListener::class)
+                ->scan();
 
-            foreach ($attrs as $attr) {
-                $instance = $attr->newInstance();
-                $this->listeners[$instance->event][] = [
+            foreach ($results as $entry) {
+                /** @var AsListener $listener */
+                $listener = $entry['attribute'];
+                $this->listeners[$listener->event][] = [
                     'class' => $fqcn,
-                    'priority' => $instance->priority,
+                    'priority' => $listener->priority,
                 ];
             }
 
-            if ($ref->implementsInterface(EventSubscriberInterface::class)) {
+            if (new \ReflectionClass($fqcn)->implementsInterface(EventSubscriberInterface::class)) {
                 foreach ($fqcn::getSubscribedEvents() as $eventClass => $method) {
-                    $this->listeners[$eventClass][] = array(
+                    $this->listeners[$eventClass][] = [
                         'class' => $fqcn,
                         'method' => $method,
                         'priority' => 0,
-                    );
+                    ];
                 }
             }
         }
 
-        foreach ($this->listeners as $event => &$list) {
+        foreach ($this->listeners as &$list) {
             usort($list, fn($a, $b) => $b['priority'] <=> $a['priority']);
         }
 
