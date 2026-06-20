@@ -8,6 +8,7 @@ use Neo\Core\Application\ApplicationPaths;
 use Neo\Core\Application\Exception\ApplicationException;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\ContainerRegistry;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\Event\RequestEvent;
 use Neo\Core\Event\Event\ResponseEvent;
@@ -36,6 +37,8 @@ class App
     {
         $this->container = new Container();
         $this->container->set(Container::class, fn() => $this->container);
+
+        ContainerRegistry::set($this->container);
 
         $this->container->set(Request::class, fn() => php_sapi_name() === 'cli'
             ? Request::createEmpty()
