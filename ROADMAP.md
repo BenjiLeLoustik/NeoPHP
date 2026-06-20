@@ -130,10 +130,9 @@ neo/Core/
 
 - [x] 🟢 **Améliorer les codes d'erreur** dans le Container (404, 422, 500 distincts)  `branch: refactor/container-distinct-error-codes`
 - [x] 🟢 **Échapper les requirements de routes** avant injection dans les regex  `branch: fix/router-escape-route-requirements`
-- [ ] 🟡 **Supprimer `exit()`** dans `MiddlewareHandler.php` l.119 → retourner une Response propre  `branch: refactor/middleware-remove-exit-call`
+- [x] 🟡 **Supprimer `exit()`** dans `MiddlewareHandler.php` l.119 → retourner une Response propre  `branch: refactor/middleware-remove-exit-call`
 - [ ] 🟡 **Uniformiser la gestion d'erreurs** — exceptions partout, supprimer les `false`/`null` implicites  `branch: refactor/uniform-error-handling`
 - [ ] 🟡 **Compiler les regex de routes une seule fois** et les mettre en cache  `branch: refactor/router-cache-compiled-regex`
-- [ ] 🟡 **Monter PHPStan au niveau 8** (actuellement niveau 6)  `branch: refactor/phpstan-level-8`
 - [ ] 🟡 **Améliorer le typage** dans les zones utilisant `mixed` ou des tableaux non typés  `branch: refactor/improve-mixed-type-hints`
 - [ ] 🟠 **Remplacer le singleton statique du Container** par une injection via le kernel  `branch: refactor/container-remove-static-singleton`
 - [ ] 🟠 **Invalider l'identity map** (`AbstractModel::$instanceCache`) après les mutations en CLI  `branch: fix/model-invalidate-identity-map-cli`
