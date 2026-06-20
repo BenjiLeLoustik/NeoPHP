@@ -21,9 +21,15 @@ use Throwable;
 class Router
 {
     private RouteCollection $routes;
+
     private Container $container;
+
     private string $controllersPath;
+
     private ?string $currentRouteName = null;
+
+    /** @var array<string, string> */
+    private array $compiledPatterns = [];
 
     /**
      * @throws ContainerException
@@ -210,45 +216,20 @@ class Router
      */
     private function match(string $route, string $path, array &$params, array $requirements = []): bool
     {
-        $route = '/' . trim($route, '/');
+        $pattern = $this->compilePattern($route, $requirements);
 
-        $pattern = preg_replace_callback(
-            '/\/\{([a-zA-Z0-9_]+)(\?)?\}/',
-            function ($m) use ($requirements) {
-                $paramName = $m[1];
-                $isOptional = isset($m[2]);
-                $regex = $requirements[$paramName] ?? '[^/]+';
-
-                if (@preg_match('#' . $regex . '#', '') === false) {
-                    $regex = '[^/]+';
-                }
-
-                return $isOptional
-                    ? '(?:/(?P<' . $paramName . '>' . $regex . '))?'
-                    : '/(?P<' . $paramName . '>' . $regex . ')';
-            },
-            $route
-        );
-
-        if ($pattern === null) return false;
-
-        $pattern = '#^' . rtrim($pattern, '/') . '/?$#';
-
-        if (@preg_match($pattern, $path, $matches) === false) {
+        if (preg_match($pattern, $path, $matches) !== 1) {
             return false;
         }
 
-        if (preg_match($pattern, $path, $matches)) {
-            $params = [];
-            foreach ($matches as $key => $value) {
-                if (!is_int($key) && $value !== '') {
-                    $params[$key] = $value;
-                }
+        $params = [];
+        foreach ($matches as $key => $value) {
+            if (!is_int($key) && $value !== '') {
+                $params[$key] = $value;
             }
-            return true;
         }
 
-        return false;
+        return true;
     }
 
     /**
@@ -360,5 +341,41 @@ class Router
     public function getCurrentRouteName(): ?string
     {
         return $this->currentRouteName;
+    }
+
+    private function compilePattern(string $route, array $requirements): string
+    {
+        if (isset($this->compiledPatterns[$route])) {
+            return $this->compiledPatterns[$route];
+        }
+
+        $route = '/' . trim($route, '/');
+
+        $pattern = preg_replace_callback(
+            '/\/\{([a-zA-Z0-9_]+)(\?)?\}/',
+            function ($m) use ($requirements) {
+                $paramName = $m[1];
+                $isOptional = isset($m[2]);
+                $regex = $requirements[$paramName] ?? '[^/]+';
+
+                set_error_handler(static fn() => true);
+                $isValid = preg_match('#' . $regex . '#', '') !== false;
+                restore_error_handler();
+
+                if (!$isValid) {
+                    $regex = '[^/]+';
+                }
+
+                return $isOptional
+                    ? '(?:/(?P<' . $paramName . '>' . $regex . '))?'
+                    : '/(?P<' . $paramName . '>' . $regex . ')';
+            },
+            $route
+        );
+
+        $pattern = '#^' . rtrim($pattern ?? '', '/') . '/?$#';
+        $this->compiledPatterns[$route] = $pattern;
+
+        return $pattern;
     }
 }
