@@ -219,6 +219,10 @@ class Router
                 $isOptional = isset($m[2]);
                 $regex = $requirements[$paramName] ?? '[^/]+';
 
+                if (@preg_match('#' . $regex . '#', '') === false) {
+                    $regex = '[^/]+';
+                }
+
                 return $isOptional
                     ? '(?:/(?P<' . $paramName . '>' . $regex . '))?'
                     : '/(?P<' . $paramName . '>' . $regex . ')';
@@ -229,6 +233,10 @@ class Router
         if ($pattern === null) return false;
 
         $pattern = '#^' . rtrim($pattern, '/') . '/?$#';
+
+        if (@preg_match($pattern, $path, $matches) === false) {
+            return false;
+        }
 
         if (preg_match($pattern, $path, $matches)) {
             $params = [];
