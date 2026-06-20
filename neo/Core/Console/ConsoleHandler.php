@@ -11,6 +11,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\Utils\Scanner\AttributeScanner;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use ReflectionClass;
 use ReflectionException;
 
 class ConsoleHandler
@@ -64,8 +65,14 @@ class ConsoleHandler
                 continue;
             }
 
-            /** @var \ReflectionClass<object> $refClass */
-            $refClass = $results[0]['reflection'];
+            /** @var array{reflection: ReflectionClass<object>} $row */
+            $row = $results[0];
+
+            if ($row['reflection']->isAbstract()) {
+                continue;
+            }
+
+            $refClass = $row['reflection'];
 
             if ($refClass->isAbstract()) {
                 continue;

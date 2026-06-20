@@ -61,9 +61,8 @@ class CronScanner
                 ->scan();
 
             foreach ($results as $entry) {
-                /** @var Cron $cron */
+                /** @var array{attribute: Cron, reflection: ReflectionMethod} $entry */
                 $cron = $entry['attribute'];
-                /** @var ReflectionMethod $refMethod */
                 $refMethod = $entry['reflection'];
 
                 $jobs[] = [

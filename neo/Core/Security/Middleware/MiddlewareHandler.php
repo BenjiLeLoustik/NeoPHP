@@ -186,7 +186,7 @@ class MiddlewareHandler
                 ->scan();
 
             foreach ($methodResults as $entry) {
-                /** @var ReflectionMethod $refMethod */
+                /** @var array{reflection: ReflectionMethod, attribute: MiddlewareAttribute|RateLimit} $entry */
                 $refMethod = $entry['reflection'];
 
                 if ($refMethod->getName() !== $method) {
@@ -290,7 +290,7 @@ class MiddlewareHandler
                 ->scan();
 
             foreach ($methodResults as $entry) {
-                /** @var ReflectionMethod $refMethod */
+                /** @var array{reflection: ReflectionMethod, attribute: Maintenance} $entry */
                 $refMethod = $entry['reflection'];
 
                 if ($refMethod->getName() === $method) {

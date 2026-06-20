@@ -94,17 +94,20 @@ abstract class AbstractCommand implements CommandInterface
 
     public function getName(): string
     {
-        return $this->getCommandAttribute()?->name ?? '';
+        $attr = $this->getCommandAttribute();
+        return $attr ? $attr->name : '';
     }
 
     public function getDescription(): string
     {
-        return $this->getCommandAttribute()?->description ?? '';
+        $attr = $this->getCommandAttribute();
+        return $attr ? $attr->description : '';
     }
 
     public function getCategory(): string
     {
-        return $this->getCommandAttribute()?->category ?? 'other';
+        $attr = $this->getCommandAttribute();
+        return $attr ? $attr->category : 'other';
     }
 
     private function getCommandAttribute(): ?Command

@@ -135,9 +135,9 @@ class Router
                     continue;
                 }
 
+                /** @var array{attribute: RouteAttribute, reflection: ReflectionMethod} $entry */
                 $route = $entry['attribute'];
-                /** @var ReflectionMethod $refMethod */
-                $refMethod  = $entry['reflection'];
+                $refMethod = $entry['reflection'];
                 $action = $refMethod->getName();
 
                 $path = $prefixPath . '/' . ltrim($route->path, '/');
