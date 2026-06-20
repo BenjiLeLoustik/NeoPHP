@@ -128,8 +128,7 @@ neo/Core/
 
 ### 🔧 Améliorations — Architecture & Qualité
 
-- [ ] 🟢 **Supprimer les `@` error suppressors** dans tout le codebase  `branch: refactor/remove-error-suppressors`
-- [ ] 🟢 **Améliorer les codes d'erreur** dans le Container (404, 422, 500 distincts)  `branch: refactor/container-distinct-error-codes`
+- [x] 🟢 **Améliorer les codes d'erreur** dans le Container (404, 422, 500 distincts)  `branch: refactor/container-distinct-error-codes`
 - [ ] 🟢 **Échapper les requirements de routes** avant injection dans les regex  `branch: fix/router-escape-route-requirements`
 - [ ] 🟡 **Supprimer `exit()`** dans `MiddlewareHandler.php` l.119 → retourner une Response propre  `branch: refactor/middleware-remove-exit-call`
 - [ ] 🟡 **Uniformiser la gestion d'erreurs** — exceptions partout, supprimer les `false`/`null` implicites  `branch: refactor/uniform-error-handling`
