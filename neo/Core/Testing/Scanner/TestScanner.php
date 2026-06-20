@@ -7,7 +7,7 @@ use Neo\Core\Testing\Attribute\Test;
 use Neo\Core\Testing\Context\TestClassContext;
 use Neo\Core\Testing\Context\TestMethodContext;
 use Neo\Core\Testing\Enum\TestType;
-use ReflectionClass;
+use Neo\Core\Utils\Scanner\AttributeScanner;
 use ReflectionMethod;
 
 class TestScanner
@@ -48,36 +48,51 @@ class TestScanner
 
             if ($shortName === '') continue;
 
-            $fqcn = $namespace !== ''
-                ? $namespace . '\\' . $shortName
-                : $shortName;
+            $fqcn = $namespace !== '' ? $namespace . '\\' . $shortName : $shortName;
 
             require_once $filePath;
 
             if (!class_exists($fqcn)) continue;
 
-            $refClass = new ReflectionClass($fqcn);
+            $results = new AttributeScanner($fqcn)
+                ->onClass()
+                ->onMethods(ReflectionMethod::IS_PUBLIC)
+                ->withAttribute(Test::class)
+                ->scan();
 
-            $classAttr = $refClass->getAttributes(Test::class)[0] ?? null;
+            $classTest  = null;
+            $methodCtxs = [];
 
-            /** @var list<TestMethodContext> $methodCtxs */
-            $methodCtxs = $this->scanMethods($refClass);
+            foreach ($results as $entry) {
+                /** @var Test $test */
+                $test = $entry['attribute'];
 
-            if ($classAttr === null && empty($methodCtxs)) {
+                if ($entry['type'] === 'class') {
+                    $classTest = $test;
+                } elseif ($entry['type'] === 'method') {
+                    if ($test->skip) continue;
+
+                    /** @var ReflectionMethod $refMethod */
+                    $refMethod = $entry['reflection'];
+                    $methodCtxs[] = new TestMethodContext(
+                        name: $refMethod->getName(),
+                        cases: $test->cases,
+                        route: $test->route,
+                        httpMethod: $test->httpMethod,
+                        dataset: $test->dataset,
+                        skip: $test->skip,
+                    );
+                }
+            }
+
+            if ($classTest === null && empty($methodCtxs)) {
                 continue;
             }
 
-            $classTest = $classAttr?->newInstance();
-
-            $type = TestType::Auto;
-
-            if ($classTest !== null && $classTest->type !== 'auto') {
-                $type = TestType::from($classTest->type);
-            } elseif ($classTest !== null) {
-                $type = TestType::fromNamespace($fqcn);
-            } else {
-                $type = TestType::fromNamespace($fqcn);
-            }
+            $type = match (true) {
+                $classTest !== null && $classTest->type !== 'auto' => TestType::from($classTest->type),
+                default => TestType::fromNamespace($fqcn),
+            };
 
             $contexts[] = new TestClassContext(
                 fqcn: $fqcn,
@@ -88,40 +103,11 @@ class TestScanner
                 cases: $classTest->cases ?? [],
                 dataset: $classTest->dataset ?? [],
                 skip: $classTest->skip ?? false,
-                customExtends: $classTest->extends,
+                customExtends: $classTest->extends ?? null,
             );
         }
 
         return $contexts;
     }
 
-    /**
-     * @param ReflectionClass<object> $refClass
-     * @return array<int, TestMethodContext>
-     */
-    private function scanMethods(ReflectionClass $refClass): array
-    {
-        $methods = [];
-
-        foreach ($refClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            $attrs = $method->getAttributes(Test::class);
-
-            if (empty($attrs)) continue;
-
-            $test = $attrs[0]->newInstance();
-
-            if ($test->skip) continue;
-
-            $methods[] = new TestMethodContext(
-                name: $method->getName(),
-                cases: $test->cases,
-                route: $test->route,
-                httpMethod: $test->httpMethod,
-                dataset: $test->dataset,
-                skip: $test->skip,
-            );
-        }
-
-        return $methods;
-    }
 }

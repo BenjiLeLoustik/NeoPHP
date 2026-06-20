@@ -3,15 +3,17 @@
 namespace Neo\Core\Cron;
 
 use Neo\Core\Cron\Attribute\Cron;
+use Neo\Core\Utils\Scanner\AttributeScanner;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use ReflectionClass;
+use ReflectionException;
 use ReflectionMethod;
 
 class CronScanner
 {
     /**
      * @return list<array{class: class-string, method: string, expression: string, description: string, timezone: string, lock: bool}>
+     * @throws ReflectionException
      */
     public function scan(string $cronsPath): array
     {
@@ -45,9 +47,7 @@ class CronScanner
                 continue;
             }
 
-            $fqcn = $namespace !== ''
-                ? $namespace . '\\' . $mClass[1]
-                : $mClass[1];
+            $fqcn = $namespace !== '' ? $namespace . '\\' . $mClass[1] : $mClass[1];
 
             require_once $filePath;
 
@@ -55,20 +55,20 @@ class CronScanner
                 continue;
             }
 
-            $ref = new ReflectionClass($fqcn);
+            $results = new AttributeScanner($fqcn)
+                ->onMethods(ReflectionMethod::IS_PUBLIC)
+                ->withAttribute(Cron::class)
+                ->scan();
 
-            foreach ($ref->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-                $attributes = $method->getAttributes(Cron::class);
-
-                if (empty($attributes)) {
-                    continue;
-                }
-
-                $cron = $attributes[0]->newInstance();
+            foreach ($results as $entry) {
+                /** @var Cron $cron */
+                $cron = $entry['attribute'];
+                /** @var ReflectionMethod $refMethod */
+                $refMethod = $entry['reflection'];
 
                 $jobs[] = [
                     'class' => $fqcn,
-                    'method' => $method->getName(),
+                    'method' => $refMethod->getName(),
                     'expression' => $cron->expression,
                     'description' => $cron->description,
                     'timezone' => $cron->timezone,
