@@ -343,6 +343,9 @@ class Router
         return $this->currentRouteName;
     }
 
+    /**
+     * @param array<string, string> $requirements
+     */
     private function compilePattern(string $route, array $requirements): string
     {
         if (isset($this->compiledPatterns[$route])) {
