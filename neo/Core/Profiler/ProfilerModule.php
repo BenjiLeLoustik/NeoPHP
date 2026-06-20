@@ -14,7 +14,7 @@ use Neo\Core\Module\AbstractModule;
 use Neo\Core\Profiler\Collector\AuthCollector;
 use Neo\Core\Profiler\Collector\EventCollector;
 use Neo\Core\Profiler\Collector\LogCollector;
-use Neo\Core\Profiler\Collector\MailCollector;
+use Neo\Core\Profiler\Collector\NotificationCollector;
 use Neo\Core\Profiler\Collector\QueryCollector;
 use Neo\Core\Profiler\Collector\RequestCollector;
 use Neo\Core\Profiler\Collector\RouterCollector;
@@ -27,8 +27,6 @@ use Neo\Core\Security\SecurityModule;
 use Neo\Core\Translation\TranslationManager;
 use Neo\Core\Translation\TranslationModule;
 use Neo\Core\Utils\Config\Config;
-use Neo\Core\Utils\Mailer\Mailer;
-use Neo\Core\Utils\Mailer\MailerModule;
 
 class ProfilerModule extends AbstractModule
 {
@@ -40,12 +38,10 @@ class ProfilerModule extends AbstractModule
             RouterModule::class,
             SecurityModule::class,
             TranslationModule::class,
-            MailerModule::class,
         ];
     }
 
-    public function register(Container $container): void
-    {}
+    public function register(Container $container): void {}
 
     /**
      * @throws ContainerException
@@ -71,7 +67,6 @@ class ProfilerModule extends AbstractModule
         $dispatcher = $this->get(EventDispatcher::class);
         $auth = $this->get(AuthManager::class);
         $translator = $this->get(TranslationManager::class);
-        $mailer = $this->get(Mailer::class);
 
         $profiler = Profiler::getInstance();
         $profiler->addCollector(new RequestCollector($request));
@@ -80,7 +75,7 @@ class ProfilerModule extends AbstractModule
         $profiler->addCollector(new EventCollector($dispatcher));
         $profiler->addCollector(new LogCollector());
         $profiler->addCollector(new AuthCollector($auth));
-        $profiler->addCollector(new MailCollector($mailer));
+        $profiler->addCollector(new NotificationCollector());
 
         $translationCollector = new TranslationCollector($translator);
         $translator->setCollector($translationCollector);
