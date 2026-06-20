@@ -107,7 +107,7 @@ neo/Core/
 
 ## 🗂 Checklist de suivi
 
-> Statut : `[ ]` à faire — `[~]` en cours — `[x]` terminé
+> Statut : `[ ]` à faire — `[~]` en cours — `[x]` terminé — `[N]` Non Pertinant pour le moment
 
 ### 🔴 URGENCES — Sécurité (à corriger avant toute mise en prod)
 
@@ -133,7 +133,7 @@ neo/Core/
 - [x] 🟡 **Supprimer `exit()`** dans `MiddlewareHandler.php` l.119 → retourner une Response propre  `branch: refactor/middleware-remove-exit-call`
 - [x] 🟡 **Uniformiser la gestion d'erreurs** — exceptions partout, supprimer les `false`/`null` implicites  `branch: refactor/uniform-error-handling`
 - [x] 🟡 **Compiler les regex de routes une seule fois** et les mettre en cache  `branch: refactor/router-cache-compiled-regex`
-- [ ] 🟡 **Améliorer le typage** dans les zones utilisant `mixed` ou des tableaux non typés  `branch: refactor/improve-mixed-type-hints`
+- [N] 🟡 **Améliorer le typage** dans les zones utilisant `mixed` ou des tableaux non typés  `branch: refactor/improve-mixed-type-hints`
 - [x] 🟠 **Remplacer le singleton statique du Container** par une injection via le kernel  `branch: refactor/container-remove-static-singleton`
 - [x] 🟠 **Invalider l'identity map** (`AbstractModel::$instanceCache`) après les mutations en CLI  `branch: fix/model-invalidate-identity-map-cli`
 - [x] 🟠 **Ajouter un système d'ordre explicite** pour l'exécution des middlewares  `branch: feature/middleware-explicit-order`
