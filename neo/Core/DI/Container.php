@@ -94,7 +94,7 @@ class Container implements ContainerInterface
         throw new ContainerException(
             title: "Service Not Found",
             message: sprintf("Service '%s' not found in the container.", $id),
-            code: 500,
+            code: 404,
             context: ['id' => $id]
         );
     }
@@ -146,7 +146,7 @@ class Container implements ContainerInterface
             throw new ContainerException(
                 title: "Class Not Found",
                 message: sprintf("Class '%s' does not exist.", $class),
-                code: 500,
+                code: 404,
                 context: ['class' => $class]
             );
         }
@@ -157,7 +157,7 @@ class Container implements ContainerInterface
             throw new ContainerException(
                 title: "Class Not Instantiable",
                 message: sprintf("Class '%s' cannot be instantiated.", $class),
-                code: 500,
+                code: 422,
                 context: ['class' => $class]
             );
         }
@@ -280,7 +280,7 @@ class Container implements ContainerInterface
                 $param->getName(),
                 $declaringClass
             ),
-            code: 500,
+            code: 422,
             context: [
                 'parameter' => $param->getName(),
                 'class' => $declaringClass,
