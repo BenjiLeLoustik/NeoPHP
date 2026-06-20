@@ -519,10 +519,58 @@ declare(strict_types=1);
 // ./src/$name/Config/api.config.php
 
 return [
-    // 'stripe' => [
-    //     'key'    => '',
-    //     'secret' => '',
-    // ],
+    'mailer' => [
+        'enabled' => false,
+
+        'default' => 'smtp',
+
+        'drivers' => [
+            'smtp' => [
+                'host'       => '',
+                'port'       => 587,
+                'encryption' => 'tls',
+                'username'   => '',
+                'password'   => '',
+            ],
+        ],
+
+        'from' => [
+            'address' => '',
+            'name'    => '',
+        ],
+    ],
+    
+    'slack' => [
+        'enabled'     => false,
+        'webhook_url' => '',
+        'default'     => [
+            'channel'  => '',
+            'username' => '',
+            'icon'     => '',
+        ],
+    ],
+    
+    'sms' => [
+        'enabled' => false,
+
+        'default' => 'log',
+
+        'drivers' => [
+            'vonage' => [
+                'api_key'    => '',
+                'api_secret' => '',
+                'from'       => '',
+            ],
+            'twilio' => [
+                'account_sid' => '',
+                'auth_token'  => '',
+                'from'        => '',
+            ],
+            'log' => [],
+        ],
+    ],
+    
+    // Add more API keys
 ];
 PHP;
 
