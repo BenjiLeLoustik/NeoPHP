@@ -72,8 +72,9 @@ class TestScanner
                 } elseif ($entry['type'] === 'method') {
                     if ($test->skip) continue;
 
-                    /** @var ReflectionMethod $refMethod */
+                    /** @var array{reflection: ReflectionMethod} $entry */
                     $refMethod = $entry['reflection'];
+
                     $methodCtxs[] = new TestMethodContext(
                         name: $refMethod->getName(),
                         cases: $test->cases,

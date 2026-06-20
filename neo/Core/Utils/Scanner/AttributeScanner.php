@@ -23,6 +23,7 @@ final class AttributeScanner
     private int $methodFlags = ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_PROTECTED | ReflectionMethod::IS_PRIVATE;
     private int $propertyFlags = ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED | ReflectionProperty::IS_PRIVATE;
 
+    /** @var ReflectionClass<object> */
     private ReflectionClass $reflection;
 
     /**
@@ -80,7 +81,7 @@ final class AttributeScanner
     }
 
     /**
-     * @return list<array{target: string, attribute: object, arguments: array<mixed>, type: string}>
+     * @return list<array{target: string, attribute: object, arguments: array<mixed>, type: string, reflection: ReflectionClass<object>|ReflectionMethod|ReflectionProperty|ReflectionParameter}>
      */
     public function scan(): array
     {
@@ -124,7 +125,7 @@ final class AttributeScanner
      * @param ReflectionClass<object>|ReflectionMethod|ReflectionProperty|ReflectionParameter $reflector
      * @param 'class'|'method'|'property'|'parameter' $type
      * @param string $targetLabel
-     * @return list<array{target: string, attribute: object, arguments: array, type: string}>
+     * @return list<array{target: string, attribute: object, arguments: array<mixed>, type: string, reflection: ReflectionClass<object>|ReflectionMethod|ReflectionProperty|ReflectionParameter}>
      */
     private function scanTarget(
         ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionParameter $reflector,
