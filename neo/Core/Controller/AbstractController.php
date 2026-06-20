@@ -3,28 +3,40 @@ declare(strict_types=1);
 
 namespace Neo\Core\Controller;
 
+use Closure;
 use Neo\Core\Controller\Exception\AbstractControllerException;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
+use Neo\Core\Event\EventControllerExtension;
+use Neo\Core\Extension\ExtensionControllerExtension;
+use Neo\Core\Http\HttpControllerExtension;
+use Neo\Core\Routing\RouterControllerExtension;
+use Neo\Core\Security\Auth\AuthControllerExtension;
+use Neo\Core\Security\Middleware\MiddlewareControllerExtension;
+use Neo\Core\Utils\Cache\CacheControllerExtension;
+use Neo\Core\Utils\Config\ConfigControllerExtension;
+use Neo\Core\Utils\Logger\LoggerControllerExtension;
+use Neo\Core\Utils\Notification\NotificationControllerExtension;
+use Neo\Core\View\ViewControllerExtension;
 
 /**
- * @mixin \Neo\Core\Event\EventControllerExtension
- * @mixin \Neo\Core\Extension\ExtensionControllerExtension
- * @mixin \Neo\Core\Http\HttpControllerExtension
- * @mixin \Neo\Core\Routing\RouterControllerExtension
- * @mixin \Neo\Core\Security\Auth\AuthControllerExtension
- * @mixin \Neo\Core\Security\Middleware\MiddlewareControllerExtension
- * @mixin \Neo\Core\Utils\Cache\CacheControllerExtension
- * @mixin \Neo\Core\Utils\Config\ConfigControllerExtension
- * @mixin \Neo\Core\Utils\Logger\LoggerControllerExtension
- * @mixin \Neo\Core\Utils\Mailer\MailerControllerExtension
- * @mixin \Neo\Core\View\ViewControllerExtension
+ * @mixin EventControllerExtension
+ * @mixin ExtensionControllerExtension
+ * @mixin HttpControllerExtension
+ * @mixin RouterControllerExtension
+ * @mixin AuthControllerExtension
+ * @mixin MiddlewareControllerExtension
+ * @mixin CacheControllerExtension
+ * @mixin ConfigControllerExtension
+ * @mixin LoggerControllerExtension
+ * @mixin NotificationControllerExtension
+ * @mixin ViewControllerExtension
  */
 abstract class AbstractController
 {
     protected Container $container;
 
-    /** @var array<string, \Closure> */
+    /** @var array<string, Closure> */
     private array $methods = [];
 
     public function __construct(?Container $container = null)
@@ -36,7 +48,7 @@ abstract class AbstractController
         $this->discoverExtensions();
     }
 
-    public function registerMethod(string $name, \Closure $resolver): void
+    public function registerMethod(string $name, Closure $resolver): void
     {
         $this->methods[$name] = $resolver;
     }
