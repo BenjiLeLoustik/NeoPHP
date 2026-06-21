@@ -16,6 +16,6 @@ class ConsoleModule extends AbstractModule
 
     public function register(Container $container): void
     {
-        $container->set(ConsoleHandler::class, fn(Container $c) => new ConsoleHandler($c));
+        $container->set(ConsoleManager::class, fn(Container $c) => new ConsoleManager($c));
     }
 }

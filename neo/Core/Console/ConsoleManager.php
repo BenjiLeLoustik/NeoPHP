@@ -14,7 +14,7 @@ use RecursiveIteratorIterator;
 use ReflectionClass;
 use ReflectionException;
 
-class ConsoleHandler
+class ConsoleManager
 {
     /** @var array<string, array{instance: AbstractCommand, description: string, category: string}> */
     private array $commands = [];
