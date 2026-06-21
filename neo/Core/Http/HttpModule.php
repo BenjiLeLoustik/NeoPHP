@@ -6,7 +6,7 @@ namespace Neo\Core\Http;
 use Neo\Core\DI\Container;
 use Neo\Core\Http\File\Uploader;
 use Neo\Core\Http\Response\Response;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Utils\Config\ConfigModule;
 
 class HttpModule extends AbstractModule

@@ -7,7 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\ClientModule;
 use Neo\Core\Http\HttpModule;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Auth\PasswordManager;
 use Neo\Core\Security\Csrf\CsrfTokenManager;

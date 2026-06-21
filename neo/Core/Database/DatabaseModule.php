@@ -3,10 +3,9 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database;
 
-use Neo\Core\Database\Form\FormExtension;
 use Neo\Core\Database\Form\FormViewExtension;
 use Neo\Core\DI\Container;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Translation\TranslationManager;
 use Neo\Core\Translation\TranslationModule;
 use Neo\Core\Utils\Config\ConfigModule;

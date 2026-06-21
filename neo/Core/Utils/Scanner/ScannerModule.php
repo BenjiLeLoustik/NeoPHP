@@ -4,7 +4,7 @@ namespace Neo\Core\Utils\Scanner;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 
 class ScannerModule extends AbstractModule
 {

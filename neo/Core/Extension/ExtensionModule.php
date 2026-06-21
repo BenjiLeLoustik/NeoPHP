@@ -13,7 +13,7 @@ use Neo\Core\Extension\Number\NumberExtension;
 use Neo\Core\Extension\Path\PathExtension;
 use Neo\Core\Extension\String\StringExtension;
 use Neo\Core\Extension\Url\UrlExtension;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\View\ViewModule;
 
 class ExtensionModule extends AbstractModule

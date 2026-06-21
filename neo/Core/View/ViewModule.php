@@ -5,7 +5,7 @@ namespace Neo\Core\View;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Utils\Config\ConfigModule;
 
 class ViewModule extends AbstractModule

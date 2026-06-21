@@ -5,11 +5,11 @@ namespace Neo\Core\Profiler;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\EventDispatcher;
 use Neo\Core\Event\EventModule;
-use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Http\HttpModule;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Profiler\Collector\CollectorInterface;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Routing\RouterModule;

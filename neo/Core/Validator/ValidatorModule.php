@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Validator;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 
 class ValidatorModule extends AbstractModule
 {
