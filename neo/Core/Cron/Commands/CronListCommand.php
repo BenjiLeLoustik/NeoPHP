@@ -9,7 +9,7 @@ use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
-use Neo\Core\Cron\CronScanner;
+use Neo\Core\Cron\Scanner\CronScanner;
 use Neo\Core\DI\Container;
 
 #[Command(
