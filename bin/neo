@@ -4,7 +4,7 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Neo\App;
-use Neo\Core\Console\ConsoleHandler;
+use Neo\Core\Console\ConsoleManager;
 use Neo\Core\DI\Container;
 
 define('ROOT_DIR', dirname(__DIR__) . '/');
@@ -36,5 +36,5 @@ if ($project !== null) {
     $container->set('srcPath',  $basePath . '/src');
 }
 
-$console = new ConsoleHandler($container);
+$console = new ConsoleManager($container);
 $console->run($argv);
