@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Routing;
+namespace Neo\Core\Routing\Collection;
 
 class RouteCollection
 {
