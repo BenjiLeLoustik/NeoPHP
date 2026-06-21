@@ -7,9 +7,9 @@ define('NEO_START_MEMORY', memory_get_usage(true));
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Neo\App;
-use Neo\Core\Error\ErrorHandler;
+use Neo\Core\Error\ErrorManager;
 
-ErrorHandler::registerBootstrap();
+ErrorManager::registerBootstrap();
 
 $app = new App();
 $response = $app->run();

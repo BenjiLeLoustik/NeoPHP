@@ -14,7 +14,7 @@ use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Logger\Logger;
 use Neo\Core\View\View;
 
-class ErrorHandler
+class ErrorManager
 {
     private Container $container;
     private ?string $resolvedEnv = null;

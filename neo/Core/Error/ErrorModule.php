@@ -22,12 +22,12 @@ class ErrorModule extends AbstractModule
 
     public function register(Container $container): void
     {
-        $container->set(ErrorHandler::class, fn(Container $c) => new ErrorHandler($c));
+        $container->set(ErrorManager::class, fn(Container $c) => new ErrorManager($c));
     }
 
     protected function resolveDependencies(): void
     {
-        $errorHandler = $this->get(ErrorHandler::class);
+        $errorHandler = $this->get(ErrorManager::class);
 
         if (empty($GLOBALS['_NEO_TEST_PROJECT'])) {
             $errorHandler->register();
