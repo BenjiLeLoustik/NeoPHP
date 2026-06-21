@@ -17,6 +17,7 @@ use Neo\Core\Utils\Cache\CacheControllerExtension;
 use Neo\Core\Utils\Config\ConfigControllerExtension;
 use Neo\Core\Utils\Logger\LoggerControllerExtension;
 use Neo\Core\Utils\Notification\NotificationControllerExtension;
+use Neo\Core\Utils\Scanner\ScannerControllerExtension;
 use Neo\Core\View\ViewControllerExtension;
 
 /**
@@ -31,6 +32,7 @@ use Neo\Core\View\ViewControllerExtension;
  * @mixin LoggerControllerExtension
  * @mixin NotificationControllerExtension
  * @mixin ViewControllerExtension
+ * @mixin ScannerControllerExtension
  */
 abstract class AbstractController
 {
