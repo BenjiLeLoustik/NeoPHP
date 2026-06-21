@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Security\Auth;
 
-use Neo\Core\Profiler\Collector\CollectorInterface;
+use Neo\Core\Profiler\Interface\CollectorInterface;
 
 class AuthCollector implements CollectorInterface
 {

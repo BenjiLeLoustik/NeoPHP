@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Routing;
 
-use Neo\Core\Profiler\Collector\CollectorInterface;
+use Neo\Core\Profiler\Interface\CollectorInterface;
 
 class RouterCollector implements CollectorInterface
 {

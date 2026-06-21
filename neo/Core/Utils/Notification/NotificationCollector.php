@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Utils\Notification;
 
-use Neo\Core\Profiler\Collector\CollectorInterface;
+use Neo\Core\Profiler\Interface\CollectorInterface;
 
 class NotificationCollector implements CollectorInterface
 {
