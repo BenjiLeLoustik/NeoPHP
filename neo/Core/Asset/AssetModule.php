@@ -22,10 +22,10 @@ class AssetModule extends AbstractModule
 
     public function register(Container $container): void
     {
-        $container->set(AssetHandler::class, fn (Container $c) => new AssetHandler($c));
+        $container->set(AssetManager::class, fn (Container $c) => new AssetManager($c));
 
         $container->set(AssetViewExtension::class, fn(Container $c) =>
-            new AssetViewExtension($c->get(AssetHandler::class))
+            new AssetViewExtension($c->get(AssetManager::class))
         );
 
         $container->tag(AssetViewExtension::class, 'twig.extension');
@@ -33,6 +33,6 @@ class AssetModule extends AbstractModule
 
     protected function resolveDependencies(): void
     {
-        $this->get(AssetHandler::class);
+        $this->get(AssetManager::class);
     }
 }

@@ -7,7 +7,7 @@ use Neo\Core\View\Interface\TwigExtensionInterface;
 
 final readonly class AssetViewExtension implements TwigExtensionInterface
 {
-    public function __construct(private AssetHandler $handler) {}
+    public function __construct(private AssetManager $handler) {}
 
     /**
      * @return array<string, array{callable: \Closure, options: array<string, mixed>}>
