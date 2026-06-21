@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Event\Abstract;
 
-use Neo\Core\Event\Contract\EventInterface;
+use Neo\Core\Event\Interface\EventInterface;
 
 abstract class AbstractEvent implements EventInterface
 {
