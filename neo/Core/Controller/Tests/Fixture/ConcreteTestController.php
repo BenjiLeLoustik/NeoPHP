@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Controller\Tests;
+namespace Neo\Core\Controller\Tests\Fixture;
 
 use Neo\Core\Controller\AbstractController;
 
