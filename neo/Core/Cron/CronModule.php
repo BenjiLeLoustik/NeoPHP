@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Neo\Core\Cron;
 
+use Neo\Core\Cron\Runner\CronRunner;
+use Neo\Core\Cron\Scanner\CronScanner;
 use Neo\Core\DI\Container;
 use Neo\Core\Module\AbstractModule;
 use Neo\Core\Utils\Logger\LoggerModule;

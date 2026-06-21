@@ -1,6 +1,6 @@
 <?php
 
-namespace Neo\Core\Cron;
+namespace Neo\Core\Cron\Runner;
 
 use DateTime;
 use DateTimeZone;

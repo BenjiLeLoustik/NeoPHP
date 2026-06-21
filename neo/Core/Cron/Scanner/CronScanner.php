@@ -1,6 +1,6 @@
 <?php
 
-namespace Neo\Core\Cron;
+namespace Neo\Core\Cron\Scanner;
 
 use Neo\Core\Cron\Attribute\Cron;
 use Neo\Core\Utils\Scanner\AttributeScanner;
