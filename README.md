@@ -1340,7 +1340,7 @@ declare(strict_types=1);
 
 namespace Neo\Src\Blog\App\Event;
 
-use Neo\Core\Event\AbstractEvent;
+use Neo\Core\Event\Abstract\AbstractEvent;
 
 final class UserRegisteredEvent extends AbstractEvent
 {
