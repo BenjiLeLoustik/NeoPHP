@@ -7,6 +7,9 @@ use Neo\Core\Cron\Attribute\Cron;
 
 class ConcreteCronClass
 {
+    /**
+     * @var list<string>
+     */
     public array $calls = [];
 
     #[Cron(expression: '* * * * *', description: 'Runs every minute')]

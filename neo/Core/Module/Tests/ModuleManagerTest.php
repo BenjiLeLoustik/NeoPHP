@@ -24,12 +24,18 @@ class ModuleManagerTest extends TestCase
         ModuleCallLog::reset();
     }
 
+    /**
+     * @return array<int, class-string>
+     */
     private function getDiscoveredModules(ModuleManager $manager): array
     {
-        $ref = new ReflectionClass($manager);
+        $ref = new \ReflectionClass($manager);
         $prop = $ref->getProperty('modules');
 
-        return $prop->getValue($manager);
+        /** @var array<int, class-string> $value */
+        $value = $prop->getValue($manager);
+
+        return $value;
     }
 
     public function testDiscoverIgnoresAbstractAndUnrelatedClasses(): void

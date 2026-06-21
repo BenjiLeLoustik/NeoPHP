@@ -29,6 +29,9 @@ final class CronRunnerTest extends TestCase
         SecondJob::$called  = false;
     }
 
+    /**
+     * @return array<string, string|bool>
+     */
     private function alwaysDueJob(string $class, string $method, bool $lock = false): array
     {
         return [
@@ -40,6 +43,9 @@ final class CronRunnerTest extends TestCase
         ];
     }
 
+    /**
+     * @return array{expression: string, timezone: string, lock: bool, class: string, method: string}
+     */
     private function neverDueJob(string $class, string $method): array
     {
         return [
@@ -220,6 +226,9 @@ final class CronRunnerTest extends TestCase
         self::assertSame($expected, $result);
     }
 
+    /**
+     * @return array<string, array{string, int, bool}>
+     */
     public static function matchesPartProvider(): array
     {
         return [

@@ -84,7 +84,7 @@ final class FsTest extends TestCase
     public function testDeleteDirOnMissingDirectoryDoesNothing(): void
     {
         Fs::deleteDir($this->tmpDir . '/does-not-exist');
-        self::assertTrue(true);
+        $this->expectNotToPerformAssertions();
     }
 
     public function testEmptyDirRemovesContentsButKeepsTheDirectory(): void
