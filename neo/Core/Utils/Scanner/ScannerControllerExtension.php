@@ -9,7 +9,7 @@ use Neo\Core\DI\Container;
 /**
  * @method \Neo\Core\Utils\Scanner\AttributeScanner getScanner(string $classname)
  */
-enum ScannerControllerExtension implements ControllerExtensionInterface
+class ScannerControllerExtension implements ControllerExtensionInterface
 {
 
     public function extend(AbstractController $controller, Container $container): void
