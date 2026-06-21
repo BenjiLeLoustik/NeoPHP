@@ -10,7 +10,7 @@ use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Exception\JwtException;
-use Neo\Core\Security\Auth\Guard\GuardInterface;
+use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;
 use Neo\Core\Security\Auth\Guard\SessionGuard;
 use Neo\Core\Security\Auth\Guard\TokenGuard;
 use Neo\Core\Utils\Config\Config;

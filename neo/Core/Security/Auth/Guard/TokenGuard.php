@@ -9,6 +9,7 @@ use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Exception\JwtException;
+use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;
 use Neo\Core\Security\Auth\JwtManager;
 use Neo\Core\Security\Auth\PasswordManager;
 
