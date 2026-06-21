@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Utils\Config\Templates;
+namespace Neo\Core\Utils\Config\Templates\Interface;
 
 interface ConfigTemplateInterface
 {
