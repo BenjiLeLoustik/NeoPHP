@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace Neo\Core\Validator;
 
 use Neo\Core\Database\Form\Form;
+use Neo\Core\Validator\Abstract\AbstractConstraint;
 use Neo\Core\Validator\Assert\EqualToField;
 use Neo\Core\Validator\Assert\NotBlank;
 
-class Validator
+class ValidatorManager
 {
     /**
      * @return array<string, array<int, string>>
@@ -28,7 +29,7 @@ class Validator
 
             $constraints = [];
 
-            $attributes = $prop->getAttributes(Constraint::class, \ReflectionAttribute::IS_INSTANCEOF);
+            $attributes = $prop->getAttributes(AbstractConstraint::class, \ReflectionAttribute::IS_INSTANCEOF);
             foreach ($attributes as $attr) {
                 $constraints[] = $attr->newInstance();
             }
@@ -61,7 +62,7 @@ class Validator
     }
 
     /**
-     * @param array<int, Constraint> $constraints
+     * @param array<int, AbstractConstraint> $constraints
      * @param array<string, array<int, string>> $errors
      */
     private function runConstraints(

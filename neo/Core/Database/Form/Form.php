@@ -11,7 +11,7 @@ use Neo\Core\Database\Form\Type\SelectType;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Csrf\CsrfTokenManager;
-use Neo\Core\Validator\Validator;
+use Neo\Core\Validator\ValidatorManager;
 use Random\RandomException;
 
 class Form
@@ -319,7 +319,7 @@ class Form
                 $propData->setValue($this->data, $internalData);
             }
 
-            $validator = new Validator();
+            $validator = new ValidatorManager();
             $modelErrors = $validator->validate($this->data, $this);
 
             foreach ($this->fields as $field) {

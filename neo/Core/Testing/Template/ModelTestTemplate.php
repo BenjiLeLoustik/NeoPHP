@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Testing\Template;
 
 use Neo\Core\Testing\Context\TestClassContext;
-use Neo\Core\Validator\Constraint;
+use Neo\Core\Validator\Abstract\AbstractConstraint;
 use ReflectionClass;
 
 class ModelTestTemplate
@@ -56,7 +56,7 @@ PHP;
 PHP;
 
         foreach ($refClass->getProperties() as $prop) {
-            $constraints = $prop->getAttributes(Constraint::class, \ReflectionAttribute::IS_INSTANCEOF);
+            $constraints = $prop->getAttributes(AbstractConstraint::class, \ReflectionAttribute::IS_INSTANCEOF);
 
             if (empty($constraints)) continue;
 

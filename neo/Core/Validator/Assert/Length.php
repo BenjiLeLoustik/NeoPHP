@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace Neo\Core\Validator\Assert;
 
-use Neo\Core\Validator\Constraint;
+use Neo\Core\Validator\Abstract\AbstractConstraint;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class Length extends Constraint
+class Length extends AbstractConstraint
 {
     public function __construct(
         public ?int $min = null,
