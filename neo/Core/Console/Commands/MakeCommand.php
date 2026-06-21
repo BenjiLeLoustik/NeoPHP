@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console\Commands;
 
-use Neo\Core\Console\AbstractCommand;
+use Neo\Core\Console\Abstract\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Enum\ExitCode;
+use Neo\Core\Console\Helper\Fs;
 use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Input\InputArgument;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
-use Neo\Core\Console\Helper\Fs;
 
 #[Command(
     name: 'app:make:command',
@@ -109,11 +109,7 @@ declare(strict_types=1);
 
 namespace $namespace;
 
-use Neo\Core\Console\AbstractCommand;
-use Neo\Core\Console\Attribute\Command;
-use Neo\Core\Console\Enum\ExitCode;
-use Neo\Core\Console\Input\Input;
-use Neo\Core\Console\Output\Output;
+use Neo\Core\Console\Attribute\Command;use Neo\Core\Console\Enum\ExitCode;use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: '$cmdName',
