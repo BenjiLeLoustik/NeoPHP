@@ -1,6 +1,6 @@
 # NeoPHP
 
-Framework PHP 8.1+ centré sur :
+Framework PHP 8.5 centré sur :
 
 - un noyau applicatif dans `neo/`
 - une CLI interne dans `bin/neo`
