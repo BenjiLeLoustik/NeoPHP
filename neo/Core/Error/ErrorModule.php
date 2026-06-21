@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Error;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Config\ConfigModule;
 

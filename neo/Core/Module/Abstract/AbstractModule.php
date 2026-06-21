@@ -1,10 +1,10 @@
 <?php
 
-namespace Neo\Core\Module;
+namespace Neo\Core\Module\Abstract;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Module\Interface\ModuleInterface;
+use Neo\Core\Module\Interface;
 
 class AbstractModule implements Interface\ModuleInterface
 {

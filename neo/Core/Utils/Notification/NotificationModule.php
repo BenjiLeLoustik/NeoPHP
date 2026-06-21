@@ -5,7 +5,7 @@ namespace Neo\Core\Utils\Notification;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 
 class NotificationModule extends AbstractModule
 {

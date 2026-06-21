@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Event;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Module\AbstractModule;
+use Neo\Core\Module\Abstract\AbstractModule;
 
 class EventModule extends AbstractModule
 {
