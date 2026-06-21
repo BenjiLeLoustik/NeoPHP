@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Console;
+namespace Neo\Core\Console\Abstract;
 
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Enum\ExitCode;

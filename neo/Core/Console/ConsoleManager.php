@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console;
 
+use Neo\Core\Console\Abstract\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Input\Input;
