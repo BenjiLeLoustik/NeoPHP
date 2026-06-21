@@ -5,9 +5,12 @@ namespace Neo\Core\Translation;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\Cookie\Cookie;
+use Neo\Core\Translation\Exception\TranslationException;
 use Neo\Core\Translation\Interface\TranslationCollectorInterface;
 use Neo\Core\Translation\Interface\TranslatorInterface;
-use Neo\Core\Translation\Exception\TranslationException;
+use Neo\Core\Translation\Loader\TranslationLoader;
+use Neo\Core\Translation\Locale\LocaleManager;
+use Neo\Core\Translation\Writer\TranslationWriter;
 use Neo\Core\Utils\Config\Config;
 
 class TranslationManager implements TranslatorInterface
