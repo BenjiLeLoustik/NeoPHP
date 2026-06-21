@@ -22,7 +22,7 @@ use ReflectionException;
 use ReflectionMethod;
 use Throwable;
 
-class MiddlewareHandler
+class MiddlewareManager
 {
     private Container $container;
 

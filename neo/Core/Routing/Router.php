@@ -14,7 +14,7 @@ use Neo\Core\Routing\Attribute\Route as RouteAttribute;
 use Neo\Core\Routing\Collection\RouteCollection;
 use Neo\Core\Routing\Exception\RouteNotFoundException;
 use Neo\Core\Routing\Exception\RouterException;
-use Neo\Core\Security\Middleware\MiddlewareHandler;
+use Neo\Core\Security\Middleware\MiddlewareManager;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Scanner\AttributeScanner;
 use ReflectionException;
@@ -258,7 +258,7 @@ class Router
                 $rc?->setMatchedRoute($routeInfo['controller'], $method, $params);
             }
 
-            $middlewareHandler = $this->container->get(MiddlewareHandler::class);
+            $middlewareHandler = $this->container->get(MiddlewareManager::class);
             $middlewareResponse = $middlewareHandler->run($routeInfo['controller'], $method);
 
             if ($middlewareResponse !== null) {
