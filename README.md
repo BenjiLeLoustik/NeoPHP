@@ -158,7 +158,7 @@ Cron/       -> Attribute/, Commands/, Exception/
 Database/   -> Builder/, Commands/, Exception/, Form/, Migration/, ORM/
 DI/         -> Exception/
 Error/      -> Exception/
-Event/      -> Attribute/, Commands/, Contract/, Event/, Exception/
+Event/      -> Attribute/, Commands/, Interface/, Event/, Exception/
 Extension/  -> Array/, Date/, File/, Html/, Json/, Number/, Path/, String/, Url/
 Http/       -> Client/, File/, Response/
 Module/     -> Exception/, Interface/

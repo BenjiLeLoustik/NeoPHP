@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Profiler;
 
-use Neo\Core\Event\Contract\EventSubscriberInterface;
+use Neo\Core\Event\Interface\EventSubscriberInterface;
 use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Http\Response\JsonResponse;
 use Neo\Core\Http\Response\RedirectResponse;

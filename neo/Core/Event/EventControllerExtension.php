@@ -6,10 +6,10 @@ namespace Neo\Core\Event;
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
-use Neo\Core\Event\Contract\EventInterface;
+use Neo\Core\Event\Interface\EventInterface;
 
 /**
- * @method \Neo\Core\Event\Contract\EventInterface dispatch(\Neo\Core\Event\Contract\EventInterface $event)
+ * @method \Neo\Core\Event\Interface\EventInterface dispatch(\Neo\Core\Event\Interface\EventInterface $event)
  */
 class EventControllerExtension implements ControllerExtensionInterface
 {
