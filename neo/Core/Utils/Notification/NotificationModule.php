@@ -14,7 +14,6 @@ class NotificationModule extends AbstractModule
 {
     public function dependencies(): array
     {
-        // On s'assure que le module de Config est chargé
         return [];
     }
 
