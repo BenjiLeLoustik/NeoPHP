@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Security\Auth\Guard;
+namespace Neo\Core\Security\Auth\Guard\Interface;
 
 use Neo\Core\Database\ORM\Model\AbstractModel;
 
