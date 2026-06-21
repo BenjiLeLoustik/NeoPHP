@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Event;
+namespace Neo\Core\Event\Abstract;
 
 use Neo\Core\Event\Contract\EventInterface;
 

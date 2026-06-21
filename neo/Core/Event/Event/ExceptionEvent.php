@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Neo\Core\Event\Event;
 
-use Neo\Core\Event\AbstractEvent;
 use Neo\Core\Error\Exception\FrameworkException;
+use Neo\Core\Event\Abstract\AbstractEvent;
 
 class ExceptionEvent extends AbstractEvent
 {
