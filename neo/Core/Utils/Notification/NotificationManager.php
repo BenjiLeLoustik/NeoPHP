@@ -12,7 +12,7 @@ use Neo\Core\Utils\Notification\Channel\ChannelInterface;
 use Neo\Core\Utils\Notification\Enum\NotificationEnum;
 use Neo\Core\Utils\Notification\Exception\ChannelException;
 use Neo\Core\Utils\Notification\Exception\NotificationException;
-use Neo\Core\View\View;
+use Neo\Core\View\ViewManager;
 
 /**
  * Notification builder.
@@ -189,8 +189,8 @@ class NotificationManager
             return '';
         }
 
-        /** @var View $view */
-        $view = $this->container->get(View::class);
+        /** @var ViewManager $view */
+        $view = $this->container->get(ViewManager::class);
 
         try {
             return $view->render($this->template, $this->templateVars);

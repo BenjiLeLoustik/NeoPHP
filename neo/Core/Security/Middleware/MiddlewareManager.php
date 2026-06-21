@@ -17,7 +17,7 @@ use Neo\Core\Security\Middleware\Default\RateLimitMiddleware;
 use Neo\Core\Security\Middleware\Exception\MiddlewareException;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
 use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
-use Neo\Core\View\View;
+use Neo\Core\View\ViewManager;
 use ReflectionException;
 use ReflectionMethod;
 use Throwable;
@@ -315,7 +315,7 @@ class MiddlewareManager
             return null;
         }
 
-        $view = $this->container->get(View::class);
+        $view = $this->container->get(ViewManager::class);
         $response = $this->container->get(Response::class);
 
         $rendered = $view->renderIfExists('maintenance.html.twig', [

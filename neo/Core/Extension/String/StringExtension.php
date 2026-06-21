@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Extension\String;
 
 use Neo\Core\DI\Container;
-use Neo\Core\View\View;
+use Neo\Core\View\ViewManager;
 
 class StringExtension
 {
