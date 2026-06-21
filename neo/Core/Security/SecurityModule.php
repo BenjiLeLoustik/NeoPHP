@@ -11,7 +11,7 @@ use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Auth\PasswordManager;
 use Neo\Core\Security\Csrf\CsrfTokenManager;
-use Neo\Core\Security\Middleware\MiddlewareHandler;
+use Neo\Core\Security\Middleware\MiddlewareManager;
 use Neo\Core\Utils\Config\ConfigModule;
 use Neo\Core\View\ViewModule;
 
@@ -32,7 +32,7 @@ class SecurityModule extends AbstractModule
         $container->set(PasswordManager::class, fn() => new PasswordManager());
         $container->set(CsrfTokenManager::class, fn() => new CsrfTokenManager());
         $container->set(AuthManager::class, fn(Container $c) => new AuthManager($c));
-        $container->set(MiddlewareHandler::class, fn(Container $c) => new MiddlewareHandler($c));
+        $container->set(MiddlewareManager::class, fn(Container $c) => new MiddlewareManager($c));
 
         $container->set(SecurityViewExtension::class, fn(Container $container) => new SecurityViewExtension(
             $container->get(AuthManager::class),
@@ -51,6 +51,6 @@ class SecurityModule extends AbstractModule
         $auth = $this->get(AuthManager::class);
         $csrf = $this->get(CsrfTokenManager::class);
 
-        $this->get(MiddlewareHandler::class);
+        $this->get(MiddlewareManager::class);
     }
 }

@@ -8,12 +8,12 @@ use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
 
 /**
- * @method \Neo\Core\Security\Middleware\MiddlewareHandler getMiddleware()
+ * @method \Neo\Core\Security\Middleware\MiddlewareManager getMiddleware()
  */
 class MiddlewareControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        $controller->registerMethod('getMiddleware', fn() => $container->get(MiddlewareHandler::class));
+        $controller->registerMethod('getMiddleware', fn() => $container->get(MiddlewareManager::class));
     }
 }
