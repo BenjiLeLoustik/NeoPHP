@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Controller\Tests;
 
 use Neo\Core\Controller\Exception\AbstractControllerException;
+use Neo\Core\Controller\Tests\Fixture\ConcreteTestController;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
