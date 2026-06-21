@@ -9,6 +9,7 @@ use Neo\Core\Profiler\Profiler;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Config\Exception\ConfigException;
 use Neo\Core\Utils\Notification\Channel\ChannelInterface;
+use Neo\Core\Utils\Notification\Enum\NotificationEnum;
 use Neo\Core\Utils\Notification\Exception\ChannelException;
 use Neo\Core\Utils\Notification\Exception\NotificationException;
 use Neo\Core\View\View;

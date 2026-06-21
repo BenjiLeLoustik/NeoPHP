@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Neo\Core\Utils\Notification\Channel;
 
+use Neo\Core\Utils\Notification\Enum\NotificationEnum;
 use Neo\Core\Utils\Notification\Exception\ChannelException;
-use Neo\Core\Utils\Notification\NotificationEnum;
 
 interface ChannelInterface
 {
