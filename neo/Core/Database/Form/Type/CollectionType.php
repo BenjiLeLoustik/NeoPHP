@@ -5,7 +5,7 @@ namespace Neo\Core\Database\Form\Type;
 
 use Neo\Core\Database\Form\FormField;
 use Neo\Core\Database\ORM\Model\AbstractModel;
-use Neo\Core\Validator\Validator;
+use Neo\Core\Validator\ValidatorManager;
 
 class CollectionType extends AbstractType
 {
@@ -196,7 +196,7 @@ class CollectionType extends AbstractType
     /**
      * @return array<string, array<int, string>>
      */
-    public function validateEntries(FormField $field, Validator $validator): array
+    public function validateEntries(FormField $field, ValidatorManager $validator): array
     {
         $entries = $field->getValue() ?? [];
         $name = $field->getName();

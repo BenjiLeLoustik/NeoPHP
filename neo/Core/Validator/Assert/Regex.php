@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace Neo\Core\Validator\Assert;
 
-use Neo\Core\Validator\Constraint;
+use Neo\Core\Validator\Abstract\AbstractConstraint;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class Regex extends Constraint
+class Regex extends AbstractConstraint
 {
     public function __construct(
         public string $pattern,

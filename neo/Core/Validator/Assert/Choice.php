@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace Neo\Core\Validator\Assert;
 
-use Neo\Core\Validator\Constraint;
+use Neo\Core\Validator\Abstract\AbstractConstraint;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class Choice extends Constraint
+class Choice extends AbstractConstraint
 {
     public function __construct(
         /** @var array<int|string, mixed> */

@@ -15,6 +15,6 @@ class ValidatorModule extends AbstractModule
 
     public function register(Container $container): void
     {
-        $container->set(Validator::class, fn() => new Validator());
+        $container->set(ValidatorManager::class, fn() => new ValidatorManager());
     }
 }

@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace Neo\Core\Validator\Assert;
 
-use Neo\Core\Validator\Constraint;
 use Neo\Core\Database\DatabaseConnection;
+use Neo\Core\Validator\Abstract\AbstractConstraint;
 use ReflectionClass;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class Unique extends Constraint
+class Unique extends AbstractConstraint
 {
     private ?string $table;
 
