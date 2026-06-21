@@ -12,7 +12,7 @@ use Neo\Core\Utils\Config\Config;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
-class AssetHandler
+class AssetManager
 {
     private Container $container;
     private string $sourcePath;
