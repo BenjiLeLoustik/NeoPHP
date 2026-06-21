@@ -7,7 +7,7 @@ use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\ORM;
 use Neo\Core\DI\Container;
 use Neo\Core\Utils\Config\Config;
-use Neo\Core\View\View;
+use Neo\Core\View\ViewManager;
 use PDO;
 use PDOException;
 use Psr\Container\ContainerExceptionInterface;

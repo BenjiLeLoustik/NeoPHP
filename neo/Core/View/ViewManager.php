@@ -18,7 +18,7 @@ use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
-class View
+class ViewManager
 {
     protected Container $container;
     private Environment $twig;

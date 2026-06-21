@@ -12,7 +12,7 @@ use Neo\Core\Profiler\Profiler;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Logger\Logger;
-use Neo\Core\View\View;
+use Neo\Core\View\ViewManager;
 
 class ErrorManager
 {
@@ -125,9 +125,9 @@ class ErrorManager
             http_response_code($code);
         }
 
-        if (file_exists($viewFile) && $this->container->has(View::class)) {
+        if (file_exists($viewFile) && $this->container->has(ViewManager::class)) {
             try {
-                $view = $this->container->get(View::class);
+                $view = $this->container->get(ViewManager::class);
                 $html = $view->render("errors/{$code}.html.twig", [
                     'title'   => $exception->getTitle(),
                     'message' => $env === 'dev'

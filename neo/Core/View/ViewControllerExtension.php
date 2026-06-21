@@ -22,7 +22,7 @@ class ViewControllerExtension implements ControllerExtensionInterface
             string $template,
             array $params = []
         ) use ($container) {
-            $view = $container->get(View::class);
+            $view = $container->get(ViewManager::class);
             $response = $container->get(Response::class);
 
             $app = array_merge(
@@ -44,7 +44,7 @@ class ViewControllerExtension implements ControllerExtensionInterface
             string $template,
             array $params = []
         ) use ($container) {
-            return $container->get(View::class)->render($template, $params);
+            return $container->get(ViewManager::class)->render($template, $params);
         });
     }
 }

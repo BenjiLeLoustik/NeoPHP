@@ -19,7 +19,7 @@ class ViewModule extends AbstractModule
 
     public function register(Container $container): void
     {
-        $container->set(View::class, fn(Container $c) => new View($c));
+        $container->set(ViewManager::class, fn(Container $c) => new ViewManager($c));
     }
 
     /**
@@ -27,7 +27,7 @@ class ViewModule extends AbstractModule
      */
     protected function resolveDependencies(): void
     {
-        $view = $this->get(View::class);
+        $view = $this->get(ViewManager::class);
 
         foreach ($this->container->tagged('twig.extension') as $extension) {
             $view->addExtension($extension);
