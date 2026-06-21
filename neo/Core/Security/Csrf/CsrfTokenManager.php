@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Security\Csrf;
 
+use Neo\Core\Security\Csrf\Token\CsrfToken;
 use Random\RandomException;
 
 class CsrfTokenManager
