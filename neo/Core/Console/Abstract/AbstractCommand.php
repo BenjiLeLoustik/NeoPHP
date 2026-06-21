@@ -10,7 +10,7 @@ use Neo\Core\Console\Input\InputArgument;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Interface\CommandInterface;
 use Neo\Core\Console\Output\Output;
-use Neo\Core\Utils\Scanner\AttributeScanner;
+use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
 
 abstract class AbstractCommand implements CommandInterface
 {
@@ -112,7 +112,7 @@ abstract class AbstractCommand implements CommandInterface
 
     private function getCommandAttribute(): ?Command
     {
-        $results = new AttributeScanner(static::class)
+        $results = new ScannerAttribute(static::class)
             ->onClass()
             ->withAttribute(Command::class)
             ->scan();

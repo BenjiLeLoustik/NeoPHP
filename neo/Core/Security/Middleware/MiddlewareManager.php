@@ -16,7 +16,7 @@ use Neo\Core\Security\Middleware\Attribute\Middleware as MiddlewareAttribute;
 use Neo\Core\Security\Middleware\Default\RateLimitMiddleware;
 use Neo\Core\Security\Middleware\Exception\MiddlewareException;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
-use Neo\Core\Utils\Scanner\AttributeScanner;
+use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
 use Neo\Core\View\View;
 use ReflectionException;
 use ReflectionMethod;
@@ -159,7 +159,7 @@ class MiddlewareManager
     {
         $all = [];
 
-        $classResults = new AttributeScanner($controller)
+        $classResults = new ScannerAttribute($controller)
             ->onClass()
             ->scan();
 
@@ -181,7 +181,7 @@ class MiddlewareManager
         }
 
         if ($method) {
-            $methodResults = new AttributeScanner($controller)
+            $methodResults = new ScannerAttribute($controller)
                 ->onMethods(ReflectionMethod::IS_PUBLIC)
                 ->scan();
 
@@ -284,7 +284,7 @@ class MiddlewareManager
         $maintenance = null;
 
         if ($method) {
-            $methodResults = new AttributeScanner($controller)
+            $methodResults = new ScannerAttribute($controller)
                 ->onMethods(ReflectionMethod::IS_PUBLIC)
                 ->withAttribute(Maintenance::class)
                 ->scan();
@@ -301,7 +301,7 @@ class MiddlewareManager
         }
 
         if ($maintenance === null) {
-            $classResults = new AttributeScanner($controller)
+            $classResults = new ScannerAttribute($controller)
                 ->onClass()
                 ->withAttribute(Maintenance::class)
                 ->scan();
