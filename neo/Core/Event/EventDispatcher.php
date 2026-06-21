@@ -6,12 +6,12 @@ namespace Neo\Core\Event;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\Attribute\AsListener;
+use Neo\Core\Event\Exception\EventException;
 use Neo\Core\Event\Interface\EventInterface;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
-use Neo\Core\Event\Exception\EventException;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Utils\Config\Config;
-use Neo\Core\Utils\Scanner\AttributeScanner;
+use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
 
 class EventDispatcher
 {
@@ -89,7 +89,7 @@ class EventDispatcher
 
             if (!class_exists($fqcn)) continue;
 
-            $results = new AttributeScanner($fqcn)
+            $results = new ScannerAttribute($fqcn)
                 ->onClass()
                 ->withAttribute(AsListener::class)
                 ->scan();

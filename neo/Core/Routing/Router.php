@@ -16,7 +16,7 @@ use Neo\Core\Routing\Exception\RouteNotFoundException;
 use Neo\Core\Routing\Exception\RouterException;
 use Neo\Core\Security\Middleware\MiddlewareManager;
 use Neo\Core\Utils\Config\Config;
-use Neo\Core\Utils\Scanner\AttributeScanner;
+use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
 use ReflectionException;
 use ReflectionMethod;
 use Throwable;
@@ -116,7 +116,7 @@ class Router
                 if (!class_exists($fqcn)) continue;
             }
 
-            $results = new AttributeScanner($fqcn)
+            $results = new ScannerAttribute($fqcn)
                 ->onClass()
                 ->onMethods(ReflectionMethod::IS_PUBLIC)
                 ->scan();

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Utils\Scanner;
+namespace Neo\Core\Utils\Scanner\Attribute;
 
 use ReflectionAttribute;
 use ReflectionClass;
@@ -10,7 +10,7 @@ use ReflectionMethod;
 use ReflectionParameter;
 use ReflectionProperty;
 
-final class AttributeScanner
+final class ScannerAttribute
 {
     private bool $scanClass = false;
     private bool $scanMethods = false;
@@ -34,7 +34,7 @@ final class AttributeScanner
         $this->reflection = new ReflectionClass($className);
     }
 
-    public function onClass(): AttributeScanner
+    public function onClass(): ScannerAttribute
     {
         $this->scanClass = true;
         return $this;
@@ -54,13 +54,13 @@ final class AttributeScanner
         return $this;
     }
 
-    public function onParameters(): AttributeScanner
+    public function onParameters(): ScannerAttribute
     {
         $this->scanParameters = true;
         return $this;
     }
 
-    public function onAll(): AttributeScanner
+    public function onAll(): ScannerAttribute
     {
         return $this->onClass()
             ->onMethods()
@@ -68,13 +68,13 @@ final class AttributeScanner
             ->onParameters();
     }
 
-    public function withAttribute(string $attributeClass): AttributeScanner
+    public function withAttribute(string $attributeClass): ScannerAttribute
     {
         $this->attributeFilter = $attributeClass;
         return $this;
     }
 
-    public function withAllAttributes(): AttributeScanner
+    public function withAllAttributes(): ScannerAttribute
     {
         $this->attributeFilter = null;
         return $this;

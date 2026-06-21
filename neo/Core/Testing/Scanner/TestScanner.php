@@ -7,7 +7,7 @@ use Neo\Core\Testing\Attribute\Test;
 use Neo\Core\Testing\Context\TestClassContext;
 use Neo\Core\Testing\Context\TestMethodContext;
 use Neo\Core\Testing\Enum\TestType;
-use Neo\Core\Utils\Scanner\AttributeScanner;
+use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
 use ReflectionMethod;
 
 class TestScanner
@@ -54,7 +54,7 @@ class TestScanner
 
             if (!class_exists($fqcn)) continue;
 
-            $results = new AttributeScanner($fqcn)
+            $results = new ScannerAttribute($fqcn)
                 ->onClass()
                 ->onMethods(ReflectionMethod::IS_PUBLIC)
                 ->withAttribute(Test::class)
