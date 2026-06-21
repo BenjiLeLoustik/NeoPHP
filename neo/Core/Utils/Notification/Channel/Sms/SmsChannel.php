@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace Neo\Core\Utils\Notification\Channel\Sms;
 
 use Neo\Core\Utils\Notification\Channel\ChannelInterface;
-use Neo\Core\Utils\Notification\Exception\ChannelException;
-use Neo\Core\Utils\Notification\NotificationEnum;
 use Neo\Core\Utils\Notification\Channel\Sms\Driver\DriverInterface;
+use Neo\Core\Utils\Notification\Enum\NotificationEnum;
+use Neo\Core\Utils\Notification\Exception\ChannelException;
 
 class SmsChannel implements ChannelInterface
 {

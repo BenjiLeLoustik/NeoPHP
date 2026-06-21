@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Neo\Core\Utils\Notification\Channel\Slack;
 
 use Neo\Core\Utils\Notification\Channel\ChannelInterface;
+use Neo\Core\Utils\Notification\Enum\NotificationEnum;
 use Neo\Core\Utils\Notification\Exception\ChannelException;
-use Neo\Core\Utils\Notification\NotificationEnum;
 
 class SlackChannel implements ChannelInterface
 {
