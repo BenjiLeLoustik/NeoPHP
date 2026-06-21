@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Profiler;
+namespace Neo\Core\Profiler\Interface;
 
 use Neo\Core\DI\Container;
 

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Event;
 
-use Neo\Core\Profiler\Collector\CollectorInterface;
+use Neo\Core\Profiler\Interface\CollectorInterface;
 
 class EventCollector implements CollectorInterface
 {

@@ -5,8 +5,8 @@ namespace Neo\Core\Translation;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Profiler\Collector\CollectorInterface;
-use Neo\Core\Profiler\CollectorAwareInterface;
+use Neo\Core\Profiler\Interface\CollectorAwareInterface;
+use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Translation\Interface\TranslationCollectorInterface;
 
 class TranslationCollector implements CollectorInterface, TranslationCollectorInterface, CollectorAwareInterface
