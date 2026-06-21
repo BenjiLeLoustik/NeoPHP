@@ -1,8 +1,10 @@
 <?php
 
-namespace Neo\Core\Translation;
+namespace Neo\Core\Translation\Writer;
 
 use Neo\Core\Translation\Exception\TranslationException;
+use Neo\Core\Translation\Loader\TranslationLoader;
+use Neo\Core\Translation\TranslationRegistry;
 
 final class TranslationWriter
 {

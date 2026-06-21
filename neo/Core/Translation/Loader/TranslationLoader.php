@@ -1,8 +1,9 @@
 <?php
 
-namespace Neo\Core\Translation;
+namespace Neo\Core\Translation\Loader;
 
 use Neo\Core\Translation\Exception\TranslationException;
+use Neo\Core\Translation\TranslationRegistry;
 
 final class TranslationLoader
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Neo\Core\Translation;
+namespace Neo\Core\Translation\Locale;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
