@@ -5,7 +5,7 @@ namespace Neo\Core\Utils\Config;
 
 use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Output\Output;
-use Neo\Core\Utils\Config\Templates\ConfigTemplateInterface;
+use Neo\Core\Utils\Config\Templates\Interface\ConfigTemplateInterface;
 
 final class ConfigTemplateWriter
 {

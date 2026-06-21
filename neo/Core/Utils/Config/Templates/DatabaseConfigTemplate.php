@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Neo\Core\Utils\Config\Templates;
 
+use Neo\Core\Utils\Config\Templates\Interface\ConfigTemplateInterface;
+
 final class DatabaseConfigTemplate implements ConfigTemplateInterface
 {
     public function filename(): string
