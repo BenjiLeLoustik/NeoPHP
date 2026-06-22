@@ -38,7 +38,8 @@ fi
 
 while IFS= read -r -d '' config; do
     suite_dir="$(dirname "${config}")"
-    suite_name="$(basename "$(dirname "${suite_dir}")")"
+    suite_name="${suite_dir#${CORE_DIR}/}"
+    suite_name="${suite_name%/Tests}"
 
     TOTAL_SUITES=$((TOTAL_SUITES + 1))
     SUITE_NAMES+=("${suite_name}")
