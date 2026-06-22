@@ -96,8 +96,8 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git tag ${{ steps.version.outputs.VERSION }}
-          git push origin ${{ steps.version.outputs.VERSION }}
+          git tag ${{ steps.version.outputs.VERSION }} || true
+          git push origin ${{ steps.version.outputs.VERSION }} || true
 
       - name: Create GitHub Release
         if: ${{ steps.tag.outputs.TAG != steps.version.outputs.VERSION }}
