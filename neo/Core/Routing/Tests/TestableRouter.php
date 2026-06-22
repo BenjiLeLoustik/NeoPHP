@@ -22,6 +22,7 @@ final class TestableRouter extends Router
     }
 
     /**
+     * @param array<string, string> $requirements
      * @throws ReflectionException
      */
     public function exposeCompilePattern(string $route, array $requirements = []): string
