@@ -49,6 +49,11 @@ class TranslationLoaderTest extends TestCase
         rmdir($dir);
     }
 
+    /**
+     * @param string $locale
+     * @param string $file
+     * @param array<string, mixed> $content
+     */
     private function writeMessages(string $locale, string $file, array $content): void
     {
         $dir = $this->path . '/' . $locale;

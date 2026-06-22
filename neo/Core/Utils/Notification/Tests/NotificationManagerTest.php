@@ -5,6 +5,7 @@ namespace Neo\Core\Utils\Notification\Tests;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Utils\Notification\Channel\ChannelInterface;
 use Neo\Core\Utils\Notification\Exception\ChannelException;
 use Neo\Core\Utils\Notification\Exception\NotificationException;
 use Neo\Core\Utils\Notification\NotificationManager;
@@ -35,7 +36,7 @@ final class NotificationManagerTest extends TestCase
     public function testChannelThrowsForNonExistentClass(): void
     {
         try {
-            $this->manager->channel('NonExistent\\Channel');
+            $this->manager->channel($this->castToChannelClass('App\Invalid\MissingChannel'));
             self::fail('Expected NotificationException.');
         } catch (NotificationException $e) {
             self::assertStringContainsString('does not exist', $e->getMessage());
@@ -46,12 +47,22 @@ final class NotificationManagerTest extends TestCase
     public function testChannelThrowsForClassNotImplementingInterface(): void
     {
         try {
-            $this->manager->channel(\stdClass::class);
+            $this->manager->channel($this->castToChannelClass(\stdClass::class));
             self::fail('Expected NotificationException.');
         } catch (NotificationException $e) {
             self::assertStringContainsString('ChannelInterface', $e->getMessage());
         } catch (ContainerException $e) {
         }
+    }
+
+    /**
+     * @param string $className
+     * @return class-string<ChannelInterface>
+     */
+    private function castToChannelClass(string $className): string
+    {
+        /** @var class-string<ChannelInterface> */
+        return $className;
     }
 
     /**
