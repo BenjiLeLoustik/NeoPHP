@@ -47,6 +47,10 @@ class ConfigTest extends TestCase
         rmdir($dir);
     }
 
+    /**
+     * @param string $name
+     * @param array<string, mixed> $data
+     */
     private function writeConfig(string $name, array $data): void
     {
         file_put_contents(
@@ -55,6 +59,10 @@ class ConfigTest extends TestCase
         );
     }
 
+    /**
+     * @param string $name
+     * @param array<string, mixed> $data
+     */
     private function writeTestConfig(string $name, array $data): void
     {
         file_put_contents(

@@ -65,6 +65,10 @@ class LoggerTest extends TestCase
         return $container;
     }
 
+    /**
+     * @param array<string, mixed> $overrides
+     * @return array<string, mixed>
+     */
     private function defaultConfig(array $overrides = []): array
     {
         return array_replace_recursive([
