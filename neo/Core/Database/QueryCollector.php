@@ -24,12 +24,13 @@ class QueryCollector implements CollectorInterface
     /**
      * @param array<string, mixed> $params
      */
-    public function record(string $sql, array $params, float $duration): void
+    public function record(string $sql, array $params, float $duration, ?string $connection = null): void
     {
         $this->queries[] = [
             'sql' => $sql,
             'params' => $params,
             'duration' => round($duration, 3),
+            'connection' => $connection ?? DatabaseConnection::getDefaultName() ?? 'default',
         ];
     }
 
@@ -81,11 +82,13 @@ HTML;
             $sql = htmlspecialchars($q['sql']);
             $ms = htmlspecialchars((string) $q['duration']);
             $params = htmlspecialchars(json_encode($q['params'], JSON_UNESCAPED_UNICODE));
+            $conn = htmlspecialchars((string) ($q['connection'] ?? 'default'));
 
             $rows .= <<<HTML
 <tr>
     <td style="color:#52525b;width:28px">{$n}</td>
     <td class="n-sql">{$sql}</td>
+    <td class="n-conn">{$conn}</td>
     <td class="n-params">{$params}</td>
     <td class="n-ms">{$ms} ms</td>
 </tr>
@@ -95,7 +98,7 @@ HTML;
         return <<<HTML
 <table>
     <thead>
-        <tr><th>#</th><th>SQL</th><th>Params</th><th style="text-align:right">Time</th></tr>
+        <tr><th>#</th><th>SQL</th><th>Connection</th><th>Params</th><th style="text-align:right">Time</th></tr>
     </thead>
     <tbody>{$rows}</tbody>
 </table>
