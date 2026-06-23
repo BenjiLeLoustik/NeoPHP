@@ -47,8 +47,8 @@ class DatabaseConnection
         }
 
         $defaultName = $container->get(Config::class)->from('database')->get('use');
-        self::connectTo($defaultName);
         self::$defaultName = $defaultName;
+        self::connectTo($defaultName);
     }
 
     /**
