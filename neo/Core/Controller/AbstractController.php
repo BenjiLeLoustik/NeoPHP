@@ -7,6 +7,7 @@ use Closure;
 use Neo\Core\Controller\Exception\AbstractControllerException;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\Database\DatabaseControllerExtension;
+use Neo\Core\Database\ORM\EntityManager;
 use Neo\Core\DI\Container;
 use Neo\Core\Event\EventControllerExtension;
 use Neo\Core\Extension\ExtensionControllerExtension;
@@ -35,6 +36,8 @@ use Neo\Core\View\ViewControllerExtension;
  * @mixin ViewControllerExtension
  * @mixin ScannerControllerExtension
  * @mixin DatabaseControllerExtension
+ *
+ * @property-read EntityManager $entityManager
  */
 abstract class AbstractController
 {
@@ -42,6 +45,12 @@ abstract class AbstractController
 
     /** @var array<string, Closure> */
     private array $methods = [];
+
+    /** @var array<string, Closure> */
+    private array $propertyResolvers = [];
+
+    /** @var array<string, mixed> */
+    private array $propertyCache = [];
 
     public function __construct(?Container $container = null)
     {
@@ -57,6 +66,11 @@ abstract class AbstractController
         $this->methods[$name] = $resolver;
     }
 
+    public function registerProperty(string $name, Closure $resolver): void
+    {
+        $this->propertyResolvers[$name] = $resolver;
+    }
+
     /**
      * @param list<mixed> $arguments
      * @throws AbstractControllerException
@@ -70,6 +84,29 @@ abstract class AbstractController
         throw new AbstractControllerException(
             title: 'Controller Error',
             message: sprintf("Method '%s' is not registered on this controller.", $name),
+            code: 500
+        );
+    }
+
+    /**
+     * @throws AbstractControllerException
+     */
+    public function __get(string $name): mixed
+    {
+        if (array_key_exists($name, $this->propertyCache)) {
+            return $this->propertyCache[$name];
+        }
+
+        if (isset($this->propertyResolvers[$name])) {
+            return $this->propertyCache[$name] = ($this->propertyResolvers[$name])();
+        }
+
+        throw new AbstractControllerException(
+            title: 'Controller Error',
+            message: sprintf(
+                "Property '%s' is not registered on this controller.",
+                $name
+            ),
             code: 500
         );
     }
