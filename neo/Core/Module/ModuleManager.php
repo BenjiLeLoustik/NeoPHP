@@ -31,6 +31,10 @@ class ModuleManager
 
             $fqcn = $this->resolveFqcn($file->getRealPath());
 
+            if (str_contains($fqcn, '\\Tests\\') || str_contains($fqcn, '\\Fixture\\')) {
+                continue;
+            }
+
             if ($fqcn === null) {
                 continue;
             }
