@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database;
 
 use Neo\Core\Database\Form\FormViewExtension;
+use Neo\Core\Database\ORM\EntityManager;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\Abstract\AbstractModule;
@@ -30,6 +31,7 @@ class DatabaseModule extends AbstractModule
     {
         $container->set(DatabaseConnection::class, fn(Container $c) => new DatabaseConnection($c));
         $container->set(DatabaseManager::class, fn() => new DatabaseManager());
+        $container->set(EntityManager::class, fn(Container $c) => new EntityManager($c));
         $container->set(DatabaseViewExtension::class, fn() => new DatabaseViewExtension());
         $container->set(FormViewExtension::class, fn(Container $c) => new FormViewExtension($c->get(TranslationManager::class)));
         $container->tag(DatabaseViewExtension::class, 'twig.extension');
