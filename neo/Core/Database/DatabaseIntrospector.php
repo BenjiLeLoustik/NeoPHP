@@ -5,6 +5,7 @@ namespace Neo\Core\Database;
 
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use PDO;
 use PDOException;
@@ -13,12 +14,25 @@ class DatabaseIntrospector
 {
     private PDO $pdo;
 
+    private ?string $connection;
+
     /**
      * @throws DatabaseException
      */
-    public function __construct(Container $container)
+    public function __construct(Container $container, ?string $connection = null)
     {
-        $this->pdo = DatabaseConnection::getPdo();
+        $this->connection = $connection;
+        $this->pdo = DatabaseConnection::getPdo($this->connection);
+    }
+
+    /**
+     * @throws DatabaseException
+     * @throws ContainerException
+     */
+    public static function on(Container $container, string $connection): self
+    {
+        DatabaseConnection::connectTo($connection);
+        return new self($container, $connection);
     }
 
     /**
