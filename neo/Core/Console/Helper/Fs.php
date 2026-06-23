@@ -52,10 +52,17 @@ final class Fs
 
     public static function pascalCase(string $string): string
     {
-        $string = preg_replace('/[^a-zA-Z0-9]+/', ' ', $string);
-        $string = ucwords(strtolower(trim($string)));
+        $string = preg_replace('/(?<=[a-z0-9])(?=[A-Z])/', ' ', $string);
 
-        return str_replace(' ', '', $string);
+        $string = preg_replace('/[^a-zA-Z0-9]+/', ' ', $string);
+
+        $words = array_filter(explode(' ', trim($string)));
+        $words = array_map(
+            fn($word) => mb_strtoupper(mb_substr($word, 0, 1)) . mb_substr($word, 1),
+            $words
+        );
+
+        return implode('', $words);
     }
 
     public static function normalizeDir(string $dir): string
