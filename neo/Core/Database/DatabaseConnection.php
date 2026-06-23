@@ -123,7 +123,7 @@ class DatabaseConnection
     /**
      * @throws DatabaseException
      */
-    public static function getPdo(): PDO
+    public static function getPdo(?string $name = null): PDO
     {
         $name ??= self::$defaultName;
 
