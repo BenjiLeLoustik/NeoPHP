@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database;
 
 use Neo\Core\Database\Exception\DatabaseException;
-use Neo\Core\Error\Exception\FrameworkException;
+use Neo\Core\DI\Exception\ContainerException;
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -12,10 +12,30 @@ use PDOStatement;
 class DatabaseManager
 {
     private PDO $pdo;
+    private ?string $connection;
 
-    public function __construct()
+    /**
+     * @throws DatabaseException
+     */
+    public function __construct(?string $connection = null)
     {
-        $this->pdo = DatabaseConnection::getPdo();
+        $this->connection = $connection;
+        $this->pdo = DatabaseConnection::getPdo($connection);
+    }
+
+    /**
+     * @throws DatabaseException
+     * @throws ContainerException
+     */
+    public static function on(string $connection): self
+    {
+        DatabaseConnection::connectTo($connection);
+        return new self($connection);
+    }
+
+    public function getConnectionName(): ?string
+    {
+        return $this->connection ?? DatabaseConnection::getDefaultName();
     }
 
     /**
