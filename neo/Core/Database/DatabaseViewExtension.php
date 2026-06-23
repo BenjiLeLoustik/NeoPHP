@@ -17,6 +17,10 @@ final class DatabaseViewExtension implements TwigExtensionInterface
                 'callable' => fn() => DatabaseConnection::isConnected() ? 'On' : 'Off',
                 'options' => [],
             ],
+            'database_connections' => [
+                'callable' => fn() => DatabaseConnection::getConnectionNames(),
+                'options' => [],
+            ],
         ];
     }
 
