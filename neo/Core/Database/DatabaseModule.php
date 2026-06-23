@@ -5,6 +5,7 @@ namespace Neo\Core\Database;
 
 use Neo\Core\Database\Form\FormViewExtension;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Translation\TranslationManager;
 use Neo\Core\Translation\TranslationModule;
@@ -30,11 +31,14 @@ class DatabaseModule extends AbstractModule
         $container->set(DatabaseConnection::class, fn(Container $c) => new DatabaseConnection($c));
         $container->set(DatabaseManager::class, fn() => new DatabaseManager());
         $container->set(DatabaseViewExtension::class, fn() => new DatabaseViewExtension());
-        $container->set(FormViewExtension::class, fn(Container $c) => new FormViewExtension($c->get(TranslationManager::class))); // 👈 fix
+        $container->set(FormViewExtension::class, fn(Container $c) => new FormViewExtension($c->get(TranslationManager::class)));
         $container->tag(DatabaseViewExtension::class, 'twig.extension');
         $container->tag(FormViewExtension::class, 'twig.extension');
     }
 
+    /**
+     * @throws ContainerException
+     */
     protected function resolveDependencies(): void
     {
         $this->get(DatabaseConnection::class);
