@@ -6,6 +6,7 @@ namespace Neo\Core\Controller;
 use Closure;
 use Neo\Core\Controller\Exception\AbstractControllerException;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
+use Neo\Core\Database\DatabaseControllerExtension;
 use Neo\Core\DI\Container;
 use Neo\Core\Event\EventControllerExtension;
 use Neo\Core\Extension\ExtensionControllerExtension;
@@ -33,6 +34,7 @@ use Neo\Core\View\ViewControllerExtension;
  * @mixin NotificationControllerExtension
  * @mixin ViewControllerExtension
  * @mixin ScannerControllerExtension
+ * @mixin DatabaseControllerExtension
  */
 abstract class AbstractController
 {
