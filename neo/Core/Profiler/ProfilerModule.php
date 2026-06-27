@@ -82,6 +82,10 @@ class ProfilerModule extends AbstractModule
         foreach ($iterator as $file) {
             $class = $this->fileToClass($file->getRealPath(), $coreDir);
 
+            if (str_contains($class, '\\Tests\\') || str_contains($class, '\\Fixture\\')) {
+                continue;
+            }
+
             if (!class_exists($class)) {
                 continue;
             }

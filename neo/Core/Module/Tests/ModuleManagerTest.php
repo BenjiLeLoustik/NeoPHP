@@ -55,7 +55,7 @@ class ModuleManagerTest extends TestCase
     public function testBootRegistersThenBootsModule(): void
     {
         $manager = new ModuleManager(new Container());
-        $manager->discover($this->fixturesDir . '/Simple');
+        $manager->discover($this->fixturesDir . '/Simple', false);
         $manager->boot();
 
         self::assertSame(
@@ -70,7 +70,7 @@ class ModuleManagerTest extends TestCase
     public function testBootResolvesDependencyOrder(): void
     {
         $manager = new ModuleManager(new Container());
-        $manager->discover($this->fixturesDir . '/Dependency');
+        $manager->discover($this->fixturesDir . '/Dependency', false);
         $manager->boot();
 
         self::assertSame(
@@ -87,7 +87,7 @@ class ModuleManagerTest extends TestCase
     public function testBootThrowsOnCircularDependency(): void
     {
         $manager = new ModuleManager(new Container());
-        $manager->discover($this->fixturesDir . '/Circular');
+        $manager->discover($this->fixturesDir . '/Circular', false);
 
         $this->expectException(ModuleException::class);
         $this->expectExceptionMessage('Circular dependency detected');
@@ -98,7 +98,7 @@ class ModuleManagerTest extends TestCase
     public function testBootThrowsWhenDependencyClassMissing(): void
     {
         $manager = new ModuleManager(new Container());
-        $manager->discover($this->fixturesDir . '/MissingDependency');
+        $manager->discover($this->fixturesDir . '/MissingDependency', false);
 
         $this->expectException(ModuleException::class);
         $this->expectExceptionMessage('does not exist');
