@@ -1,7 +1,7 @@
-# RECAP — Suivi du framework NeoPHP
+# ROADMAP — Suivi du framework NeoPHP
 
-> Analyse complète du codebase (266 fichiers PHP)
-> Dernière mise à jour : 2026-06-16
+> Analyse complète du codebase (~387 fichiers PHP dans `neo/Core/`)
+> Dernière mise à jour : 2026-06-27
 
 ---
 
@@ -21,25 +21,25 @@
 ```
 neo/Core/
 ├── Application/     → Détection du projet & environnement
-├── Asset/           → Compilation CSS/JS
-├── Console/         → Framework CLI
+├── Asset/           → Compilation CSS/JS/Less
+├── Console/         → Framework CLI & générateurs
 ├── Controller/      → Contrôleur de base & extensions
 ├── Cron/            → Tâches planifiées
-├── Database/        → ORM, QueryBuilder, Migrations
+├── Database/        → ORM, QueryBuilder, Migrations, Formulaires
 ├── DI/              → Conteneur d'injection de dépendances
 ├── Error/           → Gestion des erreurs & exceptions
 ├── Event/           → Système d'événements & dispatcher
-├── Extension/       → Système d'extensions
-├── Http/            → Request / Response
-├── Module/          → Système de modules
-├── Profiler/        → Profilage des performances
-├── Routing/         → Routeur & routing par attributs
+├── Extension/       → Extensions utilitaires (String, Date, File, Html, Json, Number, Path, Url, Array)
+├── Http/            → Request / Response / Session / Cookie / Flash
+├── Module/          → Système de modules avec boot ordonné
+├── Profiler/        → Barre de debug (env dev)
+├── Routing/         → Routeur par attributs
 ├── Security/        → Auth, CSRF, Middleware
-├── Testing/         → Utilitaires de test
+├── Testing/         → Scaffold PHPUnit, génération auto
 ├── Translation/     → Support i18n
 ├── Utils/           → Config, Cache, Logger, Mailer
-├── Validator/       → Validation des formulaires
-└── View/            → Moteur Twig
+├── Validator/       → Validation par contraintes attributs
+└── View/            → Intégration Twig
 ```
 
 ---
@@ -48,184 +48,200 @@ neo/Core/
 
 ### Architecture & Design
 - **Système de modules** propre avec résolution des dépendances et auto-découverte
-- **Routing par attributs PHP 8** (`#[Route]`) — syntaxe propre et moderne
-- **ORM complet** : 4 types de relations (HasOne, HasMany, BelongsTo, BelongsToMany), eager loading, identity map, soft deletes
-- **Système d'événements** avec priorités sur les listeners
-- **Conteneur DI** conforme PSR-11 avec résolution automatique par réflexion, détection des dépendances circulaires, support des tags
-- **Gestion des erreurs** différenciée : détails en dev, messages sûrs en prod
-- **Système de formulaires** avec génération de champs typés
-- **Cron intégré** avec parsing d'expressions cron standard
-- **CLI framework** intégré avec commandes
-- **Support Twig** complet avec extensions personnalisées et cache de templates
-- **Configuration** en notation dot-notation imbriquée
-- **Migrations** avec pattern up/down
-- **Cache de routes** en production
+- **Routing par attributs PHP 8** (`#[Route]`, `#[MainRoute]`) — syntaxe propre et moderne
+- **ORM complet** : 4 types de relations (HasOne, HasMany, BelongsTo, BelongsToMany), eager/lazy loading, identity map, soft deletes
+- **Système d'événements** avec priorités sur les listeners, subscribers, cache en prod
+- **Conteneur DI** conforme PSR-11 avec résolution par réflexion, détection des dépendances circulaires, codes d'erreur distincts (404/422/500)
+- **Gestion des erreurs** différenciée : stack trace en dev, messages sûrs en prod
+- **Système de formulaires** complet avec champs typés, CSRF, rendu Twig
+- **Cron intégré** avec expressions cron standard, timezone et lock optionnel
+- **CLI framework** intégré avec générateurs couvrant tout le workflow
+- **Support Twig 3.x** avec extensions personnalisées, `twig/intl-extra`, cache de templates
+- **Configuration** par fichiers PHP avec notation dot-notation
+- **Migrations** avec pattern up/down, snapshots de schéma, détection de drift
+- **Cache des routes** en production (JSON, plus de `unserialize()`)
+- **CRUD generator** complet via `make:crud`
+- **Génération ORM depuis le schéma** via `database:generate`
 
 ### Qualité du code
-- Usage cohérent des **fonctionnalités PHP 8+** : attributs, propriétés typées, union types, named arguments
-- **Typage fort** : la grande majorité des méthodes a des types de retour et de paramètres
+- Usage cohérent des **fonctionnalités PHP 8.5+** : attributs, propriétés typées, union types, named arguments
+- **Typage fort** : retours et paramètres typés sur la grande majorité des méthodes
 - **Respect PSR-4** pour l'autoloading
-- **Docblocks** présents sur la majorité des méthodes (`@param`, `@return`, `@throws`)
+- **Docblocks** présents sur la majorité des méthodes
 - **Nommage clair** et méthodes descriptives
-- **QueryBuilder** avec binding de paramètres
+- **QueryBuilder** avec binding de paramètres et identifiants quotés en backticks
 - Hachage des mots de passe en **Argon2/bcrypt** (cost=12)
 - **Régénération de session** à la connexion
 - `hash_equals()` utilisé correctement pour la comparaison CSRF
+- **Middleware sans `exit()`** — retour d'une Response propre
+- **Gestion d'erreurs unifiée** — exceptions partout, plus de `false`/`null` implicites
+
+### Sécurité (fixes appliqués)
+- Messages d'exception échappés avec `htmlspecialchars()` dans `ErrorHandler` ✅
+- Limite de taille `php://input` à 8 Mo dans `Request` ✅
+- Validation `X-Forwarded-For` via `filter_var()` ✅
+- Protection path traversal via `realpath()` + vérification de préfixe ✅
+- Identifiants SQL quotés avec backticks dans `QueryBuilder` ✅
+- Interpolation SQL directe supprimée dans l'ORM ✅
+- `unserialize()` remplacé par `json_decode()` pour le cache de routes dans `Router` ✅
+- `require_once` dynamique sécurisé avec whitelist dans `Router` ✅
+- CSRF sur les formulaires d'authentification ✅
+- Timeout de session dans `SessionGuard` ✅
+- Upload sécurisé : validation MIME, limite de taille, assainissement du nom ✅
+- Rate limiting sur les tentatives de connexion ✅
 
 ---
 
-## ❌ Ce qui n'est pas bon du tout
+## ❌ Ce qui reste à adresser
 
-### Sécurité critique
+### Sécurité résiduelle
 
 | Problème | Localisation | Impact |
 |----------|-------------|--------|
-| **Injection SQL** — noms de tables/colonnes non quotés dans le QueryBuilder | `QueryBuilder.php` l.56, 77, 101-112 | Critique |
-| **Injection SQL** — interpolation de chaînes directe dans les queries ORM | `AbstractModel.php` l.314-360 | Critique |
-| **Désérialisation non sécurisée** — `unserialize()` sur le cache de routes et listeners | `Router.php` l.56 | Critique |
-| **Inclusion de fichiers dynamique** — `require_once $filePath` avec chemins non validés | `Router.php` l.87 | Critique |
-| **Path traversal** — `sanitizePath()` ne filtre pas `..` | `Request.php` l.108 | Élevé |
-| **Usurpation d'IP** — `X-Forwarded-For` accepté sans validation | `Request.php` l.281-298 | Élevé |
-| **Injection HTML** dans les pages d'erreur — message d'exception non échappé | `ErrorHandler.php` l.176-191 | Élevé |
-| **Pas de CSRF** sur les formulaires d'authentification | `AuthManager.php` | Élevé |
-| **Pas de limite de taille** sur `php://input` — épuisement mémoire possible | `Request.php` l.65 | Élevé |
-| **Pas de rate limiting** sur les tentatives de connexion | Auth global | Élevé |
-| **Pas de timeout de session** | `SessionGuard` | Moyen |
-| **Upload de fichiers** sans validation MIME, sans limite de taille, sans assainissement du nom | Upload | Moyen |
+| **Désérialisation non sécurisée** — `unserialize()` toujours utilisé pour le cache des listeners | `EventDispatcher.php` l.54 | Critique |
+| **Regex des requirements de routes** non échappées avant injection dans les patterns | `Router.php` | Moyen |
+| **Pas de rate limiting** global configurable par route (hors auth) | Routing / Middleware | Moyen |
 
-### Qualité du code
+### Qualité du code résiduelle
 
-- **`exit` dans le middleware** (`MiddlewareHandler.php` l.119) — arrêt brutal, impossible à tester unitairement
-- **Singleton statique** dans le Container (`getInstance()`) — état global, problématique pour les tests et le CLI
-- **Identity map statique** (`AbstractModel::$instanceCache`) — risque de données périmées entre requêtes CLI
-- **Gestion d'erreurs mixte** — certains chemins lèvent des exceptions, d'autres retournent `false`/`null` sans cohérence
-- **`@` operator** utilisé pour supprimer des erreurs au lieu de les gérer proprement
-- **Tous les codes d'erreur à 500** dans le Container — aucune distinction entre les types d'erreur
-- **Regex des routes non échappées** — les requirements sont insérés directement dans des patterns regex
+| Problème | Localisation | Impact |
+|----------|-------------|--------|
+| **`@` operator** utilisé pour supprimer des erreurs à certains endroits | Divers | Faible |
+| **Identity map statique** (`AbstractModel::$instanceCache`) — risque de données périmées entre requêtes CLI | `AbstractModel.php` | Moyen |
+| **Singleton statique du Container** (`getInstance()`) — état global, problématique pour les tests | `Container.php` | Moyen |
+| **`AbstractModel`** a trop de responsabilités (persistance + relations + identity map + soft delete) | `AbstractModel.php` | Moyen |
 
 ---
 
 ## 🗂 Checklist de suivi
 
-> Statut : `[ ]` à faire — `[~]` en cours — `[x]` terminé — `[N]` Non Pertinant pour le moment
+> Statut : `[ ]` à faire — `[~]` en cours — `[x]` terminé — `[N]` Non pertinent pour le moment
+
+---
 
 ### 🔴 URGENCES — Sécurité (à corriger avant toute mise en prod)
 
-- [x] 🟢 **Échapper les messages d'exception** avec `htmlspecialchars()` dans `ErrorHandler.php` l.176-191 `branch: fix/xss-escape-exception-messages`
-- [x] 🟢 **Ajouter une limite de taille** sur `php://input` dans `Request.php` l.65 (ex : 8 Mo) `branch: fix/request-input-size-limit`
-- [x] 🟢 **Valider les IPs** `X-Forwarded-For` avec `filter_var()` dans `Request.php` l.281-298 `branch: fix/validate-x-forwarded-for-ip`
-- [x] 🟢 **Fix path traversal** — ajouter `realpath()` + vérification de préfixe dans `Request::sanitizePath()` `branch: fix/path-traversal-sanitize-path`
-- [x] 🟡 **Quoter les identifiants SQL** avec des backticks dans `QueryBuilder.php` l.56, 77, 101-112 `branch: fix/sql-quote-identifiers-backticks`
-- [x] 🟡 **Supprimer l'interpolation SQL directe** dans `AbstractModel.php` l.314-360 → utiliser des identifiants quotés `branch: fix/sql-remove-direct-interpolation`
-- [x] 🟡 **Remplacer `unserialize()`** par `json_decode()` pour le cache de routes dans `Router.php` l.56 `branch: fix/router-replace-unserialize-cache`
-- [x] 🟡 **Sécuriser l'inclusion dynamique** `require_once $filePath` dans `Router.php` l.87 — valider la whitelist `branch: fix/router-dynamic-include-whitelist`
-- [x] 🟡 **Ajouter CSRF** sur les formulaires d'authentification dans `AuthManager.php` `branch: feature/auth-csrf-protection`
-- [x] 🟠 **Ajouter un timeout de session** dans `SessionGuard` `branch: feature/session-timeout`
-- [x] 🟠 **Sécuriser les uploads** — validation MIME, limite de taille, assainissement du nom de fichier `branch: feature/secure-file-uploads`
-- [x] 🟠 **Rate limiting** sur les tentatives de connexion (Middleware dédié ou dans `AuthManager`) `branch: feature/auth-rate-limiting`
+- [x] 🟢 **Échapper les messages d'exception** avec `htmlspecialchars()` dans `ErrorHandler.php`
+- [x] 🟢 **Ajouter une limite de taille** sur `php://input` dans `Request.php` (8 Mo)
+- [x] 🟢 **Valider les IPs** `X-Forwarded-For` avec `filter_var()` dans `Request.php`
+- [x] 🟢 **Fix path traversal** — `realpath()` + vérification de préfixe dans `Request::sanitizePath()`
+- [x] 🟡 **Quoter les identifiants SQL** avec des backticks dans `QueryBuilder.php`
+- [x] 🟡 **Supprimer l'interpolation SQL directe** dans `AbstractModel.php` → identifiants quotés
+- [x] 🟡 **Remplacer `unserialize()`** par `json_decode()` pour le cache de routes dans `Router.php`
+- [x] 🟡 **Sécuriser l'inclusion dynamique** `require_once $filePath` dans `Router.php` — whitelist
+- [x] 🟡 **Ajouter CSRF** sur les formulaires d'authentification dans `AuthManager.php`
+- [x] 🟠 **Ajouter un timeout de session** dans `SessionGuard`
+- [x] 🟠 **Sécuriser les uploads** — validation MIME, limite de taille, assainissement du nom
+- [x] 🟠 **Rate limiting** sur les tentatives de connexion (Middleware dédié ou dans `AuthManager`)
+- [ ] 🟡 **Remplacer `unserialize()`** par `json_decode()` pour le cache des listeners dans `EventDispatcher.php` l.54
+- [ ] 🟢 **Échapper les requirements de routes** avant injection dans les patterns regex
 
 ---
 
 ### 🔧 Améliorations — Architecture & Qualité
 
-- [x] 🟢 **Améliorer les codes d'erreur** dans le Container (404, 422, 500 distincts)  `branch: refactor/container-distinct-error-codes`
-- [x] 🟢 **Échapper les requirements de routes** avant injection dans les regex  `branch: fix/router-escape-route-requirements`
-- [x] 🟡 **Supprimer `exit()`** dans `MiddlewareHandler.php` l.119 → retourner une Response propre  `branch: refactor/middleware-remove-exit-call`
-- [x] 🟡 **Uniformiser la gestion d'erreurs** — exceptions partout, supprimer les `false`/`null` implicites  `branch: refactor/uniform-error-handling`
-- [x] 🟡 **Compiler les regex de routes une seule fois** et les mettre en cache  `branch: refactor/router-cache-compiled-regex`
-- [N] 🟡 **Améliorer le typage** dans les zones utilisant `mixed` ou des tableaux non typés  `branch: refactor/improve-mixed-type-hints`
-- [x] 🟠 **Remplacer le singleton statique du Container** par une injection via le kernel  `branch: refactor/container-remove-static-singleton`
-- [x] 🟠 **Invalider l'identity map** (`AbstractModel::$instanceCache`) après les mutations en CLI  `branch: fix/model-invalidate-identity-map-cli`
-- [x] 🟠 **Ajouter un système d'ordre explicite** pour l'exécution des middlewares  `branch: feature/middleware-explicit-order`
-- [x] 🔴 **Séparer `AbstractModel`** en `Model` + `QueryScope` + `Relationships` (trop de responsabilités)  `branch: breaking/split-abstract-model`
+- [x] 🟢 **Améliorer les codes d'erreur** dans le Container (404, 422, 500 distincts)
+- [x] 🟡 **Supprimer `exit()`** dans `MiddlewareHandler.php` → retourner une Response propre
+- [x] 🟡 **Uniformiser la gestion d'erreurs** — exceptions partout, supprimer les `false`/`null` implicites
+- [x] 🟡 **Compiler les regex de routes une seule fois** et les mettre en cache
+- [x] 🟠 **Ajouter un système d'ordre explicite** pour l'exécution des middlewares
+- [N] 🟡 **Améliorer le typage** dans les zones utilisant `mixed` ou des tableaux non typés
+- [ ] 🟠 **Remplacer le singleton statique du Container** par une injection via le kernel
+- [ ] 🟠 **Invalider l'identity map** (`AbstractModel::$instanceCache`) après les mutations en CLI
+- [ ] 🔴 **Séparer `AbstractModel`** en `Model` + `QueryScope` + `Relationships` (trop de responsabilités)
 
 ---
 
 ### ⚡ Améliorations — Performance
 
-- [ ] 🟢 **Configurer les connexions PDO persistentes** en option dans `DatabaseConnection` `branch: feature/pdo-persistent-connections`
-- [ ] 🟡 **Réduire l'usage de Reflection** — mettre les résultats en cache plus agressivement `branch: refactor/cache-reflection-results`
-- [ ] 🟡 **Contrôler le buffering de sortie** pour éviter les flushes prématurés `branch: fix/output-buffering-control`
-- [ ] 🟠 **Détection automatique des requêtes N+1** en mode dev (logguer les requêtes similaires répétées) `branch: feature/dev-nplusone-detection`
-- [ ] 🟠 **Optimiser le scan de contrôleurs en dev** — cache avec watcher de fichiers plutôt que scan complet `branch: refactor/dev-controller-scan-cache`
+- [ ] 🟢 **Configurer les connexions PDO persistentes** en option dans `DatabaseConnection`
+- [ ] 🟡 **Réduire l'usage de Reflection** — mettre les résultats en cache plus agressivement
+- [ ] 🟡 **Contrôler le buffering de sortie** pour éviter les flushes prématurés
+- [ ] 🟠 **Détection automatique des requêtes N+1** en mode dev (logguer les requêtes similaires répétées)
+- [ ] 🟠 **Optimiser le scan de contrôleurs en dev** — cache avec watcher de fichiers plutôt que scan complet
 
 ---
 
-### 🧪 Module Testing (actuellement vide)
+### 🧪 Module Testing
 
-- [ ] 🟡 **`TestCase` de base** avec container isolé `branch: test/base-testcase-isolated-container`
-- [ ] 🟡 **`DatabaseTestCase`** avec transactions rollback automatique `branch: test/database-testcase-rollback`
-- [ ] 🟡 **`HttpTestCase`** pour simuler des requêtes HTTP sans serveur `branch: test/http-testcase-request-simulator`
-- [ ] 🟠 **`ModelFactory`** — générateur de données pour les tests `branch: test/model-factory`
+- [ ] 🟡 **`TestCase` de base** avec container isolé (en cours — scaffold présent, container non isolé)
+- [ ] 🟡 **`DatabaseTestCase`** avec transactions rollback automatique (scaffold présent, à valider en conditions réelles)
+- [ ] 🟡 **`HttpTestCase`** — simulation de requêtes HTTP sans serveur (scaffold présent, à valider)
+- [ ] 🟠 **`ModelFactory`** — générateur de données de test
+- [ ] 🟡 **Tests du framework lui-même** — couverture minimale des composants critiques (QueryBuilder, Router, Container)
 
 ---
 
 ### 💡 Nouvelles fonctionnalités — Priorité haute
 
-- [ ] 🟡 **Database Seeding** — Classes de seed + commande `neo db:seed` `branch: feature/db-seeding`
-- [ ] 🟠 **Validation avancée** — règles `unique:table`, `exists:table`, validation imbriquée, règles custom `branch: feature/validation-advanced-rules`
-- [ ] 🟠 **Pagination** — classe `Paginator` intégrée au QueryBuilder avec liens prev/next `branch: feature/paginator`
-- [ ] 🟠 **API Resources** — transformateurs de réponse JSON (type Laravel Resource / Fractal) `branch: feature/api-resources-transformer`
-- [ ] 🔴 **Rate Limiting** — Middleware intégré avec backend Redis ou APCu `branch: feature/rate-limiting-middleware`
+- [ ] 🟡 **Database Seeding** — Classes de seed + commande `database:seed`
+- [ ] 🟠 **Validation avancée** — règles `unique:table`, `exists:table`, validation imbriquée, règles custom
+- [ ] 🟠 **Classe `Paginator` standalone** — avec liens prev/next, métadonnées de page, rendu Twig intégré (le QueryBuilder a `paginate()` mais sans classe dédiée)
+- [ ] 🟠 **API Resources** — transformateurs de réponse JSON (type Laravel Resource / Fractal)
+- [ ] 🟠 **Versioning d'API** — support natif `/api/v1/`, `/api/v2/` dans le routeur
 
 ---
 
 ### 💡 Nouvelles fonctionnalités — Priorité moyenne
 
-- [ ] 🟠 **Scaffold CLI** — générateurs `neo make:controller`, `neo make:model`, `neo make:migration`, `neo make:middleware` `branch: feature/cli-scaffold-generators`
-- [ ] 🟠 **Cache avancé** — drivers Redis, Memcached, APCu (actuellement array uniquement) `branch: feature/cache-redis-memcached-apcu`
-- [ ] 🟠 **Logging avancé** — intégration Monolog, niveaux PSR-3, handlers multiples (fichier, Slack, DB…) `branch: feature/logging-monolog-psr3`
-- [ ] 🟠 **Versioning d'API** — support natif `/api/v1/`, `/api/v2/` dans le routeur `branch: feature/api-versioning`
-- [ ] 🔴 **Stockage de fichiers** — abstraction disque local / S3 / cloud `branch: feature/file-storage-abstraction`
-- [x] 🔴 **Notifications** — Email, SMS, push via un système unifié `branch: feature/notifications-unified`
-- [ ] 🔴 **Multi-base de données** — support de plusieurs connexions PDO simultanées `branch: feature/multi-database-connections`
+- [ ] 🟠 **Cache avancé** — driver APCu + amélioration du driver Redis (tags, flush par préfixe)
+- [ ] 🟠 **Logging avancé** — handlers multiples simultanés (fichier + Slack + DB), rotation configurable par channel
+- [ ] 🔴 **Stockage de fichiers** — abstraction disque local / S3 / cloud (type Flysystem)
+- [x] 🔴 **Notifications** — Email, SMS, push via un système unifié
+- [ ] 🔴 **Multi-base de données** — support de plusieurs connexions PDO simultanées dans l'ORM
 
 ---
 
 ### 💡 Nouvelles fonctionnalités — Priorité basse / Nice to have
 
-- [ ] 🟠 **Health check endpoint** — route `/health` native pour les déploiements containerisés `branch: feature/health-check-endpoint`
-- [ ] 🟠 **Multi-langue dans les routes** — `/fr/produits/{id}` et `/en/products/{id}` `branch: feature/i18n-route-localization`
-- [ ] 🔴 **Queue / Jobs** — système de files de traitement asynchrone `branch: feature/async-job-queue`
-- [ ] 🔴 **Debugbar** — toolbar de debug plus riche que le Profiler actuel (type Symfony) `branch: feature/debugbar-toolbar`
-- [ ] 🔴 **Multi-tenant** — routing et DB par tenant `branch: feature/multi-tenant`
-- [ ] 🔴 **GraphQL** — couche GraphQL en complément du REST `branch: feature/graphql-layer`
-- [ ] 🔴 **WebSockets** — support Swoole/Ratchet pour le temps réel `branch: feature/websockets-realtime`
+- [ ] 🟠 **Health check endpoint** — route `/health` native pour les déploiements containerisés
+- [ ] 🟠 **Multi-langue dans les routes** — `/fr/produits/{id}` et `/en/products/{id}`
+- [ ] 🔴 **Queue / Jobs** — système de files de traitement asynchrone
+- [ ] 🔴 **Debugbar enrichie** — toolbar plus riche (requêtes N+1 visualisées, timeline, etc.)
+- [ ] 🔴 **Multi-tenant** — routing et DB par tenant
+- [ ] 🔴 **GraphQL** — couche GraphQL en complément du REST
+- [ ] 🔴 **WebSockets** — support Swoole/Ratchet pour le temps réel
 
 ---
 
 ## Scores globaux
 
-| Critère | Note |
-|---------|------|
-| Architecture | 8/10 |
-| Sécurité | 5/10 |
-| Qualité du code | 7/10 |
-| Documentation | 6/10 |
-| Complétude des fonctionnalités | 6/10 |
-| Performance | 7/10 |
+> Évaluation à la date du 2026-06-27, après application des correctifs de sécurité critiques.
+
+| Critère | Note | Commentaire |
+|---------|------|-------------|
+| Architecture | 8/10 | Modules propres, DI solide, séparation claire des couches |
+| Sécurité | 7/10 | Fixes critiques appliqués ; reste `unserialize()` dans EventDispatcher et quelques points mineurs |
+| Qualité du code | 7/10 | Typage fort, PHP 8.5, mais singleton statique et AbstractModel surchargé |
+| Documentation | 8/10 | README très complet (2100+ lignes), exemples concrets pour chaque composant |
+| Complétude des fonctionnalités | 7/10 | ORM, auth, forms, CLI, crons, assets — manque seeding, pagination avancée, queues |
+| Performance | 6/10 | Reflection intensive, scan complet en dev, pas de détection N+1 |
+
+**Score global estimé : 43/60 (72 %)**
 
 ---
 
 ## Résumé exécutif
 
-NeoPHP est un framework **bien architecturé, léger et moderne** qui tire parti des fonctionnalités PHP 8+ de manière cohérente. La séparation des responsabilités est claire, le système de modules est solide, et l'ORM couvre l'essentiel des besoins.
+NeoPHP est un framework **bien architecturé, léger et moderne** qui tire parti des fonctionnalités PHP 8.5+ de manière cohérente. La séparation des responsabilités est claire, le système de modules est solide, et l'ORM couvre l'essentiel des besoins courants.
 
-Les points critiques à corriger avant toute mise en production concernent exclusivement la **sécurité** : injection SQL dans le QueryBuilder, désérialisation PHP non sécurisée, et absence de rate limiting sur l'authentification. Ces issues sont localisées et corrigeables rapidement.
+Les correctifs de sécurité critiques ont été appliqués : injections SQL résolues, désérialisation PHP sécurisée dans le Router, CSRF sur l'auth, rate limiting, upload sécurisé, timeout de session. Il reste un point critique : `unserialize()` dans `EventDispatcher.php` pour le cache des listeners.
 
-Le framework convient très bien à des **projets petits à moyens**. Pour des projets plus larges, les fonctionnalités manquantes (queue, stockage, pagination avancée) et l'absence d'utilitaires de test réels seraient les premiers chantiers à adresser.
+Le framework convient très bien à des **projets petits à moyens** (blog, backoffice, API REST, site vitrine). Pour des projets plus larges, les fonctionnalités manquantes (queue, stockage cloud, pagination avancée) et la couverture de tests du framework lui-même seraient les premiers chantiers à adresser.
 
 ---
 
 ## Ordre de traitement recommandé
 
 ```
-1. Urgences sécurité (🟢 faciles en premier → gain immédiat, risque zéro)
-2. Fix exit() middleware + uniformisation erreurs (débloque les tests)
-3. Module Testing (nécessaire avant tout refacto sérieux)
-4. Séparation AbstractModel + singleton Container (refacto structurant)
-5. Database Seeding + Validation avancée + Pagination (valeur produit directe)
-6. Scaffold CLI (productivité développeur)
-7. Cache / Logging / Stockage (selon besoins projet)
-8. Queue / WebSockets / GraphQL (selon besoins projet avancés)
+1. Fix unserialize() dans EventDispatcher (sécurité critique résiduelle)
+2. Fix regex requirements de routes non échappées
+3. Module Testing — valider le scaffold en conditions réelles + ModelFactory
+4. Tests du framework lui-même (QueryBuilder, Router, Container)
+5. Remplacer singleton Container + invalider identity map CLI
+6. Database Seeding + Pagination avancée + Validation avancée (valeur produit directe)
+7. API Resources + Versioning API (si usage API)
+8. Séparation AbstractModel (refacto structurant, breaking change)
+9. Cache avancé / Logging avancé / Stockage fichiers (selon besoins projet)
+10. Queue / WebSockets / GraphQL (selon besoins projet avancés)
 ```
