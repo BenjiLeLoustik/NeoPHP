@@ -25,31 +25,34 @@ final class TranslationWriter
         array $segments,
         string $defaultValue
     ): void {
-        foreach (TranslationRegistry::getPaths() as $path) {
-            $filePath = "$path/$locale/$file.php";
+        $path = TranslationRegistry::getPaths()[0] ?? null;
 
-            if (!file_exists($filePath)) {
-                $this->createFile($filePath);
-            }
-
-            $translations = require $filePath;
-
-            if (!is_array($translations)) {
-                throw new TranslationException(
-                    title: 'Translation File Error',
-                    message: sprintf("Translation file '%s' must return an array.", $filePath),
-                    code: 500
-                );
-            }
-
-            if ($this->hasKey($translations, $segments)) {
-                return;
-            }
-
-            $this->writeKey($filePath, $translations, $segments, $defaultValue);
-            $this->loader->invalidate($locale, $file);
+        if ($path === null) {
             return;
         }
+
+        $filePath = "$path/$locale/$file.php";
+
+        if (!file_exists($filePath)) {
+            $this->createFile($filePath);
+        }
+
+        $translations = require $filePath;
+
+        if (!is_array($translations)) {
+            throw new TranslationException(
+                title: 'Translation File Error',
+                message: sprintf("Translation file '%s' must return an array.", $filePath),
+                code: 500
+            );
+        }
+
+        if ($this->hasKey($translations, $segments)) {
+            return;
+        }
+
+        $this->writeKey($filePath, $translations, $segments, $defaultValue);
+        $this->loader->invalidate($locale, $file);
     }
 
     /**
@@ -126,7 +129,7 @@ final class TranslationWriter
     {
         $content = "<?php\n\nreturn " . $this->arrayToPhp($translations) . ";\n";
 
-        if (file_put_contents($filePath, $content) === false) {
+        if (file_put_contents($filePath, $content, LOCK_EX) === false) {
             throw new TranslationException(
                 title: 'Translation Write Error',
                 message: sprintf("Unable to write to translation file '%s'.", $filePath),
@@ -149,9 +152,11 @@ final class TranslationWriter
             $keyExport = is_int($key) ? $key : "'" . str_replace("'", "\\'", $key) . "'";
             if (is_array($value)) {
                 $lines[] = "$keyExport => " . $this->arrayToPhp($value, $level + 1);
-            } else {
+            } elseif (is_string($value)) {
                 $val = str_replace("'", "\\'", $value);
                 $lines[] = "$keyExport => '$val'";
+            } else {
+                $lines[] = "$keyExport => " . var_export($value, true);
             }
         }
 

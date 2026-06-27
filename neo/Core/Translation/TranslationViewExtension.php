@@ -33,8 +33,8 @@ class TranslationViewExtension implements TwigExtensionInterface
                 'callable' => [$this->translator, 'getLocale'],
                 'options' => [],
             ],
-            'isEnabled_translation' => [
-                'callable' => [$this->translator, 'isEnabled_translation'],
+            'isEnabledTranslation' => [
+                'callable' => [$this->translator, 'isEnabledTranslation'],
                 'options' => [],
             ],
         ];
