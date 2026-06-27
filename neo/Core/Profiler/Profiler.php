@@ -41,10 +41,6 @@ class Profiler
 
     public function addCollector(CollectorInterface $collector): void
     {
-        if (str_contains($collector::class, '\\Tests\\') || str_contains($collector::class, '\\Fixture\\')) {
-            return;
-        }
-
         $this->collectors[$collector->getName()] = $collector;
     }
 

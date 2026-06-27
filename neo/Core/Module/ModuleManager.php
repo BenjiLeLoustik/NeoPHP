@@ -14,7 +14,7 @@ class ModuleManager
 
     public function __construct(private readonly Container $container) {}
 
-    public function discover(string $basePath): self
+    public function discover(string $basePath, bool $excludeTestFixtures = true): self
     {
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($basePath)
@@ -31,11 +31,11 @@ class ModuleManager
 
             $fqcn = $this->resolveFqcn($file->getRealPath());
 
-            if (str_contains($fqcn, '\\Tests\\') || str_contains($fqcn, '\\Fixture\\')) {
+            if ($fqcn === null) {
                 continue;
             }
 
-            if ($fqcn === null) {
+            if ($excludeTestFixtures && (str_contains($fqcn, '\\Tests\\') || str_contains($fqcn, '\\Fixture\\'))) {
                 continue;
             }
 
