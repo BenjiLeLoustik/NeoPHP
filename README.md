@@ -639,6 +639,8 @@ Familles disponibles :
   `url_is_valid()`, `url_host()`, `url_params()`, `url_add_params()`
 - `PathExtension`
   `path_join()`, `path_normalize()`, `path_extension()`, `path_filename()`
+- `ArrayExtension`
+  `array_flatten()`, `array_pluck()`, `array_only()`, `array_except()`, `array_group_by()`
 
 Exemples :
 
@@ -1824,7 +1826,7 @@ php bin/neo database:migration:migrate --project=Blog
 
 ## Tests PHPUnit
 
-Le framework embarque une couche de test par projet avec PHPUnit 11.
+Le framework embarque une couche de test par projet avec PHPUnit 13.2.
 
 Commandes disponibles :
 
@@ -2042,7 +2044,7 @@ return [
 
 ### PHP
 
-- PHP `>= 8.1`
+- PHP `>= 8.5`
 
 ### Extensions PHP requises
 
