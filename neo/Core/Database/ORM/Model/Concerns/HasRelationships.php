@@ -145,7 +145,7 @@ trait HasRelationships
                         $relation->target::getTable(), $pdo, $includeTrashed, $onlyTrashed
                     );
 
-                    $stmt = $pdo->prepare("SELECT * FROM `{$relation->target::getTable()}` WHERE `{$relation->target::getPrimaryKey()}` = ? AND $where LIMIT 1");
+                    $stmt = $pdo->prepare("SELECT * FROM `{$relation->target::getTable()}` WHERE `{$relation->ownerKey}` = ? AND $where LIMIT 1");
                     $stmt->execute([$fk]);
                     $row = $stmt->fetch(PDO::FETCH_ASSOC);
                     $result = $row ? $relation->target::hydrateRow($row) : null;
@@ -335,8 +335,8 @@ trait HasRelationships
         try {
             if ($rel instanceof HasMany || $rel instanceof HasOne) {
                 $localKey = $rel->localKey;
-                $foreignKey = $rel->foreignKey;
                 $target = $rel->target;
+                $foreignKey = $rel->foreignKey;
 
                 $ids = array_values(array_unique(array_filter(
                     array_map(fn($m) => $m->$localKey, $models)
@@ -346,7 +346,6 @@ trait HasRelationships
 
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-                $target = $rel->target;
                 $where = self::buildRelationSoftDeleteWhere(
                     $target::getTable(), $pdo, $includeTrashed, $onlyTrashed
                 );
@@ -374,7 +373,7 @@ trait HasRelationships
             if ($rel instanceof BelongsTo) {
                 $foreignKey = $rel->foreignKey;
                 $target = $rel->target;
-                $targetPk = $target::getPrimaryKey();
+                $targetPk = $rel->ownerKey;
 
                 $ids = array_values(array_unique(array_filter(
                     array_map(fn($m) => $m->$foreignKey, $models)
@@ -384,7 +383,6 @@ trait HasRelationships
 
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-                $target = $rel->target;
                 $where = self::buildRelationSoftDeleteWhere(
                     $target::getTable(), $pdo, $includeTrashed, $onlyTrashed
                 );
@@ -422,7 +420,6 @@ trait HasRelationships
 
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-                $target = $rel->target;
                 $where = self::buildRelationSoftDeleteWhere(
                     $target::getTable(), $pdo, $includeTrashed, $onlyTrashed, 't'
                 );
