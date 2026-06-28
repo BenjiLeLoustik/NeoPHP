@@ -89,30 +89,48 @@ abstract class AbstractModel
     public function __get(string $name): mixed
     {
         if ($this->hasRelation($name)) {
-            if (!array_key_exists($name, $this->relationsCache)) {
-                $this->relationsCache[$name] = $this->loadRelation(
-                    $name,
-                    $this->withTrashedRelations,
-                    $this->onlyTrashedRelations
-                );
-            }
-            return $this->relationsCache[$name];
+            return $this->relation($name);
         }
 
         return $this->data[$name] ?? null;
     }
 
+    /**
+     * @throws DatabaseException
+     */
+    protected function getRelationValue(string $name): mixed
+    {
+        if (!array_key_exists($name, $this->relationsCache)) {
+            $this->relationsCache[$name] = $this->loadRelation(
+                $name,
+                $this->withTrashedRelations,
+                $this->onlyTrashedRelations
+            );
+        }
+
+        return $this->relationsCache[$name];
+    }
+
     public function __set(string $name, mixed $value): void
     {
-        if (in_array($name, ['data', 'relationsCache'])) return;
+        if (in_array($name, ['data', 'relationsCache'])) {
+            return;
+        }
 
+        $this->setAttribute($name, $value);
+    }
+
+    protected function setAttribute(string $name, mixed $value): static
+    {
         try {
             $prop = new \ReflectionProperty($this, $name);
             $value = $this->castValue($prop, $value);
-            $prop->setValue($this, $value);
         } catch (\ReflectionException) {}
 
+        $this->$name = $value;
         $this->data[$name] = $value;
+
+        return $this;
     }
 
     public static function getTable(): string
