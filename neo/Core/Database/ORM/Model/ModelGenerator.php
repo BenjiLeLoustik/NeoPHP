@@ -254,6 +254,40 @@ PHP;
 
         $propsString = implode("\n\n", $props);
 
+        $methods = [];
+        foreach ($columns as $colName => $col) {
+            $method = $this->convertToClassName($colName);
+            $nullableSign = ($col['nullable'] ?? false) ? '?' : '';
+            $type = $col['type'];
+            $isRelation = str_contains($col['docblock'] ?? '', '#[');
+
+            $getterBody = $isRelation
+                ? "\$this->getRelationValue('{$colName}')"
+                : "\$this->{$colName}";
+
+            $getter = <<<PHP
+public function get{$method}(): {$nullableSign}{$type}
+{
+    return {$getterBody};
+}
+PHP;
+            $methods[] = $this->indent($getter, 4);
+
+            if ($isRelation) {
+                continue;
+            }
+
+            $setter = <<<PHP
+public function set{$method}({$nullableSign}{$type} \${$colName}): static
+{
+    return \$this->setAttribute('{$colName}', \${$colName});
+}
+PHP;
+            $methods[] = $this->indent($setter, 4);
+        }
+
+        $methodsString = implode("\n\n", $methods);
+
         if ($hasHidden) {
             $col = $modelData['columns']['hidden'];
             $default = trim($col['defaultValue'] ?? '= []');
@@ -278,6 +312,8 @@ class {$className} extends AbstractModel
     {$hiddenLine}
     
 $propsString
+
+$methodsString
 }
 PHP;
 
@@ -290,5 +326,18 @@ PHP;
         }
 
         return $className;
+    }
+
+    private function indent(string $text, int $spaces): string
+    {
+        $pad = str_repeat(' ', $spaces);
+
+        return implode(
+            "\n",
+            array_map(
+                static fn(string $line): string => $line === '' ? '' : $pad . $line,
+                explode("\n", $text)
+            )
+        );
     }
 }
