@@ -6,13 +6,13 @@ Framework PHP 8.5 centré sur :
 - une CLI interne dans `bin/neo`
 - des projets applicatifs isolés dans `src/<Projet>/`
 
-NeoPHP vise un autre point d'équilibre que Symfony ou Laravel. 
-L'objectif n'est pas d'empiler des couches, des bundles ou un ecosysteme très large, mais de fournir un noyau PHP lisible, compact et directement exploitable pour construire une application complete sans sortir du depot. 
+NeoPHP vise un autre point d'équilibre que Symfony ou Laravel.
+L'objectif n'est pas d'empiler des couches, des bundles ou un ecosysteme très large, mais de fournir un noyau PHP lisible, compact et directement exploitable pour construire une application complete sans sortir du depot.
 Le framework mise sur une structure simple, une CLI integrée, des modules coeur autodétéctes et un workflow multi-projets qui reste explicite.
 
-En pratique, NeoPHP s'adresse surtout aux projets qui veulent aller vite sans adopter toute la complexite organisationnelle des gros frameworks généralistes. 
-Par rapport a Symfony, il réduit fortement la cérémonie de configuration et la fragmentation entre composants. 
-Par rapport a Laravel, il se montre plus minimal, plus direct dans son architecture, et moins dépendant d'une couche "magique" ou d'un ensemble d'outils externes. 
+En pratique, NeoPHP s'adresse surtout aux projets qui veulent aller vite sans adopter toute la complexite organisationnelle des gros frameworks généralistes.
+Par rapport a Symfony, il réduit fortement la cérémonie de configuration et la fragmentation entre composants.
+Par rapport a Laravel, il se montre plus minimal, plus direct dans son architecture, et moins dépendant d'une couche "magique" ou d'un ensemble d'outils externes.
 Si le besoin est un framework plus petit, plus prévisible et plus facile a suivre de bout en bout dans le code source, c'est précisement le terrain de NeoPHP.
 
 ## Sommaire
@@ -138,7 +138,7 @@ Le noyau `neo/Core/` est structuré par sous-système :
 - `Testing/`
   base de tests, scaffold PHPUnit, generation auto via `#[Test]`
 - `Translation/`
-  résolution de locale, chargement / écriture des traductions, extension Twig
+  résolution de locale, chargement / écriture des traductions, extension Twig, synchronisation des clés via CLI
 - `Utils/`
   config, cache, logs, mailer et commandes utilitaires
 - `Validator/`
@@ -164,7 +164,7 @@ Profiler/   -> Collector/, Toolbar/
 Routing/    -> Attribute/, Commands/, Exception/
 Security/   -> Auth/, Csrf/, Middleware/
 Testing/    -> Attribute/, Commands/, Context/, Enum/, Exception/, Generator/, Scaffold/, Scanner/, Template/
-Translation/-> Exception/, Helper/, Interface/
+Translation/-> Commands/, Exception/, Helper/, Interface/
 Utils/      -> Cache/, Config/, Logger/, Mailer/
 Validator/  -> Assert/
 View/       -> Exception/, Interface/
@@ -240,8 +240,8 @@ src/Blog/
 |   |-- pages/default/
 |   `-- partials/
 `-- Translations/
-    |-- en/
-    `-- fr/
+    |-- fr.php
+    `-- en.php
 ```
 
 Certains dossiers sont créés plus tard, quand la fonctionnalité est activée :
@@ -251,7 +251,7 @@ Certains dossiers sont créés plus tard, quand la fonctionnalité est activée 
 - `Database/Migrations/` via `database:migration:generate`
 - `Tests/` via `make:test` ou `make:test:auto`
 
-Les configs sensibles `database.config.php`, `deploy.config.php`, `api.config.php` et `mailer.config.php` sont prévues pour être ignorées par Git dans le `.gitignore` généré. 
+Les configs sensibles `database.config.php`, `deploy.config.php`, `api.config.php` et `mailer.config.php` sont prévues pour être ignorées par Git dans le `.gitignore` généré.
 Le générateur ignore aussi `Storage/`.
 
 ## Conteneur DI et configuration
@@ -450,7 +450,7 @@ use Neo\Core\Controller\AbstractController;
 use Neo\Core\Http\Response\Response;
 use Neo\Core\Routing\Attribute\MainRoute;
 use Neo\Core\Routing\Attribute\Route;
-use Neo\Src\Blog\Repository\PostRepository;
+use Neo\Src\Blog\Database\Repository\PostRepository;
 
 #[MainRoute(path: '/posts', name: 'posts')]
 final class PostController extends AbstractController
@@ -524,8 +524,8 @@ Exemple :
     <ul>
         {% for post in posts %}
             <li>
-                <a href="{{ path('posts.show', {id: post.id}) }}">
-                    {{ post.title }}
+                <a href="{{ path('posts.show', {id: post.getId()}) }}">
+                    {{ post.getTitle() }}
                 </a>
             </li>
         {% endfor %}
@@ -565,7 +565,7 @@ src/Blog/Assets/
 
 ### Traductions
 
-Les traductions sont chargées depuis `src/<Projet>/Translations/<locale>/`.
+Les traductions sont chargées depuis `src/<Projet>/Translations/<locale>.php`.
 
 Fonctions Twig disponibles :
 
@@ -573,34 +573,43 @@ Fonctions Twig disponibles :
 - `trans()`
 - `getLocales()`
 - `getLocale()`
-- `isEnabled_translation()`
+- `isEnabledTranslation()`
 
 Comportement notable :
 
 - la locale est résolue depuis la config et les cookies
 - `setLocale()` persiste la langue dans un cookie `lang`
-- en environnement `dev`, une clé manquante peut être auto-enregistrée
+- en environnement `dev`, une clé manquante est auto-enregistrée dans le fichier de la locale courante
+- `translation:sync` permet de synchroniser les clés de tous les fichiers de locale
 
-Exemple de fichier `src/Blog/Translations/fr/messages.php` :
+Exemple de fichier `src/Blog/Translations/fr.php` :
 
 ```php
 <?php
 
 return [
-    'page' => [
-        'title' => 'Bienvenue sur le blog',
-    ],
-    'button' => [
-        'save' => 'Enregistrer',
-    ],
+    'Bienvenue sur le blog' => 'Bienvenue sur le blog',
+    'Enregistrer' => 'Enregistrer',
+];
+```
+
+```php
+// en.php
+return [
+    'Bienvenue sur le blog' => 'Welcome to the blog',
+    'Enregistrer' => 'Save',
 ];
 ```
 
 Exemple Twig :
 
 ```twig
-<h1>{{ trans('messages.page.title') }}</h1>
-<button>{{ trans('messages.button.save') }}</button>
+<h1>{{ trans('Bienvenue sur le blog') }}</h1>
+<button>{{ trans('Enregistrer') }}</button>
+
+{{-- Avec paramètres --}}
+{{ trans('Bonjour :name !', {'name': user.getName()}) }}
+{{ 'Bonjour :name !'|trans({'name': user.getName()}) }}
 ```
 
 Exemple dans un contrôleur :
@@ -687,7 +696,7 @@ Le framework embarque une CLI dédiée à la base de données :
 - `database:create`
   crée la base déclarée dans `database.config.php`
 - `database:generate`
-  génère les `Model`, `Repository` et `App/Forms` à partir du schéma courant
+  génère les `Model`, `Repository` et `Database/Forms` à partir du schéma courant
 - `database:migration:generate`
   génère un fichier de migration dans `src/<Projet>/Database/Migrations/`
 - `database:migration:migrate`
@@ -702,7 +711,7 @@ Comportements notables :
 - `database:generate` supporte `--only=all|models|repositories|forms`
 - `database:generate --force` écrase les repositories existants si nécessaire
 - les tables internes `neo_migrations` et `neo_schema_snapshots` sont exclues de l'introspection et de la génération
-- les formulaires générés sont écrits dans `src/<Projet>/App/Forms/`
+- les formulaires générés sont écrits dans `src/<Projet>/Database/Forms/`
 
 Exemples :
 
@@ -836,7 +845,7 @@ La génération ORM depuis le schéma passe par `database:generate` :
 
 - `ModelGenerator` met à jour les propriétés depuis les colonnes SQL
 - `RepositoryGenerator` génère les repositories manquants
-- `FormGenerator` génère un formulaire par modèle dans `App/Forms/`
+- `FormGenerator` génère un formulaire par modèle dans `Database/Forms/`
 - les tables internes de migration sont ignorées
 
 Exemple de modèles :
@@ -937,7 +946,7 @@ declare(strict_types=1);
 namespace Neo\Src\Blog\Database\Repository;
 
 use Neo\Core\Database\ORM\Repository\AbstractRepository;
-use Neo\Src\Blog\Model\Post;
+use Neo\Src\Blog\Database\Model\Post;
 
 final class PostRepository extends AbstractRepository
 {
@@ -1070,7 +1079,7 @@ public function uploadAvatar(): Response
 {
     $filename = $this->upload(
         field: 'avatar',
-        name: 'user_' . (string) $this->auth()->user()?->id,
+        name: 'user_' . (string) $this->auth()->user()?->getId(),
         extensions: ['jpg', 'jpeg', 'png', 'webp'],
         directory: 'uploads/avatars'
     );
@@ -1085,7 +1094,7 @@ public function uploadAvatar(): Response
 Affichage ensuite :
 
 ```twig
-<img src="{{ asset('uploads/avatars/' ~ user.avatar) }}" alt="Avatar">
+<img src="{{ asset('uploads/avatars/' ~ user.getAvatar()) }}" alt="Avatar">
 ```
 
 ### Validation
@@ -1400,18 +1409,18 @@ Exemple dans un contrôleur :
 #[Route(path: '/register', name: 'register', methods: ['POST'])]
 public function register(): Response
 {
-    $user = new \Neo\Src\Blog\Model\Database\User();
-    $user->firstname = (string) $this->request->body('firstname');
-    $user->email = (string) $this->request->body('email');
-    $user->password = $this->getPasswordManager()->hash(
+    $user = new \Neo\Src\Blog\Database\Model\User();
+    $user->setFirstname((string) $this->request->body('firstname'));
+    $user->setEmail((string) $this->request->body('email'));
+    $user->setPassword($this->getPasswordManager()->hash(
         (string) $this->request->body('password')
-    );
+    ));
     $user->save();
 
-    $this->dispatch(new \Neo\Src\Blog\App\Event\UserRegisteredEvent((int) $user->id));
+    $this->dispatch(new \Neo\Src\Blog\App\Event\UserRegisteredEvent((int) $user->getId()));
 
     return $this->jsonSuccess([
-        'id' => $user->id,
+        'id' => $user->getId(),
     ], 201);
 }
 ```
@@ -1420,7 +1429,7 @@ public function register(): Response
 
 NeoPHP embarque un système de tâches planifiées éxécutables via la CLI.
 
-Les crons applicatifs sont attendus dans le projet courant et peuvent être lancés manuellement ou automatiquement via 
+Les crons applicatifs sont attendus dans le projet courant et peuvent être lancés manuellement ou automatiquement via
 le système d'exploitation.
 
 ### Créer un cron
@@ -1699,7 +1708,7 @@ Collecteurs exposes :
 - traductions résolues et cléfs manquantes
 - mails envoyés
 
-Le toolbar est injecté dans les réponses HTML. 
+Le toolbar est injecté dans les réponses HTML.
 Il est ignoré pour les `JsonResponse`, `RedirectResponse` et les contenus non HTML.
 
 ### Gestion des erreurs
@@ -1783,6 +1792,7 @@ Commandes natives disponibles :
 - `make:test:auto`
 - `run:test`
 - `run:test:all`
+- `translation:sync`
 
 ### Générateurs principaux
 
@@ -1845,6 +1855,8 @@ php bin/neo cache:clear --project=Blog
 php bin/neo asset:reload --project=Blog
 php bin/neo database:migration:status --project=Blog
 php bin/neo database:migration:migrate --project=Blog
+php bin/neo translation:sync --project=Blog
+php bin/neo translation:sync --project=Blog --dry-run
 ```
 
 ## Tests PHPUnit
@@ -1961,7 +1973,7 @@ namespace Neo\Src\Blog\Database\Repository;
 
 use Neo\Core\Database\ORM\Repository\AbstractRepository;
 use Neo\Core\Testing\Attribute\Test;
-use Neo\Src\Blog\Model\User;
+use Neo\Src\Blog\Database\Model\User;
 
 #[Test(
     type: 'database',
@@ -2107,8 +2119,8 @@ NeoPHP couvre aujourd'hui :
 - routing par attributs
 - contrôleurs et vues Twig
 - pipeline d'assets CSS, JS et Less
-- traduction et helpers Twig/PHP
-- QueryBuilder, ORM, repositories, formulaires générés et génération depuis le schéma
+- traduction par chaînes, un fichier par locale, synchronisation via CLI
+- QueryBuilder, ORM avec getters/setters, repositories, formulaires générés et génération depuis le schéma
 - migrations de base de données et suivi des snapshots de schéma
 - formulaires, validation, upload et CSRF
 - auth session / token, mot de passe et middlewares
