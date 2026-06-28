@@ -91,6 +91,15 @@ class FormExtension
         $attrString .= self::buildAttributes($wrapperAttrs);
 
         $html = "<div{$attrString}>";
+
+        if ($label = $field->getLabel()) {
+            $html .= sprintf(
+                '<label for="%s">%s</label>',
+                self::escape($field->getId()),
+                self::escape($label)
+            );
+        }
+
         $html .= $field->render();
 
         foreach ($field->getErrors() as $err) {
