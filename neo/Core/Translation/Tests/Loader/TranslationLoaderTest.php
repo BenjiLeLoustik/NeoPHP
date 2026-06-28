@@ -60,6 +60,9 @@ class TranslationLoaderTest extends TestCase
         );
     }
 
+    /**
+     * @throws TranslationException
+     */
     public function testLoadReturnsTranslationsFromFile(): void
     {
         $this->writeLocale('fr', [
