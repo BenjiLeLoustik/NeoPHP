@@ -132,9 +132,6 @@ trait HasRelationships
 
             $relation = $relations[$name];
             $pdo = DatabaseConnection::getPdo();
-            $where = $onlyTrashed
-                ? 'deleted_at IS NOT NULL'
-                : ($includeTrashed ? '1=1' : 'deleted_at IS NULL');
 
             try {
                 if ($relation instanceof BelongsTo) {
@@ -143,6 +140,10 @@ trait HasRelationships
                         $this->relationsCache[$name] = null;
                         return null;
                     }
+
+                    $where = self::buildRelationSoftDeleteWhere(
+                        $relation->target::getTable(), $pdo, $includeTrashed, $onlyTrashed
+                    );
 
                     $stmt = $pdo->prepare("SELECT * FROM `{$relation->target::getTable()}` WHERE `{$relation->target::getPrimaryKey()}` = ? AND $where LIMIT 1");
                     $stmt->execute([$fk]);
@@ -154,6 +155,10 @@ trait HasRelationships
                 }
 
                 if ($relation instanceof HasOne) {
+                    $where = self::buildRelationSoftDeleteWhere(
+                        $relation->target::getTable(), $pdo, $includeTrashed, $onlyTrashed
+                    );
+
                     $stmt = $pdo->prepare("SELECT * FROM `{$relation->target::getTable()}` WHERE `{$relation->foreignKey}` = ? AND $where LIMIT 1");
                     $stmt->execute([$this->{$relation->localKey}]);
                     $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -164,6 +169,10 @@ trait HasRelationships
                 }
 
                 if ($relation instanceof HasMany) {
+                    $where = self::buildRelationSoftDeleteWhere(
+                        $relation->target::getTable(), $pdo, $includeTrashed, $onlyTrashed
+                    );
+
                     $stmt = $pdo->prepare("SELECT * FROM `{$relation->target::getTable()}` WHERE `{$relation->foreignKey}` = ? AND $where");
                     $stmt->execute([$this->{$relation->localKey}]);
                     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -174,14 +183,16 @@ trait HasRelationships
                 }
 
                 if ($relation instanceof BelongsToMany) {
+                    $where = self::buildRelationSoftDeleteWhere(
+                        $relation->target::getTable(), $pdo, $includeTrashed, $onlyTrashed, 't'
+                    );
+
                     $sql = "
                         SELECT t.* FROM `{$relation->target::getTable()}` t
                         INNER JOIN `{$relation->pivotTable}` p
                             ON p.`{$relation->pivotTargetKey}` = t.`{$relation->target::getPrimaryKey()}`
                         WHERE p.`{$relation->pivotLocalKey}` = ?
-                          AND " . ($onlyTrashed
-                            ? 't.deleted_at IS NOT NULL'
-                            : ($includeTrashed ? '1=1' : 't.deleted_at IS NULL'));
+                          AND $where";
 
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute([$this->{$relation->localKey}]);
@@ -316,7 +327,6 @@ trait HasRelationships
 
         $rel = $relations[$relation];
         $pdo = DatabaseConnection::getPdo();
-        $where = self::buildSoftDeleteWhere($includeTrashed, $onlyTrashed);
 
         $syncWithIdentityMap = function (AbstractModel $obj): AbstractModel {
             return $obj;
@@ -335,6 +345,12 @@ trait HasRelationships
                 if (!$ids) return;
 
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+                $target = $rel->target;
+                $where = self::buildRelationSoftDeleteWhere(
+                    $target::getTable(), $pdo, $includeTrashed, $onlyTrashed
+                );
+
                 $stmt = $pdo->prepare("SELECT * FROM `{$target::getTable()}` WHERE `$foreignKey` IN ($placeholders) AND $where");
                 $stmt->execute($ids);
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -367,6 +383,12 @@ trait HasRelationships
                 if (!$ids) return;
 
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+                $target = $rel->target;
+                $where = self::buildRelationSoftDeleteWhere(
+                    $target::getTable(), $pdo, $includeTrashed, $onlyTrashed
+                );
+
                 $stmt = $pdo->prepare("SELECT * FROM `{$target::getTable()}` WHERE `$targetPk` IN ($placeholders) AND $where");
                 $stmt->execute($ids);
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -399,6 +421,12 @@ trait HasRelationships
                 if (!$ids) return;
 
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+                $target = $rel->target;
+                $where = self::buildRelationSoftDeleteWhere(
+                    $target::getTable(), $pdo, $includeTrashed, $onlyTrashed, 't'
+                );
+
                 $sql = "
                     SELECT t.*, p.`$pivotLocalKey` AS pivot_local
                     FROM `{$target::getTable()}` t
@@ -436,5 +464,38 @@ trait HasRelationships
         foreach ($models as $model) {
             $model->loadRelation($relation, $includeTrashed, $onlyTrashed);
         }
+    }
+
+    private static function tableHasColumn(string $table, string $column, PDO $pdo): bool
+    {
+        static $cache = [];
+
+        $key = $table . ':' . $column;
+        if (isset($cache[$key])) {
+            return $cache[$key];
+        }
+
+        $stmt = $pdo->prepare("SHOW COLUMNS FROM `{$table}` LIKE ?");
+        $stmt->execute([$column]);
+
+        return $cache[$key] = (bool)$stmt->fetch();
+    }
+
+    private static function buildRelationSoftDeleteWhere(
+        string $table,
+        PDO $pdo,
+        bool $includeTrashed,
+        bool $onlyTrashed,
+        string $alias = ''
+    ): string {
+        $prefix = $alias !== '' ? "{$alias}." : '';
+
+        if (!self::tableHasColumn($table, 'deleted_at', $pdo)) {
+            return '1=1';
+        }
+
+        return $onlyTrashed
+            ? "{$prefix}deleted_at IS NOT NULL"
+            : ($includeTrashed ? '1=1' : "{$prefix}deleted_at IS NULL");
     }
 }
