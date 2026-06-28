@@ -116,17 +116,17 @@ final class ApplicationPathsTest extends TestCase
         self::assertSame($expectedBasePath . '/src/TestApp/App/Views', $container->get('viewsPath'));
         self::assertSame($expectedBasePath . '/src/TestApp/App/Controllers', $container->get('controllersPath'));
         self::assertSame($expectedBasePath . '/src/TestApp/Assets/', $container->get('assetsPath'));
-        self::assertSame($expectedBasePath . '/src/TestApp/Repository', $container->get('repositoryPath'));
-        self::assertSame($expectedBasePath . '/src/TestApp/Model', $container->get('modelPath'));
-        self::assertSame($expectedBasePath . '/src/TestApp/App/Forms', $container->get('formPath'));
+        self::assertSame($expectedBasePath . '/src/TestApp/Database/Repository', $container->get('repositoryPath'));
+        self::assertSame($expectedBasePath . '/src/TestApp/Database/Model', $container->get('modelPath'));
+        self::assertSame($expectedBasePath . '/src/TestApp/Database/Forms', $container->get('formPath'));
         self::assertSame($expectedBasePath . '/src/TestApp/App/Event/Listener', $container->get('listenersPath'));
         self::assertSame($expectedBasePath . '/src/TestApp/App/Crons', $container->get('cronsPath'));
 
         self::assertSame('manifest.json', $container->get('manifestFilename'));
         self::assertSame('Neo\\Src\\TestApp\\App\\Controllers\\', $container->get('controllerNamespace'));
-        self::assertSame('Neo\\Src\\TestApp\\Model', $container->get('modelNamespace'));
-        self::assertSame('Neo\\Src\\TestApp\\Repository', $container->get('repositoryNamespace'));
-        self::assertSame('Neo\\Src\\TestApp\\App\\Forms', $container->get('formNamespace'));
+        self::assertSame('Neo\\Src\\TestApp\\Database\\Model', $container->get('modelNamespace'));
+        self::assertSame('Neo\\Src\\TestApp\\Database\\Repository', $container->get('repositoryNamespace'));
+        self::assertSame('Neo\\Src\\TestApp\\Database\\Forms', $container->get('formNamespace'));
     }
 
     /**

@@ -27,8 +27,7 @@ final class TranslationWriter
             $this->createFile($filePath);
         }
 
-        $content = include $filePath;
-        $translations = is_array($content) ? $content : [];
+        $translations = (static fn() => require $filePath)();
 
         if (!is_array($translations)) {
             throw new TranslationException(
