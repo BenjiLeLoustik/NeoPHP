@@ -3,10 +3,14 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM\Model;
 
+use DateTime;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Model\Concerns\HasPersistence;
 use Neo\Core\Database\ORM\Model\Concerns\HasRelationships;
 
+/**
+ * @property DateTime|string|null $deleted_at
+ */
 abstract class AbstractModel
 {
     use HasPersistence;
@@ -168,7 +172,7 @@ abstract class AbstractModel
         foreach ($this->data as $name => $value) {
             if (in_array($name, $this->getInternalProperties(), true)) continue;
             if (in_array($name, $this->hidden, true)) continue;
-            $result[$name] = $value instanceof \DateTime ? $value->format('Y-m-d H:i:s') : $value;
+            $result[$name] = $value instanceof DateTime ? $value->format('Y-m-d H:i:s') : $value;
         }
 
         if ($includeRelations) {
@@ -227,13 +231,13 @@ abstract class AbstractModel
         $name = $type->getName();
         $nullable = $type->allowsNull();
 
-        if ($name === \DateTime::class) {
-            if ($value instanceof \DateTime) return $value;
-            if ($value === null || $value === '') return $nullable ? null : new \DateTime();
+        if ($name === DateTime::class) {
+            if ($value instanceof DateTime) return $value;
+            if ($value === null || $value === '') return $nullable ? null : new DateTime();
             try {
-                return new \DateTime((string) $value);
+                return new DateTime((string) $value);
             } catch (\Exception) {
-                return $nullable ? null : new \DateTime();
+                return $nullable ? null : new DateTime();
             }
         }
 
