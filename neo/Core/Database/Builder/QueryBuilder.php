@@ -533,7 +533,14 @@ class QueryBuilder
     public function count(): int
     {
         try {
-            $sql = "SELECT COUNT(*) FROM {$this->table}";
+            $sql = <<<SQL
+SELECT COUNT(*) FROM %s
+SQL;
+
+            $sql = sprintf(
+                $sql,
+                $this->table
+            );
 
             if ($this->joins) {
                 $sql .= ' ' . implode(' ', $this->joins);
@@ -575,11 +582,16 @@ class QueryBuilder
     {
         try {
             $columns = array_keys($data);
-            $quotedColumns = array_map(fn($c) => '`' . $this->sanitizeIdentifier($c) . '`', $columns);
+            $quotedColumns = array_map(fn($c) => $this->sanitizeIdentifier($c), $columns);
             $placeholders = array_map(fn($c) => ':' . preg_replace('/[^a-zA-Z0-9_]/', '_', $c), $columns);
 
+            $sql = <<<SQL
+INSERT INTO %s (%s) VALUES (%s)
+SQL;
+
+
             $sql = sprintf(
-                'INSERT INTO %s (%s) VALUES (%s)',
+                $sql,
                 $this->table,
                 implode(', ', $quotedColumns),
                 implode(', ', $placeholders)
@@ -635,13 +647,23 @@ class QueryBuilder
             $setParams = [];
 
             foreach ($data as $key => $value) {
-                $quotedCol = '`' . $this->sanitizeIdentifier($key) . '`';
+                $quotedCol = $this->sanitizeIdentifier($key);
                 $paramKey = 'set_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $key);
                 $setParts[] = "$quotedCol = :$paramKey";
                 $setParams[$paramKey] = $value;
             }
 
-            $sql = "UPDATE {$this->table} SET " . implode(', ', $setParts) . $this->buildWhere();
+            $sql = <<<SQL
+UPDATE %s SET %s %s
+SQL;
+
+            $sql = sprintf(
+                $sql,
+                $this->table,
+                implode(', ', $setParts),
+                $this->buildWhere()
+            );
+
             $stmt = $this->pdo->prepare($sql);
 
             foreach ($setParams as $key => $value) {
@@ -680,7 +702,16 @@ class QueryBuilder
         }
 
         try {
-            $sql = "DELETE FROM {$this->table} " . $this->buildWhere();
+
+            $sql = <<<SQL
+DELETE FROM %s %s
+SQL;
+
+            $sql = sprintf(
+                $sql,
+                $this->table,
+                $this->buildWhere()
+            );
 
             $stmt = $this->pdo->prepare($sql);
             return $this->executeTracked($stmt, $this->params, $sql);
@@ -704,7 +735,16 @@ class QueryBuilder
 
         try {
             $column = $this->sanitizeColumn($column);
-            $sql = "SELECT COUNT(DISTINCT $column) FROM {$this->table}";
+
+            $sql = <<<SQL
+SELECT COUNT(DISTINCT %s) FROM %s
+SQL;
+
+            $sql = sprintf(
+                $sql,
+                $column,
+                $this->table
+            );
 
             if ($this->joins) {
                 $sql .= ' ' . implode(' ', $this->joins);
