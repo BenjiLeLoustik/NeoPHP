@@ -15,7 +15,7 @@ class RateLimit
     public function __construct(
         int $maxAttempts = 60,
         int $decaySeconds = 60,
-        string $message = 'Trop de requêtes, veuillez réessayer dans quelques instants.',
+        string $message = 'Too many requests; please try again in a few moments.',
     ) {
         $this->maxAttempts = $maxAttempts;
         $this->decaySeconds = $decaySeconds;
