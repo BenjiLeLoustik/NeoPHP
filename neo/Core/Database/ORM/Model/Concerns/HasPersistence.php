@@ -98,7 +98,18 @@ trait HasPersistence
 
             static $columnsCache = [];
             if (!isset($columnsCache[$table])) {
-                $stmt = $pdo->query("DESCRIBE `$table`");
+
+                $sql = <<<SQL
+DESCRIBE `%s`
+SQL;
+
+                $stmt = $pdo->query(
+                    sprintf(
+                        $sql,
+                        $table
+                    )
+                );
+
                 if ($stmt === false) {
                     throw new DatabaseException(
                         title: 'Model Save Error',
@@ -130,12 +141,35 @@ trait HasPersistence
                 unset($data[$pk]);
                 $columns = implode(', ', array_map(fn($c) => "`$c`", array_keys($data)));
                 $placeholders = implode(', ', array_fill(0, count($data), '?'));
-                $stmt = $pdo->prepare("INSERT INTO `$table` ($columns) VALUES ($placeholders)");
+
+                $sql = <<<SQL
+INSERT INTO `%s` (%s) VALUES (%s)
+SQL;
+                $stmt = $pdo->prepare(
+                    sprintf(
+                        $sql,
+                        $table,
+                        $columns,
+                        $placeholders
+                    )
+                );
                 $stmt->execute(array_values($data));
                 $this->$pk = (int) $pdo->lastInsertId();
             } else {
                 $set = implode(', ', array_map(fn($col) => "`$col` = ?", array_keys($data)));
-                $stmt = $pdo->prepare("UPDATE `$table` SET $set WHERE `$pk` = ?");
+
+                $sql = <<<SQL
+UPDATE `%s` SET %s WHERE `%s` = ?
+SQL;
+
+                $stmt = $pdo->prepare(
+                    sprintf(
+                        $sql,
+                        $table,
+                        $set,
+                        $pk
+                    )
+                );
                 $stmt->execute([...array_values($data), $this->$pk]);
             }
 
@@ -197,8 +231,16 @@ trait HasPersistence
             if ($pk) $submittedIds[] = (int) $pk;
         }
 
+        $sql = <<<SQL
+SELECT `%s` FROM `%s` WHERE `%s` = ? AND deleted_at IS NULL
+SQL;
         $stmt = $pdo->prepare(
-            "SELECT `{$targetPk}` FROM `{$table}` WHERE `{$foreignKey}` = ? AND deleted_at IS NULL"
+            sprintf(
+                $sql,
+                $targetPk,
+                $table,
+                $foreignKey
+            )
         );
 
         $stmt->execute([$parentId]);
@@ -214,13 +256,34 @@ trait HasPersistence
             $hasSoftDelete = $this->targetHasSoftDelete($target, $pdo);
 
             if ($hasSoftDelete) {
+
+                $sql = <<<SQL
+UPDATE `%s` SET deleted_at = ? WHERE `%s` IN (%s)
+SQL;
+
                 $stmt = $pdo->prepare(
-                    "UPDATE `{$table}` SET deleted_at = ? WHERE `{$targetPk}` IN ({$placeholders})"
+                    sprintf(
+                        $sql,
+                        $table,
+                        $targetPk,
+                        $placeholders
+                    )
                 );
                 $stmt->execute([$now, ...$toDelete]);
             } else {
+
+                $sql = <<<SQL
+DELETE FROM `%s` WHERE `%s` IN (%s)
+SQL;
+
+
                 $stmt = $pdo->prepare(
-                    "DELETE FROM `{$table}` WHERE `{$targetPk}` IN ({$placeholders})"
+                    sprintf(
+                        $sql,
+                        $table,
+                        $targetPk,
+                        $placeholders
+                    )
                 );
                 $stmt->execute([...$toDelete]);
             }
@@ -257,8 +320,18 @@ trait HasPersistence
                 $data['updated_at'] = $now;
 
                 $setParts = array_map(fn($col) => "`{$col}` = ?", array_keys($data));
+
+                $sql = <<<SQL
+UPDATE `%s` SET %s WHERE `%s` = ?
+SQL;
+
                 $stmt = $pdo->prepare(
-                    "UPDATE `{$table}` SET " . implode(', ', $setParts) . " WHERE `{$targetPk}` = ?"
+                    sprintf(
+                        $sql,
+                        $table,
+                        implode(', ', $setParts),
+                        $targetPk
+                    )
                 );
                 $stmt->execute([...array_values($data), $pk]);
 
@@ -277,8 +350,17 @@ trait HasPersistence
                 $columns = implode(', ', array_map(fn($c) => "`$c`", array_keys($data)));
                 $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
+                $sql = <<<SQL
+INSERT INTO `%s` (%s) VALUES (%s)
+SQL;
+
                 $stmt = $pdo->prepare(
-                    "INSERT INTO `{$table}` ({$columns}) VALUES ({$placeholders})"
+                    sprintf(
+                        $sql,
+                        $table,
+                        $columns,
+                        $placeholders
+                    )
                 );
                 $stmt->execute(array_values($data));
 
@@ -299,7 +381,18 @@ trait HasPersistence
         }
 
         $table = $target::getTable();
-        $stmt = $pdo->prepare("SHOW COLUMNS FROM `{$table}` LIKE 'deleted_at'");
+
+        $sql = <<<SQL
+SHOW COLUMNS FROM `%s` LIKE 'deleted_at'
+SQL;
+
+        $stmt = $pdo->prepare(
+            sprintf(
+                $sql,
+                $table
+            )
+        );
+
         $stmt->execute();
 
         return $cache[$target] = (bool) $stmt->fetch();
