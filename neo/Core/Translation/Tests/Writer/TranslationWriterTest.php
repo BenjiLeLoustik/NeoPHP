@@ -58,29 +58,13 @@ class TranslationWriterTest extends TestCase
         $loader = new TranslationLoader();
         $writer = new TranslationWriter($loader);
 
-        $writer->ensure('fr', 'messages', ['hello'], 'Bonjour');
+        $writer->ensure('fr', 'Bonjour');
 
-        $filePath = $this->path . '/fr/messages.php';
+        $filePath = $this->path . '/fr.php';
         self::assertFileExists($filePath);
 
         $translations = require $filePath;
-        self::assertSame(['hello' => 'Bonjour'], $translations);
-    }
-
-    /**
-     * @throws TranslationException
-     */
-    public function testEnsureWritesNestedSegments(): void
-    {
-        $loader = new TranslationLoader();
-        $writer = new TranslationWriter($loader);
-
-        $writer->ensure('fr', 'messages', ['section', 'title'], 'Titre');
-
-        $filePath = $this->path . '/fr/messages.php';
-        $translations = require $filePath;
-
-        self::assertSame(['section' => ['title' => 'Titre']], $translations);
+        self::assertSame(['Bonjour' => 'Bonjour'], $translations);
     }
 
     /**
@@ -88,20 +72,18 @@ class TranslationWriterTest extends TestCase
      */
     public function testEnsureDoesNotOverwriteExistingKey(): void
     {
-        $dir = $this->path . '/fr';
-        mkdir($dir, 0777, true);
         file_put_contents(
-            $dir . '/messages.php',
-            "<?php return ['hello' => 'Salut'];"
+            $this->path . '/fr.php',
+            "<?php return ['Bonjour' => 'Salut'];"
         );
 
         $loader = new TranslationLoader();
         $writer = new TranslationWriter($loader);
 
-        $writer->ensure('fr', 'messages', ['hello'], 'Bonjour');
+        $writer->ensure('fr', 'Bonjour');
 
-        $translations = require $dir . '/messages.php';
-        self::assertSame(['hello' => 'Salut'], $translations);
+        $translations = require $this->path . '/fr.php';
+        self::assertSame(['Bonjour' => 'Salut'], $translations);
     }
 
     /**
@@ -112,24 +94,22 @@ class TranslationWriterTest extends TestCase
         $loader = new TranslationLoader();
         $writer = new TranslationWriter($loader);
 
-        self::assertSame([], $loader->load('fr', 'messages'));
+        self::assertSame([], $loader->load('fr'));
 
-        $writer->ensure('fr', 'messages', ['hello'], 'Bonjour');
+        $writer->ensure('fr', 'Bonjour');
 
-        self::assertSame(['hello' => 'Bonjour'], $loader->load('fr', 'messages'));
+        self::assertSame(['Bonjour' => 'Bonjour'], $loader->load('fr'));
     }
 
     public function testEnsureThrowsWhenExistingFileDoesNotReturnAnArray(): void
     {
-        $dir = $this->path . '/fr';
-        mkdir($dir, 0777, true);
-        file_put_contents($dir . '/broken.php', "<?php return 'not-an-array';");
+        file_put_contents($this->path . '/fr.php', "<?php return 'not-an-array';");
 
         $loader = new TranslationLoader();
         $writer = new TranslationWriter($loader);
 
         $this->expectException(TranslationException::class);
 
-        $writer->ensure('fr', 'broken', ['hello'], 'Bonjour');
+        $writer->ensure('fr', 'Bonjour');
     }
 }

@@ -50,38 +50,28 @@ class TranslationLoaderTest extends TestCase
     }
 
     /**
-     * @param string $locale
-     * @param string $file
-     * @param array<string, mixed> $content
+     * @param array<string, string> $content
      */
-    private function writeMessages(string $locale, string $file, array $content): void
+    private function writeLocale(string $locale, array $content): void
     {
-        $dir = $this->path . '/' . $locale;
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
-        }
-
         file_put_contents(
-            $dir . '/' . $file . '.php',
+            $this->path . '/' . $locale . '.php',
             '<?php return ' . var_export($content, true) . ';'
         );
     }
 
-    /**
-     * @throws TranslationException
-     */
     public function testLoadReturnsTranslationsFromFile(): void
     {
-        $this->writeMessages('fr', 'messages', [
-            'hello' => 'Bonjour',
-            'nested' => ['key' => 'Valeur'],
+        $this->writeLocale('fr', [
+            'Bonjour' => 'Bonjour',
+            'Au revoir' => 'Au revoir',
         ]);
 
         $loader = new TranslationLoader();
 
         self::assertSame(
-            ['hello' => 'Bonjour', 'nested' => ['key' => 'Valeur']],
-            $loader->load('fr', 'messages')
+            ['Bonjour' => 'Bonjour', 'Au revoir' => 'Au revoir'],
+            $loader->load('fr')
         );
     }
 
@@ -92,7 +82,7 @@ class TranslationLoaderTest extends TestCase
     {
         $loader = new TranslationLoader();
 
-        self::assertSame([], $loader->load('fr', 'unknown'));
+        self::assertSame([], $loader->load('en'));
     }
 
     /**
@@ -100,20 +90,20 @@ class TranslationLoaderTest extends TestCase
      */
     public function testLoadCachesResultUntilInvalidated(): void
     {
-        $this->writeMessages('fr', 'messages', ['hello' => 'Bonjour']);
+        $this->writeLocale('fr', ['Bonjour' => 'Bonjour']);
 
         $loader = new TranslationLoader();
-        $first = $loader->load('fr', 'messages');
+        $first  = $loader->load('fr');
 
-        $this->writeMessages('fr', 'messages', ['hello' => 'Salut']);
-        $second = $loader->load('fr', 'messages');
+        $this->writeLocale('fr', ['Bonjour' => 'Salut']);
+        $second = $loader->load('fr');
 
         self::assertSame($first, $second);
 
-        $loader->invalidate('fr', 'messages');
-        $third = $loader->load('fr', 'messages');
+        $loader->invalidate('fr');
+        $third = $loader->load('fr');
 
-        self::assertSame(['hello' => 'Salut'], $third);
+        self::assertSame(['Bonjour' => 'Salut'], $third);
     }
 
     /**
@@ -122,20 +112,20 @@ class TranslationLoaderTest extends TestCase
     public function testLoadMergesTranslationsFromMultipleRegisteredPaths(): void
     {
         $secondPath = sys_get_temp_dir() . '/neo-translation-loader-' . uniqid();
-        mkdir($secondPath . '/fr', 0777, true);
+        mkdir($secondPath, 0777, true);
         file_put_contents(
-            $secondPath . '/fr/messages.php',
-            "<?php return ['extra' => 'Supplementaire'];"
+            $secondPath . '/fr.php',
+            "<?php return ['Extra' => 'Supplementaire'];"
         );
         TranslationRegistry::registerPath($secondPath);
 
-        $this->writeMessages('fr', 'messages', ['hello' => 'Bonjour']);
+        $this->writeLocale('fr', ['Bonjour' => 'Bonjour']);
 
         $loader = new TranslationLoader();
 
         self::assertSame(
-            ['hello' => 'Bonjour', 'extra' => 'Supplementaire'],
-            $loader->load('fr', 'messages')
+            ['Bonjour' => 'Bonjour', 'Extra' => 'Supplementaire'],
+            $loader->load('fr')
         );
 
         $this->deleteDir($secondPath);
@@ -143,14 +133,12 @@ class TranslationLoaderTest extends TestCase
 
     public function testLoadThrowsWhenFileDoesNotReturnAnArray(): void
     {
-        $dir = $this->path . '/fr';
-        mkdir($dir, 0777, true);
-        file_put_contents($dir . '/broken.php', "<?php return 'not-an-array';");
+        file_put_contents($this->path . '/fr.php', "<?php return 'not-an-array';");
 
         $loader = new TranslationLoader();
 
         $this->expectException(TranslationException::class);
 
-        $loader->load('fr', 'broken');
+        $loader->load('fr');
     }
 }
