@@ -58,7 +58,10 @@ abstract class AbstractRepository
         }
 
         $this->pdo = DatabaseConnection::getPdo();
-        $this->table = $this->modelClass::getTable();
+
+        $rawTable = $this->modelClass::getTable();
+
+        $this->table = $rawTable;
         $this->primaryKey = $this->modelClass::getPrimaryKey();
         $this->builder = new QueryBuilder()->table($this->table);
     }
