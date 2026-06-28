@@ -67,7 +67,7 @@ PHP;
             return $repoClassName;
         }
 
-        if (!file_exists($file) && file_put_contents($file, $code) === false) {
+        if (file_put_contents($file, $code) === false) {
             throw new DatabaseException(
                 title: 'Repository Generator Error',
                 message: sprintf("Unable to generate the repository '%s' in '%s'.", $repoClassName, $this->repoDir),
