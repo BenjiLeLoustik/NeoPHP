@@ -92,11 +92,20 @@ trait HasRelationships
     protected function filterTrashed(array $items, bool $include, bool $only): array
     {
         return array_values(array_filter($items, function ($item) use ($include, $only) {
-            if (!$item instanceof AbstractModel) return true;
+            if (!$item instanceof AbstractModel) {
+                return true;
+            }
+
             /** @phpstan-ignore-next-line */
-            if ($only) return $item->deleted_at !== null;
+            if ($only) {
+                return $item->deleted_at !== null;
+            }
+
             /** @phpstan-ignore-next-line */
-            if (!$include) return $item->deleted_at === null;
+            if (!$include) {
+                return $item->deleted_at === null;
+            }
+
             return true;
         }));
     }
@@ -145,7 +154,19 @@ trait HasRelationships
                         $relation->target::getTable(), $pdo, $includeTrashed, $onlyTrashed
                     );
 
-                    $stmt = $pdo->prepare("SELECT * FROM `{$relation->target::getTable()}` WHERE `{$relation->ownerKey}` = ? AND $where LIMIT 1");
+                    $sql = <<<SQL
+SELECT * FROM `%s` WHERE `%s` = ? AND %s LIMIT 1
+SQL;
+
+                    $stmt = $pdo->prepare(
+                        sprintf(
+                            $sql,
+                            $relation->target::getTable(),
+                            $relation->ownerKey,
+                            $where
+                        )
+                    );
+
                     $stmt->execute([$fk]);
                     $row = $stmt->fetch(PDO::FETCH_ASSOC);
                     $result = $row ? $relation->target::hydrateRow($row) : null;
@@ -159,7 +180,18 @@ trait HasRelationships
                         $relation->target::getTable(), $pdo, $includeTrashed, $onlyTrashed
                     );
 
-                    $stmt = $pdo->prepare("SELECT * FROM `{$relation->target::getTable()}` WHERE `{$relation->foreignKey}` = ? AND $where LIMIT 1");
+                    $sql = <<<SQL
+SELECT * FROM `%s` WHERE `%s` = ? AND %s LIMIT 1
+SQL;
+
+                    $stmt = $pdo->prepare(
+                        sprintf(
+                            $sql,
+                            $relation->target::getTable(),
+                            $relation->foreignKey,
+                            $where
+                        )
+                    );
                     $stmt->execute([$this->{$relation->localKey}]);
                     $row = $stmt->fetch(PDO::FETCH_ASSOC);
                     $result = $row ? $relation->target::hydrateRow($row) : null;
@@ -173,7 +205,18 @@ trait HasRelationships
                         $relation->target::getTable(), $pdo, $includeTrashed, $onlyTrashed
                     );
 
-                    $stmt = $pdo->prepare("SELECT * FROM `{$relation->target::getTable()}` WHERE `{$relation->foreignKey}` = ? AND $where");
+                    $sql = <<<SQL
+SELECT * FROM `%s` WHERE `%s` = ? AND %s
+SQL;
+
+                    $stmt = $pdo->prepare(
+                        sprintf(
+                            $sql,
+                            $relation->target::getTable(),
+                            $relation->foreignKey,
+                            $where
+                        )
+                    );
                     $stmt->execute([$this->{$relation->localKey}]);
                     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
                     $objs = array_map(fn($r) => $relation->target::hydrateRow($r), $rows);
@@ -187,14 +230,25 @@ trait HasRelationships
                         $relation->target::getTable(), $pdo, $includeTrashed, $onlyTrashed, 't'
                     );
 
-                    $sql = "
-                        SELECT t.* FROM `{$relation->target::getTable()}` t
-                        INNER JOIN `{$relation->pivotTable}` p
-                            ON p.`{$relation->pivotTargetKey}` = t.`{$relation->target::getPrimaryKey()}`
-                        WHERE p.`{$relation->pivotLocalKey}` = ?
-                          AND $where";
+                    $sql = <<<SQL
+SELECT t.* FROM `%s` t
+INNER JOIN `%s` p
+ON p.`%s` = t.`%s`
+WHERE p.`%s` = ?
+AND %s
+SQL;
 
-                    $stmt = $pdo->prepare($sql);
+                    $stmt = $pdo->prepare(
+                        sprintf(
+                            $sql,
+                            $relation->target::getTable(),
+                            $relation->pivotTable,
+                            $relation->pivotTargetKey,
+                            $relation->target::getPrimaryKey(),
+                            $relation->pivotLocalKey,
+                            $where
+                        )
+                    );
                     $stmt->execute([$this->{$relation->localKey}]);
                     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
                     $objs = array_map(fn($r) => $relation->target::hydrateRow($r), $rows);
@@ -350,7 +404,20 @@ trait HasRelationships
                     $target::getTable(), $pdo, $includeTrashed, $onlyTrashed
                 );
 
-                $stmt = $pdo->prepare("SELECT * FROM `{$target::getTable()}` WHERE `$foreignKey` IN ($placeholders) AND $where");
+                $sql = <<<SQL
+SELECT * FROM `%s` WHERE `%s` IN (%s) AND %s
+SQL;
+
+
+                $stmt = $pdo->prepare(
+                    sprintf(
+                        $sql,
+                        $target::getTable(),
+                        $foreignKey,
+                        $placeholders,
+                        $where
+                    )
+                );
                 $stmt->execute($ids);
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $grouped = [];
@@ -387,7 +454,20 @@ trait HasRelationships
                     $target::getTable(), $pdo, $includeTrashed, $onlyTrashed
                 );
 
-                $stmt = $pdo->prepare("SELECT * FROM `{$target::getTable()}` WHERE `$targetPk` IN ($placeholders) AND $where");
+                $sql = <<<SQL
+SELECT * FROM `%s` WHERE `%s` IN (%s) AND %s
+SQL;
+
+
+                $stmt = $pdo->prepare(
+                    sprintf(
+                        $sql,
+                        $target::getTable(),
+                        $targetPk,
+                        $placeholders,
+                        $where
+                    )
+                );
                 $stmt->execute($ids);
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $mapped = [];
@@ -424,15 +504,27 @@ trait HasRelationships
                     $target::getTable(), $pdo, $includeTrashed, $onlyTrashed, 't'
                 );
 
-                $sql = "
-                    SELECT t.*, p.`$pivotLocalKey` AS pivot_local
-                    FROM `{$target::getTable()}` t
-                    INNER JOIN `$pivotTable` p ON p.`$pivotTargetKey` = t.`$targetPk`
-                    WHERE p.`$pivotLocalKey` IN ($placeholders)
-                    AND $where
-                ";
+                $sql = <<<SQL
+SELECT t.*, p.`%s` AS pivot_local
+FROM `%s` t
+INNER JOIN `%s` p ON p.`%s` = t.`%s`
+WHERE p.`%s` IN (%s)
+AND %s
+SQL;
 
-                $stmt = $pdo->prepare($sql);
+                $stmt = $pdo->prepare(
+                    sprintf(
+                        $sql,
+                        $pivotLocalKey,
+                        $target::getTable(),
+                        $pivotTable,
+                        $pivotTargetKey,
+                        $targetPk,
+                        $pivotLocalKey,
+                        $placeholders,
+                        $where
+                    )
+                );
                 $stmt->execute($ids);
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $grouped = [];
@@ -473,7 +565,19 @@ trait HasRelationships
         }
 
         $escaped = str_replace(['%', '_'], ['\%', '\_'], $column);
-        $stmt = $pdo->query("SHOW COLUMNS FROM `{$table}` LIKE '{$escaped}'");
+
+        $sql = <<<SQL
+SHOW COLUMNS FROM `%s` LIKE '%s'
+SQL;
+
+
+        $stmt = $pdo->query(
+            sprintf(
+                $sql,
+                $table,
+                $escaped,
+            )
+        );
 
         return $cache[$key] = $stmt !== false && (bool) $stmt->fetch();
     }
