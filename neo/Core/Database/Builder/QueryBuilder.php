@@ -585,13 +585,8 @@ SQL;
             $quotedColumns = array_map(fn($c) => $this->sanitizeIdentifier($c), $columns);
             $placeholders = array_map(fn($c) => ':' . preg_replace('/[^a-zA-Z0-9_]/', '_', $c), $columns);
 
-            $sql = <<<SQL
-INSERT INTO %s (%s) VALUES (%s)
-SQL;
-
-
             $sql = sprintf(
-                $sql,
+                'INSERT INTO %s (%s) VALUES (%s)',
                 $this->table,
                 implode(', ', $quotedColumns),
                 implode(', ', $placeholders)
@@ -599,14 +594,17 @@ SQL;
 
             $stmt = $this->pdo->prepare($sql);
 
+            $insertParams = [];
+
             foreach ($data as $key => $value) {
                 $paramKey = ':' . preg_replace('/[^a-zA-Z0-9_]/', '_', $key);
+                $insertParams[$paramKey] = $value; // ← pour le profiler
                 $value === null
                     ? $stmt->bindValue($paramKey, null, PDO::PARAM_NULL)
                     : $stmt->bindValue($paramKey, $value);
             }
 
-            return $this->executeTracked($stmt, [], $sql);
+            return $this->executeTracked($stmt, $insertParams, $sql);
 
         } catch (PDOException $e) {
             throw new DatabaseException(
@@ -902,7 +900,7 @@ SQL;
     private function executeTracked(\PDOStatement $stmt, array $params, string $sql): bool
     {
         $t0 = microtime(true);
-        $result = $stmt->execute($params);
+        $result = empty($params) ? $stmt->execute() : $stmt->execute($params);
         $ms = (microtime(true) - $t0) * 1000;
 
         if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {

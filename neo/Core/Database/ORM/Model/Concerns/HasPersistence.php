@@ -142,17 +142,16 @@ SQL;
                 $columns = implode(', ', array_map(fn($c) => "`$c`", array_keys($data)));
                 $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
-                $sql = <<<SQL
-INSERT INTO `%s` (%s) VALUES (%s)
-SQL;
-                $stmt = $pdo->prepare(
-                    sprintf(
-                        $sql,
-                        $table,
-                        $columns,
-                        $placeholders
-                    )
+                $sql = sprintf(
+                    "INSERT INTO `%s` (%s) VALUES (%s)",
+                    $table,
+                    $columns,
+                    $placeholders
                 );
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute(array_values($data));
+
                 $stmt->execute(array_values($data));
                 $this->$pk = (int) $pdo->lastInsertId();
             } else {
