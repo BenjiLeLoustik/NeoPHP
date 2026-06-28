@@ -53,7 +53,7 @@ class ModelGenerator
 <?php
 declare(strict_types=1);
 
-namespace Neo\\Src\\{$this->appName}\\Model;
+namespace Neo\\Src\\{$this->appName}\\Database\\Model;
 
 use Neo\Core\Database\ORM\Model\AbstractModel;
 PHP;
