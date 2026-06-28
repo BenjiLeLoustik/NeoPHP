@@ -11,10 +11,10 @@ if (!function_exists('translate')) {
      * @param array<string, mixed> $replace
      * @throws ContainerException
      */
-    function translate(string $key, ?string $defaultMessage = null, array $replace = []): string
+    function translate(string $text, array $replace = []): string
     {
         return ContainerRegistry::get()
             ->get(TranslationManager::class)
-            ->translate($key, $defaultMessage, $replace);
+            ->translate($text, $replace);
     }
 }

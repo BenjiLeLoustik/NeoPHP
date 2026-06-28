@@ -7,25 +7,23 @@ use Neo\Core\Translation\TranslationRegistry;
 
 final class TranslationLoader
 {
-    /** @var array<string, array<string, mixed>> */
+    /** @var array<string, array<string, string>> */
     private array $cache = [];
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, string>
      * @throws TranslationException
      */
-    public function load(string $locale, string $file): array
+    public function load(string $locale): array
     {
-        $cacheKey = "$locale.$file";
-
-        if (isset($this->cache[$cacheKey])) {
-            return $this->cache[$cacheKey];
+        if (isset($this->cache[$locale])) {
+            return $this->cache[$locale];
         }
 
         $translations = [];
 
         foreach (TranslationRegistry::getPaths() as $path) {
-            $filePath = "$path/$locale/$file.php";
+            $filePath = "$path/$locale.php";
 
             if (!file_exists($filePath)) {
                 continue;
@@ -41,14 +39,14 @@ final class TranslationLoader
                 );
             }
 
-            $translations = array_replace_recursive($translations, $data);
+            $translations = array_replace($translations, $data);
         }
 
-        return $this->cache[$cacheKey] = $translations;
+        return $this->cache[$locale] = $translations;
     }
 
-    public function invalidate(string $locale, string $file): void
+    public function invalidate(string $locale): void
     {
-        unset($this->cache["$locale.$file"]);
+        unset($this->cache[$locale]);
     }
 }

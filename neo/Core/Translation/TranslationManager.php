@@ -40,6 +40,41 @@ class TranslationManager implements TranslatorInterface
     }
 
     /**
+     * @param array<string, mixed> $replace
+     * @throws TranslationException
+     */
+    public function translate(string $text, array $replace = []): string
+    {
+        if (!$this->enabled) {
+            return $this->replace($text, $replace);
+        }
+
+        $translations = $this->loader->load($this->locale);
+        $found = array_key_exists($text, $translations);
+        $result = $found ? $translations[$text] : $text;
+
+        $this->collector?->record($text, $result, $found);
+
+        if (!$found && $this->autoWrite) {
+            $this->writer->ensure($this->locale, $text);
+        }
+
+        return $this->replace($result, $replace);
+    }
+
+    /**
+     * @param array<string, mixed> $replace
+     */
+    private function replace(string $text, array $replace): string
+    {
+        foreach ($replace as $key => $value) {
+            $text = str_replace(':' . $key, (string) $value, $text);
+        }
+
+        return $text;
+    }
+
+    /**
      * @throws TranslationException
      * @throws ContainerException
      */
@@ -51,7 +86,7 @@ class TranslationManager implements TranslatorInterface
             ->get('translation');
 
         $availableLocales = $translationConfig['available_locales'] ?? [];
-        $cookie = $this->container->get(Cookie::class);
+        $cookie           = $this->container->get(Cookie::class);
 
         if (!empty($availableLocales) && !isset($availableLocales[$locale])) {
             throw new TranslationException(
@@ -67,76 +102,6 @@ class TranslationManager implements TranslatorInterface
 
         $this->locale = $locale;
         $cookie->set('lang', $locale, time() + $lifetime, '/', null, false, true);
-    }
-
-    /**
-     * @param array<string, mixed> $replace
-     * @throws TranslationException
-     */
-    public function translate(
-        string $key,
-        ?string $defaultMessage = null,
-        array $replace = []
-    ): string {
-        if (!$this->enabled) {
-            return $this->replace($defaultMessage ?? $key, $replace);
-        }
-
-        if (!$this->isValidKey($key)) {
-            throw new TranslationException(
-                title: 'Invalid Translation Key',
-                message: sprintf("Translation key '%s' is invalid. Expected format: 'file.key'.", $key),
-                code: 500
-            );
-        }
-
-        $translated = $this->resolve($key);
-        $found = $translated !== $key;
-        $this->collector?->record($key, $found ? $translated : ($defaultMessage ?? $key), $found);
-
-
-        if ($translated === $key) {
-            if ($this->autoWrite) {
-                $this->registerKeyIfNotExists($key, $defaultMessage ?? $key);
-            }
-
-            return $this->replace($defaultMessage ?? $key, $replace);
-        }
-
-        return $this->replace($translated, $replace);
-    }
-
-    private function resolve(string $key): string
-    {
-        if (!str_contains($key, '.')) {
-            return $key;
-        }
-
-        [$file, $path] = explode('.', $key, 2);
-        $segments = explode('.', $path);
-        $translations = $this->loader->load($this->locale, $file);
-
-        $value = $translations;
-        foreach ($segments as $segment) {
-            if (!isset($value[$segment])) {
-                return $key;
-            }
-            $value = $value[$segment];
-        }
-
-        return is_string($value) ? $value : $key;
-    }
-
-    /**
-     * @param array<string, mixed> $replace
-     */
-    private function replace(string $text, array $replace): string
-    {
-        foreach ($replace as $key => $value) {
-            $text = str_replace(':' . $key, (string) $value, $text);
-        }
-
-        return $text;
     }
 
     public function getLocale(): string
@@ -160,50 +125,6 @@ class TranslationManager implements TranslatorInterface
     {
         return $this->enabled;
     }
-
-    /**
-     * @throws TranslationException
-     */
-    public function registerKeyIfNotExists(
-        string $key,
-        ?string $value = null,
-        bool $forceUpdate = false
-    ): void {
-        if (!$this->enabled || !str_contains($key, '.')) {
-            return;
-        }
-
-        if (!$this->isValidKey($key)) {
-            throw new TranslationException(
-                title: 'Invalid Translation Key',
-                message: sprintf("Translation key '%s' is invalid. Expected format: 'file.key'.", $key),
-                code: 500
-            );
-        }
-
-        [$file, $path] = explode('.', $key, 2);
-        $segments = explode('.', $path);
-        $translations = $this->loader->load($this->locale, $file);
-
-        $existingValue = $translations;
-        foreach ($segments as $segment) {
-            if (!isset($existingValue[$segment])) {
-                $existingValue = null;
-                break;
-            }
-            $existingValue = $existingValue[$segment];
-        }
-
-        if ($existingValue === null || $forceUpdate) {
-            $this->writer->ensure($this->locale, $file, $segments, $value ?? $key);
-        }
-    }
-
-    private function isValidKey(string $key): bool
-    {
-        return (bool) preg_match('/^[a-zA-Z0-9_\-]+(\.[a-zA-Z0-9_\-]+)+$/', $key);
-    }
-
 
     public function setCollector(TranslationCollectorInterface $collector): void
     {

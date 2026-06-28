@@ -7,9 +7,5 @@ interface TranslatorInterface
     /**
      * @param array<string, mixed> $replace
      */
-    public function translate(
-        string $key,
-        ?string $defaultMessage = null,
-        array $replace = []
-    ): string;
+    public function translate(string $text, array $replace = []): string;
 }
