@@ -240,6 +240,7 @@ trait HasPersistence
             $entry->$foreignKey = $parentId;
 
             $pk = $entry->$targetPk ?? null;
+            $relations = array_keys($entry->getRelations());
 
             if ($pk) {
                 $data = $entry->toDatabase();
@@ -248,6 +249,10 @@ trait HasPersistence
                     $data['created_at'],
                     $data['deleted_at']
                 );
+
+                foreach ($relations as $relName) {
+                    unset($data[$relName]);
+                }
 
                 $data['updated_at'] = $now;
 
@@ -261,6 +266,10 @@ trait HasPersistence
             } else {
                 $data = $entry->toDatabase();
                 unset($data[$targetPk]);
+
+                foreach ($relations as $relName) {
+                    unset($data[$relName]);
+                }
 
                 $data['created_at'] ??= $now;
                 $data['updated_at'] ??= $now;
