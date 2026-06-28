@@ -94,8 +94,6 @@ Le coeur passe par `Neo\App`, qui :
 |       |-- Assets/
 |       |-- Config/
 |       |-- Database/
-|       |-- Model/
-|       |-- Repository/
 |       |-- Storage/
 |       |-- Tests/
 |       `-- Translations/
@@ -206,7 +204,6 @@ src/Blog/
 |-- composer.json
 |-- App/
 |   |-- Controllers/
-|   |-- Forms/
 |   |-- Middlewares/
 |   |-- Services/
 |   `-- Views/
@@ -221,8 +218,11 @@ src/Blog/
 |   |-- mailer.config.php
 |   |-- session.config.php
 |   `-- twig.config.php
-|-- Model/
-|-- Repository/
+|-- Database/
+|   |-- Forms/
+|   |-- Migrations/
+|   |-- Model/
+|   |-- Repository/
 |-- Storage/
 `-- Translations/
 ```
@@ -845,7 +845,7 @@ Exemple de modèles :
 <?php
 declare(strict_types=1);
 
-namespace Neo\Src\Blog\Model;
+namespace Neo\Src\Blog\Database\Model;
 
 use Neo\Core\Database\ORM\Attribute\BelongsTo;
 use Neo\Core\Database\ORM\Attribute\HasMany;
@@ -855,25 +855,48 @@ final class User extends AbstractModel
 {
     protected static ?string $table = 'users';
 
-    public ?int $id = null;
-    public string $firstname;
-    public string $email;
+    private ?int $id = null;
+    private string $firstname;
+    private string $email;
 
     #[HasMany(target: Post::class, foreignKey: 'user_id', localKey: 'id')]
-    public array $posts = [];
+    private array $posts = [];
+
+    public function getId(): ?int { return $this->id; }
+
+    public function getFirstname(): string { return $this->firstname; }
+    public function setFirstname(string $firstname): void { $this->firstname = $firstname; }
+
+    public function getEmail(): string { return $this->email; }
+    public function setEmail(string $email): void { $this->email = $email; }
+
+    public function getPosts(): array { return $this->posts; }
 }
 
 final class Post extends AbstractModel
 {
     protected static ?string $table = 'posts';
 
-    public ?int $id = null;
-    public int $user_id;
-    public string $title;
-    public string $content;
+    private ?int $id = null;
+    private int $user_id;
+    private string $title;
+    private string $content;
 
     #[BelongsTo(target: User::class, foreignKey: 'user_id', ownerKey: 'id')]
-    public ?User $author = null;
+    private ?User $author = null;
+
+    public function getId(): ?int { return $this->id; }
+
+    public function getUserId(): int { return $this->user_id; }
+    public function setUserId(int $user_id): void { $this->user_id = $user_id; }
+
+    public function getTitle(): string { return $this->title; }
+    public function setTitle(string $title): void { $this->title = $title; }
+
+    public function getContent(): string { return $this->content; }
+    public function setContent(string $content): void { $this->content = $content; }
+
+    public function getAuthor(): ?User { return $this->author; }
 }
 ```
 
@@ -881,9 +904,9 @@ Exemple d'utilisation :
 
 ```php
 $post = new Post();
-$post->user_id = 1;
-$post->title = 'Premier post';
-$post->content = 'Contenu';
+$post->setUserId(1);
+$post->setTitle('Premier post');
+$post->setContent('Contenu');
 $post->save();
 ```
 
@@ -911,7 +934,7 @@ Exemple :
 <?php
 declare(strict_types=1);
 
-namespace Neo\Src\Blog\Repository;
+namespace Neo\Src\Blog\Database\Repository;
 
 use Neo\Core\Database\ORM\Repository\AbstractRepository;
 use Neo\Src\Blog\Model\Post;
@@ -964,7 +987,7 @@ Exemple de classe de formulaire :
 <?php
 declare(strict_types=1);
 
-namespace Neo\Src\Blog\App\Forms;
+namespace Neo\Src\Blog\Database\Forms;
 
 use Neo\Core\Database\Builder\FormBuilder;
 use Neo\Core\Database\Form\Form;
@@ -973,7 +996,7 @@ use Neo\Core\Database\Form\Type\SubmitType;
 use Neo\Core\Database\Form\Type\TextType;
 use Neo\Core\DI\Container;
 use Neo\Core\Http\Request;
-use Neo\Src\Blog\Model\User;
+use Neo\Src\Blog\Database\Model\User;
 
 final class UserForm
 {
@@ -1088,7 +1111,7 @@ Exemple :
 <?php
 declare(strict_types=1);
 
-namespace Neo\Src\Blog\Model;
+namespace Neo\Src\Blog\Database\Model;
 
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Validator\Assert\Email;
@@ -1377,7 +1400,7 @@ Exemple dans un contrôleur :
 #[Route(path: '/register', name: 'register', methods: ['POST'])]
 public function register(): Response
 {
-    $user = new \Neo\Src\Blog\Model\User();
+    $user = new \Neo\Src\Blog\Model\Database\User();
     $user->firstname = (string) $this->request->body('firstname');
     $user->email = (string) $this->request->body('email');
     $user->password = $this->getPasswordManager()->hash(
@@ -1934,7 +1957,7 @@ Exemple sur un repository :
 <?php
 declare(strict_types=1);
 
-namespace Neo\Src\Blog\Repository;
+namespace Neo\Src\Blog\Database\Repository;
 
 use Neo\Core\Database\ORM\Repository\AbstractRepository;
 use Neo\Core\Testing\Attribute\Test;
