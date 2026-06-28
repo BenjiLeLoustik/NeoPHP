@@ -475,10 +475,10 @@ trait HasRelationships
             return $cache[$key];
         }
 
-        $stmt = $pdo->prepare("SHOW COLUMNS FROM `{$table}` LIKE ?");
-        $stmt->execute([$column]);
+        $escaped = str_replace(['%', '_'], ['\%', '\_'], $column);
+        $stmt = $pdo->query("SHOW COLUMNS FROM `{$table}` LIKE '{$escaped}'");
 
-        return $cache[$key] = (bool)$stmt->fetch();
+        return $cache[$key] = $stmt !== false && (bool) $stmt->fetch();
     }
 
     private static function buildRelationSoftDeleteWhere(
