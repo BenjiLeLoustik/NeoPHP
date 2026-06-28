@@ -6,10 +6,9 @@ use Neo\Core\View\Interface\TwigExtensionInterface;
 
 class TranslationViewExtension implements TwigExtensionInterface
 {
-
     public function __construct(
         private readonly TranslationManager $translator
-    ){}
+    ) {}
 
     /**
      * @return array<string, array{callable: callable, options: array<string, mixed>}>
@@ -18,24 +17,24 @@ class TranslationViewExtension implements TwigExtensionInterface
     {
         return [
             'translate' => [
-                'callable' => fn(string $key, ?string $default = null, array $params = []) => $this->translator->translate($key, $default, $params),
-                'options' => [],
+                'callable' => fn(string $text, array $params = []) => $this->translator->translate($text, $params),
+                'options'  => [],
             ],
             'trans' => [
-                'callable' => fn(string $key, ?string $default = null, array $params = []) => $this->translator->translate($key, $default, $params),
-                'options' => [],
+                'callable' => fn(string $text, array $params = []) => $this->translator->translate($text, $params),
+                'options'  => [],
             ],
             'getLocales' => [
                 'callable' => [$this->translator, 'getLocales'],
-                'options' => [],
+                'options'  => [],
             ],
             'getLocale' => [
                 'callable' => [$this->translator, 'getLocale'],
-                'options' => [],
+                'options'  => [],
             ],
             'isEnabledTranslation' => [
                 'callable' => [$this->translator, 'isEnabledTranslation'],
-                'options' => [],
+                'options'  => [],
             ],
         ];
     }
@@ -47,8 +46,8 @@ class TranslationViewExtension implements TwigExtensionInterface
     {
         return [
             'trans' => [
-                'callable' => fn(string $key, array $params = [], ?string $default = null) => $this->translator->translate($key, $default, $params),
-                'options' => [],
+                'callable' => fn(string $text, array $params = []) => $this->translator->translate($text, $params),
+                'options'  => [],
             ],
         ];
     }
