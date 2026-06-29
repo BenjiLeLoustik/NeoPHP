@@ -7,6 +7,7 @@ use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
+use Neo\Core\Utils\Config\Config;
 use PDO;
 use PDOException;
 
@@ -16,6 +17,8 @@ class DatabaseIntrospector
 
     private ?string $connection;
 
+    private string $prefix;
+
     /**
      * @throws DatabaseException
      */
@@ -23,6 +26,9 @@ class DatabaseIntrospector
     {
         $this->connection = $connection;
         $this->pdo = DatabaseConnection::getPdo($this->connection);
+
+        $connectionName = $connection ?? DatabaseConnection::getDefaultName();
+        $this->prefix = $container->get(Config::class)->from('database')->get("connections.{$connectionName}.prefix");
     }
 
     /**
@@ -54,7 +60,10 @@ class DatabaseIntrospector
 
             $tables = [];
             while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
-                $tables[] = $row[0];
+                $tableName = $row[0];
+                if ($this->prefix === '' || str_starts_with($tableName, $this->prefix)) {
+                    $tables[] = $tableName;
+                }
             }
 
             $internal = ['neo_migrations', 'neo_schema_snapshots'];
