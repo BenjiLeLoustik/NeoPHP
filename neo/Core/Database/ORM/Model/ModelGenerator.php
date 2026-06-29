@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM\Model;
 
+use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
+use Neo\Core\Utils\Config\Config;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -14,6 +16,7 @@ class ModelGenerator
     protected Container $container;
     private string $appName;
     private string $modelDir;
+    private string $prefix;
 
     /**
      * @throws NotFoundExceptionInterface
@@ -25,6 +28,9 @@ class ModelGenerator
         $this->container = $container;
         $this->appName = $this->container->get('application');
         $this->modelDir = $this->container->get('modelPath');
+
+        $connectionName = DatabaseConnection::getDefaultName();
+        $this->prefix = $container->get(Config::class)->from('database')->get("connections.{$connectionName}.prefix") ?? '';
 
         if (!is_dir($this->modelDir) && !mkdir($this->modelDir, 0777, true) && !is_dir($this->modelDir)) {
             throw new DatabaseException(
@@ -41,7 +47,11 @@ class ModelGenerator
      */
     public function generate(string $table, array $columns, bool $write = true): string
     {
-        $className = $this->convertToClassName($table);
+        $tableWithoutPrefix = ($this->prefix !== '' && str_starts_with($table, $this->prefix))
+            ? substr($table, strlen($this->prefix))
+            : $table;
+        $className = $this->convertToClassName($tableWithoutPrefix);
+
         $file = "{$this->modelDir}/$className.php";
 
         $modelData = [
