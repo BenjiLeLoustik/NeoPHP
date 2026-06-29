@@ -170,7 +170,17 @@ class Logger
 
     private function isEnabled(): bool
     {
-        return !empty($this->config['enabled']);
+        if (empty($this->config['enabled'])) {
+            return false;
+        }
+
+        $channelConfig = $this->config['channels'][$this->currentChannel] ?? [];
+
+        if (isset($channelConfig['enabled']) && $channelConfig['enabled'] === false) {
+            return false;
+        }
+
+        return true;
     }
 
     private function getLogFilePath(): string
