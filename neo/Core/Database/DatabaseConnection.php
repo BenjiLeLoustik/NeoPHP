@@ -83,9 +83,10 @@ class DatabaseConnection
         }
 
         $dsn = sprintf(
-            '%s:host=%s;dbname=%s;charset=%s',
+            '%s:host=%s;port=%d;dbname=%s;charset=%s',
             $config['driver'],
             $config['host'],
+            $config['port'] ?? 3306,
             $config['dbname'],
             $config['charset'] ?? 'utf8mb4'
         );
