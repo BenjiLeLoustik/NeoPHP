@@ -55,11 +55,6 @@ class App
 
         if (php_sapi_name() !== 'cli') {
             $moduleManager->boot();
-
-            $this->container->get(Request::class)
-                ->enablePreviousUrlTracking(
-                    $this->container->get(Session::class)
-                );
         }
     }
 

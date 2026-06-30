@@ -184,8 +184,6 @@ class Router
      */
     public function dispatch(Request $request, Response $response): Response
     {
-        $request->enablePreviousUrlTracking($this->container->get(Session::class));
-
         $method = strtoupper($request->getMethod());
         $path = '/' . trim($request->getPath(), '/');
         $routes = $this->routes->all();
