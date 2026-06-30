@@ -6,6 +6,7 @@ namespace Neo\Core\Routing;
 use JsonException;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
 use Neo\Core\Profiler\Profiler;
@@ -183,6 +184,8 @@ class Router
      */
     public function dispatch(Request $request, Response $response): Response
     {
+        $request->enablePreviousUrlTracking($this->container->get(Session::class));
+
         $method = strtoupper($request->getMethod());
         $path = '/' . trim($request->getPath(), '/');
         $routes = $this->routes->all();

@@ -32,15 +32,12 @@ class RouterControllerExtension implements ControllerExtensionInterface
             array $routeParams = []
         ) use ($container) {
             $request = $container->get(Request::class);
-            $referer = $request->header('Referer');
 
-            if (is_string($referer) && $referer !== '') {
-                return $referer;
-            }
-
-            return $fallbackRoute
+            $fallback = $fallbackRoute
                 ? $container->get(Router::class)->generateUrl($fallbackRoute, $routeParams)
                 : '/';
+
+            return $request->getPreviousUrl($fallback);
         });
 
         $controller->registerMethod('redirectToRoute', function (
