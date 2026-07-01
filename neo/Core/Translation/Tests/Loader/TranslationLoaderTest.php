@@ -52,10 +52,16 @@ class TranslationLoaderTest extends TestCase
     /**
      * @param array<string, string> $content
      */
-    private function writeLocale(string $locale, array $content): void
+    private function writeLocale(string $locale, array $content, string $domain = 'common'): void
     {
+        $dir = $this->path . '/' . $locale;
+
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
         file_put_contents(
-            $this->path . '/' . $locale . '.php',
+            $dir . '/' . $domain . '.php',
             '<?php return ' . var_export($content, true) . ';'
         );
     }
@@ -115,9 +121,9 @@ class TranslationLoaderTest extends TestCase
     public function testLoadMergesTranslationsFromMultipleRegisteredPaths(): void
     {
         $secondPath = sys_get_temp_dir() . '/neo-translation-loader-' . uniqid();
-        mkdir($secondPath, 0777, true);
+        mkdir($secondPath . '/fr', 0777, true);
         file_put_contents(
-            $secondPath . '/fr.php',
+            $secondPath . '/fr/common.php',
             "<?php return ['Extra' => 'Supplementaire'];"
         );
         TranslationRegistry::registerPath($secondPath);
@@ -136,7 +142,8 @@ class TranslationLoaderTest extends TestCase
 
     public function testLoadThrowsWhenFileDoesNotReturnAnArray(): void
     {
-        file_put_contents($this->path . '/fr.php', "<?php return 'not-an-array';");
+        mkdir($this->path . '/fr', 0777, true);
+        file_put_contents($this->path . '/fr/common.php', "<?php return 'not-an-array';");
 
         $loader = new TranslationLoader();
 

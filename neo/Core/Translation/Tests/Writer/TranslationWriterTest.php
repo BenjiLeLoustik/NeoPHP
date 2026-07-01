@@ -60,7 +60,7 @@ class TranslationWriterTest extends TestCase
 
         $writer->ensure('fr', 'Bonjour');
 
-        $filePath = $this->path . '/fr.php';
+        $filePath = $this->path . '/fr/common.php';
         self::assertFileExists($filePath);
 
         $translations = require $filePath;
@@ -72,8 +72,9 @@ class TranslationWriterTest extends TestCase
      */
     public function testEnsureDoesNotOverwriteExistingKey(): void
     {
+        mkdir($this->path . '/fr', 0777, true);
         file_put_contents(
-            $this->path . '/fr.php',
+            $this->path . '/fr/common.php',
             "<?php return ['Bonjour' => 'Salut'];"
         );
 
@@ -82,7 +83,7 @@ class TranslationWriterTest extends TestCase
 
         $writer->ensure('fr', 'Bonjour');
 
-        $translations = require $this->path . '/fr.php';
+        $translations = require $this->path . '/fr/common.php';
         self::assertSame(['Bonjour' => 'Salut'], $translations);
     }
 
@@ -103,7 +104,8 @@ class TranslationWriterTest extends TestCase
 
     public function testEnsureThrowsWhenExistingFileDoesNotReturnAnArray(): void
     {
-        file_put_contents($this->path . '/fr.php', "<?php return 'not-an-array';");
+        mkdir($this->path . '/fr', 0777, true);
+        file_put_contents($this->path . '/fr/common.php', "<?php return 'not-an-array';");
 
         $loader = new TranslationLoader();
         $writer = new TranslationWriter($loader);
