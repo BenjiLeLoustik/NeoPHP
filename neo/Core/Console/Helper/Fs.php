@@ -68,7 +68,7 @@ final class Fs
                     : mb_strtoupper(mb_substr($part, 0, 1)) . mb_substr($part, 1),
                 $parts
             );
-            $result .= implode('_', $parts);
+            $result .= implode('', $parts);
         }
 
         return $result;
