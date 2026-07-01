@@ -67,7 +67,7 @@ final class TranslationWriter
             );
         }
 
-        if (file_put_contents($filePath, "<?php\n\nreturn [\n];\n") === false) {
+        if (file_put_contents($filePath, "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n];\n") === false) {
             throw new TranslationException(
                 title: 'Translation File Error',
                 message: sprintf("Unable to create translation file '%s'.", $filePath),
@@ -84,12 +84,10 @@ final class TranslationWriter
     {
         $lines = [];
         foreach ($translations as $key => $value) {
-            $k = str_replace("'", "\\'", $key);
-            $v = str_replace("'", "\\'", $value);
-            $lines[] = "    '$k' => '$v'";
+            $lines[] = '    ' . var_export($key, true) . ' => ' . var_export($value, true);
         }
 
-        $content = "<?php\n\nreturn [\n" . implode(",\n", $lines) . "\n];\n";
+        $content = "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n" . implode(",\n", $lines) . "\n];\n";
 
         if (file_put_contents($filePath, $content, LOCK_EX) === false) {
             throw new TranslationException(
