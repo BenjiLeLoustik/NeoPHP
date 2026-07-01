@@ -2,6 +2,7 @@
 
 namespace Neo\Core\Translation\Loader;
 
+use Neo\Core\Translation\Domain\TranslationDomain;
 use Neo\Core\Translation\Exception\TranslationException;
 use Neo\Core\Translation\TranslationRegistry;
 
@@ -14,16 +15,19 @@ final class TranslationLoader
      * @return array<string, string>
      * @throws TranslationException
      */
-    public function load(string $locale): array
+    public function load(string $locale, ?string $domain = null): array
     {
-        if (isset($this->cache[$locale])) {
-            return $this->cache[$locale];
+        $domain = TranslationDomain::normalize($domain);
+        $cacheKey = "$domain:$locale";
+
+        if (isset($this->cache[$cacheKey])) {
+            return $this->cache[$cacheKey];
         }
 
         $translations = [];
 
         foreach (TranslationRegistry::getPaths() as $path) {
-            $filePath = "$path/$locale.php";
+            $filePath = TranslationDomain::resolveFilePath($path, $locale, $domain);
 
             if (!file_exists($filePath)) {
                 continue;
@@ -42,7 +46,7 @@ final class TranslationLoader
             $translations = array_replace($translations, $data);
         }
 
-        return $this->cache[$locale] = $translations;
+        return $this->cache[$cacheKey] = $translations;
     }
 
     public function invalidate(string $locale): void

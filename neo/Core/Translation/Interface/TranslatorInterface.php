@@ -7,5 +7,5 @@ interface TranslatorInterface
     /**
      * @param array<string, mixed> $replace
      */
-    public function translate(string $text, array $replace = []): string;
+    public function translate(string $text, array $replace = [], ?string $domain = null): string;
 }
