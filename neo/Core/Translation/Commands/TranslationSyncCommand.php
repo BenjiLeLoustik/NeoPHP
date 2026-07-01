@@ -72,12 +72,14 @@ final class TranslationSyncCommand extends AbstractCommand
         $totalKeys = array_sum(array_map('count', $keysByDomain));
         Output::info("$totalKeys key(s) found across " . count($keysByDomain) . ' domain(s).');
 
-        $locales = $this->discoverLocales($path);
+        $locales = $this->discoverLocales($project, $path);
 
         if (empty($locales)) {
-            Output::warning("No locale files found in $path. Create at least one base locale file (e.g. 'fr.php') first.");
+            Output::warning("No locale could be determined for '$project'. Check 'translation.available_locales' in app.config.php.");
             return ExitCode::SUCCESS;
         }
+
+        Output::muted('Locales: ' . implode(', ', $locales));
 
         foreach ($keysByDomain as $domain => $keys) {
             foreach ($locales as $locale) {
@@ -137,7 +139,27 @@ final class TranslationSyncCommand extends AbstractCommand
     /**
      * @return list<string>
      */
-    private function discoverLocales(string $path): array
+    private function discoverLocales(string $project, string $translationsPath): array
+    {
+        $configPath = ROOT_DIR . "src/$project/Config/app.config.php";
+
+        if (is_file($configPath)) {
+            $config = require $configPath;
+
+            $availableLocales = $config['translation']['available_locales'] ?? null;
+
+            if (is_array($availableLocales) && !empty($availableLocales)) {
+                return array_values(array_map('strval', array_keys($availableLocales)));
+            }
+        }
+
+        return $this->discoverLocalesFromDisk($translationsPath);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function discoverLocalesFromDisk(string $path): array
     {
         $locales = [];
 
