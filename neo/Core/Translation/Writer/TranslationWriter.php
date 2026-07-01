@@ -9,10 +9,7 @@ use Neo\Core\Translation\TranslationRegistry;
 
 final class TranslationWriter
 {
-    public function __construct(
-        private TranslationLoader $loader
-    ) {
-    }
+    public function __construct(private TranslationLoader $loader) {}
 
     /**
      * @throws TranslationException
@@ -32,6 +29,8 @@ final class TranslationWriter
             $this->createFile($filePath);
         }
 
+        $this->bustFileCache($filePath);
+
         $translations = (static fn() => require $filePath)();
 
         if (!is_array($translations)) {
@@ -49,10 +48,7 @@ final class TranslationWriter
         $translations[$key] = $key;
 
         $this->dumpPhpFile($filePath, $translations);
-
-        if (function_exists('opcache_invalidate')) {
-            opcache_invalidate($filePath, true);
-        }
+        $this->bustFileCache($filePath);
 
         $this->loader->invalidate($locale, $domain);
     }
@@ -100,6 +96,15 @@ final class TranslationWriter
                 message: sprintf("Unable to write to translation file '%s'.", $filePath),
                 code: 500
             );
+        }
+    }
+
+    private function bustFileCache(string $filePath): void
+    {
+        clearstatcache(true, $filePath);
+
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($filePath, true);
         }
     }
 }

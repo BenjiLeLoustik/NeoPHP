@@ -135,10 +135,6 @@ final class TranslationSyncCommand extends AbstractCommand
     }
 
     /**
-     * Discovers available locales from "common" domain files only
-     * (e.g. "fr.php", not "contact.fr.php"), since the set of locales
-     * is a project-wide concept, not a per-domain one.
-     *
      * @return list<string>
      */
     private function discoverLocales(string $path): array
@@ -182,12 +178,12 @@ final class TranslationSyncCommand extends AbstractCommand
                 '/(?<![a-zA-Z0-9_])(?:translate|trans)\(\s*([\'"])((?:\\\\.|(?!\1).)*)\1((?:[^()]|\([^()]*\))*)\)/us',
                 $content,
                 $matches,
-                PREG_SET_ORDER
+                PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL
             );
 
             foreach ($matches as $match) {
                 $key = $this->unescapeString($match[2]);
-                $domain = $this->extractDomain($match[3] ?? '');
+                $domain = $this->extractDomain($match[3]);
                 $keysByDomain[$domain][] = $key;
             }
 
@@ -195,12 +191,12 @@ final class TranslationSyncCommand extends AbstractCommand
                 '/([\'"])((?:\\\\.|(?!\1).)*)\1\|trans(?:\(((?:[^()]|\([^()]*\))*)\))?/us',
                 $content,
                 $filterMatches,
-                PREG_SET_ORDER
+                PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL
             );
 
             foreach ($filterMatches as $match) {
                 $key = $this->unescapeString($match[2]);
-                $domain = $this->extractDomain($match[3] ?? '');
+                $domain = $this->extractDomain($match[3]);
                 $keysByDomain[$domain][] = $key;
             }
 
@@ -222,9 +218,9 @@ final class TranslationSyncCommand extends AbstractCommand
         return $keysByDomain;
     }
 
-    private function extractDomain(string $argsTail): string
+    private function extractDomain(?string $argsTail): string
     {
-        if ($argsTail === '') {
+        if ($argsTail === null || $argsTail === '') {
             return TranslationDomain::DEFAULT;
         }
 
