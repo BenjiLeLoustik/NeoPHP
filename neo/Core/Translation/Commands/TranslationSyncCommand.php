@@ -31,6 +31,12 @@ final class TranslationSyncCommand extends AbstractCommand
             mode: InputOption::NONE,
             description: 'Show what would be added/removed without writing'
         );
+
+        $this->addOption(
+            name: 'prune',
+            mode: InputOption::NONE,
+            description: 'Actually remove keys that are no longer found in source files (destructive)'
+        );
     }
 
     public function do(Input $input, Output $output): ExitCode
@@ -47,6 +53,7 @@ final class TranslationSyncCommand extends AbstractCommand
         }
 
         $dryRun = (bool) $input->getOption('dry-run');
+        $prune = (bool) $input->getOption('prune');
         $path = ROOT_DIR . "src/$project/Translations";
 
         if (!is_dir($path)) {
@@ -92,7 +99,7 @@ final class TranslationSyncCommand extends AbstractCommand
             }
 
             foreach ($toRemove as $key) {
-                Output::warning("  - '$key'");
+                Output::warning("  - '$key'" . ($prune ? '' : ' (not removed, use --prune to delete)'));
             }
 
             if ($dryRun) {
@@ -103,8 +110,10 @@ final class TranslationSyncCommand extends AbstractCommand
                 $translations[$key] = $key;
             }
 
-            foreach ($toRemove as $key) {
-                unset($translations[$key]);
+            if ($prune) {
+                foreach ($toRemove as $key) {
+                    unset($translations[$key]);
+                }
             }
 
             $this->dumpPhpFile($localeFile, $translations);
@@ -138,30 +147,49 @@ final class TranslationSyncCommand extends AbstractCommand
                 continue;
             }
 
+            if (str_contains($file->getPathname(), DIRECTORY_SEPARATOR . 'Translations' . DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+
             $content = file_get_contents($file->getPathname());
 
             preg_match_all(
-                '/(?:translate|trans)\(\s*[\'"](.+?)[\'"]/u',
+                '/(?<![a-zA-Z0-9_])(?:translate|trans)\(\s*([\'"])((?:\\\\.|(?!\1).)*)\1/us',
                 $content,
                 $matches
             );
 
             preg_match_all(
-                '/[\'"](.+?)[\'"]\|trans/u',
+                '/([\'"])((?:\\\\.|(?!\1).)*)\1\|trans/us',
                 $content,
                 $filterMatches
             );
 
-            foreach ($matches[1] as $key) {
-                $keys[] = $key;
+            preg_match_all(
+                '/=>\s*([\'"])((?:\\\\.|(?!\1).)*)\1\s*,?\s*\/\/\s*@translatable/u',
+                $content,
+                $configMatches
+            );
+
+            foreach ($matches[2] as $key) {
+                $keys[] = $this->unescapeString($key);
             }
 
-            foreach ($filterMatches[1] as $key) {
-                $keys[] = $key;
+            foreach ($filterMatches[2] as $key) {
+                $keys[] = $this->unescapeString($key);
+            }
+
+            foreach ($configMatches[2] as $key) {
+                $keys[] = $this->unescapeString($key);
             }
         }
 
         return array_values(array_unique($keys));
+    }
+
+    private function unescapeString(string $raw): string
+    {
+        return preg_replace_callback('/\\\\(.)/', static fn(array $m): string => $m[1], $raw);
     }
 
     /**
@@ -171,12 +199,10 @@ final class TranslationSyncCommand extends AbstractCommand
     {
         $lines = [];
         foreach ($translations as $key => $value) {
-            $k = str_replace("'", "\\'", $key);
-            $v = str_replace("'", "\\'", $value);
-            $lines[] = "    '$k' => '$v'";
+            $lines[] = '    ' . var_export($key, true) . ' => ' . var_export($value, true);
         }
 
-        $content = "<?php\n\nreturn [\n" . implode(",\n", $lines) . "\n];\n";
+        $content = "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n" . implode(",\n", $lines) . "\n];\n";
 
         file_put_contents($filePath, $content, LOCK_EX);
     }
