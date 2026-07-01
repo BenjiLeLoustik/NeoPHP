@@ -163,12 +163,8 @@ final class TranslationSyncCommand extends AbstractCommand
     {
         $locales = [];
 
-        foreach (glob($path . '/*.php') ?: [] as $file) {
-            $parsed = TranslationDomain::parseFilename(basename($file));
-
-            if ($parsed['domain'] === TranslationDomain::DEFAULT) {
-                $locales[] = $parsed['locale'];
-            }
+        foreach (glob($path . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+            $locales[] = basename($dir);
         }
 
         return array_values(array_unique($locales));
@@ -263,6 +259,13 @@ final class TranslationSyncCommand extends AbstractCommand
      */
     private function dumpPhpFile(string $filePath, array $translations): void
     {
+        $dir = dirname($filePath);
+
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            Output::error("Unable to create translation directory '$dir'.");
+            return;
+        }
+
         $lines = [];
         foreach ($translations as $key => $value) {
             $lines[] = '    ' . var_export($key, true) . ' => ' . var_export($value, true);

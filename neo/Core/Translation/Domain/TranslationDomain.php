@@ -21,24 +21,6 @@ final class TranslationDomain
         $domain = self::normalize($domain);
         $basePath = rtrim($basePath, '/');
 
-        return $domain === self::DEFAULT
-            ? "$basePath/$locale.php"
-            : "$basePath/$domain.$locale.php";
-    }
-
-    /**
-     * @return array{domain: string, locale: string}
-     */
-    public static function parseFilename(string $filename): array
-    {
-        $name = str_ends_with($filename, '.php') ? substr($filename, 0, -4) : $filename;
-
-        if (!str_contains($name, '.')) {
-            return ['domain' => self::DEFAULT, 'locale' => $name];
-        }
-
-        [$domain, $locale] = explode('.', $name, 2);
-
-        return ['domain' => $domain, 'locale' => $locale];
+        return "$basePath/$locale/$domain.php";
     }
 }
