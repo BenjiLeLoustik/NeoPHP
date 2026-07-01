@@ -11,10 +11,10 @@ use Neo\Core\Translation\Interface\TranslationCollectorInterface;
 
 class TranslationCollector implements CollectorInterface, TranslationCollectorInterface, CollectorAwareInterface
 {
-    /** @var array<int, array{key: string, result: string}> */
+    /** @var array<int, array{key: string, result: string, domain: string}> */
     private array $hits = [];
 
-    /** @var array<int, array{key: string, result: string}> */
+    /** @var array<int, array{key: string, result: string, domain: string}> */
     private array $misses = [];
 
     public function __construct(
@@ -31,20 +31,20 @@ class TranslationCollector implements CollectorInterface, TranslationCollectorIn
         return 'translation';
     }
 
-    public function record(string $key, string $result, bool $found): void
+    public function record(string $key, string $result, bool $found, string $domain = 'common'): void
     {
         if ($found) {
             $this->hits[] = [
                 'key' => $key,
-                'result' => $result
+                'result' => $result,
+                'domain' => $domain
             ];
-
         } else {
             $this->misses[] = [
                 'key' => $key,
-                'result' => $result
+                'result' => $result,
+                'domain' => $domain
             ];
-
         }
     }
 
@@ -122,22 +122,24 @@ HTML;
         foreach (($data['misses'] ?? []) as $m) {
             $k = htmlspecialchars($m['key']);
             $v = htmlspecialchars($m['result']);
-            $missRows .= "<tr><td style=\"color:#fbbf24\">{$k}</td><td class=\"n-origin\">{$v}</td></tr>";
+            $d = htmlspecialchars($m['domain'] ?? 'common');
+            $missRows .= "<tr><td style=\"color:#fbbf24\">{$k}</td><td class=\"n-origin\">{$v}</td><td class=\"n-origin\">{$d}</td></tr>";
         }
 
         $missesTable = $missRows
-            ? "<table><thead><tr><th>Missing key</th><th>Fallback</th></tr></thead><tbody>{$missRows}</tbody></table>"
+            ? "<table><thead><tr><th>Missing key</th><th>Fallback</th><th>Domain</th></tr></thead><tbody>{$missRows}</tbody></table>"
             : '<p class="n-empty">No missing keys.</p>';
 
         $hitRows = '';
         foreach (($data['hits'] ?? []) as $h) {
             $k = htmlspecialchars($h['key']);
             $v = htmlspecialchars($h['result']);
-            $hitRows .= "<tr><td class=\"n-event\">{$k}</td><td class=\"n-origin\">{$v}</td></tr>";
+            $d = htmlspecialchars($h['domain'] ?? 'common');
+            $hitRows .= "<tr><td class=\"n-event\">{$k}</td><td class=\"n-origin\">{$v}</td><td class=\"n-origin\">{$d}</td></tr>";
         }
 
         $hitsTable = $hitRows
-            ? "<table><thead><tr><th>Key</th><th>Translation</th></tr></thead><tbody>{$hitRows}</tbody></table>"
+            ? "<table><thead><tr><th>Key</th><th>Translation</th><th>Domain</th></tr></thead><tbody>{$hitRows}</tbody></table>"
             : '<p class="n-empty">No translation resolved.</p>';
 
         $missColor = $misses > 0 ? '#fbbf24' : '#4ade80';

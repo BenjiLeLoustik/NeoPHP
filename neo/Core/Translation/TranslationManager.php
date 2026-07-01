@@ -5,6 +5,7 @@ namespace Neo\Core\Translation;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\Cookie\Cookie;
+use Neo\Core\Translation\Domain\TranslationDomain;
 use Neo\Core\Translation\Exception\TranslationException;
 use Neo\Core\Translation\Interface\TranslationCollectorInterface;
 use Neo\Core\Translation\Interface\TranslatorInterface;
@@ -43,20 +44,22 @@ class TranslationManager implements TranslatorInterface
      * @param array<string, mixed> $replace
      * @throws TranslationException
      */
-    public function translate(string $text, array $replace = []): string
+    public function translate(string $text, array $replace = [], ?string $domain = null): string
     {
+        $domain = TranslationDomain::normalize($domain);
+
         if (!$this->enabled) {
             return $this->replace($text, $replace);
         }
 
-        $translations = $this->loader->load($this->locale);
+        $translations = $this->loader->load($this->locale, $domain);
         $found = array_key_exists($text, $translations);
         $result = $found ? $translations[$text] : $text;
 
-        $this->collector?->record($text, $result, $found);
+        $this->collector?->record($text, $result, $found, $domain);
 
         if (!$found && $this->autoWrite) {
-            $this->writer->ensure($this->locale, $text);
+            $this->writer->ensure($this->locale, $text, $domain);
         }
 
         return $this->replace($result, $replace);
@@ -86,7 +89,7 @@ class TranslationManager implements TranslatorInterface
             ->get('translation');
 
         $availableLocales = $translationConfig['available_locales'] ?? [];
-        $cookie           = $this->container->get(Cookie::class);
+        $cookie = $this->container->get(Cookie::class);
 
         if (!empty($availableLocales) && !isset($availableLocales[$locale])) {
             throw new TranslationException(

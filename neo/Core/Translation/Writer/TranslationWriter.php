@@ -2,26 +2,31 @@
 
 namespace Neo\Core\Translation\Writer;
 
+use Neo\Core\Translation\Domain\TranslationDomain;
 use Neo\Core\Translation\Exception\TranslationException;
 use Neo\Core\Translation\Loader\TranslationLoader;
 use Neo\Core\Translation\TranslationRegistry;
 
 final class TranslationWriter
 {
-    public function __construct(private TranslationLoader $loader) {}
+    public function __construct(
+        private TranslationLoader $loader
+    ) {
+    }
 
     /**
      * @throws TranslationException
      */
-    public function ensure(string $locale, string $key): void
+    public function ensure(string $locale, string $key, ?string $domain = null): void
     {
+        $domain = TranslationDomain::normalize($domain);
         $path = TranslationRegistry::getPaths()[0] ?? null;
 
         if ($path === null) {
             return;
         }
 
-        $filePath = "$path/$locale.php";
+        $filePath = TranslationDomain::resolveFilePath($path, $locale, $domain);
 
         if (!file_exists($filePath)) {
             $this->createFile($filePath);
@@ -49,7 +54,7 @@ final class TranslationWriter
             opcache_invalidate($filePath, true);
         }
 
-        $this->loader->invalidate($locale);
+        $this->loader->invalidate($locale, $domain);
     }
 
     /**
