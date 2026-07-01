@@ -33,6 +33,8 @@ final class TranslationLoader
                 continue;
             }
 
+            $this->bustFileCache($filePath);
+
             $data = require $filePath;
 
             if (!is_array($data)) {
@@ -49,8 +51,17 @@ final class TranslationLoader
         return $this->cache[$cacheKey] = $translations;
     }
 
-    public function invalidate(string $locale): void
+    public function invalidate(string $locale, ?string $domain = null): void
     {
-        unset($this->cache[$locale]);
+        unset($this->cache[TranslationDomain::normalize($domain) . ":$locale"]);
+    }
+
+    private function bustFileCache(string $filePath): void
+    {
+        clearstatcache(true, $filePath);
+
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($filePath, true);
+        }
     }
 }

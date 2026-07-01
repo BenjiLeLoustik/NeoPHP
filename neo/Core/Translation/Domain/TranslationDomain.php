@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Neo\Core\Translation\Domain;
 
@@ -8,7 +9,11 @@ final class TranslationDomain
 
     public static function normalize(?string $domain): string
     {
-        return ($domain === null ?? $domain === '') ? self::DEFAULT : $domain;
+        if ($domain === null || $domain === '') {
+            return self::DEFAULT;
+        }
+
+        return $domain;
     }
 
     public static function resolveFilePath(string $basePath, string $locale, ?string $domain = null): string
@@ -21,6 +26,9 @@ final class TranslationDomain
             : "$basePath/$domain.$locale.php";
     }
 
+    /**
+     * @return array{domain: string, locale: string}
+     */
     public static function parseFilename(string $filename): array
     {
         $name = str_ends_with($filename, '.php') ? substr($filename, 0, -4) : $filename;
@@ -31,9 +39,6 @@ final class TranslationDomain
 
         [$domain, $locale] = explode('.', $name, 2);
 
-        return [
-            'domain' => $domain,
-            'locale' => $locale
-        ];
+        return ['domain' => $domain, 'locale' => $locale];
     }
 }
