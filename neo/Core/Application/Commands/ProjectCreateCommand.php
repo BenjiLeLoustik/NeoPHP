@@ -142,6 +142,7 @@ final class ProjectCreateCommand extends AbstractCommand
             Fs::ensureDir($path . '/' . $directory);
         }
 
+        $this->generateDefaultModule($path, $name);
         $this->generateDefaultController($path . '/App/Controllers/', $name, $originalName);
         $this->generateDefaultLayoutView($path . '/App/Views/layouts/', $name);
         $this->generateDefaultView($path . '/App/Views/pages/default/', $name);
@@ -505,5 +506,38 @@ PHP;
         }
 
         return ['localhost', $port];
+    }
+
+    private function generateDefaultModule(string $path, string $name): void
+    {
+        $content = <<<PHP
+<?php
+declare(strict_types=1);
+
+namespace Neo\Src\\$name;
+
+use Neo\Core\DI\Container;
+use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Utils\Config\ConfigModule;
+use Neo\Core\View\ViewModule;
+use Neo\Core\Utils\Cache\CacheModule;
+
+final class {$name}Module extends AbstractModule
+{
+    public function dependencies(): array
+    {
+        return [
+            // ClassModule::class,
+        ];
+    }
+
+    public function register(Container \$container): void
+    {
+        // Registration of project-specific services ($name)
+    }
+}
+PHP;
+
+        file_put_contents($path . "/{$name}Module.php", $content);
     }
 }

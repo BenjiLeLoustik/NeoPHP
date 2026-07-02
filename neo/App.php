@@ -51,7 +51,8 @@ class App
         new ApplicationPaths($this->container)->register();
 
         $moduleManager = new ModuleManager($this->container)
-            ->discover(__DIR__ . '/Core');
+            ->discover(__DIR__ . '/Core')
+            ->discover($this->container->get('appPath'));
 
         if (php_sapi_name() !== 'cli') {
             $moduleManager->boot();
