@@ -22,6 +22,7 @@ readonly class ApplicationPaths
         $basePath = realpath(__DIR__ . '/../../../');
 
         $this->container->set('basePath', $basePath);
+        $this->container->set('appPath', $basePath . '/src/' . $appName);
 
         $publicPath = $this->resolvePublicPath($basePath);
 
