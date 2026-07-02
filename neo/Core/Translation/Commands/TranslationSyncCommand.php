@@ -219,13 +219,16 @@ final class TranslationSyncCommand extends AbstractCommand
             }
 
             preg_match_all(
-                '/=>\s*([\'"])((?:\\\\.|(?!\1).)*)\1\s*,?\s*\/\/\s*@translatable/u',
+                '/=>\s*([\'"])((?:\\\\.|(?!\1).)*)\1\s*,?\s*\/\/\s*@translatable(?::(\w+))?/u',
                 $content,
-                $configMatches
+                $configMatches,
+                PREG_SET_ORDER
             );
 
-            foreach ($configMatches[2] as $key) {
-                $keysByDomain[TranslationDomain::DEFAULT][] = $this->unescapeString($key);
+            foreach ($configMatches as $match) {
+                $key = $this->unescapeString($match[2]);
+                $domain = $match[3] ?? TranslationDomain::DEFAULT;
+                $keysByDomain[$domain][] = $key;
             }
         }
 
