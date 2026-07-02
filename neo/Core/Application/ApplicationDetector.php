@@ -94,12 +94,6 @@ class ApplicationDetector
             }
         }
 
-        $projects = glob(__DIR__ . '/../../../src/*', GLOB_ONLYDIR);
-        if (count($projects) === 1) {
-            $this->container->set('application', basename($projects[0]));
-            return;
-        }
-
         throw new ApplicationException(
             title: 'Application Error',
             message: sprintf("No application detected for access: '%s'.", $server),
