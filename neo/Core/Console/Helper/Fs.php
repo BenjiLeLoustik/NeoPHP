@@ -21,6 +21,7 @@ final class Fs
         );
 
         foreach ($it as $file) {
+            self::forceWritable($file->getRealPath());
             $file->isDir() ? rmdir($file->getRealPath()) : unlink($file->getRealPath());
         }
 
@@ -39,7 +40,15 @@ final class Fs
         );
 
         foreach ($it as $file) {
+            self::forceWritable($file->getRealPath());
             $file->isDir() ? rmdir($file->getRealPath()) : unlink($file->getRealPath());
+        }
+    }
+
+    private static function forceWritable(string $path): void
+    {
+        if (!is_writable($path)) {
+            @chmod($path, 0666);
         }
     }
 
