@@ -11,7 +11,10 @@ use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\DatabaseIntrospector;
+use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Database\Migration\MigrationGenerator;
+use Neo\Core\Database\Migration\MigrationSchemaSnapshot;
+use Neo\Core\Database\Migration\SchemaDiffer;
 use Neo\Core\DI\Container;
 
 #[Command(
@@ -45,7 +48,7 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
     public function do(Input $input, Output $output): ExitCode
     {
         $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
-        $name = $input->getOption('name') ?? Input::ask('Migration name ?', 'initial_schema');
+        $name = $input->getOption('name') ?? Input::ask('Migration name ?', 'schema_update');
 
         $basePath = ROOT_DIR . "/src/$project";
         $migrationsPath = "$basePath/Database/Migrations";
@@ -72,9 +75,35 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
                 return ExitCode::SUCCESS;
             }
 
-            Output::info(count($tables) . ' table(s) found.');
+            $db = $this->container->get(DatabaseManager::class);
+            $snapshot = new MigrationSchemaSnapshot($db, $introspector);
             $generator = new MigrationGenerator($introspector);
-            $file = $generator->generate($migrationsPath, $name);
+
+            $previousSchema = $snapshot->getLastSchema();
+
+            if ($previousSchema === null) {
+                Output::info('No previous snapshot found. Generating full schema migration.');
+                $file = $generator->generate($migrationsPath, $name);
+                $snapshot->take();
+
+                Output::success('Migration file generated:');
+                Output::muted('  ' . str_replace(ROOT_DIR, '', $file));
+                return ExitCode::SUCCESS;
+            }
+
+            $currentSchema = $snapshot->getCurrentSchema();
+            $differ = new SchemaDiffer();
+            $diff = $differ->diff($previousSchema, $currentSchema);
+
+            if ($differ->isEmpty($diff)) {
+                Output::info('No schema changes detected. Nothing to migrate.');
+                return ExitCode::SUCCESS;
+            }
+
+            $this->printDiffSummary($diff);
+
+            $file = $generator->generateDiff($migrationsPath, $name, $diff);
+            $snapshot->take();
 
             Output::success('Migration file generated:');
             Output::muted('  ' . str_replace(ROOT_DIR, '', $file));
@@ -83,6 +112,36 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
         } catch (\Throwable $e) {
             Output::error('Generation failed: ' . $e->getMessage());
             return ExitCode::FAILURE;
+        }
+    }
+
+    /**
+     * @param array{
+     *     tablesToCreate: array<string, mixed>,
+     *     tablesToDrop: array<string, mixed>,
+     *     tableChanges: array<string, array{added: array<int, array<string,mixed>>, removed: array<int, array<string,mixed>>, modified: array<int, array{before: array<string,mixed>, after: array<string,mixed>}>}>
+     * } $diff
+     */
+    private function printDiffSummary(array $diff): void
+    {
+        foreach (array_keys($diff['tablesToCreate']) as $table) {
+            Output::success("  + table `$table`");
+        }
+
+        foreach (array_keys($diff['tablesToDrop']) as $table) {
+            Output::warning("  - table `$table`");
+        }
+
+        foreach ($diff['tableChanges'] as $table => $changes) {
+            foreach ($changes['added'] as $col) {
+                Output::success("  + {$table}.{$col['name']}");
+            }
+            foreach ($changes['removed'] as $col) {
+                Output::warning("  - {$table}.{$col['name']}");
+            }
+            foreach ($changes['modified'] as $change) {
+                Output::info("  ~ {$table}.{$change['after']['name']}");
+            }
         }
     }
 
@@ -96,12 +155,12 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
         $this->container->set('controllersPath', "$srcPath/App/Controllers");
         $this->container->set('storagePath', "$srcPath/Storage");
         $this->container->set('configsPath', "$srcPath/Config");
-        $this->container->set('repositoryPath', "$srcPath/Repository");
-        $this->container->set('modelPath', "$srcPath/Model");
-        $this->container->set('formPath', "$srcPath/App/Forms");
-        $this->container->set('modelNamespace', "Neo\\Src\\$project\\Model");
-        $this->container->set('repositoryNamespace', "Neo\\Src\\$project\\Repository");
-        $this->container->set('formNamespace', "Neo\\Src\\$project\\App\\Forms");
+        $this->container->set('repositoryPath', "$srcPath/Database/Repository");
+        $this->container->set('modelPath', "$srcPath/Database/Model");
+        $this->container->set('formPath', "$srcPath/Database/Forms");
+        $this->container->set('modelNamespace', "Neo\\Src\\$project\\Database\\Model");
+        $this->container->set('repositoryNamespace', "Neo\\Src\\$project\\Database\\Repository");
+        $this->container->set('formNamespace', "Neo\\Src\\$project\\Database\\Forms");
     }
 
     protected function getAvailableProjects(): array
