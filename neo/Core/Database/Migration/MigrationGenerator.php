@@ -17,6 +17,94 @@ final class MigrationGenerator
      */
     public function generate(string $migrationsPath, string $name): string
     {
+        $tables = $this->introspector->getTables();
+
+        $upLines = [];
+        $downLines = [];
+
+        foreach ($tables as $table) {
+            if (in_array($table, ['neo_migrations', 'neo_schema_snapshots'], true)) {
+                continue;
+            }
+
+            $columns = $this->introspector->getColumns($table);
+            $upLines[] = $this->executeLine($this->buildCreateTableSql($table, $columns));
+            $downLines[] = $this->executeLine("DROP TABLE IF EXISTS `$table`");
+        }
+
+        return $this->writeFile(
+            $migrationsPath,
+            $name,
+            implode("\n\n", $upLines),
+            implode("\n", array_reverse($downLines))
+        );
+    }
+
+    /**
+     * @param array{
+     *     tablesToCreate: array<string, array<int, array<string, mixed>>>,
+     *     tablesToDrop: array<string, array<int, array<string, mixed>>>,
+     *     tableChanges: array<string, array{
+     *         added: array<int, array<string, mixed>>,
+     *         removed: array<int, array<string, mixed>>,
+     *         modified: array<int, array{before: array<string, mixed>, after: array<string, mixed>}>
+     *     }>
+     * } $diff
+     */
+    public function generateDiff(string $migrationsPath, string $name, array $diff): string
+    {
+        $upLines = [];
+        $downLines = [];
+
+        foreach ($diff['tablesToCreate'] as $table => $columns) {
+            $upLines[] = $this->executeLine($this->buildCreateTableSql($table, $columns));
+            $downLines[] = $this->executeLine("DROP TABLE IF EXISTS `$table`");
+        }
+
+        foreach ($diff['tablesToDrop'] as $table => $columns) {
+            $upLines[] = $this->executeLine("DROP TABLE IF EXISTS `$table`");
+            $downLines[] = $this->executeLine($this->buildCreateTableSql($table, $columns));
+        }
+
+        foreach ($diff['tableChanges'] as $table => $changes) {
+            foreach ($changes['added'] as $col) {
+                $upLines[] = $this->executeLine(
+                    "ALTER TABLE `$table` ADD COLUMN " . $this->buildColumnDefinition($col)
+                );
+                $downLines[] = $this->executeLine(
+                    "ALTER TABLE `$table` DROP COLUMN `{$col['name']}`"
+                );
+            }
+
+            foreach ($changes['removed'] as $col) {
+                $upLines[] = $this->executeLine(
+                    "ALTER TABLE `$table` DROP COLUMN `{$col['name']}`"
+                );
+                $downLines[] = $this->executeLine(
+                    "ALTER TABLE `$table` ADD COLUMN " . $this->buildColumnDefinition($col)
+                );
+            }
+
+            foreach ($changes['modified'] as $change) {
+                $upLines[] = $this->executeLine(
+                    "ALTER TABLE `$table` MODIFY COLUMN " . $this->buildColumnDefinition($change['after'])
+                );
+                $downLines[] = $this->executeLine(
+                    "ALTER TABLE `$table` MODIFY COLUMN " . $this->buildColumnDefinition($change['before'])
+                );
+            }
+        }
+
+        return $this->writeFile(
+            $migrationsPath,
+            $name,
+            implode("\n\n", $upLines),
+            implode("\n", array_reverse($downLines))
+        );
+    }
+
+    private function writeFile(string $migrationsPath, string $name, string $upBody, string $downBody): string
+    {
         if (!is_dir($migrationsPath)) {
             mkdir($migrationsPath, 0777, true);
         }
@@ -24,13 +112,8 @@ final class MigrationGenerator
         $timestamp = date('Ymd_His');
         $className = 'MigrationVersion_' . $timestamp;
         $file = "$migrationsPath/$className.php";
-
-        $tables = $this->introspector->getTables();
-
-        $upBody = $this->buildUpBody($tables);
-        $downBody = $this->buildDownBody($tables);
-
         $date = date('Y-m-d H:i:s');
+
         $content = <<<PHP
 <?php
 declare(strict_types=1);
@@ -59,79 +142,64 @@ PHP;
     }
 
     /**
-     * @param array<int, string> $tables
-     * @throws DatabaseException
+     * @param array<int, array<string, mixed>> $columns
      */
-    private function buildUpBody(array $tables): string
+    private function buildCreateTableSql(string $table, array $columns): string
     {
-        $lines = [];
+        $defs = [];
+        $primary = [];
 
-        foreach ($tables as $table) {
-            if (in_array($table, ['neo_migrations', 'neo_schema_snapshots'], true)) {
-                continue;
+        foreach ($columns as $col) {
+            $defs[] = '        ' . $this->buildColumnDefinition($col);
+
+            if (($col['key'] ?? '') === 'PRI') {
+                $primary[] = "`{$col['name']}`";
             }
-
-            $columns = $this->introspector->getColumns($table);
-            $defs = [];
-            $primary = [];
-
-            foreach ($columns as $col) {
-                $def = "        `{$col['name']}` {$col['type']}";
-
-                if (!$col['nullable']) {
-                    $def .= ' NOT NULL';
-                }
-
-                $isCurrentTimestampDefault = $col['default'] !== null
-                    && strtoupper((string) $col['default']) === 'CURRENT_TIMESTAMP';
-
-                if ($col['default'] !== null) {
-                    $def .= $isCurrentTimestampDefault
-                        ? ' DEFAULT CURRENT_TIMESTAMP'
-                        : " DEFAULT '{$col['default']}'";
-                }
-
-                $extra = trim((string) preg_replace('/DEFAULT_GENERATED/i', '', (string) $col['extra']));
-
-                if ($extra !== '' && strcasecmp($extra, 'auto_increment') !== 0) {
-                    $def .= ' ' . strtoupper($extra);
-                } elseif (strcasecmp($extra, 'auto_increment') === 0) {
-                    $def .= ' AUTO_INCREMENT';
-                }
-
-                $defs[] = $def;
-
-                if ($col['key'] === 'PRI') {
-                    $primary[] = "`{$col['name']}`";
-                }
-            }
-
-            if (!empty($primary)) {
-                $defs[] = '        PRIMARY KEY (' . implode(', ', $primary) . ')';
-            }
-
-            $colsSql = implode(",\n", $defs);
-            $sql = "CREATE TABLE IF NOT EXISTS `$table` (\n$colsSql\n    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-
-            $escaped = str_replace(["\\", "'"], ["\\\\", "\\'"], $sql);
-            $lines[] = "        \$db->execute('" . $escaped . "');";
         }
 
-        return implode("\n\n", $lines);
+        if (!empty($primary)) {
+            $defs[] = '        PRIMARY KEY (' . implode(', ', $primary) . ')';
+        }
+
+        $colsSql = implode(",\n", $defs);
+
+        return "CREATE TABLE IF NOT EXISTS `$table` (\n$colsSql\n    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     }
 
     /**
-     * @param array<int, string> $tables
+     * @param array<string, mixed> $col
      */
-    private function buildDownBody(array $tables): string
+    private function buildColumnDefinition(array $col): string
     {
-        $lines = [];
-        $reversed = array_reverse(array_filter($tables, fn($t) => $t !== 'neo_migrations'));
+        $def = "`{$col['name']}` {$col['type']}";
 
-        foreach ($reversed as $table) {
-            $lines[] = "        \$db->execute('DROP TABLE IF EXISTS `$table`');";
+        if (empty($col['nullable'])) {
+            $def .= ' NOT NULL';
         }
 
-        return implode("\n", $lines);
+        $isCurrentTimestampDefault = $col['default'] !== null
+            && strtoupper((string) $col['default']) === 'CURRENT_TIMESTAMP';
+
+        if ($col['default'] !== null) {
+            $def .= $isCurrentTimestampDefault
+                ? ' DEFAULT CURRENT_TIMESTAMP'
+                : " DEFAULT '{$col['default']}'";
+        }
+
+        $extra = trim((string) preg_replace('/DEFAULT_GENERATED/i', '', (string) $col['extra']));
+
+        if (strcasecmp($extra, 'auto_increment') === 0) {
+            $def .= ' AUTO_INCREMENT';
+        } elseif ($extra !== '') {
+            $def .= ' ' . strtoupper($extra);
+        }
+
+        return $def;
+    }
+
+    private function executeLine(string $sql): string
+    {
+        $escaped = str_replace(["\\", "'"], ["\\\\", "\\'"], $sql);
+        return "        \$db->execute('" . $escaped . "');";
     }
 }

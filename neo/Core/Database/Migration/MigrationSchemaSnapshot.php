@@ -52,42 +52,54 @@ final class MigrationSchemaSnapshot
     }
 
     /**
+     * @return array<string, array<int, array<string, mixed>>>|null
      * @throws DatabaseException
      */
-    public function getLastHash(): ?string
+    public function getLastSchema(): ?array
     {
         $row = $this->db->fetch(sprintf(
-            'SELECT schema_hash FROM `%s` ORDER BY id DESC LIMIT 1',
+            'SELECT schema_dump FROM `%s` ORDER BY id DESC LIMIT 1',
             self::TABLE
         ));
 
-        return $row['schema_hash'] ?? null;
-    }
-
-    /**
-     * @throws DatabaseException
-     */
-    public function getCurrentHash(): string
-    {
-        return hash('sha256', $this->buildDump());
-    }
-
-    /**
-     * @throws DatabaseException
-     */
-    public function hasChanged(): bool
-    {
-        $last = $this->getLastHash();
-
-        if ($last === null) {
-            throw new DatabaseException(
-                title: 'Migration Snapshot Error',
-                message: 'No schema snapshot found. Run a snapshot first.',
-                code: 404
-            );
+        if ($row === null || !isset($row['schema_dump'])) {
+            return null;
         }
 
-        return $last !== $this->getCurrentHash();
+        $decoded = json_decode($row['schema_dump'], true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * @return array<string, array<int, array<string, mixed>>>
+     * @throws DatabaseException
+     */
+    public function getCurrentSchema(): array
+    {
+        return $this->buildDumpArray();
+    }
+
+    /**
+     * @return array<string, array<int, array<string, mixed>>>
+     * @throws DatabaseException
+     */
+    private function buildDumpArray(): array
+    {
+        $tables = $this->introspector->getTables();
+        $dump = [];
+
+        foreach ($tables as $table) {
+            if (in_array($table, ['neo_migrations', self::TABLE], true)) {
+                continue;
+            }
+
+            $dump[$table] = $this->introspector->getColumns($table);
+        }
+
+        ksort($dump);
+
+        return $dump;
     }
 
     /**
@@ -95,20 +107,9 @@ final class MigrationSchemaSnapshot
      */
     private function buildDump(): string
     {
-        $tables = $this->introspector->getTables();
-        $dump = [];
-
-        foreach ($tables as $table) {
-            if (in_array($table, ['neo_migrations', 'neo_schema_snapshots'], true)) {
-                continue;
-            }
-
-            $columns = $this->introspector->getColumns($table);
-            $dump[] = $table . ':' . json_encode($columns);
-        }
-
-        sort($dump);
-
-        return implode('|', $dump);
+        return json_encode(
+            $this->buildDumpArray(),
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
     }
 }
