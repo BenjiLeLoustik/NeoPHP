@@ -59,7 +59,8 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
             }
 
             $db = new DatabaseManager();
-            $snapshot = new MigrationSchemaSnapshot($db, new DatabaseIntrospector($this->container));
+            $introspector = new DatabaseIntrospector($this->container);
+            $snapshot = new MigrationSchemaSnapshot($db, $introspector);
             $runner = new MigrationRunner($db);
             $applied = $runner->getApplied();
             $files = $runner->getMigrationFiles($migrationsPath);
@@ -95,7 +96,9 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
             $pendingCount = count($files) - count(array_filter($files, fn($f) => isset($applied[basename($f, '.php')])));
             Output::muted("  $appliedCount applied · $pendingCount pending");
 
-            if ($snapshot->hasChanged()) {
+            $lastSchema = $snapshot->getLastSchema();
+
+            if ($lastSchema !== null && $lastSchema !== $snapshot->getCurrentSchema()) {
                 Output::newLine();
                 Output::warning('Schema has changed. Run database:migration:generate ?');
             }
@@ -117,12 +120,12 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
         $this->container->set('controllersPath', "$srcPath/App/Controllers");
         $this->container->set('storagePath', "$srcPath/Storage");
         $this->container->set('configsPath', "$srcPath/Config");
-        $this->container->set('repositoryPath', "$srcPath/Repository");
-        $this->container->set('modelPath', "$srcPath/Model");
-        $this->container->set('formPath', "$srcPath/App/Forms");
-        $this->container->set('modelNamespace', "Neo\\Src\\$project\\Model");
-        $this->container->set('repositoryNamespace', "Neo\\Src\\$project\\Repository");
-        $this->container->set('formNamespace', "Neo\\Src\\$project\\App\\Forms");
+        $this->container->set('repositoryPath', "$srcPath/Database/Repository");
+        $this->container->set('modelPath', "$srcPath/Database/Model");
+        $this->container->set('formPath', "$srcPath/Database/Forms");
+        $this->container->set('modelNamespace', "Neo\\Src\\$project\\Database\\Model");
+        $this->container->set('repositoryNamespace', "Neo\\Src\\$project\\Database\\Repository");
+        $this->container->set('formNamespace', "Neo\\Src\\$project\\Database\\Forms");
     }
 
     protected function getAvailableProjects(): array

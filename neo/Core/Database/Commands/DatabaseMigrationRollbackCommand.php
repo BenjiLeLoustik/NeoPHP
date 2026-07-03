@@ -115,12 +115,12 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
         $this->container->set('controllersPath', "$srcPath/App/Controllers");
         $this->container->set('storagePath', "$srcPath/Storage");
         $this->container->set('configsPath', "$srcPath/Config");
-        $this->container->set('repositoryPath', "$srcPath/Repository");
-        $this->container->set('modelPath', "$srcPath/Model");
-        $this->container->set('formPath', "$srcPath/App/Forms");
-        $this->container->set('modelNamespace', "Neo\\Src\\$project\\Model");
-        $this->container->set('repositoryNamespace', "Neo\\Src\\$project\\Repository");
-        $this->container->set('formNamespace', "Neo\\Src\\$project\\App\\Forms");
+        $this->container->set('repositoryPath', "$srcPath/Database/Repository");
+        $this->container->set('modelPath', "$srcPath/Database/Model");
+        $this->container->set('formPath', "$srcPath/Database/Forms");
+        $this->container->set('modelNamespace', "Neo\\Src\\$project\\Database\\Model");
+        $this->container->set('repositoryNamespace', "Neo\\Src\\$project\\Database\\Repository");
+        $this->container->set('formNamespace', "Neo\\Src\\$project\\Database\\Forms");
     }
 
     protected function getAvailableProjects(): array
