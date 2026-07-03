@@ -82,12 +82,21 @@ PHP;
                     $def .= ' NOT NULL';
                 }
 
+                $isCurrentTimestampDefault = $col['default'] !== null
+                    && strtoupper((string) $col['default']) === 'CURRENT_TIMESTAMP';
+
                 if ($col['default'] !== null) {
-                    $def .= " DEFAULT '{$col['default']}'";
+                    $def .= $isCurrentTimestampDefault
+                        ? ' DEFAULT CURRENT_TIMESTAMP'
+                        : " DEFAULT '{$col['default']}'";
                 }
 
-                if ($col['extra']) {
-                    $def .= ' ' . strtoupper($col['extra']);
+                $extra = trim((string) preg_replace('/DEFAULT_GENERATED/i', '', (string) $col['extra']));
+
+                if ($extra !== '' && strcasecmp($extra, 'auto_increment') !== 0) {
+                    $def .= ' ' . strtoupper($extra);
+                } elseif (strcasecmp($extra, 'auto_increment') === 0) {
+                    $def .= ' AUTO_INCREMENT';
                 }
 
                 $defs[] = $def;
