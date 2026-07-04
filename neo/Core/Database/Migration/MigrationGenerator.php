@@ -103,6 +103,9 @@ final class MigrationGenerator
         );
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $columns
+     */
     private function guardedCreateTable(string $table, array $columns): string
     {
         $sql = $this->buildCreateTableSql($table, $columns);
@@ -142,6 +145,9 @@ PHP;
 PHP;
     }
 
+    /**
+     * @param array<string, mixed> $col
+     */
     private function guardedAddColumn(string $table, array $col): string
     {
         $def = $this->escape($this->buildColumnDefinition($col));
@@ -162,6 +168,9 @@ PHP;
 PHP;
     }
 
+    /**
+     * @param array<string, mixed> $col
+     */
     private function guardedModifyColumn(string $table, array $col): string
     {
         $def = $this->escape($this->buildColumnDefinition($col));
