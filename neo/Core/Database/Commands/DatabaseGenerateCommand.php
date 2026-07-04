@@ -11,6 +11,7 @@ use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\DatabaseIntrospector;
+use Neo\Core\Database\ORM\Model\ModelGenerator;
 use Neo\Core\Database\ORM\ORM;
 use Neo\Core\DI\Container;
 
@@ -100,7 +101,22 @@ final class DatabaseGenerateCommand extends AbstractCommand
                 force: $force,
             );
 
+
+            $modelGenerator = new ModelGenerator($this->container);
+            $validClassNames = array_map(fn($t) => $modelGenerator->resolveClassName($t), $tables);
+            $orphans = $modelGenerator->findOrphanModels($validClassNames);
+
+            if (!empty($orphans)) {
+                Output::newLine();
+                Output::warning('Orphan model files detected (table no longer exists):');
+                foreach ($orphans as $orphan) {
+                    Output::muted("  - Database/Model/{$orphan}.php");
+                }
+                Output::muted('Not deleted automatically — remove manually once you\'ve confirmed this is intentional.');
+            }
+
             Output::success("Generation completed.");
+
             return ExitCode::SUCCESS;
         } catch (\Throwable $e) {
             Output::error('Generation failed: ' . $e->getMessage());

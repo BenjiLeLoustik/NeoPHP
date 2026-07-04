@@ -350,4 +350,32 @@ PHP;
             )
         );
     }
+
+    public function resolveClassName(string $table): string
+    {
+        $tableWithoutPrefix = ($this->prefix !== '' && str_starts_with($table, $this->prefix))
+            ? substr($table, strlen($this->prefix))
+            : $table;
+
+        return $this->convertToClassName($tableWithoutPrefix);
+    }
+
+    /**
+     * @param array<int, string> $validClassNames
+     * @return array<int, string>
+     */
+    public function findOrphanModels(array $validClassNames): array
+    {
+        $orphans = [];
+
+        foreach (glob($this->modelDir . '/*.php') ?: [] as $file) {
+            $className = basename($file, '.php');
+
+            if (!in_array($className, $validClassNames, true)) {
+                $orphans[] = $className;
+            }
+        }
+
+        return $orphans;
+    }
 }
