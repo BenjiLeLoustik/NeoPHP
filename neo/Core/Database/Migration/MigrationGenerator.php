@@ -44,17 +44,22 @@ final class MigrationGenerator
      * @param array{
      *     tablesToCreate: array<string, array<int, array<string, mixed>>>,
      *     tablesToDrop: array<string, array<int, array<string, mixed>>>,
-     *     tableChanges: array<string, array{
-     *         added: array<int, array<string, mixed>>,
-     *         removed: array<int, array<string, mixed>>,
-     *         modified: array<int, array{before: array<string, mixed>, after: array<string, mixed>}>
-     *     }>
+     *     tableChanges: array<string, array{added: array<int, array<string,mixed>>, removed: array<int, array<string,mixed>>, modified: array<int, array{before: array<string,mixed>, after: array<string,mixed>}>}>,
+     *     tableRenames?: array<int, array{from: string, to: string}>,
+     *     columnRenames?: array<string, array<int, array{from: string, to: string}>>
      * } $diff
      */
     public function generateDiff(string $migrationsPath, string $name, array $diff): string
     {
         $upLines = [];
         $downLines = [];
+
+        foreach ($diff['tableRenames'] ?? [] as $rename) {
+            $from = $rename['from'];
+            $to = $rename['to'];
+            $upLines[] = $this->executeLine("RENAME TABLE `$from` TO `$to`");
+            $downLines[] = $this->executeLine("RENAME TABLE `$to` TO `$from`");
+        }
 
         foreach ($diff['tablesToCreate'] as $table => $columns) {
             $upLines[] = $this->executeLine($this->buildCreateTableSql($table, $columns));
@@ -64,6 +69,13 @@ final class MigrationGenerator
         foreach ($diff['tablesToDrop'] as $table => $columns) {
             $upLines[] = $this->executeLine("DROP TABLE IF EXISTS `$table`");
             $downLines[] = $this->executeLine($this->buildCreateTableSql($table, $columns));
+        }
+
+        foreach ($diff['columnRenames'] ?? [] as $table => $renames) {
+            foreach ($renames as $rename) {
+                $upLines[] = $this->executeLine("ALTER TABLE `$table` RENAME COLUMN `{$rename['from']}` TO `{$rename['to']}`");
+                $downLines[] = $this->executeLine("ALTER TABLE `$table` RENAME COLUMN `{$rename['to']}` TO `{$rename['from']}`");
+            }
         }
 
         foreach ($diff['tableChanges'] as $table => $changes) {

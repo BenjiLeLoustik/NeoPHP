@@ -84,7 +84,103 @@ final class SchemaDiffer
     {
         return empty($diff['tablesToCreate'])
             && empty($diff['tablesToDrop'])
-            && empty($diff['tableChanges']);
+            && empty($diff['tableChanges'])
+            && empty($diff['tableRenames']);
+    }
+
+    /**
+     * @param array<string, array<int, array<string, mixed>>> $tablesToCreate
+     * @param array<string, array<int, array<string, mixed>>> $tablesToDrop
+     * @return array<int, array{from: string, to: string}>
+     */
+    public function findTableRenameCandidates(array $tablesToCreate, array $tablesToDrop): array
+    {
+        $dropSignatures = [];
+        foreach ($tablesToDrop as $table => $columns) {
+            $dropSignatures[$this->buildTableSignature($columns)][] = $table;
+        }
+
+        $createSignatures = [];
+        foreach ($tablesToCreate as $table => $columns) {
+            $createSignatures[$this->buildTableSignature($columns)][] = $table;
+        }
+
+        $candidates = [];
+
+        foreach ($dropSignatures as $signature => $droppedTables) {
+            if (count($droppedTables) !== 1 || empty($createSignatures[$signature]) || count($createSignatures[$signature]) !== 1) {
+                continue; // ambiguous match on either side, skip
+            }
+
+            $candidates[] = [
+                'from' => $droppedTables[0],
+                'to' => $createSignatures[$signature][0],
+            ];
+        }
+
+        return $candidates;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $removed
+     * @param array<int, array<string, mixed>> $added
+     * @return array<int, array{from: string, to: string}>
+     */
+    public function findColumnRenameCandidates(array $removed, array $added): array
+    {
+        $removedBySignature = [];
+        foreach ($removed as $col) {
+            $removedBySignature[$this->signature($col)][] = $col['name'];
+        }
+
+        $addedBySignature = [];
+        foreach ($added as $col) {
+            $addedBySignature[$this->signature($col)][] = $col['name'];
+        }
+
+        $candidates = [];
+
+        foreach ($removedBySignature as $signature => $names) {
+            if (count($names) !== 1 || empty($addedBySignature[$signature]) || count($addedBySignature[$signature]) !== 1) {
+                continue;
+            }
+
+            $candidates[] = [
+                'from' => $names[0],
+                'to' => $addedBySignature[$signature][0],
+            ];
+        }
+
+        return $candidates;
+    }
+
+    /**
+     * @param array<string, array<int, array<string, mixed>>> $tablesToCreate
+     * @param array<string, array{added: array<int, array<string,mixed>>, removed: array<int, array<string,mixed>>, modified: array<int, array{before: array<string,mixed>, after: array<string,mixed>}>}> $tableChanges
+     * @return array<int, array{table: string, column: string, context: string}>
+     */
+    public function findRiskyNotNullChanges(array $tablesToCreate, array $tableChanges): array
+    {
+        $risks = [];
+
+        foreach ($tableChanges as $table => $changes) {
+            foreach ($changes['added'] as $col) {
+                if (empty($col['nullable']) && $col['default'] === null && !$this->isAutoIncrementPrimary($col)) {
+                    $risks[] = ['table' => $table, 'column' => $col['name'], 'context' => 'added'];
+                }
+            }
+
+            foreach ($changes['modified'] as $change) {
+                $before = $change['before'];
+                $after = $change['after'];
+
+                if (!empty($before['nullable']) && empty($after['nullable']) && $after['default'] === null) {
+                    $risks[] = ['table' => $table, 'column' => $after['name'], 'context' => 'modified'];
+                }
+            }
+        }
+
+        return $risks;
     }
 
     /**
@@ -112,5 +208,30 @@ final class SchemaDiffer
             (string) ($col['extra'] ?? ''),
             (string) ($col['key'] ?? ''),
         ]);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $columns
+     */
+    private function buildTableSignature(array $columns): string
+    {
+        $parts = [];
+
+        foreach ($columns as $col) {
+            $parts[$col['name']] = $col['name'] . ':' . $this->signature($col);
+        }
+
+        ksort($parts);
+
+        return implode('|', $parts);
+    }
+
+    /**
+     * @param array<string, mixed> $col
+     */
+    private function isAutoIncrementPrimary(array $col): bool
+    {
+        return ($col['key'] ?? '') === 'PRI'
+            && str_contains(strtolower((string) ($col['extra'] ?? '')), 'auto_increment');
     }
 }
