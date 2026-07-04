@@ -85,7 +85,8 @@ final class SchemaDiffer
         return empty($diff['tablesToCreate'])
             && empty($diff['tablesToDrop'])
             && empty($diff['tableChanges'])
-            && empty($diff['tableRenames']);
+            && empty($diff['tableRenames'])
+            && empty($diff['columnRenames']);
     }
 
     /**

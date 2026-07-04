@@ -28,15 +28,16 @@ final class MigrationGenerator
             }
 
             $columns = $this->introspector->getColumns($table);
-            $upLines[] = $this->executeLine($this->buildCreateTableSql($table, $columns));
-            $downLines[] = $this->executeLine("DROP TABLE IF EXISTS `$table`");
+            $upLines[] = $this->guardedCreateTable($table, $columns);
+            $downLines[] = $this->guardedDropTable($table);
         }
 
         return $this->writeFile(
             $migrationsPath,
             $name,
             implode("\n\n", $upLines),
-            implode("\n", array_reverse($downLines))
+            implode("\n", array_reverse($downLines)),
+            usesHelpers: true
         );
     }
 
@@ -55,55 +56,41 @@ final class MigrationGenerator
         $downLines = [];
 
         foreach ($diff['tableRenames'] ?? [] as $rename) {
-            $from = $rename['from'];
-            $to = $rename['to'];
-            $upLines[] = $this->executeLine("RENAME TABLE `$from` TO `$to`");
-            $downLines[] = $this->executeLine("RENAME TABLE `$to` TO `$from`");
+            $upLines[] = $this->guardedRenameTable($rename['from'], $rename['to']);
+            $downLines[] = $this->guardedRenameTable($rename['to'], $rename['from']);
         }
 
         foreach ($diff['tablesToCreate'] as $table => $columns) {
-            $upLines[] = $this->executeLine($this->buildCreateTableSql($table, $columns));
-            $downLines[] = $this->executeLine("DROP TABLE IF EXISTS `$table`");
+            $upLines[] = $this->guardedCreateTable($table, $columns);
+            $downLines[] = $this->guardedDropTable($table);
         }
 
         foreach ($diff['tablesToDrop'] as $table => $columns) {
-            $upLines[] = $this->executeLine("DROP TABLE IF EXISTS `$table`");
-            $downLines[] = $this->executeLine($this->buildCreateTableSql($table, $columns));
+            $upLines[] = $this->guardedDropTable($table);
+            $downLines[] = $this->guardedCreateTable($table, $columns);
         }
 
         foreach ($diff['columnRenames'] ?? [] as $table => $renames) {
             foreach ($renames as $rename) {
-                $upLines[] = $this->executeLine("ALTER TABLE `$table` RENAME COLUMN `{$rename['from']}` TO `{$rename['to']}`");
-                $downLines[] = $this->executeLine("ALTER TABLE `$table` RENAME COLUMN `{$rename['to']}` TO `{$rename['from']}`");
+                $upLines[] = $this->guardedRenameColumn($table, $rename['from'], $rename['to']);
+                $downLines[] = $this->guardedRenameColumn($table, $rename['to'], $rename['from']);
             }
         }
 
         foreach ($diff['tableChanges'] as $table => $changes) {
             foreach ($changes['added'] as $col) {
-                $upLines[] = $this->executeLine(
-                    "ALTER TABLE `$table` ADD COLUMN " . $this->buildColumnDefinition($col)
-                );
-                $downLines[] = $this->executeLine(
-                    "ALTER TABLE `$table` DROP COLUMN `{$col['name']}`"
-                );
+                $upLines[] = $this->guardedAddColumn($table, $col);
+                $downLines[] = $this->guardedDropColumn($table, $col['name']);
             }
 
             foreach ($changes['removed'] as $col) {
-                $upLines[] = $this->executeLine(
-                    "ALTER TABLE `$table` DROP COLUMN `{$col['name']}`"
-                );
-                $downLines[] = $this->executeLine(
-                    "ALTER TABLE `$table` ADD COLUMN " . $this->buildColumnDefinition($col)
-                );
+                $upLines[] = $this->guardedDropColumn($table, $col['name']);
+                $downLines[] = $this->guardedAddColumn($table, $col);
             }
 
             foreach ($changes['modified'] as $change) {
-                $upLines[] = $this->executeLine(
-                    "ALTER TABLE `$table` MODIFY COLUMN " . $this->buildColumnDefinition($change['after'])
-                );
-                $downLines[] = $this->executeLine(
-                    "ALTER TABLE `$table` MODIFY COLUMN " . $this->buildColumnDefinition($change['before'])
-                );
+                $upLines[] = $this->guardedModifyColumn($table, $change['after']);
+                $downLines[] = $this->guardedModifyColumn($table, $change['before']);
             }
         }
 
@@ -111,11 +98,82 @@ final class MigrationGenerator
             $migrationsPath,
             $name,
             implode("\n\n", $upLines),
-            implode("\n", array_reverse($downLines))
+            implode("\n", array_reverse($downLines)),
+            usesHelpers: true
         );
     }
 
-    private function writeFile(string $migrationsPath, string $name, string $upBody, string $downBody): string
+    private function guardedCreateTable(string $table, array $columns): string
+    {
+        $sql = $this->buildCreateTableSql($table, $columns);
+        $escaped = $this->escape($sql);
+
+        return <<<PHP
+        if (!\$this->tableExists(\$db, '{$table}')) {
+            \$db->execute('{$escaped}');
+        }
+PHP;
+    }
+
+    private function guardedDropTable(string $table): string
+    {
+        return <<<PHP
+        if (\$this->tableExists(\$db, '{$table}')) {
+            \$db->execute('DROP TABLE IF EXISTS `{$table}`');
+        }
+PHP;
+    }
+
+    private function guardedRenameTable(string $from, string $to): string
+    {
+        return <<<PHP
+        if (\$this->tableExists(\$db, '{$from}') && !\$this->tableExists(\$db, '{$to}')) {
+            \$db->execute('RENAME TABLE `{$from}` TO `{$to}`');
+        }
+PHP;
+    }
+
+    private function guardedRenameColumn(string $table, string $from, string $to): string
+    {
+        return <<<PHP
+        if (\$this->columnExists(\$db, '{$table}', '{$from}') && !\$this->columnExists(\$db, '{$table}', '{$to}')) {
+            \$db->execute('ALTER TABLE `{$table}` RENAME COLUMN `{$from}` TO `{$to}`');
+        }
+PHP;
+    }
+
+    private function guardedAddColumn(string $table, array $col): string
+    {
+        $def = $this->escape($this->buildColumnDefinition($col));
+
+        return <<<PHP
+        if (!\$this->columnExists(\$db, '{$table}', '{$col['name']}')) {
+            \$db->execute('ALTER TABLE `{$table}` ADD COLUMN {$def}');
+        }
+PHP;
+    }
+
+    private function guardedDropColumn(string $table, string $column): string
+    {
+        return <<<PHP
+        if (\$this->columnExists(\$db, '{$table}', '{$column}')) {
+            \$db->execute('ALTER TABLE `{$table}` DROP COLUMN `{$column}`');
+        }
+PHP;
+    }
+
+    private function guardedModifyColumn(string $table, array $col): string
+    {
+        $def = $this->escape($this->buildColumnDefinition($col));
+
+        return <<<PHP
+        if (\$this->columnExists(\$db, '{$table}', '{$col['name']}')) {
+            \$db->execute('ALTER TABLE `{$table}` MODIFY COLUMN {$def}');
+        }
+PHP;
+    }
+
+    private function writeFile(string $migrationsPath, string $name, string $upBody, string $downBody, bool $usesHelpers = false): string
     {
         if (!is_dir($migrationsPath)) {
             mkdir($migrationsPath, 0777, true);
@@ -125,6 +183,8 @@ final class MigrationGenerator
         $className = 'MigrationVersion_' . $timestamp;
         $file = "$migrationsPath/$className.php";
         $date = date('Y-m-d H:i:s');
+
+        $helpers = $usesHelpers ? $this->helperMethods() : '';
 
         $content = <<<PHP
 <?php
@@ -145,12 +205,39 @@ $upBody
     {
 $downBody
     }
+$helpers
 }
 PHP;
 
         file_put_contents($file, $content);
 
         return $file;
+    }
+
+    private function helperMethods(): string
+    {
+        return <<<'PHP'
+
+    private function tableExists(\Neo\Core\Database\DatabaseManager $db, string $table): bool
+    {
+        $row = $db->fetch(
+            'SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table',
+            ['table' => $table]
+        );
+
+        return $row !== null;
+    }
+
+    private function columnExists(\Neo\Core\Database\DatabaseManager $db, string $table, string $column): bool
+    {
+        $row = $db->fetch(
+            'SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column',
+            ['table' => $table, 'column' => $column]
+        );
+
+        return $row !== null;
+    }
+PHP;
     }
 
     /**
@@ -209,9 +296,8 @@ PHP;
         return $def;
     }
 
-    private function executeLine(string $sql): string
+    private function escape(string $sql): string
     {
-        $escaped = str_replace(["\\", "'"], ["\\\\", "\\'"], $sql);
-        return "        \$db->execute('" . $escaped . "');";
+        return str_replace(["\\", "'"], ["\\\\", "\\'"], $sql);
     }
 }
