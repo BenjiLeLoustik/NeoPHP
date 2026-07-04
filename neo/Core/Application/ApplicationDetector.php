@@ -68,7 +68,7 @@ class ApplicationDetector
         $request = $this->container->get(Request::class);
         $serverData = $request->getServer() ?? $_SERVER;
 
-        $serverName = $serverData['SERVER_NAME'] ?? $serverData['HTTP_HOST'] ?? null;
+        $serverName = $serverData['HTTP_HOST'] ?? $serverData['SERVER_NAME'] ?? null;
         $serverPort = (string) ($serverData['SERVER_PORT'] ?? '');
 
         if (!$serverName) {
@@ -80,7 +80,7 @@ class ApplicationDetector
         }
 
         $server = $serverName;
-        if (!empty($serverPort) && !in_array($serverPort, ['80', '443'])) {
+        if (!str_contains($server, ':') && !empty($serverPort) && !in_array($serverPort, ['80', '443'])) {
             $server .= ':' . $serverPort;
         }
 
@@ -88,7 +88,7 @@ class ApplicationDetector
             $config = require $file;
             $accessServer = $config['access'] ?? null;
 
-            if ($accessServer === $server || $accessServer === $serverName) {
+            if ($accessServer === $server) {
                 $this->container->set('application', basename(dirname($file, 2)));
                 return;
             }

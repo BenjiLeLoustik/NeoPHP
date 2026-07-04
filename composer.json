@@ -35,7 +35,11 @@
         "psr-4": {
             "Neo\\": "neo/",
             "Neo\\Src\\": "src/"
-        }
+        },
+        "exclude-from-classmap": [
+            "/src/*/Database/Migrations/",
+            "/src/*/Storage/"
+        ]
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
