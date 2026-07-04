@@ -61,26 +61,27 @@ final class Fs
 
     public static function pascalCase(string $string): string
     {
-        $string = preg_replace('/(?<=[a-z0-9])(?=[A-Z])/', ' ', $string);
         $string = self::stripAccents($string);
-        $string = str_replace('-', '_', $string);
-        $string = preg_replace('/[^a-zA-Z0-9_\s]+/', ' ', $string);
+        $string = str_replace(['-', ' '], '_', $string);
+        $string = preg_replace('/[^A-Za-z0-9_]+/', '', $string);
+        $string = trim($string, '_');
 
-        $tokens = array_filter(explode(' ', trim($string)), fn($t) => $t !== '');
-
-        $result = '';
-        foreach ($tokens as $token) {
-            $parts = explode('_', $token);
-            $parts = array_map(
-                fn($part) => $part === ''
-                    ? ''
-                    : mb_strtoupper(mb_substr($part, 0, 1)) . mb_substr($part, 1),
-                $parts
-            );
-            $result .= implode('', $parts);
+        if ($string === '') {
+            return '';
         }
 
-        return $result;
+        if (!str_contains($string, '_')) {
+            return mb_strtoupper(mb_substr($string, 0, 1)) . mb_substr($string, 1);
+        }
+
+        $parts = array_filter(explode('_', $string), fn($p) => $p !== '');
+
+        $parts = array_map(
+            fn($part) => mb_strtoupper(mb_substr($part, 0, 1)) . mb_substr($part, 1),
+            $parts
+        );
+
+        return implode('_', $parts);
     }
 
     private static function stripAccents(string $string): string
