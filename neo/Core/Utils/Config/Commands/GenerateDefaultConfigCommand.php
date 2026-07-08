@@ -13,8 +13,6 @@ use Neo\Core\Console\Output\Output;
 use Neo\Core\Utils\Config\ConfigTemplateWriter;
 use Neo\Core\Utils\Config\Templates\ApiConfigTemplate;
 use Neo\Core\Utils\Config\Templates\DatabaseConfigTemplate;
-use Neo\Core\Utils\Config\Templates\DeployConfigTemplate;
-use Neo\Core\Utils\Config\Templates\MailerConfigTemplate;
 
 #[Command(
     name: 'generate:default:config',
@@ -51,7 +49,6 @@ final class GenerateDefaultConfigCommand extends AbstractCommand
         ConfigTemplateWriter::write(
             templates: [
                 new DatabaseConfigTemplate(),
-                new DeployConfigTemplate(),
                 new ApiConfigTemplate(),
             ],
             configPath: $configPath,
