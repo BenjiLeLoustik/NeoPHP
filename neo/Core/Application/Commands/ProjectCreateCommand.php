@@ -191,8 +191,8 @@ PHP;
 
     private function generateDefaultLayoutView(string $path, string $name): void
     {
-        $content = <<<TWIG
-{# ./src/$name/App/Views/layouts/base_layout.html.twig #}
+        $content = <<<'TWIG'
+{# ./src/__NAME__/App/Views/layouts/base_layout.html.twig #}
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -206,13 +206,13 @@ PHP;
     <body class="layout-body">
         <header class="layout-header">
             {% block header %}
-                <h1>{{ translate('welcome.header.title') }}</h1>
-                <p class="subtitle">{{ translate('welcome.header.sub_title') }}</p>
+                <h1>{{ translate('NeoPHP Project Ready to Use', domain='header') }}</h1>
+                <p class="subtitle">{{ translate('Your application is properly configured and ready for development.', domain='header') }}</p>
                 <div class="locales">
-                    {% for locale, name in getLocales() %}
+                    {% for locale, label in getLocales() %}
                         <a class="{% if locale == getLocale() %}currentLocale{% endif %}"
                            href="{{ path('default.change.locale', {'locale': locale}) }}">
-                            {{ translate('welcome.' ~ name) }}
+                            {{ label }}
                         </a>
                     {% endfor %}
                 </div>
@@ -225,7 +225,7 @@ PHP;
 
         <footer class="layout-footer">
             {% block footer %}
-                <p>&copy; {{ "now"|date("Y") }} - NeoPHP</p>
+                <p>{{ translate('© :year - NeoPHP', {'year': "now"|date("Y")}, domain='footer') }}</p>
             {% endblock %}
         </footer>
 
@@ -235,37 +235,41 @@ PHP;
 </html>
 TWIG;
 
+        $content = str_replace('__NAME__', $name, $content);
+
         file_put_contents($path . 'base_layout.html.twig', $content);
     }
 
     private function generateDefaultView(string $path, string $name): void
     {
-        $content = <<<TWIG
-{# ./src/$name/App/Views/pages/default/index.html.twig #}
+        $content = <<<'TWIG'
+{# ./src/__NAME__/App/Views/pages/default/index.html.twig #}
 
 {% extends 'layouts/base_layout.html.twig' %}
 
-{% block title %}{{ translate('welcome.page_title') }}{% endblock %}
+{% block title %}{{ translate('Welcome to your project') }}{% endblock %}
 
 {% block content %}
     <section class="landing-section">
-        <h2>{{ translate('welcome.title.message', '', {'projectName': projectName}) }}</h2>
-        <p class="intro">{{ translate('welcome.title.install') }}</p>
-        <p class="note">{{ translate('welcome.title.note') }}</p>
+        <h2>{{ translate('Welcome to :projectName', {'projectName': projectName}) }}</h2>
+        <p class="intro">{{ translate('Congratulations! All your base folders and files have been created successfully.') }}</p>
+        <p class="note">{{ translate('You can now start developing your NeoPHP project.') }}</p>
 
         <div class="actions">
             <div class="action-block">
-                <p>{{ translate('welcome.command.create_crud') }}</p>
+                <p>{{ translate('Create a full CRUD (Controller + views):') }}</p>
                 <code>php bin/neo make:crud &lt;Entity&gt; --project={{ app.name }}</code>
             </div>
             <div class="action-block">
-                <p>{{ translate('welcome.command.create_controller') }}</p>
+                <p>{{ translate('Create a simple Controller:') }}</p>
                 <code>php bin/neo make:controller &lt;ControllerName&gt; --project={{ app.name }}</code>
             </div>
         </div>
     </section>
 {% endblock %}
 TWIG;
+
+        $content = str_replace('__NAME__', $name, $content);
 
         file_put_contents($path . 'index.html.twig', $content);
     }
@@ -367,54 +371,58 @@ JS;
 
     private function generateDefaultTranslations(string $path): void
     {
-        $fr = <<<PHP
-<?php
+        $domains = [
+            'common' => [
+                'fr' => [
+                    'Welcome to your project' => 'Bienvenue sur votre projet',
+                    'Welcome to :projectName' => 'Bienvenue sur :projectName',
+                    'Congratulations! All your base folders and files have been created successfully.' => 'Félicitations ! Tous vos dossiers et fichiers de base sont correctement créés.',
+                    'You can now start developing your NeoPHP project.' => 'Vous pouvez maintenant commencer à développer votre projet NeoPHP.',
+                    'Create a full CRUD (Controller + views):' => 'Créer un CRUD complet (Controller + vues) :',
+                    'Create a simple Controller:' => 'Créer un Controller simple :',
+                ],
+                'en' => [
+                    'Welcome to your project' => 'Welcome to your project',
+                    'Welcome to :projectName' => 'Welcome to :projectName',
+                    'Congratulations! All your base folders and files have been created successfully.' => 'Congratulations! All your base folders and files have been created successfully.',
+                    'You can now start developing your NeoPHP project.' => 'You can now start developing your NeoPHP project.',
+                    'Create a full CRUD (Controller + views):' => 'Create a full CRUD (Controller + views):',
+                    'Create a simple Controller:' => 'Create a simple Controller:',
+                ],
+            ],
+            'header' => [
+                'fr' => [
+                    'NeoPHP Project Ready to Use' => "Projet NeoPHP prêt à l'emploi",
+                    'Your application is properly configured and ready for development.' => 'Votre application est correctement configurée et prête au développement.',
+                ],
+                'en' => [
+                    'NeoPHP Project Ready to Use' => 'NeoPHP Project Ready to Use',
+                    'Your application is properly configured and ready for development.' => 'Your application is properly configured and ready for development.',
+                ],
+            ],
+            'footer' => [
+                'fr' => [
+                    '© :year - NeoPHP' => '© :year - NeoPHP',
+                ],
+                'en' => [
+                    '© :year - NeoPHP' => '© :year - NeoPHP',
+                ],
+            ],
+        ];
 
-return [
-    'page_title' => 'Bienvenue sur votre projet',
-    'header' => [
-        'title'     => 'Projet NeoPHP prêt à l\'emploi',
-        'sub_title' => 'Votre application est correctement configurée et prête au développement.',
-    ],
-    'Français' => 'Français',
-    'Anglais'  => 'Anglais',
-    'title' => [
-        'message' => 'Bienvenue sur :projectName',
-        'install' => 'Félicitations ! Tous vos dossiers et fichiers de base sont correctement créés.',
-        'note'    => 'Vous pouvez maintenant commencer à développer votre projet NeoPHP.',
-    ],
-    'command' => [
-        'create_crud'       => 'Créer un CRUD complet (Controller + vues) :',
-        'create_controller' => 'Créer un Controller simple :',
-    ],
-];
-PHP;
+        foreach ($domains as $domain => $locales) {
+            foreach ($locales as $locale => $translations) {
+                $lines = [];
+                foreach ($translations as $key => $value) {
+                    $lines[] = '    ' . var_export($key, true) . ' => ' . var_export($value, true);
+                }
 
-        $en = <<<PHP
-<?php
+                $fileContent = "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n" . implode(",\n", $lines) . "\n];\n";
 
-return [
-    'page_title' => 'Welcome to your project',
-    'header' => [
-        'title'     => 'NeoPHP Project Ready to Use',
-        'sub_title' => 'Your application is properly configured and ready for development.',
-    ],
-    'Français' => 'French',
-    'Anglais'  => 'English',
-    'title' => [
-        'message' => 'Welcome to :projectName',
-        'install' => 'Congratulations! All your base folders and files have been created successfully.',
-        'note'    => 'You can now start developing your NeoPHP project.',
-    ],
-    'command' => [
-        'create_crud'       => 'Create a full CRUD (Controller + views):',
-        'create_controller' => 'Create a simple Controller:',
-    ],
-];
-PHP;
-
-        file_put_contents($path . 'fr/welcome.php', $fr);
-        file_put_contents($path . 'en/welcome.php', $en);
+                Fs::ensureDir($path . $locale);
+                file_put_contents($path . "$locale/$domain.php", $fileContent);
+            }
+        }
     }
 
     private function generateProjectComposer(string $path, string $name): void
