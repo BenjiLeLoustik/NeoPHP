@@ -16,9 +16,7 @@ use Neo\Core\Utils\Config\Templates\ApiConfigTemplate;
 use Neo\Core\Utils\Config\Templates\AppConfigTemplate;
 use Neo\Core\Utils\Config\Templates\CacheConfigTemplate;
 use Neo\Core\Utils\Config\Templates\DatabaseConfigTemplate;
-use Neo\Core\Utils\Config\Templates\DeployConfigTemplate;
 use Neo\Core\Utils\Config\Templates\LoggerConfigTemplate;
-use Neo\Core\Utils\Config\Templates\MailerConfigTemplate;
 use Neo\Core\Utils\Config\Templates\SessionConfigTemplate;
 use Neo\Core\Utils\Config\Templates\TwigConfigTemplate;
 
@@ -107,7 +105,6 @@ final class ProjectCreateCommand extends AbstractCommand
             templates: [
                 new AppConfigTemplate(),
                 new DatabaseConfigTemplate(),
-                new DeployConfigTemplate(),
                 new LoggerConfigTemplate(),
                 new CacheConfigTemplate(),
                 new TwigConfigTemplate(),
@@ -278,9 +275,7 @@ TWIG;
         $content = <<<GITIGNORE
 # Sensitive config
 /Config/database.config.php
-/Config/deploy.config.php
 /Config/api.config.php
-/Config/mailer.config.php
 
 # Storage
 /Storage/
