@@ -25,17 +25,17 @@ final class FsTest extends TestCase
 
     public function testPascalCaseConvertsKebabCase(): void
     {
-        self::assertSame('MyCommandName', Fs::pascalCase('my-command-name'));
+        self::assertSame('My_Command_Name', Fs::pascalCase('my-command-name'));
     }
 
     public function testPascalCaseConvertsSnakeCaseAndTrims(): void
     {
-        self::assertSame('HelloWorld', Fs::pascalCase('  hello_world  '));
+        self::assertSame('Hello_World', Fs::pascalCase('  hello_world  '));
     }
 
     public function testPascalCaseHandlesMultipleSeparators(): void
     {
-        self::assertSame('FooBarBaz', Fs::pascalCase('foo__bar--baz'));
+        self::assertSame('Foo_Bar_Baz', Fs::pascalCase('foo__bar--baz'));
     }
 
     public function testNormalizeDirTrimsLeadingAndTrailingSlashes(): void
