@@ -118,6 +118,7 @@ final class ProjectCreateCommand extends AbstractCommand
         );
 
         $this->generateGitignore($path);
+        $this->generateDefaultModule($path, $name);
 
         if ($skeleton) {
             return;
@@ -139,7 +140,6 @@ final class ProjectCreateCommand extends AbstractCommand
             Fs::ensureDir($path . '/' . $directory);
         }
 
-        $this->generateDefaultModule($path, $name);
         $this->generateDefaultController($path . '/App/Controllers/', $name, $originalName);
         $this->generateDefaultLayoutView($path . '/App/Views/layouts/', $name);
         $this->generateDefaultView($path . '/App/Views/pages/default/', $name);
