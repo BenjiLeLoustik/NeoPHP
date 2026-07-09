@@ -152,7 +152,6 @@ SQL;
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute(array_values($data));
 
-                $stmt->execute(array_values($data));
                 $this->$pk = (int) $pdo->lastInsertId();
             } else {
                 $set = implode(', ', array_map(fn($col) => "`$col` = ?", array_keys($data)));
