@@ -21,12 +21,21 @@ foreach ($argv as $arg) {
     }
 }
 
+if ($project === null) {
+    $commandName = $argv[1] ?? null;
+
+    if ($commandName !== null) {
+        $project = ConsoleManager::findProjectForCommand($commandName);
+    }
+}
+
 if ($project !== null && !is_dir($basePath . '/src/' . $project)) {
     echo "\033[31m✘ Project '$project' not found in src/.\033[0m\n";
     exit(1);
 }
 
 if ($project !== null) {
+    $GLOBALS['_NEO_CLI_PROJECT'] = $project;
     $app = new App();
     $container = $app->getContainer();
 } else {

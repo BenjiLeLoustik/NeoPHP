@@ -37,6 +37,11 @@ class ApplicationDetector
             return;
         }
 
+        if (!empty($GLOBALS['_NEO_CLI_PROJECT'])) {
+            $this->container->set('application', $GLOBALS['_NEO_CLI_PROJECT']);
+            return;
+        }
+
         global $argv;
         $project = null;
 

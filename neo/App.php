@@ -54,9 +54,7 @@ class App
             ->discover(__DIR__ . '/Core')
             ->discover($this->container->get('appPath'));
 
-        if (php_sapi_name() !== 'cli') {
-            $moduleManager->boot();
-        }
+        $moduleManager->boot();
     }
 
     /**
