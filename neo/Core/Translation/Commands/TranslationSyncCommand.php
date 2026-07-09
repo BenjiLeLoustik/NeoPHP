@@ -177,6 +177,15 @@ final class TranslationSyncCommand extends AbstractCommand
     {
         $keysByDomain = [];
 
+        $targs = '(?:'
+            . '\'(?:\\\\.|[^\'\\\\])*\''
+            . '|"(?:\\\\.|[^"\\\\])*"'
+            . '|\((?&targs)*\)'
+            . '|\[(?&targs)*\]'
+            . '|\{(?&targs)*\}'
+            . '|[^()\[\]{}\'"]'
+            . ')*';
+
         $files = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($srcPath, \FilesystemIterator::SKIP_DOTS)
         );
@@ -193,7 +202,7 @@ final class TranslationSyncCommand extends AbstractCommand
             $content = file_get_contents($file->getPathname());
 
             preg_match_all(
-                '/(?<![a-zA-Z0-9_])(?:translate|trans)\(\s*([\'"])((?:\\\\.|(?!\1).)*)\1((?:[^()]|\([^()]*\))*)\)/us',
+                '/(?<![a-zA-Z0-9_])(?:translate|trans)\(\s*([\'"])((?:\\\\.|(?!\1).)*)\1(?P<targs>' . $targs . ')\)/us',
                 $content,
                 $matches,
                 PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL
@@ -201,12 +210,12 @@ final class TranslationSyncCommand extends AbstractCommand
 
             foreach ($matches as $match) {
                 $key = $this->unescapeString($match[2]);
-                $domain = $this->extractDomain($match[3]);
+                $domain = $this->extractDomain($match['targs']);
                 $keysByDomain[$domain][] = $key;
             }
 
             preg_match_all(
-                '/([\'"])((?:\\\\.|(?!\1).)*)\1\|trans(?:\(((?:[^()]|\([^()]*\))*)\))?/us',
+                '/([\'"])((?:\\\\.|(?!\1).)*)\1\|trans(?:\((?P<targs>' . $targs . ')\))?/us',
                 $content,
                 $filterMatches,
                 PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL
@@ -214,7 +223,7 @@ final class TranslationSyncCommand extends AbstractCommand
 
             foreach ($filterMatches as $match) {
                 $key = $this->unescapeString($match[2]);
-                $domain = $this->extractDomain($match[3]);
+                $domain = $this->extractDomain($match['targs'] ?? null);
                 $keysByDomain[$domain][] = $key;
             }
 
@@ -245,11 +254,86 @@ final class TranslationSyncCommand extends AbstractCommand
             return TranslationDomain::DEFAULT;
         }
 
-        if (preg_match('/domain\s*[:=]\s*([\'"])((?:\\\\.|(?!\1).)*)\1/u', $argsTail, $m)) {
+        if (preg_match('/(?<![a-zA-Z0-9_])domain\s*:\s*([\'"])((?:\\\\.|(?!\1).)*)\1/u', $argsTail, $m)) {
+            return $this->unescapeString($m[2]);
+        }
+
+        if (preg_match('/[\'"]domain[\'"]\s*=>\s*([\'"])((?:\\\\.|(?!\1).)*)\1/u', $argsTail, $m)) {
+            return $this->unescapeString($m[2]);
+        }
+
+        $args = $this->splitTopLevelArgs($argsTail);
+
+        if (isset($args[1]) && preg_match('/^([\'"])((?:\\\\.|(?!\1).)*)\1$/us', trim($args[1]), $m)) {
             return $this->unescapeString($m[2]);
         }
 
         return TranslationDomain::DEFAULT;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function splitTopLevelArgs(string $argsTail): array
+    {
+        $tail = ltrim($argsTail);
+        $tail = ltrim($tail, ',');
+
+        $args = [];
+        $current = '';
+        $depth = 0;
+        $inQuote = null;
+        $len = strlen($tail);
+
+        for ($i = 0; $i < $len; $i++) {
+            $char = $tail[$i];
+
+            if ($inQuote !== null) {
+                $current .= $char;
+                if ($char === '\\') {
+                    if ($i + 1 < $len) {
+                        $current .= $tail[++$i];
+                    }
+                    continue;
+                }
+                if ($char === $inQuote) {
+                    $inQuote = null;
+                }
+                continue;
+            }
+
+            if ($char === '\'' || $char === '"') {
+                $inQuote = $char;
+                $current .= $char;
+                continue;
+            }
+
+            if ($char === '(' || $char === '[' || $char === '{') {
+                $depth++;
+                $current .= $char;
+                continue;
+            }
+
+            if ($char === ')' || $char === ']' || $char === '}') {
+                $depth--;
+                $current .= $char;
+                continue;
+            }
+
+            if ($char === ',' && $depth === 0) {
+                $args[] = $current;
+                $current = '';
+                continue;
+            }
+
+            $current .= $char;
+        }
+
+        if (trim($current) !== '') {
+            $args[] = $current;
+        }
+
+        return $args;
     }
 
     private function unescapeString(string $raw): string
