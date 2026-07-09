@@ -202,16 +202,20 @@ final class TranslationSyncCommand extends AbstractCommand
             $content = file_get_contents($file->getPathname());
 
             preg_match_all(
-                '/(?<![a-zA-Z0-9_])(?:translate|trans)\(\s*([\'"])((?:\\\\.|(?!\1).)*)\1(?P<targs>' . $targs . ')\)/us',
+                '/(?<![a-zA-Z0-9_])(?:translate|trans)\((?P<targs>' . $targs . ')\)/us',
                 $content,
                 $matches,
-                PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL
+                PREG_SET_ORDER
             );
 
             foreach ($matches as $match) {
-                $key = $this->unescapeString($match[2]);
-                $domain = $this->extractDomain($match['targs']);
-                $keysByDomain[$domain][] = $key;
+                $result = $this->extractTranslationArgs($match['targs'], keyInArgs: true);
+
+                if ($result['key'] === null) {
+                    continue;
+                }
+
+                $keysByDomain[$result['domain']][] = $result['key'];
             }
 
             preg_match_all(
@@ -223,8 +227,8 @@ final class TranslationSyncCommand extends AbstractCommand
 
             foreach ($filterMatches as $match) {
                 $key = $this->unescapeString($match[2]);
-                $domain = $this->extractDomain($match['targs'] ?? null);
-                $keysByDomain[$domain][] = $key;
+                $result = $this->extractTranslationArgs($match['targs'] ?? '', keyInArgs: false);
+                $keysByDomain[$result['domain']][] = $key;
             }
 
             preg_match_all(
@@ -248,51 +252,28 @@ final class TranslationSyncCommand extends AbstractCommand
         return $keysByDomain;
     }
 
-    private function extractDomain(?string $argsTail): string
-    {
-        if ($argsTail === null || $argsTail === '') {
-            return TranslationDomain::DEFAULT;
-        }
-
-        if (preg_match('/(?<![a-zA-Z0-9_])domain\s*:\s*([\'"])((?:\\\\.|(?!\1).)*)\1/u', $argsTail, $m)) {
-            return $this->unescapeString($m[2]);
-        }
-
-        if (preg_match('/[\'"]domain[\'"]\s*=>\s*([\'"])((?:\\\\.|(?!\1).)*)\1/u', $argsTail, $m)) {
-            return $this->unescapeString($m[2]);
-        }
-
-        $args = $this->splitTopLevelArgs($argsTail);
-
-        if (isset($args[1]) && preg_match('/^([\'"])((?:\\\\.|(?!\1).)*)\1$/us', trim($args[1]), $m)) {
-            return $this->unescapeString($m[2]);
-        }
-
-        return TranslationDomain::DEFAULT;
-    }
-
     /**
      * @return list<string>
      */
-    private function splitTopLevelArgs(string $argsTail): array
+    private function splitTopLevelArgs(string $argsBlob): array
     {
-        $tail = ltrim($argsTail);
-        $tail = ltrim($tail, ',');
+        $blob = ltrim($argsBlob);
+        $blob = ltrim($blob, ',');
 
         $args = [];
         $current = '';
         $depth = 0;
         $inQuote = null;
-        $len = strlen($tail);
+        $len = strlen($blob);
 
         for ($i = 0; $i < $len; $i++) {
-            $char = $tail[$i];
+            $char = $blob[$i];
 
             if ($inQuote !== null) {
                 $current .= $char;
                 if ($char === '\\') {
                     if ($i + 1 < $len) {
-                        $current .= $tail[++$i];
+                        $current .= $blob[++$i];
                     }
                     continue;
                 }
@@ -334,6 +315,70 @@ final class TranslationSyncCommand extends AbstractCommand
         }
 
         return $args;
+    }
+
+    /**
+     * @return array{named: array<string, string>, positional: list<string>}
+     */
+    private function parseCallArguments(string $argsBlob): array
+    {
+        $named = [];
+        $positional = [];
+
+        foreach ($this->splitTopLevelArgs($argsBlob) as $rawArg) {
+            $arg = trim($rawArg);
+
+            if ($arg === '') {
+                continue;
+            }
+
+            if (preg_match('/^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(?!:)(.*)$/us', $arg, $m)) {
+                $named[$m[1]] = trim($m[2]);
+                continue;
+            }
+
+            $positional[] = $arg;
+        }
+
+        return ['named' => $named, 'positional' => $positional];
+    }
+
+    private function extractLiteralString(?string $expr): ?string
+    {
+        if ($expr === null) {
+            return null;
+        }
+
+        if (preg_match('/^([\'"])((?:\\\\.|(?!\1).)*)\1$/us', trim($expr), $m)) {
+            return $this->unescapeString($m[2]);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{key: ?string, domain: string}
+     */
+    private function extractTranslationArgs(string $argsBlob, bool $keyInArgs): array
+    {
+        $parsed = $this->parseCallArguments($argsBlob);
+        $named = $parsed['named'];
+        $positional = $parsed['positional'];
+
+        $key = null;
+
+        if ($keyInArgs) {
+            $keyExpr = $named['text'] ?? $named['key'] ?? ($positional[0] ?? null);
+            $key = $this->extractLiteralString($keyExpr);
+            $domainPositionalIndex = 2;
+        } else {
+            $domainPositionalIndex = 1;
+        }
+
+        $domainExpr = $named['domain'] ?? ($positional[$domainPositionalIndex] ?? null);
+        $domain = $this->extractLiteralString($domainExpr) ?? TranslationDomain::DEFAULT;
+
+        return ['key' => $key, 'domain' => $domain];
     }
 
     private function unescapeString(string $raw): string
