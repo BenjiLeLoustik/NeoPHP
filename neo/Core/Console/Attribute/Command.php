@@ -12,5 +12,6 @@ class Command
         public ?string $name = null,
         public ?string $description = null,
         public ?string $category = null,
+        public ?string $project = null,
     ) {}
 }

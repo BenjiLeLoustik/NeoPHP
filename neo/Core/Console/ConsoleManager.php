@@ -17,20 +17,20 @@ use ReflectionException;
 
 class ConsoleManager
 {
+    /** @var list<string> */
+    private const array COMMAND_BASE_PATHS = [
+        __DIR__ . '/../../../src',
+        __DIR__ . '/../../../neo',
+    ];
+
     /** @var array<string, array{instance: AbstractCommand, description: string, category: string}> */
     private array $commands = [];
 
     public function __construct(private readonly Container $container) {}
 
-    /** @throws ReflectionException */
-    private function loadCommands(): void
+    private static function requireCommandFiles(): void
     {
-        $basePaths = [
-            __DIR__ . '/../../../src',
-            __DIR__ . '/../../../neo',
-        ];
-
-        foreach ($basePaths as $basePath) {
+        foreach (self::COMMAND_BASE_PATHS as $basePath) {
             if (!is_dir($basePath)) {
                 continue;
             }
@@ -51,6 +51,51 @@ class ConsoleManager
                 require_once $file->getPathname();
             }
         }
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    public static function findProjectForCommand(string $commandName): ?string
+    {
+        self::requireCommandFiles();
+
+        foreach (get_declared_classes() as $class) {
+            if (!is_subclass_of($class, AbstractCommand::class)) {
+                continue;
+            }
+
+            $results = new ScannerAttribute($class)
+                ->onClass()
+                ->withAttribute(Command::class)
+                ->scan();
+
+            if (empty($results)) {
+                continue;
+            }
+
+            /** @var array{reflection: ReflectionClass<object>, attribute: Command} $row */
+            $row = $results[0];
+
+            if ($row['reflection']->isAbstract()) {
+                continue;
+            }
+
+            /** @var Command $attr */
+            $attr = $row['attribute'];
+
+            if ($attr->name === $commandName) {
+                return $attr->project;
+            }
+        }
+
+        return null;
+    }
+
+    /** @throws ReflectionException */
+    private function loadCommands(): void
+    {
+        self::requireCommandFiles();
 
         foreach (get_declared_classes() as $class) {
             if (!is_subclass_of($class, AbstractCommand::class)) {
@@ -79,7 +124,7 @@ class ConsoleManager
                 continue;
             }
 
-            $instance = new $class($this->container);
+            $instance = $this->container->make($class);
             $instance->configure();
 
             $name = $instance->getName();
