@@ -49,7 +49,7 @@ readonly class Toolbar
   #neo-bar{
     position:fixed;bottom:0;left:0;right:0;z-index:99999;
     background:transparent;color:#a1a1aa;
-    display:flex;align-items:stretch;height:34px;
+    display:flex;align-items:stretch;justify-content:flex-end;height:34px;
     border-top:none;font-size:11px;
   }
 
