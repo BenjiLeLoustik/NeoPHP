@@ -89,9 +89,9 @@ class Logger
             return;
         }
 
-        $this->archiveOldLogs();
-
         $this->rotateIfNeeded();
+
+        $this->archiveOldLogs();
 
         $filePath = $this->getLogFilePath();
         $entry = $this->formatMessage($level, $message, $context, $origin);
@@ -212,7 +212,7 @@ class Logger
             return;
         }
 
-        if (filesize($file) < $rotation['max_file_size']) {
+        if (filesize($file) < ($rotation['max_file_size'] ?? PHP_INT_MAX)) {
             return;
         }
 
@@ -226,47 +226,95 @@ class Logger
             return;
         }
 
-        $activeFile = $this->getLogFilePath();
-        $files = glob($this->logDirectory . '/*.log');
+        $activeFiles = $this->activeFilePaths();
+        $files = glob($this->logDirectory . '/*');
 
+        $groups = [];
         foreach ($files as $file) {
-            if ($file === $activeFile) {
+            if (!is_file($file) || in_array($file, $activeFiles, true)) {
                 continue;
             }
 
-            $this->archiveFile($file);
+            $date = $this->extractDateFromFile($file);
+            $groups[$date][] = $file;
+        }
+
+        foreach ($groups as $date => $groupFiles) {
+            $this->archiveFilesForDate($date, $groupFiles);
         }
     }
 
-    private function archiveFile(string $file): void
+    private function extractDateFromFile(string $file): string
+    {
+        if (preg_match('/(\d{4}-\d{2}-\d{2})/', basename($file), $matches)) {
+            return $matches[1];
+        }
+
+        $fileTime = filemtime($file) ?: time();
+        return date('Y-m-d', $fileTime);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function activeFilePaths(): array
+    {
+        $channels = $this->config['channels'] ?? [];
+
+        if (!isset($channels[$this->currentChannel])) {
+            $channels[$this->currentChannel] = [];
+        }
+
+        $rotationType = $this->config['rotation']['type'] ?? 'daily';
+        $paths = [];
+
+        foreach ($channels as $name => $conf) {
+            $fileName = $conf['name'] ?? $name;
+            $extension = $conf['extension'] ?? 'log';
+
+            if ($rotationType === 'daily') {
+                $date = date('Y-m-d');
+                $paths[] = "{$this->logDirectory}/{$fileName}-{$date}.{$extension}";
+            } else {
+                $paths[] = "{$this->logDirectory}/{$fileName}.{$extension}";
+            }
+        }
+
+        return $paths;
+    }
+
+    /**
+     * @param array<int, string> $files
+     */
+    private function archiveFilesForDate(string $date, array $files): void
     {
         $ext = $this->config['archive']['extension'] ?? 'zip';
 
-        $dt = new DateTime();
-        $year = $dt->format('Y');
-        $month = $dt->format('m');
+        $parts = explode('-', $date);
+        $year = $parts[0] ?? date('Y');
+        $month = $parts[1] ?? date('m');
 
         $archivePath = "{$this->archiveDirectory}/{$year}/{$month}";
         if (!is_dir($archivePath)) {
             mkdir($archivePath, 0777, true);
         }
 
-        $baseName = basename($file);
-        $zipPath = "{$archivePath}/{$baseName}.{$ext}";
-
-        if (file_exists($zipPath)) {
-            return;
-        }
+        $zipPath = "{$archivePath}/{$date}.{$ext}";
 
         $zip = new ZipArchive();
         if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
             return;
         }
 
-        $zip->addFile($file, $baseName);
+        foreach ($files as $file) {
+            $zip->addFile($file, basename($file));
+        }
+
         $zip->close();
 
-        unlink($file);
+        foreach ($files as $file) {
+            unlink($file);
+        }
     }
 
     /**
