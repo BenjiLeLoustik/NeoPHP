@@ -216,10 +216,49 @@ class LoggerTest extends TestCase
 
         self::assertFileDoesNotExist($logsDir . '/app-2020-01-01.log');
 
-        $year = date('Y');
-        $month = date('m');
-        $archived = glob($this->storageDir . "/logs/archives/{$year}/{$month}/*.zip");
+        $archived = glob($this->storageDir . '/logs/archives/2020/01/*.zip');
 
         self::assertCount(1, $archived);
+        self::assertSame('2020-01-01.zip', basename($archived[0]));
+    }
+
+    /**
+     * @throws ContainerException
+     */
+    public function testArchiveGroupsAllChannelsOfSameDateIntoSingleZip(): void
+    {
+        if (!class_exists(\ZipArchive::class)) {
+            self::markTestSkipped('ext-zip is not available.');
+        }
+
+        $logsDir = $this->storageDir . '/logs';
+        mkdir($logsDir, 0777, true);
+        file_put_contents($logsDir . '/app-2020-01-01.log', '[INFO] app entry');
+        file_put_contents($logsDir . '/mail-2020-01-01.log', '[INFO] mail entry');
+
+        $logger = new Logger($this->makeContainer($this->defaultConfig([
+            'channels' => [
+                'app' => ['name' => 'app', 'extension' => 'log'],
+                'mail' => ['name' => 'mail', 'extension' => 'log'],
+            ],
+            'archive' => ['enabled' => true, 'extension' => 'zip'],
+        ])));
+
+        $logger->info('fresh entry');
+
+        self::assertFileDoesNotExist($logsDir . '/app-2020-01-01.log');
+        self::assertFileDoesNotExist($logsDir . '/mail-2020-01-01.log');
+
+        $zipPath = $this->storageDir . '/logs/archives/2020/01/2020-01-01.zip';
+        self::assertFileExists($zipPath);
+
+        $zip = new \ZipArchive();
+        $zip->open($zipPath);
+
+        self::assertSame(2, $zip->numFiles);
+        self::assertNotFalse($zip->locateName('app-2020-01-01.log'));
+        self::assertNotFalse($zip->locateName('mail-2020-01-01.log'));
+
+        $zip->close();
     }
 }
