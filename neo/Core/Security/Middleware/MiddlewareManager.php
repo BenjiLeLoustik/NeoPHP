@@ -117,7 +117,9 @@ class MiddlewareManager
         bool $isClassMiddleware
     ): ?Response {
         if ($redirect !== null) {
-            $flash->add('warning', $message);
+            if ($message !== '') {
+                $flash->add('warning', $message);
+            }
             $url = $router->generateUrl($redirect);
             return $response->setHeader('Location', $url)->setStatusCode(302);
         }
@@ -130,7 +132,7 @@ class MiddlewareManager
             );
         }
 
-        if ($onError === 'soft') {
+        if ($onError === 'soft' && $message !== '') {
             $flash->add('warning', $message);
         }
 
