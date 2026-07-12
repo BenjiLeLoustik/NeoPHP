@@ -17,11 +17,11 @@ class TranslationViewExtension implements TwigExtensionInterface
     {
         return [
             'translate' => [
-                'callable' => fn(string $text, array $params = [], ?string $domain = null) => $this->translator->translate($text, $params, $domain),
+                'callable' => fn(string $text, ?array $params = null, ?string $domain = null) => $this->translator->translate($text, $params ?? [], $domain),
                 'options'  => [],
             ],
             'trans' => [
-                'callable' => fn(string $text, array $params = [], ?string $domain = null) => $this->translator->translate($text, $params, $domain),
+                'callable' => fn(string $text, ?array $params = null, ?string $domain = null) => $this->translator->translate($text, $params ?? [], $domain),
                 'options'  => [],
             ],
             'getLocales' => [
@@ -46,7 +46,7 @@ class TranslationViewExtension implements TwigExtensionInterface
     {
         return [
             'trans' => [
-                'callable' => fn(string $text, array $params = [], ?string $domain = null) => $this->translator->translate($text, $params, $domain),
+                'callable' => fn(string $text, ?array $params = null, ?string $domain = null) => $this->translator->translate($text, $params ?? [], $domain),
                 'options'  => [],
             ],
         ];
