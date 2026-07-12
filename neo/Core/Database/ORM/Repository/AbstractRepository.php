@@ -8,6 +8,7 @@ use Neo\Core\Database\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Database\Builder\QueryBuilder;
+use Neo\Core\Database\ORM\Attribute\BelongsToMany;
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -668,5 +669,64 @@ abstract class AbstractRepository
         }, $rows);
 
         $this->lastResult = $results;
+    }
+
+    /**
+     * @param array<int, int|string> $relatedIds
+     * @throws DatabaseException
+     */
+    public function attachRelation(AbstractModel $model, string $relationName, array $relatedIds): void
+    {
+        $relations = $model->getRelations();
+
+        if (!isset($relations[$relationName])) {
+            throw new DatabaseException(
+                title: 'Repository Relation Error',
+                message: sprintf("Relation '%s' does not exist on %s.", $relationName, get_class($model)),
+                code: 500
+            );
+        }
+
+        $relation = $relations[$relationName];
+
+        if (!$relation instanceof BelongsToMany) {
+            throw new DatabaseException(
+                title: 'Repository Relation Error',
+                message: sprintf("attachRelation() only supports BelongsToMany relations. '%s' is not BelongsToMany.", $relationName),
+                code: 500
+            );
+        }
+
+        $localKey = $relation->localKey;
+        $localId = $model->$localKey ?? null;
+
+        if ($localId === null) {
+            throw new DatabaseException(
+                title: 'Repository Relation Error',
+                message: 'Cannot attach relation on a model without a persisted primary key.',
+                code: 500
+            );
+        }
+
+        $this->query(
+            sprintf(
+                'DELETE FROM `%s` WHERE `%s` = ?',
+                $relation->pivotTable,
+                $relation->pivotLocalKey
+            ),
+            [$localId]
+        );
+
+        foreach (array_unique($relatedIds) as $relatedId) {
+            $this->query(
+                sprintf(
+                    'INSERT INTO `%s` (`%s`, `%s`) VALUES (?, ?)',
+                    $relation->pivotTable,
+                    $relation->pivotLocalKey,
+                    $relation->pivotTargetKey
+                ),
+                [$localId, $relatedId]
+            );
+        }
     }
 }
