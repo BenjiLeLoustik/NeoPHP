@@ -113,7 +113,7 @@ final class ApplicationPathsTest extends TestCase
 
         self::assertSame($expectedBasePath . '/src/TestApp/Storage', $container->get('storagePath'));
         self::assertSame($expectedBasePath . '/src/TestApp/Config', $container->get('configsPath'));
-        self::assertSame($expectedBasePath . '/src/TestApp/App/Views', $container->get('viewsPath'));
+        self::assertSame($expectedBasePath . '/src/TestApp/Templates', $container->get('viewsPath'));
         self::assertSame($expectedBasePath . '/src/TestApp/App/Controllers', $container->get('controllersPath'));
         self::assertSame($expectedBasePath . '/src/TestApp/Assets/', $container->get('assetsPath'));
         self::assertSame($expectedBasePath . '/src/TestApp/Database/Repository', $container->get('repositoryPath'));
