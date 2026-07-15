@@ -402,7 +402,7 @@ abstract class AbstractRepository
     }
 
     /**
-     * @param array<string, mixed> $params
+     * @param array<int|string, mixed> $params
      * @throws DatabaseException
      */
     public function query(string $sql, array $params = []): PDOStatement
