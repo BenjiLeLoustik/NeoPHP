@@ -86,7 +86,7 @@ final class ProjectCreateCommand extends AbstractCommand
             'App/Controllers/',
             'App/Middlewares/',
             'App/Services/',
-            'App/Views/',
+            'Templates/',
             'Assets/',
             'Config/',
             'Database/Migrations/',
@@ -129,11 +129,11 @@ final class ProjectCreateCommand extends AbstractCommand
             'Translations/en',
             'Assets/css',
             'Assets/js',
-            'App/Views/errors/',
-            'App/Views/pages/',
-            'App/Views/layouts/',
-            'App/Views/pages/default/',
-            'App/Views/partials/',
+            'Templates/errors/',
+            'Templates/pages/',
+            'Templates/layouts/',
+            'Templates/pages/default/',
+            'Templates/partials/',
         ];
 
         foreach ($extra as $directory) {
@@ -141,8 +141,8 @@ final class ProjectCreateCommand extends AbstractCommand
         }
 
         $this->generateDefaultController($path . '/App/Controllers/', $name, $originalName);
-        $this->generateDefaultLayoutView($path . '/App/Views/layouts/', $name);
-        $this->generateDefaultView($path . '/App/Views/pages/default/', $name);
+        $this->generateDefaultLayoutView($path . '/Templates/layouts/', $name);
+        $this->generateDefaultView($path . '/Templates/pages/default/', $name);
         $this->generateDefaultCss($path . '/Assets/css/');
         $this->generateDefaultJs($path . '/Assets/js/');
         $this->generateDefaultTranslations($path . '/Translations/');
@@ -192,7 +192,7 @@ PHP;
     private function generateDefaultLayoutView(string $path, string $name): void
     {
         $content = <<<'TWIG'
-{# ./src/__NAME__/App/Views/layouts/base_layout.html.twig #}
+{# ./src/__NAME__/Templates/layouts/base_layout.html.twig #}
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -243,7 +243,7 @@ TWIG;
     private function generateDefaultView(string $path, string $name): void
     {
         $content = <<<'TWIG'
-{# ./src/__NAME__/App/Views/pages/default/index.html.twig #}
+{# ./src/__NAME__/Templates/pages/default/index.html.twig #}
 
 {% extends 'layouts/base_layout.html.twig' %}
 
