@@ -16,9 +16,9 @@ readonly class ApplicationPaths
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
-    public function register(): void
+    public function register(?string $project = null): void
     {
-        $appName  = $this->container->get('application');
+        $appName  = $project ?? $this->container->get('application');
         $basePath = realpath(__DIR__ . '/../../../');
 
         $this->container->set('basePath', $basePath);

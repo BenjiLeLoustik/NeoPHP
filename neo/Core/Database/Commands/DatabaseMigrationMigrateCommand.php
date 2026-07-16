@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Commands;
 
+use Neo\Core\Application\ApplicationPaths;
 use Neo\Core\Console\Abstract\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Enum\ExitCode;
@@ -58,7 +59,7 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
         }
 
         try {
-            $this->bootProjectContainer($project);
+            new ApplicationPaths($this->container)->register($project);
             $this->container->get(DatabaseConnection::class);
 
             if (!DatabaseConnection::isConnected()) {
@@ -101,24 +102,6 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
             Output::error('Migration failed: ' . $e->getMessage());
             return ExitCode::FAILURE;
         }
-    }
-
-    private function bootProjectContainer(string $project): void
-    {
-        $srcPath = ROOT_DIR . "/src/$project";
-
-        $this->container->set('application', $project);
-        $this->container->set('projectPath', $srcPath);
-        $this->container->set('controllerNamespace', "Neo\\Src\\$project\\App\\Controllers");
-        $this->container->set('controllersPath', "$srcPath/App/Controllers");
-        $this->container->set('storagePath', "$srcPath/Storage");
-        $this->container->set('configsPath', "$srcPath/Config");
-        $this->container->set('repositoryPath', "$srcPath/Database/Repository");
-        $this->container->set('modelPath', "$srcPath/Database/Model");
-        $this->container->set('formPath', "$srcPath/Database/Forms");
-        $this->container->set('modelNamespace', "Neo\\Src\\$project\\Database\\Model");
-        $this->container->set('repositoryNamespace', "Neo\\Src\\$project\\Database\\Repository");
-        $this->container->set('formNamespace', "Neo\\Src\\$project\\Database\\Forms");
     }
 
     protected function getAvailableProjects(): array

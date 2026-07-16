@@ -25,7 +25,8 @@
         "ext-simplexml": "*",
         "phpmailer/phpmailer": "^7.1",
         "ext-fileinfo": "*",
-        "predis/predis": "3.5"
+        "predis/predis": "3.5",
+        "neo_admin/app": "@dev"
     },
     "require-dev": {
         "phpunit/phpunit": "13.2",
@@ -43,5 +44,13 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "repositories": []
+    "repositories": [
+        {
+            "type": "path",
+            "url": "src/Neo_Admin",
+            "options": {
+                "symlink": false
+            }
+        }
+    ]
 }
