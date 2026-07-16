@@ -80,10 +80,6 @@ final class MakeControllerCommand extends AbstractCommand
 
         $this->generateController($basePath, $project, $controller, $directory !== '' ? $directory : null, $isApi, $force);
 
-        if (!$isApi) {
-            $this->generateView($basePath, $controller, $directory !== '' ? $directory : null, $force);
-        }
-
         Output::success("Controller '$controller' generated.");
         return ExitCode::SUCCESS;
     }
@@ -134,20 +130,6 @@ final class $controller extends AbstractController
 }
 PHP;
         file_put_contents($path, $content);
-    }
-
-    private function generateView(string $basePath, string $controller, ?string $directory, bool $force): void
-    {
-        $routePath = $this->buildRoutePath($directory, $controller);
-        $dir = $basePath . '/App/Views/pages/' . $routePath;
-        Fs::ensureDir($dir);
-        $file = $dir . '/index.html.twig';
-
-        if (file_exists($file) && !$force) {
-            return;
-        }
-
-        file_put_contents($file, "{% extends 'layouts/base_layout.html.twig' %}\n\n{% block content %}\n<h1>$controller</h1>\n{% endblock %}");
     }
 
     private function buildRoutePath(?string $directory, string $controller): string
