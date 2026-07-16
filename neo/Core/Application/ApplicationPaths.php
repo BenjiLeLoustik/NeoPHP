@@ -21,6 +21,7 @@ readonly class ApplicationPaths
         $appName  = $project ?? $this->container->get('application');
         $basePath = realpath(__DIR__ . '/../../../');
 
+        $this->container->set('application', $appName);
         $this->container->set('basePath', $basePath);
         $this->container->set('appPath', $basePath . '/src/' . $appName);
 
