@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Routing\Commands;
 
+use Neo\Core\Application\ApplicationPaths;
 use Neo\Core\Console\Abstract\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Enum\ExitCode;
@@ -75,10 +76,7 @@ final class DebugRouterCommand extends AbstractCommand
             return ExitCode::FAILURE;
         }
 
-        $this->container->set('controllerNamespace', "Neo\\Src\\$project\\App\\Controllers");
-        $this->container->set('controllersPath', "$srcPath/App/Controllers");
-        $this->container->set('storagePath', "$srcPath/Storage");
-        $this->container->set('configsPath', "$srcPath/Config");
+        new ApplicationPaths($this->container)->register($project);
 
         try {
             $router = $this->container->get(Router::class);
