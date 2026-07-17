@@ -119,7 +119,7 @@ class FormExtension
 
         return sprintf(
             '<label for="%s">%s</label>',
-            self::escape($field->getName()),
+            self::escape($field->getId()),
             self::escape($field->getLabel())
         );
     }
