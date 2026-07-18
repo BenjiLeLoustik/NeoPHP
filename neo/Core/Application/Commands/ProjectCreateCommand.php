@@ -14,6 +14,7 @@ use Neo\Core\Console\Output\Output;
 use Neo\Core\Utils\Config\ConfigTemplateWriter;
 use Neo\Core\Utils\Config\Templates\ApiConfigTemplate;
 use Neo\Core\Utils\Config\Templates\AppConfigTemplate;
+use Neo\Core\Utils\Config\Templates\AuthConfigTemplate;
 use Neo\Core\Utils\Config\Templates\CacheConfigTemplate;
 use Neo\Core\Utils\Config\Templates\DatabaseConfigTemplate;
 use Neo\Core\Utils\Config\Templates\LoggerConfigTemplate;
@@ -110,6 +111,7 @@ final class ProjectCreateCommand extends AbstractCommand
                 new TwigConfigTemplate(),
                 new SessionConfigTemplate(),
                 new ApiConfigTemplate(),
+                new AuthConfigTemplate(),
             ],
             configPath: $path . '/Config/',
             projectName: $name,
@@ -280,6 +282,7 @@ TWIG;
 # Sensitive config
 /Config/database.config.php
 /Config/api.config.php
+/Config/auth.config.php
 
 # Storage
 /Storage/
