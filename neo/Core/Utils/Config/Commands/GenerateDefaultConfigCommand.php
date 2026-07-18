@@ -12,6 +12,7 @@ use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\Utils\Config\ConfigTemplateWriter;
 use Neo\Core\Utils\Config\Templates\ApiConfigTemplate;
+use Neo\Core\Utils\Config\Templates\AuthConfigTemplate;
 use Neo\Core\Utils\Config\Templates\DatabaseConfigTemplate;
 
 #[Command(
@@ -50,6 +51,7 @@ final class GenerateDefaultConfigCommand extends AbstractCommand
             templates: [
                 new DatabaseConfigTemplate(),
                 new ApiConfigTemplate(),
+                new AuthConfigTemplate(),
             ],
             configPath: $configPath,
             projectName: $project,
