@@ -12,7 +12,9 @@ use Neo\Core\Routing\Attribute\Maintenance;
 use Neo\Core\Routing\Attribute\RateLimit;
 use Neo\Core\Routing\Exception\RouteNotFoundException;
 use Neo\Core\Routing\Router;
+use Neo\Core\Security\Middleware\Attribute\IsGranted;
 use Neo\Core\Security\Middleware\Attribute\Middleware as MiddlewareAttribute;
+use Neo\Core\Security\Middleware\Default\IsGrantedMiddleware;
 use Neo\Core\Security\Middleware\Default\RateLimitMiddleware;
 use Neo\Core\Security\Middleware\Exception\MiddlewareException;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
@@ -103,6 +105,39 @@ class MiddlewareManager
     }
 
     /**
+     * @throws ReflectionException
+     * @throws ContainerException
+     */
+    public function isAccessible(string $controller, ?string $method = null): bool
+    {
+        foreach ($this->getMiddlewares($controller, $method) as $meta) {
+            $middlewareClass = $meta['class'];
+
+            if (!class_exists($middlewareClass)) {
+                return false;
+            }
+
+            $middleware = empty($meta['params'])
+                ? $this->container->get($middlewareClass)
+                : $this->container->make($middlewareClass, $meta['params']);
+
+            if (!$middleware instanceof MiddlewareInterface) {
+                return false;
+            }
+
+            try {
+                if ($middleware->handle() !== true) {
+                    return false;
+                }
+            } catch (Throwable) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @throws MiddlewareException
      * @throws FrameworkException
      * @throws RouteNotFoundException
@@ -179,6 +214,8 @@ class MiddlewareManager
                 ];
             } elseif ($entry['attribute'] instanceof RateLimit) {
                 $all[] = $this->buildRateLimitMeta($entry['attribute'], true);
+            } elseif ($entry['attribute'] instanceof IsGranted) {
+                $all[] = $this->buildIsGrantedMeta($entry['attribute'], true);
             }
         }
 
@@ -188,7 +225,7 @@ class MiddlewareManager
                 ->scan();
 
             foreach ($methodResults as $entry) {
-                /** @var array{reflection: ReflectionMethod, attribute: MiddlewareAttribute|RateLimit} $entry */
+                /** @var array{reflection: ReflectionMethod, attribute: MiddlewareAttribute|RateLimit|IsGranted} $entry */
                 $refMethod = $entry['reflection'];
 
                 if ($refMethod->getName() !== $method) {
@@ -208,6 +245,8 @@ class MiddlewareManager
                     ];
                 } elseif ($entry['attribute'] instanceof RateLimit) {
                     $all[] = $this->buildRateLimitMeta($entry['attribute'], false);
+                } elseif ($entry['attribute'] instanceof IsGranted) {
+                    $all[] = $this->buildIsGrantedMeta($entry['attribute'], false);
                 }
             }
         }
@@ -239,6 +278,31 @@ class MiddlewareManager
                 'maxAttempts' => $attr->maxAttempts,
                 'decaySeconds' => $attr->decaySeconds,
                 'message' => $attr->message,
+            ],
+            'priority' => 0,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     class: class-string,
+     *     message: string,
+     *     onError: string,
+     *     redirect: ?string,
+     *     isClass: bool,
+     *     params: array<string, mixed>
+     * }
+     */
+    private function buildIsGrantedMeta(IsGranted $attr, bool $isClass): array
+    {
+        return [
+            'class' => IsGrantedMiddleware::class,
+            'message' => $attr->message !== '' ? $attr->message : 'Access denied.',
+            'onError' => $attr->onError,
+            'redirect' => $attr->redirect,
+            'isClass' => $isClass,
+            'params' => [
+                'roles' => $attr->roles,
             ],
             'priority' => 0,
         ];
