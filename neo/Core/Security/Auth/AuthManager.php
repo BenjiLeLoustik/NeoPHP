@@ -14,6 +14,7 @@ use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;
 use Neo\Core\Security\Auth\Guard\SessionGuard;
 use Neo\Core\Security\Auth\Guard\TokenGuard;
 use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\Exception\ConfigException;
 
 class AuthManager
 {
@@ -33,9 +34,11 @@ class AuthManager
     {
         $this->container = $container;
 
-        $this->config = $container->get(Config::class)
-            ->from('app')
-            ->get('auth') ?? [];
+        try {
+            $this->config = $container->get(Config::class)->from('auth')->all();
+        } catch (ConfigException) {
+            $this->config = [];
+        }
 
         if (isset($this->config['enabled']) && $this->config['enabled'] === false) {
             return;
@@ -44,7 +47,7 @@ class AuthManager
         if (empty($this->config['model'])) {
             throw new AuthException(
                 title: 'Auth Configuration Error',
-                message: "The 'auth.model' configuration is missing in app.config.php.",
+                message: "The 'model' configuration is missing in auth.config.php.",
                 code: 500
             );
         }
@@ -160,7 +163,7 @@ class AuthManager
         if ($this->guard === null) {
             throw new AuthException(
                 title: 'Auth Disabled',
-                message: "The authentication system is disabled in app.config.php.",
+                message: "The authentication system is disabled in auth.config.php.",
                 code: 500
             );
         }
