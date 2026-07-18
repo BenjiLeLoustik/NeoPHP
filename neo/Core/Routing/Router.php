@@ -344,6 +344,25 @@ class Router
         );
     }
 
+    /**
+     * @return array{controller: class-string, action: string}|null
+     */
+    public function findRouteInfo(string $name): ?array
+    {
+        foreach ($this->routes->all() as $methodRoutes) {
+            foreach ($methodRoutes as $info) {
+                if ($info['name'] === $name) {
+                    return [
+                        'controller' => $info['controller'],
+                        'action' => $info['action'],
+                    ];
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function getRoutes(): RouteCollection
     {
         return $this->routes;
