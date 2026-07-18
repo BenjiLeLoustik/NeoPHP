@@ -33,6 +33,22 @@ trait HasRelationships
         return $this->relationsCache;
     }
 
+    public function setRelation(string $name, mixed $value): static
+    {
+        $relations = $this->getRelations();
+
+        if (isset($relations[$name]) && $relations[$name] instanceof BelongsTo) {
+            $foreignKey = $relations[$name]->foreignKey;
+            $ownerKey = $relations[$name]->ownerKey;
+
+            $this->setAttribute($foreignKey, $value?->$ownerKey);
+        }
+
+        $this->relationsCache[$name] = $value;
+
+        return $this;
+    }
+
     /**
      * @return array<string, object>
      */
