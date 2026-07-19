@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\View;
+namespace Neo\Core\View\Extension;
 
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
@@ -11,6 +11,7 @@ use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Response\Response;
+use Neo\Core\View\ViewManager;
 
 /**
  * @method \Neo\Core\Http\Response\Response render(string $template, array<string, mixed> $params = [])
