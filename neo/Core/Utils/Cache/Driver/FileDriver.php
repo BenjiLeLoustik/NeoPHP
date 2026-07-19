@@ -52,7 +52,7 @@ class FileDriver implements CacheDriverInterface
             );
         }
 
-        $data = unserialize($raw, ['allowed_classes' => true]);
+        $data = unserialize($raw, ['allowed_classes' => false]);
 
         if (!is_array($data) || !isset($data['expires_at'], $data['content'])) {
             $this->delete($key);
@@ -133,7 +133,7 @@ class FileDriver implements CacheDriverInterface
         }
 
         $raw = file_get_contents($file);
-        $data = $raw !== false ? unserialize($raw, ['allowed_classes' => true]) : null;
+        $data = $raw !== false ? unserialize($raw, ['allowed_classes' => false]) : null;
 
         if (!is_array($data) || !isset($data['expires_at'])) {
             $this->delete($key);
