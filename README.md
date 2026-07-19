@@ -998,14 +998,7 @@ declare(strict_types=1);
 
 namespace Neo\Src\Blog\Database\Forms;
 
-use Neo\Core\Database\Builder\FormBuilder;
-use Neo\Core\Database\Form\Form;
-use Neo\Core\Database\Form\Type\EmailType;
-use Neo\Core\Database\Form\Type\SubmitType;
-use Neo\Core\Database\Form\Type\TextType;
-use Neo\Core\DI\Container;
-use Neo\Core\Http\Request;
-use Neo\Src\Blog\Database\Model\User;
+use Neo\Core\Database\Builder\FormBuilder;use Neo\Core\Database\Form\Form;use Neo\Core\Database\Form\Type\EmailType;use Neo\Core\Database\Form\Type\SubmitType;use Neo\Core\Database\Form\Type\TextType;use Neo\Core\DI\Container;use Neo\Core\Http\Request\Request;use Neo\Src\Blog\Database\Model\User;
 
 final class UserForm
 {

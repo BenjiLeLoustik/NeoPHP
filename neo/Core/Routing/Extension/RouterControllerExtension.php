@@ -8,7 +8,7 @@ use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
-use Neo\Core\Http\Request;
+use Neo\Core\Http\Request\Request;
 use Neo\Core\Http\Response\RedirectResponse;
 use Neo\Core\Routing\RouterManager;
 

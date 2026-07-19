@@ -13,6 +13,7 @@ use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Http\Client\Flash\Flash;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\File\Uploader;
+use Neo\Core\Http\Request\Request;
 use Neo\Core\Http\Response\JsonResponse;
 
 /**

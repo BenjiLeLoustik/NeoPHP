@@ -3,7 +3,7 @@
 namespace Neo\Core\Security\Csrf;
 
 use Neo\Core\Http\Client\Session\Session;
-use Neo\Core\Http\Request;
+use Neo\Core\Http\Request\Request;
 
 class CsrfManager
 {

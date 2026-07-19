@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Security\Middleware\Default;
 
-use Neo\Core\Http\Request;
+use Neo\Core\Http\Request\Request;
 use Neo\Core\Security\Csrf\CsrfManager;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
 

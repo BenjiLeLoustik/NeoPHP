@@ -6,7 +6,7 @@ namespace Neo\Core\Security\Middleware\Default;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
-use Neo\Core\Http\Request;
+use Neo\Core\Http\Request\Request;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
 use Neo\Core\Utils\Cache\CacheManager;
 

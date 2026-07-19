@@ -9,7 +9,7 @@ use Neo\Core\Http\Client\Flash\Flash;
 use Neo\Core\Http\Client\Flash\FlashViewExtension;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\HttpModule;
-use Neo\Core\Http\Request;
+use Neo\Core\Http\Request\Request;
 use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Utils\Config\ConfigModule;
 use Neo\Core\View\ViewModule;

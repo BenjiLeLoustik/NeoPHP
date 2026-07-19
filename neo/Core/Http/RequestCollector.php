@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Http;
 
+use Neo\Core\Http\Request\Request;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 
 class RequestCollector implements CollectorInterface
