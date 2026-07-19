@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Security\Auth;
+namespace Neo\Core\Security\Auth\Collector;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Security\Auth\AuthManager;
 
 class AuthCollector implements CollectorInterface
 {
