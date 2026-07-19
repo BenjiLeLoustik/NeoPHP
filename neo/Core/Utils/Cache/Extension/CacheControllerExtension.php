@@ -1,13 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Utils\Cache;
+namespace Neo\Core\Utils\Cache\Extension;
 
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
+use Neo\Core\Utils\Cache\CacheManager;
 
 /**
  * @method \Neo\Core\Utils\Cache\CacheManager getCache()
