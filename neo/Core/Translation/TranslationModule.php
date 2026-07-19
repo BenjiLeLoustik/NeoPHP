@@ -7,6 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\ClientModule;
 use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Translation\Extension\TranslationViewExtension;
 use Neo\Core\Utils\Config\ConfigModule;
 use Neo\Core\View\ViewModule;
 
