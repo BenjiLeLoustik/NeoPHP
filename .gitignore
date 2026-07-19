@@ -5,6 +5,9 @@ composer.lock
 # Compiled Assets
 /public/builds/
 
+# Framework
+/storage/app-detect-cache.json
+
 # Projects
 /src/
 
