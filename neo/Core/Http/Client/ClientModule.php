@@ -5,8 +5,8 @@ namespace Neo\Core\Http\Client;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Http\Client\Cookie\Cookie;
+use Neo\Core\Http\Client\Flash\Extension\FlashViewExtension;
 use Neo\Core\Http\Client\Flash\Flash;
-use Neo\Core\Http\Client\Flash\FlashViewExtension;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\HttpModule;
 use Neo\Core\Http\Request\Request;
