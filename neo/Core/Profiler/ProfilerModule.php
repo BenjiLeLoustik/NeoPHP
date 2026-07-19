@@ -16,7 +16,7 @@ use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Routing\RouterModule;
 use Neo\Core\Security\SecurityModule;
 use Neo\Core\Translation\TranslationModule;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
@@ -45,7 +45,7 @@ class ProfilerModule extends AbstractModule
             return;
         }
 
-        $env = $this->get(Config::class)->from('app')->get('environment') ?? 'prod';
+        $env = $this->get(ConfigManager::class)->from('app')->get('environment') ?? 'prod';
         if ($env !== 'dev') {
             return;
         }

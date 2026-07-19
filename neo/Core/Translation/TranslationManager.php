@@ -12,7 +12,7 @@ use Neo\Core\Translation\Interface\TranslatorInterface;
 use Neo\Core\Translation\Loader\TranslationLoader;
 use Neo\Core\Translation\Locale\LocaleManager;
 use Neo\Core\Translation\Writer\TranslationWriter;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 
 class TranslationManager implements TranslatorInterface
 {
@@ -31,7 +31,7 @@ class TranslationManager implements TranslatorInterface
     {
         $this->container = $container;
 
-        $config = $container->get(Config::class)->from('app');
+        $config = $container->get(ConfigManager::class)->from('app');
 
         $this->enabled = (bool) ($config->get('translation.enabled') ?? false);
         $this->autoWrite = $config->get('environment') === 'dev';
@@ -84,7 +84,7 @@ class TranslationManager implements TranslatorInterface
     public function setLocale(string $locale, int $lifetime = 31536000): void
     {
         $translationConfig = $this->container
-            ->get(Config::class)
+            ->get(ConfigManager::class)
             ->from('app')
             ->get('translation');
 
@@ -119,7 +119,7 @@ class TranslationManager implements TranslatorInterface
     public function getLocales(): array
     {
         return $this->container
-            ->get(Config::class)
+            ->get(ConfigManager::class)
             ->from('app')
             ->get('translation.available_locales') ?? [];
     }

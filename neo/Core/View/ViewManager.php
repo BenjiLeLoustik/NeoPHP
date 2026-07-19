@@ -5,7 +5,7 @@ namespace Neo\Core\View;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\View\Exception\ViewException;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 use Twig\Environment;
@@ -30,7 +30,7 @@ class ViewManager
     {
         $this->container = $container;
 
-        $config = $this->container->get(Config::class);
+        $config = $this->container->get(ConfigManager::class);
         $twigConfig = $config->from('twig')->all();
 
         $loader = new FilesystemLoader($this->container->get('viewsPath'));

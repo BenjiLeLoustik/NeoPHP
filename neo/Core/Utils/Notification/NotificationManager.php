@@ -6,7 +6,7 @@ namespace Neo\Core\Utils\Notification;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Profiler\Profiler;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Config\Exception\ConfigException;
 use Neo\Core\Utils\Notification\Channel\ChannelInterface;
 use Neo\Core\Utils\Notification\Enum\NotificationEnum;
@@ -144,14 +144,14 @@ class NotificationManager
      */
     private function resolveApiConfig(string $keyPath, string $channelClass): array
     {
-        /** @var Config $config */
-        $config = $this->container->get(Config::class);
+        /** @var ConfigManager $config */
+        $config = $this->container->get(ConfigManager::class);
 
         try {
             $apiConfig = $config->from('api')->get($keyPath);
         } catch (ConfigException $e) {
             throw new NotificationException(
-                title: 'Missing API Config File',
+                title: 'Missing API ConfigManager File',
                 message: sprintf(
                     "Channel '%s' requires 'api.config.php' with key '%s', but the config file was not found. "
                     . "Please create neo/config/api.config.php and add the '%s' key.",
@@ -165,7 +165,7 @@ class NotificationManager
 
         if (!is_array($apiConfig) || empty($apiConfig)) {
             throw new NotificationException(
-                title: 'Missing API Config Key',
+                title: 'Missing API ConfigManager Key',
                 message: sprintf(
                     "Channel '%s' requires key '%s' in api.config.php, but it is absent or empty. "
                     . "Please add the '%s' configuration block.",

@@ -31,7 +31,7 @@ readonly class ApplicationPaths
         $this->container->set('buildsPath', $publicPath . '/builds/');
         $this->container->set('srcPath', $basePath . '/src');
         $this->container->set('storagePath', $basePath . '/src/' . $appName . '/Storage');
-        $this->container->set('configsPath', $basePath . '/src/' . $appName . '/Config');
+        $this->container->set('configsPath', $basePath . '/src/' . $appName . '/ConfigManager');
         $this->container->set('viewsPath', $basePath . '/src/' . $appName . '/Templates');
         $this->container->set('controllersPath', $basePath . '/src/' . $appName . '/App/Controllers');
         $this->container->set('assetsPath', $basePath . '/src/' . $appName . '/Assets/');

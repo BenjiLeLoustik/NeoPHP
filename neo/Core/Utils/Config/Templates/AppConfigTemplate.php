@@ -21,7 +21,7 @@ final class AppConfigTemplate implements ConfigTemplateInterface
 <?php
 declare(strict_types=1);
 
-// ./src/$projectName/Config/app.config.php
+// ./src/$projectName/ConfigManager/app.config.php
 
 return [
     'general' => [

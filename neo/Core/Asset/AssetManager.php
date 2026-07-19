@@ -8,7 +8,7 @@ use Neo\Core\Asset\Compiler\JsCompiler;
 use Neo\Core\Asset\Compiler\LessCompiler;
 use Neo\Core\Asset\Exception\AssetException;
 use Neo\Core\DI\Container;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -33,7 +33,7 @@ class AssetManager
     {
         $this->container = $container;
 
-        $config = $this->container->get(Config::class)->from('app');
+        $config = $this->container->get(ConfigManager::class)->from('app');
         $this->env = $config->get('environment', 'prod');
 
         $this->currentApplication = $this->container->get('application');

@@ -32,7 +32,7 @@ final class DatabaseCreateCommand extends AbstractCommand
     public function do(Input $input, Output $output): ExitCode
     {
         $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
-        $configPath = ROOT_DIR . "/src/$project/Config/database.config.php";
+        $configPath = ROOT_DIR . "/src/$project/ConfigManager/database.config.php";
 
         if (!file_exists($configPath)) {
             Output::error("No database.config.php found.");
