@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Extension;
 
-use Neo\Core\Database\DatabaseConnection;
+use Neo\Core\Database\Connection\DatabaseConnection;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\View\Interface\TwigExtensionInterface;

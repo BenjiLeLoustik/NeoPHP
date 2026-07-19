@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM\Model\Concerns;
 
-use Neo\Core\Database\DatabaseConnection;
+use Neo\Core\Database\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Attribute\BelongsTo;
 use Neo\Core\Database\ORM\Attribute\BelongsToMany;

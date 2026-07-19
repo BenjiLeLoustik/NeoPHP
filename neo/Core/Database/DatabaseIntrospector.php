@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database;
 
+use Neo\Core\Database\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Utils\Config\Config;
 use PDO;
 use PDOException;

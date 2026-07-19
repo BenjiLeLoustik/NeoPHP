@@ -10,7 +10,7 @@ use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
-use Neo\Core\Database\DatabaseConnection;
+use Neo\Core\Database\Connection\DatabaseConnection;
 use Neo\Core\Database\DatabaseIntrospector;
 use Neo\Core\Database\ORM\Model\ModelGenerator;
 use Neo\Core\Database\ORM\ORM;
