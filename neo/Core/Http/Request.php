@@ -28,7 +28,7 @@ class Request
     /** @var array<string, array<string, mixed>> */
     private array $files;
 
-    private Session $session;
+    private ?Session $session = null;
 
     /**
      * @param array<string, mixed> $query
@@ -309,7 +309,7 @@ class Request
 
     public function getPreviousUrl(?string $fallback = null): string
     {
-        return $this->session->get('_previous_url', ($fallback ?? '/'));
+        return $this->session?->get('_previous_url', $fallback ?? '/') ?? ($fallback ?? '/');
     }
 
     public function getFullUrl(): string
