@@ -8,7 +8,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Http\Response\Response;
-use Neo\Core\Profiler\Profiler;
+use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Routing\Attribute\MainRoute as MainRouteAttribute;
 use Neo\Core\Routing\Attribute\Route as RouteAttribute;
 use Neo\Core\Routing\Collection\RouteCollection;
@@ -254,7 +254,7 @@ class RouterManager
             $method = $routeInfo['action'];
 
             if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
-                $rc = Profiler::getInstance()->getCollector('router');
+                $rc = ProfilerManager::getInstance()->getCollector('router');
                 $rc?->setMatchedRoute($routeInfo['controller'], $method, $params);
             }
 

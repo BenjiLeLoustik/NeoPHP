@@ -6,7 +6,7 @@ namespace Neo\Core\Utils\Logger;
 use DateTime;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Profiler\Profiler;
+use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Utils\Config\ConfigManager;
 use ZipArchive;
 
@@ -97,7 +97,7 @@ class LoggerManager
         $entry = $this->formatMessage($level, $message, $context, $origin);
 
         if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
-            $lc = Profiler::getInstance()->getCollector('logs');
+            $lc = ProfilerManager::getInstance()->getCollector('logs');
             $lc?->record($level, $message, $context, $origin);
         }
 

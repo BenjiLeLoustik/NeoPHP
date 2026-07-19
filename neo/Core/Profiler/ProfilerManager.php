@@ -5,7 +5,7 @@ namespace Neo\Core\Profiler;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
 
-class Profiler
+class ProfilerManager
 {
     private static ?self $instance = null;
 
