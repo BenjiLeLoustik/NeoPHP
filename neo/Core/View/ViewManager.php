@@ -104,7 +104,7 @@ class ViewManager
     {
         try {
             return $this->twig->render($template, $params);
-        } catch (\Twig\Error\LoaderError|RuntimeError|SyntaxError $e) {
+        } catch (\Twig\Error\LoaderError $e) {
             return null;
         }
     }
