@@ -12,6 +12,7 @@ use Neo\Core\Http\HttpModule;
 use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Profiler\Interface\CollectorAwareInterface;
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Profiler\Listener\ProfilerResponseListener;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Routing\RouterModule;
 use Neo\Core\Security\SecurityModule;
