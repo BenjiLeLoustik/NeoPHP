@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Routing;
+namespace Neo\Core\Routing\Collector;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Routing\Router;
 
 class RouterCollector implements CollectorInterface
 {
