@@ -33,7 +33,9 @@ final readonly class SecurityViewExtension implements TwigExtensionInterface
                 'options' => [],
             ],
             'csrf_token' => [
-                'callable' => fn(string $id = 'default') => $this->csrf->generateToken($id)->getValue(),
+                'callable' => fn(string $id = 'default') => (
+                    $this->csrf->getToken($id) ?? $this->csrf->generateToken($id)
+                )->getValue(),
                 'options' => [],
             ],
         ];
