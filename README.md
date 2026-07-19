@@ -274,13 +274,13 @@ declare(strict_types=1);
 namespace Neo\Src\Blog\App\Services;
 
 use Neo\Core\Utils\Cache\CacheManager;
-use Neo\Core\Utils\Logger\Logger;
+use Neo\Core\Utils\Logger\LoggerManager;
 
 final class ReportService
 {
     public function __construct(
         private CacheManager $cache,
-        private Logger $logger
+        private LoggerManager $logger
     ) {
     }
 

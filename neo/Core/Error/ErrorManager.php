@@ -11,7 +11,7 @@ use Neo\Core\Event\EventManager;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Utils\Config\ConfigManager;
-use Neo\Core\Utils\Logger\Logger;
+use Neo\Core\Utils\Logger\LoggerManager;
 use Neo\Core\View\ViewManager;
 
 class ErrorManager
@@ -88,7 +88,7 @@ class ErrorManager
         $env = $this->getEnv();
 
         try {
-            $logger = $this->container->get(Logger::class);
+            $logger = $this->container->get(LoggerManager::class);
             $logger->channel('framework')->error(
                 get_class($e) . ': ' . $e->getMessage(),
                 ['trace' => $e->getTraceAsString()],

@@ -10,7 +10,7 @@ use Neo\Core\Profiler\Profiler;
 use Neo\Core\Utils\Config\ConfigManager;
 use ZipArchive;
 
-class Logger
+class LoggerManager
 {
     protected Container $container;
 
