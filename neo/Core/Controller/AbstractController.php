@@ -10,7 +10,6 @@ use Neo\Core\Database\DatabaseControllerExtension;
 use Neo\Core\Database\ORM\EntityManager;
 use Neo\Core\DI\Container;
 use Neo\Core\Event\EventControllerExtension;
-use Neo\Core\Extension\ExtensionControllerExtension;
 use Neo\Core\Http\HttpControllerExtension;
 use Neo\Core\Routing\RouterControllerExtension;
 use Neo\Core\Security\Auth\AuthControllerExtension;
@@ -24,7 +23,6 @@ use Neo\Core\View\ViewControllerExtension;
 
 /**
  * @mixin EventControllerExtension
- * @mixin ExtensionControllerExtension
  * @mixin HttpControllerExtension
  * @mixin RouterControllerExtension
  * @mixin AuthControllerExtension
