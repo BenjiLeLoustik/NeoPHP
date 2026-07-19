@@ -11,6 +11,7 @@ use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Auth\PasswordManager;
 use Neo\Core\Security\Csrf\CsrfTokenManager;
+use Neo\Core\Security\Extension\SecurityViewExtension;
 use Neo\Core\Security\Middleware\MiddlewareManager;
 use Neo\Core\Utils\Config\ConfigModule;
 use Neo\Core\View\ViewModule;
