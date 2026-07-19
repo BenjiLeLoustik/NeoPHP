@@ -1,6 +1,6 @@
 <?php
 
-namespace Neo\Core\Translation;
+namespace Neo\Core\Translation\Registry;
 
 final class TranslationRegistry
 {
