@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Utils\Config;
+namespace Neo\Core\Utils\Config\Writer;
 
 use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Output\Output;
