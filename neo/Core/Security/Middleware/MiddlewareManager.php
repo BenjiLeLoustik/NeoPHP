@@ -11,7 +11,7 @@ use Neo\Core\Http\Response\Response;
 use Neo\Core\Routing\Attribute\Maintenance;
 use Neo\Core\Routing\Attribute\RateLimit;
 use Neo\Core\Routing\Exception\RouteNotFoundException;
-use Neo\Core\Routing\Router;
+use Neo\Core\Routing\RouterManager;
 use Neo\Core\Security\Middleware\Attribute\IsGranted;
 use Neo\Core\Security\Middleware\Attribute\Middleware as MiddlewareAttribute;
 use Neo\Core\Security\Middleware\Default\IsGrantedMiddleware;
@@ -63,7 +63,7 @@ class MiddlewareManager
 
         $middlewares = $this->getMiddlewares($controller, $method);
 
-        $router = $this->container->get(Router::class);
+        $router = $this->container->get(RouterManager::class);
         $response = $this->container->get(Response::class);
         $flash = $this->container->get(Flash::class);
 
@@ -146,13 +146,13 @@ class MiddlewareManager
      * @throws RouteNotFoundException
      */
     private function handleFailure(
-        string $message,
-        string $onError,
-        ?string $redirect,
-        Response $response,
-        Flash $flash,
-        Router $router,
-        bool $isClassMiddleware
+        string        $message,
+        string        $onError,
+        ?string       $redirect,
+        Response      $response,
+        Flash         $flash,
+        RouterManager $router,
+        bool          $isClassMiddleware
     ): ?Response {
         if ($redirect !== null) {
             if ($message !== '') {

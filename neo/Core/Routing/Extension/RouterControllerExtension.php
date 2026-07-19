@@ -10,7 +10,7 @@ use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\RedirectResponse;
-use Neo\Core\Routing\Router;
+use Neo\Core\Routing\RouterManager;
 
 /**
  * @method string getRoutePath(string $routeName, array<string, string> $params = [])
@@ -28,7 +28,7 @@ class RouterControllerExtension implements ControllerExtensionInterface
             string $routeName,
             array $params = []
         ) use ($container) {
-            return $container->get(Router::class)->generateUrl($routeName, $params);
+            return $container->get(RouterManager::class)->generateUrl($routeName, $params);
         });
 
         $controller->registerMethod('getRedirectBack', function (
@@ -38,7 +38,7 @@ class RouterControllerExtension implements ControllerExtensionInterface
             $request = $container->get(Request::class);
 
             $fallback = $fallbackRoute
-                ? $container->get(Router::class)->generateUrl($fallbackRoute, $routeParams)
+                ? $container->get(RouterManager::class)->generateUrl($fallbackRoute, $routeParams)
                 : '/';
 
             return $request->getPreviousUrl($fallback);
@@ -48,7 +48,7 @@ class RouterControllerExtension implements ControllerExtensionInterface
             string $routeName,
             array $params = []
         ) use ($container) {
-            $path = $container->get(Router::class)->generateUrl($routeName, $params);
+            $path = $container->get(RouterManager::class)->generateUrl($routeName, $params);
             return new RedirectResponse($path, 302);
         });
 
@@ -69,7 +69,7 @@ class RouterControllerExtension implements ControllerExtensionInterface
             }
 
             $fallback = $fallbackRoute
-                ? $container->get(Router::class)->generateUrl($fallbackRoute, $routeParams)
+                ? $container->get(RouterManager::class)->generateUrl($fallbackRoute, $routeParams)
                 : '/';
 
             return new RedirectResponse($request->getPreviousUrl($fallback), $code);

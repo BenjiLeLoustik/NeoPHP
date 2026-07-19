@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Routing\Collector;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
-use Neo\Core\Routing\Router;
+use Neo\Core\Routing\RouterManager;
 
 class RouterCollector implements CollectorInterface
 {
@@ -16,7 +16,7 @@ class RouterCollector implements CollectorInterface
     private array $params = [];
 
     public function __construct(
-        private readonly Router $router
+        private readonly RouterManager $router
     ) {}
 
     public function getName(): string
@@ -61,7 +61,7 @@ class RouterCollector implements CollectorInterface
 
         return <<<HTML
 <div class="n-tab" onclick="neoSwitch('router')" title="Routing">
-    <span class="n-label">Router</span>
+    <span class="n-label">RouterManager</span>
     <span class="n-value">{$route}</span>
 </div>
 HTML;
