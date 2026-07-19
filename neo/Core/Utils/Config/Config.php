@@ -21,6 +21,8 @@ class Config
 
     private Container $container;
 
+    private bool $hasSelected = false;
+
     /**
      * @throws ContainerException
      * @throws ConfigException
@@ -124,6 +126,7 @@ class Config
         }
 
         $this->current = $this->configs[$key];
+        $this->hasSelected = true;
         return $this;
     }
 
@@ -161,7 +164,7 @@ class Config
      */
     private function assertSelected(): void
     {
-        if (empty($this->current)) {
+        if (!$this->hasSelected) {
             throw new ConfigException(
                 title: "Config Not Selected",
                 message: "Call from() before calling get() or all().",
