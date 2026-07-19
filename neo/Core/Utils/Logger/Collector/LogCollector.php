@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Utils\Logger;
+namespace Neo\Core\Utils\Logger\Collector;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
 
