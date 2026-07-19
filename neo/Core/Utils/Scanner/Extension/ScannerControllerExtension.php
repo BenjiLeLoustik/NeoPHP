@@ -1,12 +1,13 @@
 <?php
 
-namespace Neo\Core\Utils\Scanner;
+namespace Neo\Core\Utils\Scanner\Extension;
 
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
+use Neo\Core\Utils\Scanner\Attribute;
 use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
 
 /**
