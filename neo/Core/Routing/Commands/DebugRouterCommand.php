@@ -11,12 +11,12 @@ use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
-use Neo\Core\Routing\Router;
+use Neo\Core\Routing\RouterManager;
 
 #[Command(
     name: 'debug:router',
     description: 'Display all registered routes for a project',
-    category: 'Router',
+    category: 'RouterManager',
 )]
 final class DebugRouterCommand extends AbstractCommand
 {
@@ -79,9 +79,9 @@ final class DebugRouterCommand extends AbstractCommand
         new ApplicationPaths($this->container)->register($project);
 
         try {
-            $router = $this->container->get(Router::class);
+            $router = $this->container->get(RouterManager::class);
         } catch (\Throwable $e) {
-            Output::error('Unable to load Router: ' . $e->getMessage());
+            Output::error('Unable to load RouterManager: ' . $e->getMessage());
             return ExitCode::FAILURE;
         }
 

@@ -18,7 +18,7 @@ use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
 use Neo\Core\Module\Exception\ModuleException;
 use Neo\Core\Module\ModuleManager;
-use Neo\Core\Routing\Router;
+use Neo\Core\Routing\RouterManager;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -67,7 +67,7 @@ class App
     {
         $request = $this->container->get(Request::class);
         $response = $this->container->get(Response::class);
-        $router = $this->container->get(Router::class);
+        $router = $this->container->get(RouterManager::class);
         $dispatcher = $this->container->get(EventManager::class);
 
         $dispatcher->dispatch(new RequestEvent($request));

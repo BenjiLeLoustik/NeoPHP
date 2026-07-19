@@ -22,7 +22,7 @@ use ReflectionException;
 use ReflectionMethod;
 use Throwable;
 
-class Router
+class RouterManager
 {
     private RouteCollection $routes;
 

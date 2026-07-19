@@ -5,13 +5,13 @@ namespace Neo\Core\Routing\Extension;
 
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
-use Neo\Core\Routing\Router;
+use Neo\Core\Routing\RouterManager;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
 #[Extension(type: ExtensionTypeEnum::VIEW)]
 final readonly class RouterViewExtension implements TwigExtensionInterface
 {
-    public function __construct(private Router $router) {}
+    public function __construct(private RouterManager $router) {}
 
     /**
      * @return array<string, array{callable: callable, options: array<string, mixed>}>
