@@ -13,7 +13,7 @@ use Neo\Core\Profiler\Profiler;
 use Neo\Core\Utils\Config\Config;
 use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
 
-class EventDispatcher
+class EventManager
 {
     /**
      * @var array<class-string, list<array{

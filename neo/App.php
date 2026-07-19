@@ -12,7 +12,7 @@ use Neo\Core\DI\ContainerRegistry;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\Event\RequestEvent;
 use Neo\Core\Event\Event\ResponseEvent;
-use Neo\Core\Event\EventDispatcher;
+use Neo\Core\Event\EventManager;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
@@ -68,7 +68,7 @@ class App
         $request = $this->container->get(Request::class);
         $response = $this->container->get(Response::class);
         $router = $this->container->get(Router::class);
-        $dispatcher = $this->container->get(EventDispatcher::class);
+        $dispatcher = $this->container->get(EventManager::class);
 
         $dispatcher->dispatch(new RequestEvent($request));
 

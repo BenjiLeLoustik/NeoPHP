@@ -11,7 +11,7 @@ class EventCollector implements CollectorInterface
     private array $events = [];
 
     public function __construct(
-        private readonly EventDispatcher $dispatcher
+        private readonly EventManager $dispatcher
     ) {}
 
     public function getName(): string
