@@ -8,7 +8,7 @@ use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
-use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
+use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
 final class ExtensionManager
@@ -80,7 +80,7 @@ final class ExtensionManager
                 continue;
             }
 
-            $scanResults = new ScannerAttribute($fqcn)
+            $scanResults = new ScannerAttributeManager($fqcn)
                 ->onClass()
                 ->withAttribute(Extension::class)
                 ->scan();
