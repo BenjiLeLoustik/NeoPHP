@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM;
 
-use Neo\Core\Database\DatabaseIntrospector;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Form\FormGenerator;
+use Neo\Core\Database\Introspector\DatabaseIntrospector;
 use Neo\Core\Database\ORM\Model\ModelGenerator;
 use Neo\Core\Database\ORM\Repository\RepositoryGenerator;
 use Neo\Core\DI\Container;

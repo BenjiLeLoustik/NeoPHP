@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database;
+namespace Neo\Core\Database\Introspector;
 
 use Neo\Core\Database\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
