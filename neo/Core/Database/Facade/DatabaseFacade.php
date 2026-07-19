@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database;
+namespace Neo\Core\Database\Facade;
 
 use Neo\Core\Database\Connection\DatabaseConnection;
+use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Exception\ContainerException;
 use PDO;
