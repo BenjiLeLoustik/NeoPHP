@@ -146,7 +146,7 @@ PHP;
     private function generateViews(string $basePath, string $entity, ?string $directory, bool $force): void
     {
         $routePath = $this->buildRoutePath($directory, $entity);
-        $dir = "$basePath/App/Views/pages/$routePath";
+        $dir = "$basePath/Templates/pages/$routePath";
         Fs::ensureDir($dir);
 
         $views = [
