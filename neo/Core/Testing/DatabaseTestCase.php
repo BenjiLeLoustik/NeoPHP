@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Testing;
 
 use Neo\App;
-use Neo\Core\Database\Connection\DatabaseConnection;
+use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;

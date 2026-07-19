@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database\Collector;
+namespace Neo\Core\Database\Access\Collector;
 
-use Neo\Core\Database\Connection\DatabaseConnection;
+use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 
 class QueryCollector implements CollectorInterface

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM\Model;
 
-use Neo\Core\Database\Connection\DatabaseConnection;
+use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\Utils\Config\Config;

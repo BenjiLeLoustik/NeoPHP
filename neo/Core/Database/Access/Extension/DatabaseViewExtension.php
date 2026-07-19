@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database\Extension;
+namespace Neo\Core\Database\Access\Extension;
 
-use Neo\Core\Database\Connection\DatabaseConnection;
+use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\View\Interface\TwigExtensionInterface;

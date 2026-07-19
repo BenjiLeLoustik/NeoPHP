@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database\Connection;
+namespace Neo\Core\Database\Access\Connection;
 
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\ORM;
