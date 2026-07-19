@@ -3,10 +3,13 @@ declare(strict_types=1);
 
 namespace Neo\Core\Security;
 
+use Neo\Core\Extension\Attribute\Extension;
+use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Csrf\CsrfTokenManager;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
+#[Extension(type: ExtensionTypeEnum::VIEW)]
 final readonly class SecurityViewExtension implements TwigExtensionInterface
 {
     public function __construct(

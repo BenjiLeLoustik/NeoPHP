@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Routing;
 
+use Neo\Core\Extension\Attribute\Extension;
+use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
+#[Extension(type: ExtensionTypeEnum::VIEW)]
 final readonly class RouterViewExtension implements TwigExtensionInterface
 {
     public function __construct(private Router $router) {}

@@ -6,6 +6,8 @@ namespace Neo\Core\View;
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
+use Neo\Core\Extension\Attribute\Extension;
+use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Response\Response;
@@ -14,6 +16,7 @@ use Neo\Core\Http\Response\Response;
  * @method \Neo\Core\Http\Response\Response render(string $template, array<string, mixed> $params = [])
  * @method string template(string $template, array<string, mixed> $params = [])
  */
+#[Extension(type: ExtensionTypeEnum::CONTROLLER)]
 class ViewControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void

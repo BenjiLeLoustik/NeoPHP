@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Http\Client\Flash;
 
+use Neo\Core\Extension\Attribute\Extension;
+use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\View\Interface\TwigExtensionInterface;
-use Twig\Markup;
 
+#[Extension(type: ExtensionTypeEnum::VIEW)]
 final readonly class FlashViewExtension implements TwigExtensionInterface
 {
     public function __construct(private Flash $flash) {}

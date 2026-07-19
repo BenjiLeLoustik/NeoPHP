@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\View;
 
 use Neo\Core\DI\Container;
-use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Extension\ExtensionManager;
 use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Utils\Config\ConfigModule;
 
@@ -22,14 +22,12 @@ class ViewModule extends AbstractModule
         $container->set(ViewManager::class, fn(Container $c) => new ViewManager($c));
     }
 
-    /**
-     * @throws ContainerException
-     */
     protected function resolveDependencies(): void
     {
         $view = $this->get(ViewManager::class);
+        $extensions = $this->get(ExtensionManager::class)->getViewExtensions();
 
-        foreach ($this->container->tagged('twig.extension') as $extension) {
+        foreach ($extensions as $extension) {
             $view->addExtension($extension);
         }
     }

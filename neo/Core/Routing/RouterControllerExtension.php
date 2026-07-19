@@ -6,6 +6,8 @@ namespace Neo\Core\Routing;
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
+use Neo\Core\Extension\Attribute\Extension;
+use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\RedirectResponse;
 
@@ -16,6 +18,7 @@ use Neo\Core\Http\Response\RedirectResponse;
  * @method \Neo\Core\Http\Response\RedirectResponse redirectToPath(string $path, int $code = 302)
  * @method \Neo\Core\Http\Response\RedirectResponse redirectBack(?string $fallbackRoute = null, array<string, string> $routeParams = [], int $code = 302)
  */
+#[Extension(type: ExtensionTypeEnum::CONTROLLER)]
 class RouterControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void

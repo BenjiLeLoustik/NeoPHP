@@ -2,8 +2,11 @@
 
 namespace Neo\Core\Translation;
 
+use Neo\Core\Extension\Attribute\Extension;
+use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
+#[Extension(type: ExtensionTypeEnum::VIEW)]
 class TranslationViewExtension implements TwigExtensionInterface
 {
     public function __construct(
