@@ -11,7 +11,6 @@ use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Input\InputArgument;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
-use Neo\Core\Utils\Config\ConfigTemplateWriter;
 use Neo\Core\Utils\Config\Templates\ApiConfigTemplate;
 use Neo\Core\Utils\Config\Templates\AppConfigTemplate;
 use Neo\Core\Utils\Config\Templates\AuthConfigTemplate;
@@ -20,6 +19,7 @@ use Neo\Core\Utils\Config\Templates\DatabaseConfigTemplate;
 use Neo\Core\Utils\Config\Templates\LoggerConfigTemplate;
 use Neo\Core\Utils\Config\Templates\SessionConfigTemplate;
 use Neo\Core\Utils\Config\Templates\TwigConfigTemplate;
+use Neo\Core\Utils\Config\Writer\ConfigTemplateWriter;
 
 #[Command(
     name: 'project:create',
