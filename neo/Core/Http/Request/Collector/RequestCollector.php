@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Http;
+namespace Neo\Core\Http\Request\Collector;
 
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Profiler\Interface\CollectorInterface;
