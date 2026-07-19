@@ -19,7 +19,7 @@ class CacheModule extends AbstractModule
 
     public function register(Container $container): void
     {
-        $container->set(Cache::class, fn(Container $c) => new Cache($c));
+        $container->set(CacheManager::class, fn(Container $c) => new CacheManager($c));
     }
 
     /**
@@ -27,6 +27,6 @@ class CacheModule extends AbstractModule
      */
     protected function resolveDependencies(): void
     {
-        $this->get(Cache::class);
+        $this->get(CacheManager::class);
     }
 }

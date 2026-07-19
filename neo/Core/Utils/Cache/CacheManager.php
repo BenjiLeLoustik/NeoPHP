@@ -12,7 +12,7 @@ use Neo\Core\Utils\Cache\Driver\RedisDriver;
 use Neo\Core\Utils\Cache\Exception\CacheException;
 use Neo\Core\Utils\Config\Config;
 
-class Cache
+class CacheManager
 {
     private CacheDriverInterface $driver;
 
@@ -38,7 +38,7 @@ class Cache
             ),
             'array' => new ArrayDriver($ttl),
             default => throw new CacheException(
-                title: 'Cache Driver Error',
+                title: 'CacheManager Driver Error',
                 message: sprintf("Unsupported cache driver '%s'.", $driverName),
                 code: 500
             ),

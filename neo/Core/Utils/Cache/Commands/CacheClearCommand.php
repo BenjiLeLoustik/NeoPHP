@@ -14,7 +14,7 @@ use Neo\Core\Console\Output\Output;
 #[Command(
     name: 'cache:clear',
     description: 'Clear the cache of a project',
-    category: 'Cache',
+    category: 'CacheManager',
 )]
 final class CacheClearCommand extends AbstractCommand
 {
@@ -34,7 +34,7 @@ final class CacheClearCommand extends AbstractCommand
         $cacheDir = ROOT_DIR . "/src/$project/Storage/var/cache";
 
         if (!is_dir($cacheDir)) {
-            Output::warning("Cache directory not found.");
+            Output::warning("CacheManager directory not found.");
             return ExitCode::FAILURE;
         }
 
@@ -44,7 +44,7 @@ final class CacheClearCommand extends AbstractCommand
         }
 
         Fs::emptyDir($cacheDir);
-        Output::success("Cache cleared for '$project'.");
+        Output::success("CacheManager cleared for '$project'.");
 
         return ExitCode::SUCCESS;
     }
