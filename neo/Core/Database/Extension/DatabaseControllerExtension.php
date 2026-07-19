@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database;
+namespace Neo\Core\Database\Extension;
 
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
+use Neo\Core\Database\DatabaseFacade;
 use Neo\Core\Database\ORM\EntityManager;
 use Neo\Core\DI\Container;
 use Neo\Core\Extension\Attribute\Extension;
