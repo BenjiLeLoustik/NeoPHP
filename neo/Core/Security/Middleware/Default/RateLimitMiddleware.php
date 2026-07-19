@@ -8,11 +8,11 @@ use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
-use Neo\Core\Utils\Cache\Cache;
+use Neo\Core\Utils\Cache\CacheManager;
 
 class RateLimitMiddleware implements MiddlewareInterface
 {
-    private Cache $cache;
+    private CacheManager $cache;
     private Request $request;
     private int $maxAttempts;
     private int $decaySeconds;
@@ -27,7 +27,7 @@ class RateLimitMiddleware implements MiddlewareInterface
         int $decaySeconds = 60,
         string $message = "Too many requests. Please try again in a few moments."
     ) {
-        $this->cache = $container->get(Cache::class);
+        $this->cache = $container->get(CacheManager::class);
         $this->request = $container->get(Request::class);
         $this->maxAttempts = $maxAttempts;
         $this->decaySeconds = $decaySeconds;

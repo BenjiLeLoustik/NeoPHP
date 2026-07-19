@@ -10,13 +10,13 @@ use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 
 /**
- * @method \Neo\Core\Utils\Cache\Cache getCache()
+ * @method \Neo\Core\Utils\Cache\CacheManager getCache()
  */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]
 class CacheControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        $controller->registerMethod('getCache', fn() => $container->get(Cache::class));
+        $controller->registerMethod('getCache', fn() => $container->get(CacheManager::class));
     }
 }

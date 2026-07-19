@@ -80,7 +80,7 @@ class ORM
 
         if (!is_dir($cachePath) && !mkdir($cachePath, 0777, true) && !is_dir($cachePath)) {
             throw new DatabaseException(
-                title: 'ORM Cache Directory Error',
+                title: 'ORM CacheManager Directory Error',
                 message: sprintf("Unable to create the ORM cache directory '%s'.", $cachePath),
                 code: 500
             );

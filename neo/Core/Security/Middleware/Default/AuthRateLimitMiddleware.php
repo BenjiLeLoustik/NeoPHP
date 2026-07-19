@@ -8,11 +8,11 @@ use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Request;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
-use Neo\Core\Utils\Cache\Cache;
+use Neo\Core\Utils\Cache\CacheManager;
 
 class AuthRateLimitMiddleware implements MiddlewareInterface
 {
-    private Cache $cache;
+    private CacheManager $cache;
     private Request $request;
     private int $maxAttempts;
     private int $decaySeconds;
@@ -29,7 +29,7 @@ class AuthRateLimitMiddleware implements MiddlewareInterface
         string $identifierField = 'email',
         string $message = 'Trop de tentatives de connexion. Réessayez dans quelques minutes.',
     ) {
-        $this->cache = $container->get(Cache::class);
+        $this->cache = $container->get(CacheManager::class);
         $this->request = $container->get(Request::class);
         $this->maxAttempts = $maxAttempts;
         $this->decaySeconds = $decaySeconds;
