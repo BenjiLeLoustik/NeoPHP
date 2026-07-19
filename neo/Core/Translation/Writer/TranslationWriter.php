@@ -5,7 +5,7 @@ namespace Neo\Core\Translation\Writer;
 use Neo\Core\Translation\Domain\TranslationDomain;
 use Neo\Core\Translation\Exception\TranslationException;
 use Neo\Core\Translation\Loader\TranslationLoader;
-use Neo\Core\Translation\TranslationRegistry;
+use Neo\Core\Translation\Registry\TranslationRegistry;
 
 final class TranslationWriter
 {
