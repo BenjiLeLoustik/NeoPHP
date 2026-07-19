@@ -10,6 +10,8 @@ use Psr\Container\NotFoundExceptionInterface;
 
 class ApplicationDetector
 {
+    private const string CACHE_FILE = '/storage/app-detect-cache.json';
+
     public function __construct(
         private readonly Container $container
     ){}
@@ -89,14 +91,48 @@ class ApplicationDetector
             $server .= ':' . $serverPort;
         }
 
-        foreach (glob(__DIR__ . '/../../../src/*/Config/app.config.php') as $file) {
+        $rootDir = realpath(__DIR__ . '/../../../');
+        $cacheFile = $rootDir . self::CACHE_FILE;
+
+        $configFiles = glob($rootDir . '/src/*/Config/app.config.php');
+        $signature = md5(implode('|', $configFiles) . '|' . implode('|', array_map('filemtime', $configFiles)));
+
+        if (file_exists($cacheFile)) {
+            $cached = json_decode(file_get_contents($cacheFile) ?: '', true);
+            if (is_array($cached) && ($cached['signature'] ?? null) === $signature) {
+                if (isset($cached['map'][$server])) {
+                    $this->container->set('application', $cached['map'][$server]);
+                    return;
+                }
+                throw new ApplicationException(
+                    title: 'Application Error',
+                    message: sprintf("No application detected for access: '%s'.", $server),
+                    code: 500
+                );
+            }
+        }
+
+        $map = [];
+        $found = null;
+
+        foreach ($configFiles as $file) {
             $config = require $file;
             $accessServer = $config['access'] ?? null;
 
-            if ($accessServer === $server) {
-                $this->container->set('application', basename(dirname($file, 2)));
-                return;
+            if ($accessServer !== null) {
+                $map[$accessServer] = basename(dirname($file, 2));
             }
+
+            if ($accessServer === $server) {
+                $found = basename(dirname($file, 2));
+            }
+        }
+
+        file_put_contents($cacheFile, json_encode(['signature' => $signature, 'map' => $map]));
+
+        if ($found !== null) {
+            $this->container->set('application', $found);
+            return;
         }
 
         throw new ApplicationException(
