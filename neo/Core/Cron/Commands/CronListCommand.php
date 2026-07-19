@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Cron\Commands;
 
+use Neo\Core\Application\ApplicationPaths;
 use Neo\Core\Console\Abstract\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Enum\ExitCode;
@@ -35,18 +36,15 @@ final class CronListCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        try {
-            $cronsPath = $this->container->get('cronsPath');
-        } catch (\Throwable) {
-            $projects = $this->getAvailableProjects();
-            if (empty($projects)) {
-                Output::error('No projects found.');
-                return ExitCode::FAILURE;
-            }
+        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
 
-            $project = $input->getOption('project') ?? Input::choice('Target project ?', $projects);
-            $cronsPath = ROOT_DIR . "/src/$project/App/Crons";
+        if (!is_dir(ROOT_DIR . "/src/$project")) {
+            Output::error("Project '$project' not found.");
+            return ExitCode::FAILURE;
         }
+
+        new ApplicationPaths($this->container)->register($project);
+        $cronsPath = $this->container->get('cronsPath');
 
         $scanner = new CronScanner();
         $jobs = $scanner->scan($cronsPath);
@@ -67,5 +65,10 @@ final class CronListCommand extends AbstractCommand
 
         Output::newLine();
         return ExitCode::SUCCESS;
+    }
+
+    protected function getAvailableProjects(): array
+    {
+        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
     }
 }
