@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database;
 
+use Neo\Core\Database\Connection\DatabaseConnection;
 use Neo\Core\Database\Extension\DatabaseViewExtension;
 use Neo\Core\Database\Form\FormViewExtension;
 use Neo\Core\Database\ORM\EntityManager;

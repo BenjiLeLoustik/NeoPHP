@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database;
 
+use Neo\Core\Database\Connection\DatabaseConnection;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 
 class QueryCollector implements CollectorInterface

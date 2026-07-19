@@ -1,14 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database;
+namespace Neo\Core\Database\Connection;
 
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\ORM;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Utils\Config\Config;
-use Neo\Core\View\ViewManager;
 use PDO;
 use PDOException;
 use Psr\Container\ContainerExceptionInterface;
