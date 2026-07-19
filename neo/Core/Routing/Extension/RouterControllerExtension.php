@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Routing;
+namespace Neo\Core\Routing\Extension;
 
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
@@ -10,6 +10,7 @@ use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\RedirectResponse;
+use Neo\Core\Routing\Router;
 
 /**
  * @method string getRoutePath(string $routeName, array<string, string> $params = [])

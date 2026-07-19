@@ -6,6 +6,7 @@ namespace Neo\Core\Routing;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Routing\Extension\RouterViewExtension;
 use Neo\Core\Security\SecurityModule;
 use Neo\Core\View\ViewModule;
 

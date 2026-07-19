@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Routing;
+namespace Neo\Core\Routing\Extension;
 
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
+use Neo\Core\Routing\Router;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
 #[Extension(type: ExtensionTypeEnum::VIEW)]
