@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Event;
+namespace Neo\Core\Event\Extension;
 
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
+use Neo\Core\Event\EventManager;
 use Neo\Core\Event\Interface\EventInterface;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
