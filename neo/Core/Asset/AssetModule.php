@@ -2,6 +2,7 @@
 
 namespace Neo\Core\Asset;
 
+use Neo\Core\Asset\Extension\AssetViewExtension;
 use Neo\Core\DI\Container;
 use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Utils\Config\ConfigModule;
