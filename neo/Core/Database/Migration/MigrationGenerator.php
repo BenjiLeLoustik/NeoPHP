@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Migration;
 
+use Neo\Core\Database\Access\Introspector\DatabaseIntrospector;
 use Neo\Core\Database\Exception\DatabaseException;
-use Neo\Core\Database\Introspector\DatabaseIntrospector;
 
 final class MigrationGenerator
 {

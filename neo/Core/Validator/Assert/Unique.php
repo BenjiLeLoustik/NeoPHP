@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Validator\Assert;
 
-use Neo\Core\Database\Connection\DatabaseConnection;
+use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Validator\Abstract\AbstractConstraint;
 use ReflectionClass;
 
