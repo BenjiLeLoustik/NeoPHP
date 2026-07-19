@@ -109,7 +109,7 @@ class Logger
      */
     public function debug(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
-        $this->log('DEBUG', $msg, $ctx, $origin);
+        ($channel !== null ? $this->channel($channel) : $this)->log('DEBUG', $msg, $ctx, $origin);
     }
 
     /**
@@ -117,7 +117,7 @@ class Logger
      */
     public function info(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
-        $this->log('INFO', $msg, $ctx, $origin);
+        ($channel !== null ? $this->channel($channel) : $this)->log('INFO', $msg, $ctx, $origin);
     }
 
     /**
@@ -125,7 +125,7 @@ class Logger
      */
     public function notice(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
-        $this->log('NOTICE', $msg, $ctx, $origin);
+        ($channel !== null ? $this->channel($channel) : $this)->log('NOTICE', $msg, $ctx, $origin);
     }
 
     /**
@@ -133,7 +133,7 @@ class Logger
      */
     public function warning(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
-        $this->log('WARNING', $msg, $ctx, $origin);
+        ($channel !== null ? $this->channel($channel) : $this)->log('WARNING', $msg, $ctx, $origin);
     }
 
     /**
@@ -141,7 +141,7 @@ class Logger
      */
     public function error(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
-        $this->log('ERROR', $msg, $ctx, $origin);
+        ($channel !== null ? $this->channel($channel) : $this)->log('ERROR', $msg, $ctx, $origin);
     }
 
     /**
@@ -149,7 +149,7 @@ class Logger
      */
     public function critical(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
-        $this->log('CRITICAL', $msg, $ctx, $origin);
+        ($channel !== null ? $this->channel($channel) : $this)->log('CRITICAL', $msg, $ctx, $origin);
     }
 
     /**
@@ -157,7 +157,7 @@ class Logger
      */
     public function alert(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
-        $this->log('ALERT', $msg, $ctx, $origin);
+        ($channel !== null ? $this->channel($channel) : $this)->log('ALERT', $msg, $ctx, $origin);
     }
 
     /**
@@ -165,7 +165,7 @@ class Logger
      */
     public function emergency(string $msg, array $ctx = [], string $origin = 'system', ?string $channel = null): void
     {
-        $this->log('EMERGENCY', $msg, $ctx, $origin);
+        ($channel !== null ? $this->channel($channel) : $this)->log('EMERGENCY', $msg, $ctx, $origin);
     }
 
     private function isEnabled(): bool
