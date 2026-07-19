@@ -261,7 +261,7 @@ class ArrayExtension
         if ($key !== null) {
             $array = $this->pluck($array, $key);
         }
-        return min($array);
+        return max($array);
     }
 
     /**
