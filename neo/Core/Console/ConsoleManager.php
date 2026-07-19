@@ -9,7 +9,7 @@ use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
-use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
+use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
@@ -65,7 +65,7 @@ class ConsoleManager
                 continue;
             }
 
-            $results = new ScannerAttribute($class)
+            $results = new ScannerAttributeManager($class)
                 ->onClass()
                 ->withAttribute(Command::class)
                 ->scan();
@@ -102,7 +102,7 @@ class ConsoleManager
                 continue;
             }
 
-            $results = new ScannerAttribute($class)
+            $results = new ScannerAttributeManager($class)
                 ->onClass()
                 ->withAttribute(Command::class)
                 ->scan();

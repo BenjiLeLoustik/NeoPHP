@@ -3,7 +3,7 @@
 namespace Neo\Core\Cron\Scanner;
 
 use Neo\Core\Cron\Attribute\Cron;
-use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
+use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionException;
@@ -55,7 +55,7 @@ class CronScanner
                 continue;
             }
 
-            $results = new ScannerAttribute($fqcn)
+            $results = new ScannerAttributeManager($fqcn)
                 ->onMethods(ReflectionMethod::IS_PUBLIC)
                 ->withAttribute(Cron::class)
                 ->scan();

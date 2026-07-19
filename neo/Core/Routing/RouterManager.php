@@ -6,7 +6,6 @@ namespace Neo\Core\Routing;
 use JsonException;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Request;
 use Neo\Core\Http\Response\Response;
 use Neo\Core\Profiler\Profiler;
@@ -17,7 +16,7 @@ use Neo\Core\Routing\Exception\RouteNotFoundException;
 use Neo\Core\Routing\Exception\RouterException;
 use Neo\Core\Security\Middleware\MiddlewareManager;
 use Neo\Core\Utils\Config\ConfigManager;
-use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
+use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use ReflectionException;
 use ReflectionMethod;
 use Throwable;
@@ -117,7 +116,7 @@ class RouterManager
                 if (!class_exists($fqcn)) continue;
             }
 
-            $results = new ScannerAttribute($fqcn)
+            $results = new ScannerAttributeManager($fqcn)
                 ->onClass()
                 ->onMethods(ReflectionMethod::IS_PUBLIC)
                 ->scan();

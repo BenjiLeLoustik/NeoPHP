@@ -8,16 +8,16 @@ use Neo\Core\DI\Container;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Utils\Scanner\Attribute;
-use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
+use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 
 /**
- * @method Attribute\ScannerAttribute getScanner(string $classname)
+ * @method \Neo\Core\Utils\Scanner\ScannerAttributeManager getScanner(string $classname)
  */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]
 class ScannerControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        $controller->registerMethod('getScanner', fn(string $className) => new ScannerAttribute($className));
+        $controller->registerMethod('getScanner', fn(string $className) => new ScannerAttributeManager($className));
     }
 }

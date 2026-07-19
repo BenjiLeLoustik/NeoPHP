@@ -11,7 +11,7 @@ use Neo\Core\Event\Interface\EventInterface;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Utils\Config\ConfigManager;
-use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
+use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 
 class EventManager
 {
@@ -89,7 +89,7 @@ class EventManager
 
             if (!class_exists($fqcn)) continue;
 
-            $results = new ScannerAttribute($fqcn)
+            $results = new ScannerAttributeManager($fqcn)
                 ->onClass()
                 ->withAttribute(AsListener::class)
                 ->scan();
