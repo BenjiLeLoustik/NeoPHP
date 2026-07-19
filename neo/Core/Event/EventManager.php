@@ -9,7 +9,7 @@ use Neo\Core\Event\Attribute\AsListener;
 use Neo\Core\Event\Exception\EventException;
 use Neo\Core\Event\Interface\EventInterface;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
-use Neo\Core\Profiler\Profiler;
+use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 
@@ -172,7 +172,7 @@ class EventManager
 
         if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
             $ms = (microtime(true) - $t0) * 1000;
-            $ec = Profiler::getInstance()->getCollector('events');
+            $ec = ProfilerManager::getInstance()->getCollector('events');
             $ec?->record($eventClass, $called, $ms);
         }
 

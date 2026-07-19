@@ -6,7 +6,7 @@ namespace Neo\Core\Database\Builder;
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Model\AbstractModel;
-use Neo\Core\Profiler\Profiler;
+use Neo\Core\Profiler\ProfilerManager;
 use PDO;
 use PDOException;
 
@@ -903,7 +903,7 @@ SQL;
         $ms = (microtime(true) - $t0) * 1000;
 
         if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
-            $qc = Profiler::getInstance()->getCollector('database');
+            $qc = ProfilerManager::getInstance()->getCollector('database');
             $qc?->record($sql, $params, $ms);
         }
 

@@ -8,7 +8,7 @@ use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Event\ExceptionEvent;
 use Neo\Core\Event\EventManager;
-use Neo\Core\Profiler\Profiler;
+use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Logger\LoggerManager;
@@ -330,7 +330,7 @@ class ErrorManager
 
         try {
             $toolbar = new Toolbar(
-                Profiler::getInstance()
+                ProfilerManager::getInstance()
             );
             $rendered = $toolbar->render();
 

@@ -54,7 +54,7 @@ class ProfilerModule extends AbstractModule
             define('NEO_PROFILER_ENABLED', true);
         }
 
-        $profiler = Profiler::getInstance();
+        $profiler = ProfilerManager::getInstance();
         $dispatcher = $this->get(EventManager::class);
 
         $this->registerCollectors($profiler);
@@ -67,7 +67,7 @@ class ProfilerModule extends AbstractModule
     /**
      * @throws ContainerException
      */
-    private function registerCollectors(Profiler $profiler): void
+    private function registerCollectors(ProfilerManager $profiler): void
     {
         $coreDir = dirname(__DIR__);
 

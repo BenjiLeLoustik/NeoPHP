@@ -5,7 +5,7 @@ namespace Neo\Core\Utils\Notification;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Profiler\Profiler;
+use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Config\Exception\ConfigException;
 use Neo\Core\Utils\Notification\Channel\ChannelInterface;
@@ -219,7 +219,7 @@ class NotificationManager
             return;
         }
 
-        $collector = Profiler::getInstance()->getCollector('mail');
+        $collector = ProfilerManager::getInstance()->getCollector('mail');
         if (!$collector instanceof NotificationCollector) {
             return;
         }

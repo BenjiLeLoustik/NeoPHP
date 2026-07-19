@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace Neo\Core\Profiler\Toolbar;
 
-use Neo\Core\Profiler\Profiler;
+use Neo\Core\Profiler\ProfilerManager;
 
 readonly class Toolbar
 {
     public function __construct(
-        private Profiler $profiler
+        private ProfilerManager $profiler
     ) {}
 
     public function render(): string
