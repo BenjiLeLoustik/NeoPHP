@@ -7,6 +7,8 @@ use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Exception\AbstractControllerException;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
+use Neo\Core\Extension\Attribute\Extension;
+use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Http\Client\Flash\Flash;
 use Neo\Core\Http\Client\Session\Session;
@@ -22,6 +24,7 @@ use Neo\Core\Http\Response\JsonResponse;
  * @method \Neo\Core\Http\Response\JsonResponse jsonError(string $message, int $status = 400, array<string, mixed> $extra = [])
  * @method string upload(string $field, string $name, array<int, string> $extensions, string $directory)
  */
+#[Extension(type: ExtensionTypeEnum::CONTROLLER)]
 class HttpControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void

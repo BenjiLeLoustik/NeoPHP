@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Asset;
 
+use Neo\Core\Extension\Attribute\Extension;
+use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
+#[Extension(type: ExtensionTypeEnum::VIEW)]
 final readonly class AssetViewExtension implements TwigExtensionInterface
 {
     public function __construct(private AssetManager $handler) {}

@@ -7,7 +7,10 @@ use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\Database\ORM\EntityManager;
 use Neo\Core\DI\Container;
+use Neo\Core\Extension\Attribute\Extension;
+use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 
+#[Extension(type: ExtensionTypeEnum::CONTROLLER)]
 final class DatabaseControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
