@@ -19,9 +19,9 @@ final class PasswordManager
         return password_verify($plainPassword, $hashedPassword);
     }
 
-    public function needsRehash(string $plainPassword): bool
+    public function needsRehash(string $hashedPassword): bool
     {
-        return password_needs_rehash($plainPassword, self::DEFAULT_ALGO, self::DEFAULT_OPTIONS);
+        return password_needs_rehash($hashedPassword, self::DEFAULT_ALGO, self::DEFAULT_OPTIONS);
     }
 
     /**
