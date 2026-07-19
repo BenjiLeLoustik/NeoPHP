@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Event;
+namespace Neo\Core\Event\Collector;
 
+use Neo\Core\Event\EventManager;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 
 class EventCollector implements CollectorInterface
