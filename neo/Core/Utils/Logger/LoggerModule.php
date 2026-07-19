@@ -19,7 +19,7 @@ class LoggerModule extends AbstractModule
 
     public function register(Container $container): void
     {
-        $container->set(Logger::class, fn(Container $c) => new Logger($c));
+        $container->set(LoggerManager::class, fn(Container $c) => new LoggerManager($c));
     }
 
     /**
@@ -27,6 +27,6 @@ class LoggerModule extends AbstractModule
      */
     protected function resolveDependencies(): void
     {
-        $this->get(Logger::class);
+        $this->get(LoggerManager::class);
     }
 }
