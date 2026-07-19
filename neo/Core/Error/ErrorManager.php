@@ -207,10 +207,21 @@ class ErrorManager
 
             $traceRows = '';
             $i = 0;
-            foreach (explode("\n", $exception->getTraceAsString()) as $traceLine) {
-                if (trim($traceLine) === '') {
-                    continue;
+            $maxFrames = 50;
+            $traceLines = array_filter(explode("\n", $exception->getTraceAsString()), fn($l) => trim($l) !== '');
+            $totalFrames = count($traceLines);
+
+            foreach ($traceLines as $traceLine) {
+                if ($i >= $maxFrames) {
+                    $remaining = $totalFrames - $maxFrames;
+                    $traceRows .= <<<HTML
+        <tr style="background:#f9fafb;border-bottom:1px solid #f3f4f6;">
+            <td colspan="2" style="padding:0.5rem 1.25rem;font-family:monospace;font-size:0.72rem;color:#9ca3af;font-style:italic;">… et {$remaining} frame(s) supplémentaire(s), non affichées.</td>
+        </tr>
+        HTML;
+                    break;
                 }
+
                 $traceLine = htmlspecialchars($traceLine, ENT_QUOTES, 'UTF-8');
                 $rowBg = $i % 2 === 0 ? '#ffffff' : '#f9fafb';
                 if (preg_match('/^(#\d+)\s+(.+)$/', $traceLine, $m)) {
@@ -223,17 +234,17 @@ class ErrorManager
                         $m[2]
                     );
                     $traceRows .= <<<HTML
-                <tr style="background:{$rowBg};border-bottom:1px solid #f3f4f6;">
-                    <td style="padding:0.5rem 1rem;font-family:monospace;font-size:0.72rem;color:#d1d5db;vertical-align:top;white-space:nowrap;user-select:none;border-right:1px solid #f3f4f6;min-width:48px;text-align:right;">{$num}</td>
-                    <td style="padding:0.5rem 1.25rem;font-family:monospace;font-size:0.72rem;line-height:1.7;word-break:break-all;">{$rest}</td>
-                </tr>
-                HTML;
+    <tr style="background:{$rowBg};border-bottom:1px solid #f3f4f6;">
+        <td style="padding:0.5rem 1rem;font-family:monospace;font-size:0.72rem;color:#d1d5db;vertical-align:top;white-space:nowrap;user-select:none;border-right:1px solid #f3f4f6;min-width:48px;text-align:right;">{$num}</td>
+        <td style="padding:0.5rem 1.25rem;font-family:monospace;font-size:0.72rem;line-height:1.7;word-break:break-all;">{$rest}</td>
+    </tr>
+    HTML;
                 } else {
                     $traceRows .= <<<HTML
-                <tr style="background:{$rowBg};border-bottom:1px solid #f3f4f6;">
-                    <td colspan="2" style="padding:0.5rem 1.25rem;font-family:monospace;font-size:0.72rem;color:#9ca3af;">{$traceLine}</td>
-                </tr>
-                HTML;
+    <tr style="background:{$rowBg};border-bottom:1px solid #f3f4f6;">
+        <td colspan="2" style="padding:0.5rem 1.25rem;font-family:monospace;font-size:0.72rem;color:#9ca3af;">{$traceLine}</td>
+    </tr>
+    HTML;
                 }
                 $i++;
             }
