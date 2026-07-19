@@ -38,6 +38,9 @@ class MiddlewareManager
 
     private ?string $lastMethod = null;
 
+    /** @var array<string, array<int, array<string, mixed>>> */
+    private array $middlewareCache = [];
+
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -194,6 +197,12 @@ class MiddlewareManager
      */
     private function getMiddlewares(string $controller, ?string $method = null): array
     {
+        $cacheKey = $controller . '::' . ($method ?? '');
+
+        if (isset($this->middlewareCache[$cacheKey])) {
+            return $this->middlewareCache[$cacheKey];
+        }
+
         $all = [];
 
         $classResults = new ScannerAttribute($controller)
@@ -253,7 +262,7 @@ class MiddlewareManager
 
         usort($all, fn($a, $b) => $b['priority'] <=> $a['priority']);
 
-        return $all;
+        return $this->middlewareCache[$cacheKey] = $all;
     }
 
     /**
