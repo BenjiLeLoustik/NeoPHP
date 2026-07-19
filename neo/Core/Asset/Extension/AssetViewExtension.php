@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Asset;
+namespace Neo\Core\Asset\Extension;
 
+use Neo\Core\Asset\AssetManager;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\View\Interface\TwigExtensionInterface;
