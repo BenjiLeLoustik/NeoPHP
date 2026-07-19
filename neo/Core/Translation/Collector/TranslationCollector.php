@@ -1,13 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Translation;
+namespace Neo\Core\Translation\Collector;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Profiler\Interface\CollectorAwareInterface;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Translation\Interface\TranslationCollectorInterface;
+use Neo\Core\Translation\TranslationManager;
 
 class TranslationCollector implements CollectorInterface, TranslationCollectorInterface, CollectorAwareInterface
 {
