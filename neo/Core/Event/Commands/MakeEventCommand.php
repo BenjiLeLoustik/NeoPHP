@@ -70,6 +70,8 @@ declare(strict_types=1);
 
 namespace $namespace;
 
+use Neo\Core\Event\Abstract\AbstractEvent;
+
 final class $event extends AbstractEvent
 {
     public function __construct(
