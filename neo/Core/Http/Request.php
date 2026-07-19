@@ -325,29 +325,37 @@ class Request
 
     public function getIp(): ?string
     {
-        $ipHeaders = [
-            'HTTP_CF_CONNECTING_IP',
-            'HTTP_X_REAL_IP',
-            'HTTP_X_FORWARDED_FOR',
-            'REMOTE_ADDR',
-        ];
+        $remoteAddr = $this->server['REMOTE_ADDR'] ?? null;
+        $isFromLikelyProxy = $remoteAddr !== null && filter_var(
+                $remoteAddr, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+            ) === false;
 
-        foreach ($ipHeaders as $header) {
-            if (!empty($this->server[$header])) {
-                $ip = trim(explode(',', $this->server[$header])[0]);
-                if (
-                    filter_var(
-                        $ip,
-                        FILTER_VALIDATE_IP,
-                        FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-                    ) !== false)
-                {
-                    return $ip;
+        if ($isFromLikelyProxy) {
+            $ipHeaders = [
+                'HTTP_CF_CONNECTING_IP',
+                'HTTP_X_REAL_IP',
+                'HTTP_X_FORWARDED_FOR',
+            ];
+
+            foreach ($ipHeaders as $header) {
+                if (!empty($this->server[$header])) {
+                    $ip = trim(explode(',', $this->server[$header])[0]);
+                    if (
+                        filter_var(
+                            $ip,
+                            FILTER_VALIDATE_IP,
+                            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+                        ) !== false
+                    ) {
+                        return $ip;
+                    }
                 }
             }
         }
 
-        return null;
+        return ($remoteAddr !== null && filter_var($remoteAddr, FILTER_VALIDATE_IP) !== false)
+            ? $remoteAddr
+            : null;
     }
 
     /**
