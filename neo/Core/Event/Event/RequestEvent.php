@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Event\Event;
 
 use Neo\Core\Event\Abstract\AbstractEvent;
-use Neo\Core\Http\Request;
+use Neo\Core\Http\Request\Request;
 
 class RequestEvent extends AbstractEvent
 {

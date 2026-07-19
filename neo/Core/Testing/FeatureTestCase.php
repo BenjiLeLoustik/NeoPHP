@@ -6,7 +6,7 @@ namespace Neo\Core\Testing;
 use Neo\App;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
-use Neo\Core\Http\Request;
+use Neo\Core\Http\Request\Request;
 use Neo\Core\Http\Response\Response;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 use Psr\Container\ContainerExceptionInterface;

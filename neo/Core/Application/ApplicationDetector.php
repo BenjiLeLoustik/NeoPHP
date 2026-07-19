@@ -4,7 +4,7 @@ namespace Neo\Core\Application;
 
 use Neo\Core\Application\Exception\ApplicationException;
 use Neo\Core\DI\Container;
-use Neo\Core\Http\Request;
+use Neo\Core\Http\Request\Request;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 

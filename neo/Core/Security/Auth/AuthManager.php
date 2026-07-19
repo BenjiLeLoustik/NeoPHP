@@ -7,7 +7,7 @@ use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\Session\Session;
-use Neo\Core\Http\Request;
+use Neo\Core\Http\Request\Request;
 use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Exception\JwtException;
 use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;

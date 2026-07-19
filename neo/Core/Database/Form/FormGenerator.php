@@ -59,14 +59,8 @@ declare(strict_types=1);
 
 namespace $namespaceForm;
 
-use Neo\Core\DI\Container;
-use Neo\Core\Database\Builder\FormBuilder;
-use Neo\Core\Database\Form\Form;
-use Neo\Core\Database\ORM\Model\AbstractModel;
-use Neo\Core\Http\Request;
-use Neo\Core\Database\Form\Type\SubmitType;
-use $modelNamespace\\$modelName;
-use Neo\Core\Translation\TranslationManager;
+use Neo\Core\Database\Builder\FormBuilder;use Neo\Core\Database\Form\Type\SubmitType;use Neo\Core\Database\ORM\Model\AbstractModel;use Neo\Core\DI\Container;use Neo\Core\Http\Request\Request;use Neo\Core\Translation\TranslationManager;
+$modelNamespace\\$modelName;
 
 
 class $formClassName
