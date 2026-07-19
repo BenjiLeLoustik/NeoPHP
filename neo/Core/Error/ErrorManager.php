@@ -7,7 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Event\ExceptionEvent;
-use Neo\Core\Event\EventDispatcher;
+use Neo\Core\Event\EventManager;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Utils\Config\Config;
@@ -109,7 +109,7 @@ class ErrorManager
         }
 
         try {
-            $dispatcher = $this->container->get(EventDispatcher::class);
+            $dispatcher = $this->container->get(EventManager::class);
             $exceptionEvent = new ExceptionEvent(
                 $e instanceof FrameworkException ? $e : FrameworkException::fromThrowable($e)
             );

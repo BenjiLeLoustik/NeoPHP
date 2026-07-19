@@ -6,7 +6,7 @@ namespace Neo\Core\Profiler;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\Event\ResponseEvent;
-use Neo\Core\Event\EventDispatcher;
+use Neo\Core\Event\EventManager;
 use Neo\Core\Event\EventModule;
 use Neo\Core\Http\HttpModule;
 use Neo\Core\Module\Abstract\AbstractModule;
@@ -55,7 +55,7 @@ class ProfilerModule extends AbstractModule
         }
 
         $profiler = Profiler::getInstance();
-        $dispatcher = $this->get(EventDispatcher::class);
+        $dispatcher = $this->get(EventManager::class);
 
         $this->registerCollectors($profiler);
 

@@ -19,7 +19,7 @@ class EventControllerExtension implements ControllerExtensionInterface
     public function extend(AbstractController $controller, Container $container): void
     {
         $controller->registerMethod('dispatch', function (EventInterface $event) use ($container) {
-            return $container->get(EventDispatcher::class)->dispatch($event);
+            return $container->get(EventManager::class)->dispatch($event);
         });
     }
 }
