@@ -1,13 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Security\Auth;
+namespace Neo\Core\Security\Auth\Extension;
 
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
+use Neo\Core\Security\Auth\AuthManager;
+use Neo\Core\Security\Auth\PasswordManager;
 
 /**
  * @method \Neo\Core\Security\Auth\AuthManager auth()
