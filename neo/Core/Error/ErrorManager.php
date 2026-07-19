@@ -10,7 +10,7 @@ use Neo\Core\Event\Event\ExceptionEvent;
 use Neo\Core\Event\EventManager;
 use Neo\Core\Profiler\Profiler;
 use Neo\Core\Profiler\Toolbar\Toolbar;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Logger\Logger;
 use Neo\Core\View\ViewManager;
 
@@ -36,7 +36,7 @@ class ErrorManager
         }
 
         try {
-            $env = $this->container->get(Config::class)->from('app')->get('environment');
+            $env = $this->container->get(ConfigManager::class)->from('app')->get('environment');
             $this->resolvedEnv = $env ?? 'prod';
         } catch (\Throwable) {
             $this->resolvedEnv = 'prod';

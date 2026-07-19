@@ -13,7 +13,7 @@ use Neo\Core\Security\Auth\Exception\JwtException;
 use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;
 use Neo\Core\Security\Auth\Guard\SessionGuard;
 use Neo\Core\Security\Auth\Guard\TokenGuard;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Config\Exception\ConfigException;
 
 class AuthManager
@@ -35,7 +35,7 @@ class AuthManager
         $this->container = $container;
 
         try {
-            $this->config = $container->get(Config::class)->from('auth')->all();
+            $this->config = $container->get(ConfigManager::class)->from('auth')->all();
         } catch (ConfigException) {
             $this->config = [];
         }

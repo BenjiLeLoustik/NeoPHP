@@ -7,7 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Utils\Config\Exception\ConfigException;
 
-class Config
+class ConfigManager
 {
     private const string CONFIG_EXTENSION = '.config.php';
 
@@ -54,8 +54,8 @@ class Config
 
             if (!is_array($data)) {
                 throw new ConfigException(
-                    title: "Invalid Config File",
-                    message: sprintf("Config file '%s' must return an array.", $file),
+                    title: "Invalid ConfigManager File",
+                    message: sprintf("ConfigManager file '%s' must return an array.", $file),
                     code: 500,
                     context: ['file' => $file]
                 );
@@ -79,7 +79,7 @@ class Config
 
             if (!is_array($data)) {
                 throw new ConfigException(
-                    title: "Invalid Test Config File",
+                    title: "Invalid Test ConfigManager File",
                     message: sprintf("Test config file '%s' must return an array.", $file),
                     code: 500,
                     context: ['file' => $file]
@@ -118,8 +118,8 @@ class Config
     {
         if (!isset($this->configs[$key])) {
             throw new ConfigException(
-                title: "Config Not Found",
-                message: sprintf("Config '%s' not found.", $key),
+                title: "ConfigManager Not Found",
+                message: sprintf("ConfigManager '%s' not found.", $key),
                 code: 404,
                 context: ['key' => $key]
             );
@@ -166,7 +166,7 @@ class Config
     {
         if (!$this->hasSelected) {
             throw new ConfigException(
-                title: "Config Not Selected",
+                title: "ConfigManager Not Selected",
                 message: "Call from() before calling get() or all().",
                 code: 500
             );

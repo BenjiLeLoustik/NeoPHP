@@ -5,7 +5,7 @@ namespace Neo\Core\Http\Client\Cookie;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 
 class Cookie
 {
@@ -31,7 +31,7 @@ class Cookie
     {
         $this->container = $container;
 
-        $cfg = $this->container->get(Config::class);
+        $cfg = $this->container->get(ConfigManager::class);
         $this->config = $cfg->from('session')->get('cookie');
     }
 

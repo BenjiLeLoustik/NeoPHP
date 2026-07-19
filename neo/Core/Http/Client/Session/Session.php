@@ -6,7 +6,7 @@ namespace Neo\Core\Http\Client\Session;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 
 class Session
 {
@@ -36,7 +36,7 @@ class Session
     {
         $this->container = $container;
 
-        $config = $this->container->get(Config::class);
+        $config = $this->container->get(ConfigManager::class);
         $this->config = $config->from('session')->get('session');
 
         $this->configureSession();

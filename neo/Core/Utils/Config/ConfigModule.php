@@ -15,7 +15,7 @@ class ConfigModule extends AbstractModule
 
     public function register(Container $container): void
     {
-        $container->set(Config::class, fn(Container $c) => new Config($c));
+        $container->set(ConfigManager::class, fn(Container $c) => new ConfigManager($c));
     }
 
     /**
@@ -23,6 +23,6 @@ class ConfigModule extends AbstractModule
      */
     protected function resolveDependencies(): void
     {
-        $this->get(Config::class);
+        $this->get(ConfigManager::class);
     }
 }

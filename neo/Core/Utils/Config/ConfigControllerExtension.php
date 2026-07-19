@@ -10,13 +10,13 @@ use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 
 /**
- * @method \Neo\Core\Utils\Config\Config getConfig()
+ * @method \Neo\Core\Utils\Config\ConfigManager getConfig()
  */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]
 class ConfigControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        $controller->registerMethod('getConfig', fn() => $container->get(Config::class));
+        $controller->registerMethod('getConfig', fn() => $container->get(ConfigManager::class));
     }
 }

@@ -18,7 +18,7 @@ final class DatabaseConfigTemplate implements ConfigTemplateInterface
 <?php
 declare(strict_types=1);
 
-// ./src/$projectName/Config/database.config.php
+// ./src/$projectName/ConfigManager/database.config.php
 
 return [
     'enabled' => false,

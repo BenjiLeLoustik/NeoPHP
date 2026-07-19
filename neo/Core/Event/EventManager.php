@@ -10,7 +10,7 @@ use Neo\Core\Event\Exception\EventException;
 use Neo\Core\Event\Interface\EventInterface;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
 use Neo\Core\Profiler\Profiler;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Scanner\Attribute\ScannerAttribute;
 
 class EventManager
@@ -35,7 +35,7 @@ class EventManager
     private function isDebug(): bool
     {
         try {
-            return $this->container->get(Config::class)->from('app')->get('environment') === 'dev';
+            return $this->container->get(ConfigManager::class)->from('app')->get('environment') === 'dev';
         } catch (\Throwable) {
             return false;
         }

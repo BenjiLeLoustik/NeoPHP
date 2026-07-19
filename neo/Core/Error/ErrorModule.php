@@ -5,7 +5,7 @@ namespace Neo\Core\Error;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Module\Abstract\AbstractModule;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Config\ConfigModule;
 
 class ErrorModule extends AbstractModule
@@ -34,7 +34,7 @@ class ErrorModule extends AbstractModule
         }
 
         try {
-            $env = $this->get(Config::class)
+            $env = $this->get(ConfigManager::class)
                 ->from('app')
                 ->get('environment') ?? 'prod';
             $errorHandler->setEnv($env);

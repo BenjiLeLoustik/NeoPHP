@@ -19,7 +19,7 @@ class AuthConfigTemplate implements ConfigTemplateInterface
 <?php
 declare(strict_types=1);
 
-// ./src/$projectName/Config/auth.config.php
+// ./src/$projectName/ConfigManager/auth.config.php
 
 return [
     'enabled'    => false,

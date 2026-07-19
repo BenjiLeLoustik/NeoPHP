@@ -18,7 +18,7 @@ use Neo\Core\Utils\Config\Templates\DatabaseConfigTemplate;
 #[Command(
     name: 'generate:default:config',
     description: 'Generate sensitive config files for a project',
-    category: 'Config',
+    category: 'ConfigManager',
 )]
 final class GenerateDefaultConfigCommand extends AbstractCommand
 {
@@ -42,7 +42,7 @@ final class GenerateDefaultConfigCommand extends AbstractCommand
             return ExitCode::FAILURE;
         }
 
-        $configPath = "$projectPath/Config/";
+        $configPath = "$projectPath/ConfigManager/";
         Fs::ensureDir($configPath);
 
         Output::title("Generating configs for: $project");

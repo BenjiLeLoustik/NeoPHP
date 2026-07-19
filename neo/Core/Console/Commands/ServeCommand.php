@@ -99,7 +99,7 @@ final class ServeCommand extends AbstractCommand
 
         foreach ($dirs as $dir) {
             $name = basename($dir);
-            $configPath = $dir . '/Config/app.config.php';
+            $configPath = $dir . '/ConfigManager/app.config.php';
 
             if (!file_exists($configPath)) {
                 continue;

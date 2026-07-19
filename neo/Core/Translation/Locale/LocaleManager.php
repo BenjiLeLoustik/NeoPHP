@@ -5,7 +5,7 @@ namespace Neo\Core\Translation\Locale;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\Cookie\Cookie;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 
 final class LocaleManager
 {
@@ -15,7 +15,7 @@ final class LocaleManager
     public static function resolve(Container $container): string
     {
         $cookie = $container->get(Cookie::class);
-        $translationConfig = $container->get(Config::class)->from('app')->get('translation');
+        $translationConfig = $container->get(ConfigManager::class)->from('app')->get('translation');
 
         $availableLocales = $translationConfig['available_locales'] ?? [];
         $defaultLocale = strtolower($translationConfig['default_locale'] ?? 'fr');

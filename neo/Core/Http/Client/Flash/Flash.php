@@ -7,7 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Client\Session\Session;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 
 class Flash
 {
@@ -29,7 +29,7 @@ class Flash
      */
     public function __construct(Container $container)
     {
-        $configObj = $container->get(Config::class);
+        $configObj = $container->get(ConfigManager::class);
         $this->config = $configObj->from('session')->get('flash');
 
         $this->flashKey = $this->config['session_key'];

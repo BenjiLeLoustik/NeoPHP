@@ -9,7 +9,7 @@ use Neo\Core\Database\Form\FormGenerator;
 use Neo\Core\Database\ORM\Model\ModelGenerator;
 use Neo\Core\Database\ORM\Repository\RepositoryGenerator;
 use Neo\Core\DI\Container;
-use Neo\Core\Utils\Config\Config;
+use Neo\Core\Utils\Config\ConfigManager;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -71,7 +71,7 @@ class ORM
         bool $force = false,
         bool $bypassLock = false,
     ): void {
-        $env = $this->container->get(Config::class)->from('app')->get('environment') ?? 'prod';
+        $env = $this->container->get(ConfigManager::class)->from('app')->get('environment') ?? 'prod';
         $isDebug = $env === 'dev';
 
         $storagePath = $this->container->get('storagePath');
