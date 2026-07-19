@@ -1,9 +1,10 @@
 <?php
 
-namespace Neo\Core\Translation;
+namespace Neo\Core\Translation\Extension;
 
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
+use Neo\Core\Translation\TranslationManager;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
 #[Extension(type: ExtensionTypeEnum::VIEW)]
