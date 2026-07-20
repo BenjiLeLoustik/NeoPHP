@@ -54,6 +54,13 @@ class App
             ->discover($this->container->get('appPath'));
 
         $moduleManager->boot();
+
+        $viewManager = $this->container->get(\Neo\Core\View\ViewManager::class);
+        $extensions = $this->container->get(\Neo\Core\Extension\ExtensionManager::class)->getViewExtensions();
+
+        foreach ($extensions as $extension) {
+            $viewManager->addExtension($extension);
+        }
     }
 
     /**
