@@ -4,12 +4,10 @@ declare(strict_types=1);
 namespace Neo\Core\Profiler;
 
 use Neo\Core\DI\Container;
-use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\Event\ResponseEvent;
-use Neo\Core\Event\EventManager;
 use Neo\Core\Event\EventModule;
 use Neo\Core\Http\Response\ResponseModule;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Profiler\Interface\CollectorAwareInterface;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Profiler\Listener\ProfilerResponseListener;
@@ -17,12 +15,11 @@ use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Routing\RouterModule;
 use Neo\Core\Security\Auth\AuthModule;
 use Neo\Core\Translation\TranslationModule;
-use Neo\Core\Utils\Config\ConfigManager;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
 
-class ProfilerModule extends AbstractModule
+class ProfilerModule implements ModuleInterface
 {
     public function dependencies(): array
     {
@@ -37,38 +34,35 @@ class ProfilerModule extends AbstractModule
 
     public function register(Container $container): void {}
 
-    /**
-     * @throws ContainerException
-     */
-    protected function resolveDependencies(): void
+    public function init(Container $container): object
     {
+        $profiler = ProfilerManager::getInstance();
+
         if (php_sapi_name() === 'cli') {
-            return;
+            return $profiler;
         }
 
-        $env = $this->get(ConfigManager::class)->from('app')->get('environment') ?? 'prod';
+        $env = $container->get('profiler.configModule')->from('app')->get('environment') ?? 'prod';
         if ($env !== 'dev') {
-            return;
+            return $profiler;
         }
 
         if (!defined('NEO_PROFILER_ENABLED')) {
             define('NEO_PROFILER_ENABLED', true);
         }
 
-        $profiler = ProfilerManager::getInstance();
-        $dispatcher = $this->get(EventManager::class);
+        $dispatcher = $container->get('profiler.eventModule');
 
-        $this->registerCollectors($profiler);
+        $this->registerCollectors($container, $profiler);
 
         $toolbar = new Toolbar($profiler);
         $listener = new ProfilerResponseListener($toolbar);
         $dispatcher->addListenerInstance(ResponseEvent::class, $listener, 'onResponse');
+
+        return $profiler;
     }
 
-    /**
-     * @throws ContainerException
-     */
-    private function registerCollectors(ProfilerManager $profiler): void
+    private function registerCollectors(Container $container, ProfilerManager $profiler): void
     {
         $coreDir = dirname(__DIR__);
 
@@ -98,10 +92,10 @@ class ProfilerModule extends AbstractModule
             }
 
             /** @var CollectorInterface $collector */
-            $collector = $this->get($class);
+            $collector = $container->get($class);
 
             if ($collector instanceof CollectorAwareInterface) {
-                $collector->boot($this->get(Container::class));
+                $collector->boot($container);
             }
 
             $profiler->addCollector($collector);
