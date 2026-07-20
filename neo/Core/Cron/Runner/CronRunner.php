@@ -7,7 +7,6 @@ use DateTimeZone;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\Cron\Exception\CronException;
 use Neo\Core\DI\Container;
-use Neo\Core\Utils\Logger\LoggerManager;
 use Throwable;
 
 class CronRunner
@@ -129,7 +128,7 @@ class CronRunner
     private function log(string $level, string $message): void
     {
         try {
-            $this->container->get(LoggerManager::class)->$level($message, [], 'Cron');
+            $this->container->get('cron.loggerModule')->$level($message, [], 'Cron');
         } catch (\Throwable) {}
 
         match ($level) {
