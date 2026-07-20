@@ -7,7 +7,6 @@ use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\ORM;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Utils\Config\ConfigManager;
 use PDO;
 use PDOException;
 use Psr\Container\ContainerExceptionInterface;
@@ -39,13 +38,13 @@ class DatabaseConnection
             return;
         }
 
-        $dbEnabled = $container->get(ConfigManager::class)->from('database')->get('enabled');
+        $dbEnabled = $container->get('database.configModule')->from('database')->get('enabled');
 
         if ($dbEnabled !== true) {
             return;
         }
 
-        $defaultName = $container->get(ConfigManager::class)->from('database')->get('use');
+        $defaultName = $container->get('database.configModule')->from('database')->get('use');
         self::$defaultName = $defaultName;
         self::connectTo($defaultName);
     }
@@ -68,7 +67,7 @@ class DatabaseConnection
             );
         }
 
-        $config = self::$sharedContainer->get(ConfigManager::class)->from('database')->get("connections.{$name}");
+        $config = self::$sharedContainer->get('database.configModule')->from('database')->get("connections.{$name}");
 
         if (!is_array($config)) {
             throw new DatabaseException(

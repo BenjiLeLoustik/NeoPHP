@@ -7,12 +7,12 @@ use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\ORM\EntityManager;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Translation\TranslationModule;
 use Neo\Core\Utils\Config\ConfigModule;
 use Neo\Core\View\ViewModule;
 
-class DatabaseModule extends AbstractModule
+class DatabaseModule implements ModuleInterface
 {
     /**
      * @return array<int, class-string>
@@ -36,8 +36,8 @@ class DatabaseModule extends AbstractModule
     /**
      * @throws ContainerException
      */
-    protected function resolveDependencies(): void
+    public function init(Container $container): object
     {
-        $this->get(DatabaseConnection::class);
+        return $container->get(DatabaseConnection::class);
     }
 }

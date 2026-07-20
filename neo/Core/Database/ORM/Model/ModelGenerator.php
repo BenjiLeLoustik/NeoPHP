@@ -6,7 +6,6 @@ namespace Neo\Core\Database\ORM\Model;
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
-use Neo\Core\Utils\Config\ConfigManager;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -29,7 +28,7 @@ class ModelGenerator
         $this->modelDir = $this->container->get('modelPath');
 
         $connectionName = DatabaseConnection::getDefaultName();
-        $this->prefix = $container->get(ConfigManager::class)->from('database')->get("connections.{$connectionName}.prefix") ?? '';
+        $this->prefix = $container->get('database.configModule')->from('database')->get("connections.{$connectionName}.prefix") ?? '';
 
         if (!is_dir($this->modelDir) && !mkdir($this->modelDir, 0777, true) && !is_dir($this->modelDir)) {
             throw new DatabaseException(
