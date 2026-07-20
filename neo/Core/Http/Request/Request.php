@@ -5,7 +5,7 @@ namespace Neo\Core\Http\Request;
 
 
 use Neo\Core\Http\Client\Session\Session;
-use Neo\Core\Http\File\UploadedFile;
+use Neo\Core\Http\File\Model\UploadedFile;
 
 class Request
 {
