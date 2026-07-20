@@ -8,7 +8,7 @@ use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\EventManager;
 use Neo\Core\Event\EventModule;
-use Neo\Core\Http\HttpModule;
+use Neo\Core\Http\Response\ResponseModule;
 use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Profiler\Interface\CollectorAwareInterface;
 use Neo\Core\Profiler\Interface\CollectorInterface;
@@ -27,7 +27,7 @@ class ProfilerModule extends AbstractModule
     public function dependencies(): array
     {
         return [
-            HttpModule::class,
+            ResponseModule::class,
             EventModule::class,
             RouterModule::class,
             AuthModule::class,

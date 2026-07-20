@@ -19,7 +19,6 @@ class CsrfModule extends AbstractModule
     {
         return [
             ClientModule::class,
-            HttpModule::class,
         ];
     }
 

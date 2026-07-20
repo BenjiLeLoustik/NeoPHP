@@ -5,7 +5,7 @@ namespace Neo\Core\Security\Middleware;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\ClientModule;
-use Neo\Core\Http\HttpModule;
+use Neo\Core\Http\Response\ResponseModule;
 use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Routing\RouterModule;
 use Neo\Core\View\ViewModule;
@@ -18,7 +18,7 @@ class MiddlewareModule extends AbstractModule
     public function dependencies(): array
     {
         return [
-            HttpModule::class,
+            ResponseModule::class,
             ClientModule::class,
             RouterModule::class,
             ViewModule::class,
