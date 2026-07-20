@@ -15,6 +15,7 @@ use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Routing\RouterModule;
 use Neo\Core\Security\Auth\AuthModule;
 use Neo\Core\Translation\TranslationModule;
+use Neo\Core\Utils\Config\ConfigModule;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
@@ -29,6 +30,7 @@ class ProfilerModule implements ModuleInterface
             RouterModule::class,
             AuthModule::class,
             TranslationModule::class,
+            ConfigModule::class
         ];
     }
 
