@@ -15,7 +15,6 @@ use Neo\Core\Routing\Collection\RouteCollection;
 use Neo\Core\Routing\Exception\RouteNotFoundException;
 use Neo\Core\Routing\Exception\RouterException;
 use Neo\Core\Security\Middleware\MiddlewareManager;
-use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use ReflectionException;
 use ReflectionMethod;
@@ -51,7 +50,7 @@ class RouterManager
      */
     private function isDebug(): bool
     {
-        return $this->container->get(ConfigManager::class)->from('app')->get('environment') === 'dev';
+        return $this->container->get('router.configModule')->from('app')->get('environment') === 'dev';
     }
 
     /**
@@ -313,6 +312,7 @@ class RouterManager
 
     /**
      * @param array<string, string> $params
+     * @throws RouteNotFoundException
      */
     public function generateUrl(string $name, array $params = []): string
     {

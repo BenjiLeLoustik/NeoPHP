@@ -5,12 +5,10 @@ namespace Neo\Core\Routing;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Module\Abstract\AbstractModule;
-use Neo\Core\Routing\Extension\RouterViewExtension;
-use Neo\Core\Security\Middleware\MiddlewareModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\View\ViewModule;
 
-class RouterModule extends AbstractModule
+class RouterModule implements ModuleInterface
 {
     public function dependencies(): array
     {
@@ -27,8 +25,8 @@ class RouterModule extends AbstractModule
     /**
      * @throws ContainerException
      */
-    protected function resolveDependencies(): void
+    public function init(Container $container): object
     {
-        $this->get(RouterManager::class);
+        return $container->get(RouterManager::class);
     }
 }
