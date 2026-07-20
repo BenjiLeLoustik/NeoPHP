@@ -89,7 +89,7 @@ final class ProjectCreateCommand extends AbstractCommand
             'App/Services/',
             'Templates/',
             'Assets/',
-            'ConfigManager/',
+            'Config/',
             'Database/Migrations/',
             'Database/Model/',
             'Database/Repository/',
@@ -113,7 +113,7 @@ final class ProjectCreateCommand extends AbstractCommand
                 new ApiConfigTemplate(),
                 new AuthConfigTemplate(),
             ],
-            configPath: $path . '/ConfigManager/',
+            configPath: $path . '/Config/',
             projectName: $name,
             context: ['host' => $host, 'port' => $port],
             askOverwrite: false,
@@ -280,9 +280,9 @@ TWIG;
     {
         $content = <<<GITIGNORE
 # Sensitive config
-/ConfigManager/database.config.php
-/ConfigManager/api.config.php
-/ConfigManager/auth.config.php
+/Config/database.config.php
+/Config/api.config.php
+/Config/auth.config.php
 
 # Storage
 /Storage/
@@ -492,7 +492,7 @@ JS;
         $used = [];
 
         foreach (glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR) as $dir) {
-            $configPath = $dir . '/ConfigManager/app.config.php';
+            $configPath = $dir . '/Config/app.config.php';
 
             if (!file_exists($configPath)) {
                 continue;
