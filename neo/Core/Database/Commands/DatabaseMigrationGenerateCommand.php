@@ -13,7 +13,7 @@ use Neo\Core\Console\Output\Output;
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Access\Introspector\DatabaseIntrospector;
 use Neo\Core\Database\DatabaseManager;
-use Neo\Core\Database\Migration\MigrationGenerator;
+use Neo\Core\Database\Migration\Generator\MigrationGenerator;
 use Neo\Core\Database\Migration\MigrationSchemaSnapshot;
 use Neo\Core\Database\Migration\SchemaDiffer;
 use Neo\Core\DI\Container;

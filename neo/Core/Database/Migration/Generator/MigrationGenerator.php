@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database\Migration;
+namespace Neo\Core\Database\Migration\Generator;
 
 use Neo\Core\Database\Access\Introspector\DatabaseIntrospector;
 use Neo\Core\Database\Exception\DatabaseException;
