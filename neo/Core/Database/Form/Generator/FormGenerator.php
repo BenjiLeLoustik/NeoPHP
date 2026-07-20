@@ -1,11 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database\Form;
+namespace Neo\Core\Database\Form\Generator;
 
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
-use Neo\Core\Error\Exception\FrameworkException;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
