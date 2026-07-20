@@ -4,16 +4,13 @@ declare(strict_types=1);
 namespace Neo\Core\Http\File;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Module\Abstract\AbstractModule;
-use Neo\Core\Utils\Config\ConfigModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 
-class UploaderModule extends AbstractModule
+class UploaderModule implements ModuleInterface
 {
     public function dependencies(): array
     {
-        return [
-            ConfigModule::class,
-        ];
+        return [];
     }
 
     public function register(Container $container): void
@@ -21,8 +18,8 @@ class UploaderModule extends AbstractModule
         $container->set(UploaderManager::class, fn(Container $c) => new UploaderManager($c));
     }
 
-    protected function resolveDependencies(): void
+    public function init(Container $container): object
     {
-        $this->get(UploaderManager::class);
+        return $container->get(UploaderManager::class);
     }
 }
