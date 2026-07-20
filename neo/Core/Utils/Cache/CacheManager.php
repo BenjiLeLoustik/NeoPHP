@@ -10,7 +10,6 @@ use Neo\Core\Utils\Cache\Driver\FileDriver;
 use Neo\Core\Utils\Cache\Driver\Interface\CacheDriverInterface;
 use Neo\Core\Utils\Cache\Driver\RedisDriver;
 use Neo\Core\Utils\Cache\Exception\CacheException;
-use Neo\Core\Utils\Config\ConfigManager;
 
 class CacheManager
 {
@@ -22,7 +21,7 @@ class CacheManager
      */
     public function __construct(Container $container)
     {
-        $config = $container->get(ConfigManager::class)->from('cache')->all();
+        $config = $container->get('cache.configModule')->from('cache')->all();
         $driverName = $config['driver'] ?? 'files';
         $ttl = (int) ($config['ttl'] ?? 3600);
         $drivers = $config['drivers'] ?? [];

@@ -5,10 +5,10 @@ namespace Neo\Core\Utils\Cache;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Utils\Config\ConfigModule;
 
-class CacheModule extends AbstractModule
+class CacheModule implements ModuleInterface
 {
     public function dependencies(): array
     {
@@ -25,8 +25,8 @@ class CacheModule extends AbstractModule
     /**
      * @throws ContainerException
      */
-    protected function resolveDependencies(): void
+    public function init(Container $container): object
     {
-        $this->get(CacheManager::class);
+        return $container->get(CacheManager::class);
     }
 }
