@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Http\File;
+namespace Neo\Core\Http\File\Model;
 
 use Neo\Core\Http\File\Exception\UploadException;
 
