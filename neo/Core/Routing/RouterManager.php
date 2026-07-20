@@ -7,7 +7,7 @@ use JsonException;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Request\Request;
-use Neo\Core\Http\Response\Response;
+use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Routing\Attribute\MainRoute as MainRouteAttribute;
 use Neo\Core\Routing\Attribute\Route as RouteAttribute;

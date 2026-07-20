@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Event\Event;
 
 use Neo\Core\Event\Abstract\AbstractEvent;
-use Neo\Core\Http\Response\Response;
+use Neo\Core\Http\Response\Types\Response;
 
 class ResponseEvent extends AbstractEvent
 {

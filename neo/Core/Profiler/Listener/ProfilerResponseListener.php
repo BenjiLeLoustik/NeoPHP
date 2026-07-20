@@ -5,8 +5,8 @@ namespace Neo\Core\Profiler\Listener;
 
 use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
-use Neo\Core\Http\Response\JsonResponse;
-use Neo\Core\Http\Response\RedirectResponse;
+use Neo\Core\Http\Response\Types\JsonResponse;
+use Neo\Core\Http\Response\Types\RedirectResponse;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 
 class ProfilerResponseListener implements EventSubscriberInterface

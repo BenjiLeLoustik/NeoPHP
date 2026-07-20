@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Http\Response;
+namespace Neo\Core\Http\Response\Types;
 
 class RedirectResponse extends Response
 {

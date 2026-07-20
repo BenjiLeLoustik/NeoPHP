@@ -10,11 +10,11 @@ use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Http\Client\Session\Session;
-use Neo\Core\Http\Response\Response;
+use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\View\ViewManager;
 
 /**
- * @method \Neo\Core\Http\Response\Response render(string $template, array<string, mixed> $params = [])
+ * @method \Neo\Core\Http\Response\Types\Response render(string $template, array<string, mixed> $params = [])
  * @method string template(string $template, array<string, mixed> $params = [])
  */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]

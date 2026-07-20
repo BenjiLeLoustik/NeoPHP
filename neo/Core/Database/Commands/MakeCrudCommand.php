@@ -101,10 +101,7 @@ declare(strict_types=1);
 
 namespace $namespace;
 
-use Neo\Core\Controller\AbstractController;
-use Neo\Core\Routing\Attribute\MainRoute;
-use Neo\Core\Routing\Attribute\Route;
-use Neo\Core\Http\Response\Response;
+use Neo\Core\Http\Response\Types\Response;use Neo\Core\Routing\Attribute\MainRoute;
 
 #[MainRoute(path: '/$routePath', name: '$routeName')]
 final class $controllerName extends AbstractController
