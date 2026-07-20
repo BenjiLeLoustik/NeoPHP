@@ -3,10 +3,9 @@
 namespace Neo\Core\Utils\Scanner;
 
 use Neo\Core\DI\Container;
-use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 
-class ScannerModule extends AbstractModule
+class ScannerModule implements ModuleInterface
 {
     public function dependencies(): array
     {
@@ -20,11 +19,8 @@ class ScannerModule extends AbstractModule
         });
     }
 
-    /**
-     * @throws ContainerException
-     */
-    protected function resolveDependencies(): void
+    public function init(Container $container): object
     {
-        $this->get(ScannerAttributeManager::class);
+        return $this;
     }
 }
