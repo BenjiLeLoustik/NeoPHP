@@ -6,8 +6,9 @@ namespace Neo\Core\Http\File;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\File\Exception\UploaderException;
+use Neo\Core\Http\File\Model\UploadedFile;
 
-class Uploader
+class UploaderManager
 {
     private string $assetsPath;
 
