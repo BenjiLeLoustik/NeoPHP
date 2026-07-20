@@ -7,7 +7,6 @@ use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Utils\Config\ConfigManager;
 use PDO;
 use PDOException;
 
@@ -28,7 +27,7 @@ class DatabaseIntrospector
         $this->pdo = DatabaseConnection::getPdo($this->connection);
 
         $connectionName = $connection ?? DatabaseConnection::getDefaultName();
-        $this->prefix = $container->get(ConfigManager::class)->from('database')->get("connections.{$connectionName}.prefix");
+        $this->prefix = $container->get('database.configModule')->from('database')->get("connections.{$connectionName}.prefix");
     }
 
     /**
