@@ -7,7 +7,6 @@ use DateTime;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Profiler\ProfilerManager;
-use Neo\Core\Utils\Config\ConfigManager;
 use ZipArchive;
 
 class LoggerManager
@@ -41,7 +40,7 @@ class LoggerManager
     {
         $this->container = $container;
 
-        $configService = $this->container->get(ConfigManager::class);
+        $configService = $this->container->get('logger.configModule');
         $this->config = $configService->from('logger')->all();
 
         if (empty($this->config['enabled'])) {

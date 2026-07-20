@@ -5,10 +5,10 @@ namespace Neo\Core\Utils\Logger;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Utils\Config\ConfigModule;
 
-class LoggerModule extends AbstractModule
+class LoggerModule implements ModuleInterface
 {
     public function dependencies(): array
     {
@@ -25,8 +25,8 @@ class LoggerModule extends AbstractModule
     /**
      * @throws ContainerException
      */
-    protected function resolveDependencies(): void
+    public function init(Container $container): object
     {
-        $this->get(LoggerManager::class);
+        return $container->get(LoggerManager::class);
     }
 }
