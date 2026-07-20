@@ -4,9 +4,9 @@ namespace Neo\Core\Utils\Config;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 
-class ConfigModule extends AbstractModule
+class ConfigModule implements ModuleInterface
 {
     public function dependencies(): array
     {
@@ -21,8 +21,8 @@ class ConfigModule extends AbstractModule
     /**
      * @throws ContainerException
      */
-    protected function resolveDependencies(): void
+    public function init(Container $container): object
     {
-        $this->get(ConfigManager::class);
+        return $container->get(ConfigManager::class);
     }
 }
