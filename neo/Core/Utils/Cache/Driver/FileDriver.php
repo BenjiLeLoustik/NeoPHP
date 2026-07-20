@@ -24,7 +24,7 @@ class FileDriver implements CacheDriverInterface
             !is_dir($this->directory)
         ) {
             throw new CacheException(
-                title: 'CacheManager Directory Error',
+                title: 'Cache Directory Error',
                 message: sprintf("Unable to create cache directory '%s'.", $this->directory),
                 code: 500
             );
@@ -46,7 +46,7 @@ class FileDriver implements CacheDriverInterface
 
         if ($raw === false) {
             throw new CacheException(
-                title: 'CacheManager Read Error',
+                title: 'Cache Read Error',
                 message: sprintf("Unable to read cache for key '%s'.", $key),
                 code: 500
             );
@@ -80,7 +80,7 @@ class FileDriver implements CacheDriverInterface
 
         if (file_put_contents($this->path($key), serialize($data), LOCK_EX) === false) {
             throw new CacheException(
-                title: 'CacheManager Write Error',
+                title: 'Cache Write Error',
                 message: sprintf("Unable to write cache for key '%s'.", $key),
                 code: 500
             );
@@ -96,7 +96,7 @@ class FileDriver implements CacheDriverInterface
 
         if (file_exists($file) && !unlink($file)) {
             throw new CacheException(
-                title: 'CacheManager Delete Error',
+                title: 'Cache Delete Error',
                 message: sprintf("Unable to delete cache for key '%s'.", $key),
                 code: 500
             );
@@ -113,7 +113,7 @@ class FileDriver implements CacheDriverInterface
         foreach ($files as $file) {
             if (is_file($file) && !unlink($file)) {
                 throw new CacheException(
-                    title: 'CacheManager Clear Error',
+                    title: 'Cache Clear Error',
                     message: sprintf("Unable to delete cache file '%s'.", $file),
                     code: 500
                 );
