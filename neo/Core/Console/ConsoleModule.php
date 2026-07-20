@@ -4,9 +4,10 @@ declare(strict_types=1);
 namespace Neo\Core\Console;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Module\Interface\ModuleInterface;
 
-class ConsoleModule extends AbstractModule
+class ConsoleModule implements ModuleInterface
 {
     /** @return list<class-string> */
     public function dependencies(): array
@@ -17,5 +18,13 @@ class ConsoleModule extends AbstractModule
     public function register(Container $container): void
     {
         $container->set(ConsoleManager::class, fn(Container $c) => new ConsoleManager($c));
+    }
+
+    /**
+     * @throws ContainerException
+     */
+    public function init(Container $container): object
+    {
+        return $container->get(ConsoleManager::class);
     }
 }
