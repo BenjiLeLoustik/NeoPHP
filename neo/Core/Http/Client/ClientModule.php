@@ -4,14 +4,15 @@ declare(strict_types=1);
 namespace Neo\Core\Http\Client;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Http\Client\Flash\Flash;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Request\Request;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Utils\Config\ConfigModule;
 
-class ClientModule extends AbstractModule
+class ClientModule implements ModuleInterface
 {
     /**
      * @return array<class-string>
@@ -31,17 +32,21 @@ class ClientModule extends AbstractModule
         $container->set(ClientManager::class, fn(Container $c) => new ClientManager($c));
     }
 
-    protected function resolveDependencies(): void
+    /**
+     * @throws ContainerException
+     */
+    public function init(Container $container): object
     {
-        $this->get(Session::class);
-        $this->get(Cookie::class);
-        $this->get(ClientManager::class);
+        $container->get(Session::class);
+        $container->get(Cookie::class);
 
         if (php_sapi_name() !== 'cli') {
-            $this->get(Flash::class);
+            $container->get(Flash::class);
 
-            $request = $this->get(Request::class);
-            $request->enablePreviousUrlTracking($this->get(Session::class));
+            $request = $container->get(Request::class);
+            $request->enablePreviousUrlTracking($container->get(Session::class));
         }
+
+        return $container->get(ClientManager::class);
     }
 }
