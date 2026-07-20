@@ -7,7 +7,6 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\ClientModule;
 use Neo\Core\Module\Abstract\AbstractModule;
-use Neo\Core\Translation\Extension\TranslationViewExtension;
 use Neo\Core\Translation\Registry\TranslationRegistry;
 use Neo\Core\Utils\Config\ConfigModule;
 use Neo\Core\View\ViewModule;
@@ -26,8 +25,6 @@ class TranslationModule extends AbstractModule
     public function register(Container $container): void
     {
         $container->set(TranslationManager::class, fn(Container $c) => new TranslationManager($c));
-        $container->set(TranslationViewExtension::class, fn(Container $c) => new TranslationViewExtension($c->get(TranslationManager::class)));
-        $container->tag(TranslationViewExtension::class, 'twig.extension');
     }
 
     /**

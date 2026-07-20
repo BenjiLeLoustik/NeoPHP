@@ -4,9 +4,12 @@ declare(strict_types=1);
 namespace Neo\Core\Database\Form\Extension;
 
 use Neo\Core\Database\Form\Form;
+use Neo\Core\Extension\Attribute\Extension;
+use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Translation\TranslationManager;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
+#[Extension(type: ExtensionTypeEnum::VIEW)]
 final class FormViewExtension implements TwigExtensionInterface
 {
     public function __construct(
