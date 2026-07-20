@@ -18,7 +18,7 @@ final class ApiConfigTemplate implements ConfigTemplateInterface
 <?php
 declare(strict_types=1);
 
-// ./src/$projectName/ConfigManager/api.config.php
+// ./src/$projectName/Config/api.config.php
 
 return [
     'mailer' => [

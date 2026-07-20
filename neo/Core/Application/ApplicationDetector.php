@@ -94,7 +94,7 @@ class ApplicationDetector
         $rootDir = realpath(__DIR__ . '/../../../');
         $cacheFile = $rootDir . self::CACHE_FILE;
 
-        $configFiles = glob($rootDir . '/src/*/ConfigManager/app.config.php');
+        $configFiles = glob($rootDir . '/src/*/Config/app.config.php');
         $signature = md5(implode('|', $configFiles) . '|' . implode('|', array_map('filemtime', $configFiles)));
 
         if (file_exists($cacheFile)) {

@@ -18,7 +18,7 @@ final class LoggerConfigTemplate implements ConfigTemplateInterface
 <?php
 declare(strict_types=1);
 
-// ./src/$projectName/ConfigManager/logger.config.php
+// ./src/$projectName/Config/logger.config.php
 
 return [
     'enabled' => false,
