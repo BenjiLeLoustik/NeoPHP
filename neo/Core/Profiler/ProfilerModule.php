@@ -15,7 +15,7 @@ use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Profiler\Listener\ProfilerResponseListener;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 use Neo\Core\Routing\RouterModule;
-use Neo\Core\Security\SecurityModule;
+use Neo\Core\Security\Auth\AuthModule;
 use Neo\Core\Translation\TranslationModule;
 use Neo\Core\Utils\Config\ConfigManager;
 use RecursiveDirectoryIterator;
@@ -30,7 +30,7 @@ class ProfilerModule extends AbstractModule
             HttpModule::class,
             EventModule::class,
             RouterModule::class,
-            SecurityModule::class,
+            AuthModule::class,
             TranslationModule::class,
         ];
     }
