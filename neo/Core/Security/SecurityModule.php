@@ -18,6 +18,9 @@ use Neo\Core\View\ViewModule;
 
 class SecurityModule extends AbstractModule
 {
+    /**
+     * @return array<class-string>
+     */
     public function dependencies(): array
     {
         return [
