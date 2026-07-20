@@ -50,7 +50,7 @@ final class ExtensionManager
     private function discover(ExtensionTypeEnum $type): array
     {
         $results = [];
-        $basePath = realpath(__DIR__ . '/../');
+        $basePath = realpath(__DIR__ . '/../../../');
 
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($basePath)
