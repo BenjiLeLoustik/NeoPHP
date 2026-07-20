@@ -13,5 +13,5 @@ interface ModuleInterface
 
     public function register(Container $container): void;
 
-    public function boot(Container $container): void;
+    public function init(Container $container): object;
 }
