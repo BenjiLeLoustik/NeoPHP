@@ -7,12 +7,8 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Event\ExceptionEvent;
-use Neo\Core\Event\EventManager;
 use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Profiler\Toolbar\Toolbar;
-use Neo\Core\Utils\Config\ConfigManager;
-use Neo\Core\Utils\Logger\LoggerManager;
-use Neo\Core\View\ViewManager;
 
 class ErrorManager
 {
@@ -36,7 +32,7 @@ class ErrorManager
         }
 
         try {
-            $env = $this->container->get(ConfigManager::class)->from('app')->get('environment');
+            $env = $this->container->get('error.configModule')->from('app')->get('environment');
             $this->resolvedEnv = $env ?? 'prod';
         } catch (\Throwable) {
             $this->resolvedEnv = 'prod';
@@ -88,7 +84,7 @@ class ErrorManager
         $env = $this->getEnv();
 
         try {
-            $logger = $this->container->get(LoggerManager::class);
+            $logger = $this->container->get('error.loggerModule');
             $logger->channel('framework')->error(
                 get_class($e) . ': ' . $e->getMessage(),
                 ['trace' => $e->getTraceAsString()],
@@ -109,7 +105,7 @@ class ErrorManager
         }
 
         try {
-            $dispatcher = $this->container->get(EventManager::class);
+            $dispatcher = $this->container->get('error.eventModule');
             $exceptionEvent = new ExceptionEvent(
                 $e instanceof FrameworkException ? $e : FrameworkException::fromThrowable($e)
             );
@@ -125,9 +121,9 @@ class ErrorManager
             http_response_code($code);
         }
 
-        if (file_exists($viewFile) && $this->container->has(ViewManager::class)) {
+        if (file_exists($viewFile) && $this->container->has('error.viewModule')) {
             try {
-                $view = $this->container->get(ViewManager::class);
+                $view = $this->container->get('error.viewModule');
                 $html = $view->render("errors/{$code}.html.twig", [
                     'title'   => $exception->getTitle(),
                     'message' => $env === 'dev'

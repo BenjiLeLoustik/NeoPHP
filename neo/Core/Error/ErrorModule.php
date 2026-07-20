@@ -4,11 +4,13 @@ declare(strict_types=1);
 namespace Neo\Core\Error;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Module\Abstract\AbstractModule;
-use Neo\Core\Utils\Config\ConfigManager;
+use Neo\Core\Event\EventModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Utils\Config\ConfigModule;
+use Neo\Core\Utils\Logger\LoggerModule;
+use Neo\Core\View\ViewModule;
 
-class ErrorModule extends AbstractModule
+class ErrorModule implements ModuleInterface
 {
     /**
      * @return list<class-string>
@@ -17,6 +19,9 @@ class ErrorModule extends AbstractModule
     {
         return [
             ConfigModule::class,
+            EventModule::class,
+            LoggerModule::class,
+            ViewModule::class,
         ];
     }
 
@@ -25,19 +30,21 @@ class ErrorModule extends AbstractModule
         $container->set(ErrorManager::class, fn(Container $c) => new ErrorManager($c));
     }
 
-    protected function resolveDependencies(): void
+    public function init(Container $container): object
     {
-        $errorHandler = $this->get(ErrorManager::class);
+        $errorHandler = $container->get(ErrorManager::class);
 
         if (empty($GLOBALS['_NEO_TEST_PROJECT'])) {
             $errorHandler->register();
         }
 
         try {
-            $env = $this->get(ConfigManager::class)
+            $env = $container->get('error.configModule')
                 ->from('app')
                 ->get('environment') ?? 'prod';
             $errorHandler->setEnv($env);
         } catch (\Throwable) {}
+
+        return $errorHandler;
     }
 }
