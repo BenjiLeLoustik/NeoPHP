@@ -42,7 +42,7 @@ final class GenerateDefaultConfigCommand extends AbstractCommand
             return ExitCode::FAILURE;
         }
 
-        $configPath = "$projectPath/ConfigManager/";
+        $configPath = "$projectPath/Config/";
         Fs::ensureDir($configPath);
 
         Output::title("Generating configs for: $project");
