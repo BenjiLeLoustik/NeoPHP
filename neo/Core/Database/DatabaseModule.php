@@ -5,7 +5,7 @@ namespace Neo\Core\Database;
 
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Access\Extension\DatabaseViewExtension;
-use Neo\Core\Database\Form\FormViewExtension;
+use Neo\Core\Database\Form\Extension\FormViewExtension;
 use Neo\Core\Database\ORM\EntityManager;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
