@@ -518,12 +518,9 @@ declare(strict_types=1);
 namespace Neo\Src\\$name;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Module\Abstract\AbstractModule;
-use Neo\Core\Utils\Config\ConfigModule;
-use Neo\Core\View\ViewModule;
-use Neo\Core\Utils\Cache\CacheModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 
-final class {$name}Module extends AbstractModule
+final class {$name}Module implements ModuleInterface
 {
     public function dependencies(): array
     {
@@ -535,6 +532,11 @@ final class {$name}Module extends AbstractModule
     public function register(Container \$container): void
     {
         // Registration of project-specific services ($name)
+    }
+
+    public function init(Container \$container): object
+    {
+        return \$this;
     }
 }
 PHP;
