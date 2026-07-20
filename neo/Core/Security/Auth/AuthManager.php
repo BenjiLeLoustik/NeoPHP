@@ -6,14 +6,12 @@ namespace Neo\Core\Security\Auth;
 use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Exception\JwtException;
 use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;
 use Neo\Core\Security\Auth\Guard\SessionGuard;
 use Neo\Core\Security\Auth\Guard\TokenGuard;
-use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Config\Exception\ConfigException;
 
 class AuthManager
@@ -35,7 +33,7 @@ class AuthManager
         $this->container = $container;
 
         try {
-            $this->config = $container->get(ConfigManager::class)->from('auth')->all();
+            $this->config = $container->get('auth.configModule')->from('auth')->all();
         } catch (ConfigException) {
             $this->config = [];
         }
@@ -144,7 +142,7 @@ class AuthManager
                 $role
             ),
             default => new SessionGuard(
-                $this->container->get(Session::class),
+                $this->container->get('auth.clientModule')->session(),
                 $this->container->get(PasswordManager::class),
                 $this->config['model'],
                 $this->config['identifier'] ?? 'email',

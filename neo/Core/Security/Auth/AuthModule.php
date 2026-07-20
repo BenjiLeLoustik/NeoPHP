@@ -5,11 +5,10 @@ namespace Neo\Core\Security\Auth;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\ClientModule;
-use Neo\Core\Http\HttpModule;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Utils\Config\ConfigModule;
 
-class AuthModule extends AbstractModule
+class AuthModule implements ModuleInterface
 {
     /**
      * @return array<class-string>
@@ -31,9 +30,10 @@ class AuthModule extends AbstractModule
     /**
      * @throws ContainerException
      */
-    public function resolveDependencies(): void
+    public function init(Container $container): object
     {
-        $this->get(PasswordManager::class);
-        $this->get(AuthManager::class);
+        $container->get(PasswordManager::class);
+
+        return $container->get(AuthManager::class);
     }
 }

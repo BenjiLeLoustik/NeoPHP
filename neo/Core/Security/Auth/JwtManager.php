@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Neo\Core\Security\Auth;
 
-use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Security\Auth\Exception\JwtException;
 
 final class JwtManager
