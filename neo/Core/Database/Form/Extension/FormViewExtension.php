@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database\Form;
+namespace Neo\Core\Database\Form\Extension;
 
+use Neo\Core\Database\Form\Form;
 use Neo\Core\Translation\TranslationManager;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 

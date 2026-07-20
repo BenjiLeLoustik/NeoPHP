@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database\Form;
+namespace Neo\Core\Database\Form\Extension;
 
+use Neo\Core\Database\Form\Form;
 use Neo\Core\Database\Form\Type\CollectionType;
 use Neo\Core\Database\Form\Type\SubmitType;
 
