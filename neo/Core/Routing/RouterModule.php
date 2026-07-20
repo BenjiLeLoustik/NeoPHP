@@ -16,7 +16,6 @@ class RouterModule extends AbstractModule
     {
         return [
             ViewModule::class,
-            MiddlewareModule::class,
         ];
     }
 
