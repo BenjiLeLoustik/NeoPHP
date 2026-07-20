@@ -105,8 +105,8 @@ final class MakeControllerCommand extends AbstractCommand
 
         $returnType = $isApi ? 'JsonResponse' : 'Response';
         $useStatement = $isApi
-            ? 'use Neo\Core\Http\Response\JsonResponse;'
-            : 'use Neo\Core\Http\Response\Response;';
+            ? 'use Neo\Core\Http\Response\Types\JsonResponse;'
+            : 'use Neo\Core\Http\Response\Types\Response;';
 
         $content = <<<PHP
 <?php
