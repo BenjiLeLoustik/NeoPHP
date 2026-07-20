@@ -8,8 +8,6 @@ use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\View\Exception\ViewException;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 use Twig\Environment;
-use Twig\Error\RuntimeError;
-use Twig\Error\SyntaxError;
 use Twig\Extension\CoreExtension;
 use Twig\Extension\DebugExtension;
 use Twig\Extra\Intl\IntlExtension;
@@ -105,7 +103,6 @@ class ViewManager
             return $this->twig->render($template, $params);
         } catch (\Twig\Error\LoaderError $e) {
             return null;
-        } catch (RuntimeError|SyntaxError $e) {
         }
     }
 
