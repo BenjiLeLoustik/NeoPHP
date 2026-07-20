@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Utils\Notification;
+namespace Neo\Core\Utils\Notification\Collector;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Utils\Notification\Enum\NotificationEnum;

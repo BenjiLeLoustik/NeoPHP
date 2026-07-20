@@ -6,13 +6,11 @@ namespace Neo\Core\Utils\Notification;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Profiler\ProfilerManager;
-use Neo\Core\Utils\Config\ConfigManager;
 use Neo\Core\Utils\Config\Exception\ConfigException;
 use Neo\Core\Utils\Notification\Channel\ChannelInterface;
 use Neo\Core\Utils\Notification\Enum\NotificationEnum;
 use Neo\Core\Utils\Notification\Exception\ChannelException;
 use Neo\Core\Utils\Notification\Exception\NotificationException;
-use Neo\Core\View\ViewManager;
 
 /**
  * Notification builder.
@@ -22,7 +20,7 @@ use Neo\Core\View\ViewManager;
  *        ->channel(EmailChannel::class)
  *        ->setParams([...])
  *        ->setTemplate('emails/welcome.html.twig', ['user' => $user])
- *        ->doSend();  // NotificationEnum
+ *        ->doSend(); // NotificationEnum
  */
 class NotificationManager
 {
@@ -144,8 +142,7 @@ class NotificationManager
      */
     private function resolveApiConfig(string $keyPath, string $channelClass): array
     {
-        /** @var ConfigManager $config */
-        $config = $this->container->get(ConfigManager::class);
+        $config = $this->container->get('notification.configModule');
 
         try {
             $apiConfig = $config->from('api')->get($keyPath);
@@ -189,8 +186,7 @@ class NotificationManager
             return '';
         }
 
-        /** @var ViewManager $view */
-        $view = $this->container->get(ViewManager::class);
+        $view = $this->container->get('notification.viewModule');
 
         try {
             return $view->render($this->template, $this->templateVars);
