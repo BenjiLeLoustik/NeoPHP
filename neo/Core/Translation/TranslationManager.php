@@ -4,7 +4,6 @@ namespace Neo\Core\Translation;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Translation\Domain\TranslationDomain;
 use Neo\Core\Translation\Exception\TranslationException;
 use Neo\Core\Translation\Interface\TranslationCollectorInterface;
@@ -12,7 +11,6 @@ use Neo\Core\Translation\Interface\TranslatorInterface;
 use Neo\Core\Translation\Loader\TranslationLoader;
 use Neo\Core\Translation\Locale\LocaleManager;
 use Neo\Core\Translation\Writer\TranslationWriter;
-use Neo\Core\Utils\Config\ConfigManager;
 
 class TranslationManager implements TranslatorInterface
 {
@@ -31,7 +29,7 @@ class TranslationManager implements TranslatorInterface
     {
         $this->container = $container;
 
-        $config = $container->get(ConfigManager::class)->from('app');
+        $config = $container->get('translation.configModule')->from('app');
 
         $this->enabled = (bool) ($config->get('translation.enabled') ?? false);
         $this->autoWrite = $config->get('environment') === 'dev';
@@ -84,12 +82,12 @@ class TranslationManager implements TranslatorInterface
     public function setLocale(string $locale, int $lifetime = 31536000): void
     {
         $translationConfig = $this->container
-            ->get(ConfigManager::class)
+            ->get('translation.configModule')
             ->from('app')
             ->get('translation');
 
         $availableLocales = $translationConfig['available_locales'] ?? [];
-        $cookie = $this->container->get(Cookie::class);
+        $cookie = $this->container->get('translation.clientModule')->cookie();
 
         if (!empty($availableLocales) && !isset($availableLocales[$locale])) {
             throw new TranslationException(
@@ -119,7 +117,7 @@ class TranslationManager implements TranslatorInterface
     public function getLocales(): array
     {
         return $this->container
-            ->get(ConfigManager::class)
+            ->get('translation.configModule')
             ->from('app')
             ->get('translation.available_locales') ?? [];
     }
