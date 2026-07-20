@@ -18,7 +18,6 @@ class AuthModule extends AbstractModule
     {
         return [
             ConfigModule::class,
-            HttpModule::class,
             ClientModule::class
         ];
     }

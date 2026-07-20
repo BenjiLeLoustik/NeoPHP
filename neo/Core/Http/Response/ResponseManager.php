@@ -3,22 +3,35 @@ declare(strict_types=1);
 
 namespace Neo\Core\Http\Response;
 
+use JsonException;
 use Neo\Core\Http\Response\Types\JsonResponse;
 use Neo\Core\Http\Response\Types\RedirectResponse;
 use Neo\Core\Http\Response\Types\Response;
 
 final class ResponseManager
 {
+    /**
+     * @param array<string, mixed>|object $data
+     * @throws JsonException
+     */
     public function json(array|object $data, int $status = 200): JsonResponse
     {
         return new JsonResponse($data, $status);
     }
 
+    /**
+     * @param array<string, mixed>|object $data
+     * @throws JsonException
+     */
     public function jsonSuccess(array|object $data = [], int $status = 200): JsonResponse
     {
         return new JsonResponse(['success' => true, 'data' => $data], $status);
     }
 
+    /**
+     * @param array<string, mixed> $extra
+     * @throws JsonException
+     */
     public function jsonError(string $message, int $status = 400, array $extra = []): JsonResponse
     {
         return new JsonResponse(array_merge(['success' => false, 'error' => $message], $extra), $status);
