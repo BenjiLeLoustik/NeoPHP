@@ -3,11 +3,12 @@
 namespace Neo\Core\Asset;
 
 use Neo\Core\DI\Container;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Utils\Config\ConfigModule;
 use Neo\Core\View\ViewModule;
 
-class AssetModule extends AbstractModule
+class AssetModule implements ModuleInterface
 {
     /**
      * @return list<class-string>
@@ -25,8 +26,11 @@ class AssetModule extends AbstractModule
         $container->set(AssetManager::class, fn (Container $c) => new AssetManager($c));
     }
 
-    protected function resolveDependencies(): void
+    /**
+     * @throws ContainerException
+     */
+    public function init(Container $container): object
     {
-        $this->get(AssetManager::class);
+        return $container->get(AssetManager::class);
     }
 }
