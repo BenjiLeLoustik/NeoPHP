@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace Neo\Core\Http\Response;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Response\Types\Response;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 
-class ResponseModule extends AbstractModule
+class ResponseModule implements ModuleInterface
 {
     public function dependencies(): array
     {
@@ -20,9 +21,13 @@ class ResponseModule extends AbstractModule
         $container->set(ResponseManager::class, fn() => new ResponseManager());
     }
 
-    protected function resolveDependencies(): void
+    /**
+     * @throws ContainerException
+     */
+    public function init(Container $container): object
     {
-        $this->get(Response::class);
-        $this->get(ResponseManager::class);
+        $container->get(Response::class);
+
+        return $container->get(ResponseManager::class);
     }
 }
