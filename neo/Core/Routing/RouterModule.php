@@ -23,12 +23,6 @@ class RouterModule extends AbstractModule
     public function register(Container $container): void
     {
         $container->set(RouterManager::class, fn(Container $c) => new RouterManager($c));
-
-        $container->set(RouterViewExtension::class, fn(Container $c) =>
-        new RouterViewExtension($c->get(RouterManager::class))
-        );
-
-        $container->tag(RouterViewExtension::class, 'twig.extension');
     }
 
     /**
