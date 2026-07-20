@@ -6,12 +6,10 @@ namespace Neo\Core\Security\Middleware;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
-use Neo\Core\Http\Client\Flash\Flash;
 use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Routing\Attribute\Maintenance;
 use Neo\Core\Routing\Attribute\RateLimit;
 use Neo\Core\Routing\Exception\RouteNotFoundException;
-use Neo\Core\Routing\RouterManager;
 use Neo\Core\Security\Middleware\Attribute\IsGranted;
 use Neo\Core\Security\Middleware\Attribute\Middleware as MiddlewareAttribute;
 use Neo\Core\Security\Middleware\Default\IsGrantedMiddleware;
@@ -19,7 +17,6 @@ use Neo\Core\Security\Middleware\Default\RateLimitMiddleware;
 use Neo\Core\Security\Middleware\Exception\MiddlewareException;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
-use Neo\Core\View\ViewManager;
 use ReflectionException;
 use ReflectionMethod;
 use Throwable;
@@ -63,9 +60,9 @@ class MiddlewareManager
 
         $middlewares = $this->getMiddlewares($controller, $method);
 
-        $router = $this->container->get(RouterManager::class);
+        $router = $this->container->get('middleware.routerModule');
         $response = $this->container->get(Response::class);
-        $flash = $this->container->get(Flash::class);
+        $flash = $this->container->get('middleware.clientModule')->flash();
 
         foreach ($middlewares as $meta) {
             $middlewareClass = $meta['class'];
@@ -146,13 +143,13 @@ class MiddlewareManager
      * @throws RouteNotFoundException
      */
     private function handleFailure(
-        string        $message,
-        string        $onError,
-        ?string       $redirect,
-        Response      $response,
-        Flash         $flash,
-        RouterManager $router,
-        bool          $isClassMiddleware
+        string  $message,
+        string  $onError,
+        ?string $redirect,
+        Response $response,
+        mixed   $flash,
+        mixed   $router,
+        bool    $isClassMiddleware
     ): ?Response {
         if ($redirect !== null) {
             if ($message !== '') {
@@ -390,7 +387,7 @@ class MiddlewareManager
             return null;
         }
 
-        $view = $this->container->get(ViewManager::class);
+        $view = $this->container->get('middleware.viewModule');
         $response = $this->container->get(Response::class);
 
         $rendered = $view->renderIfExists('maintenance.html.twig', [
