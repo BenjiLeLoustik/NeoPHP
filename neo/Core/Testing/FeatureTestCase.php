@@ -7,7 +7,7 @@ use Neo\App;
 use Neo\Core\DI\Container;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Request\Request;
-use Neo\Core\Http\Response\Response;
+use Neo\Core\Http\Response\Types\Response;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;

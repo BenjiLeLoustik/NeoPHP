@@ -9,15 +9,15 @@ use Neo\Core\DI\Container;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Request\Request;
-use Neo\Core\Http\Response\RedirectResponse;
+use Neo\Core\Http\Response\Types\RedirectResponse;
 use Neo\Core\Routing\RouterManager;
 
 /**
  * @method string getRoutePath(string $routeName, array<string, string> $params = [])
  * @method string getRedirectBack(?string $fallbackRoute = null, array<string, string> $routeParams = [])
- * @method \Neo\Core\Http\Response\RedirectResponse redirectToRoute(string $routeName, array<string, string> $params = [])
- * @method \Neo\Core\Http\Response\RedirectResponse redirectToPath(string $path, int $code = 302)
- * @method \Neo\Core\Http\Response\RedirectResponse redirectBack(?string $fallbackRoute = null, array<string, string> $routeParams = [], int $code = 302)
+ * @method \Neo\Core\Http\Response\Types\RedirectResponse redirectToRoute(string $routeName, array<string, string> $params = [])
+ * @method \Neo\Core\Http\Response\Types\RedirectResponse redirectToPath(string $path, int $code = 302)
+ * @method \Neo\Core\Http\Response\Types\RedirectResponse redirectBack(?string $fallbackRoute = null, array<string, string> $routeParams = [], int $code = 302)
  */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]
 class RouterControllerExtension implements ControllerExtensionInterface

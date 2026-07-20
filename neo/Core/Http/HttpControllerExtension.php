@@ -14,15 +14,15 @@ use Neo\Core\Http\Client\Flash\Flash;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\File\Uploader;
 use Neo\Core\Http\Request\Request;
-use Neo\Core\Http\Response\JsonResponse;
+use Neo\Core\Http\Response\Types\JsonResponse;
 
 /**
  * @method \Neo\Core\Http\Client\Session\Session getSession()
  * @method \Neo\Core\Http\Client\Cookie\Cookie getCookie()
  * @method \Neo\Core\Http\Client\Flash\Flash getFlash()
- * @method \Neo\Core\Http\Response\JsonResponse json(array<string, mixed>|object $data, int $status = 200)
- * @method \Neo\Core\Http\Response\JsonResponse jsonSuccess(array<string, mixed>|object $data = [], int $status = 200)
- * @method \Neo\Core\Http\Response\JsonResponse jsonError(string $message, int $status = 400, array<string, mixed> $extra = [])
+ * @method Response\Types\JsonResponse json(array<string, mixed>|object $data, int $status = 200)
+ * @method Response\Types\JsonResponse jsonSuccess(array<string, mixed>|object $data = [], int $status = 200)
+ * @method Response\Types\JsonResponse jsonError(string $message, int $status = 400, array<string, mixed> $extra = [])
  * @method string upload(string $field, string $name, array<int, string> $extensions, string $directory)
  */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]

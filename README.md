@@ -446,11 +446,7 @@ declare(strict_types=1);
 
 namespace Neo\Src\Blog\App\Controllers;
 
-use Neo\Core\Controller\AbstractController;
-use Neo\Core\Http\Response\Response;
-use Neo\Core\Routing\Attribute\MainRoute;
-use Neo\Core\Routing\Attribute\Route;
-use Neo\Src\Blog\Database\Repository\PostRepository;
+use Neo\Core\Controller\AbstractController;use Neo\Core\Http\Response\Types\Response;use Neo\Core\Routing\Attribute\MainRoute;use Neo\Core\Routing\Attribute\Route;use Neo\Src\Blog\Database\Repository\PostRepository;
 
 #[MainRoute(path: '/posts', name: 'posts')]
 final class PostController extends AbstractController
@@ -1993,11 +1989,7 @@ declare(strict_types=1);
 
 namespace Neo\Src\Blog\App\Controllers;
 
-use Neo\Core\Controller\AbstractController;
-use Neo\Core\Http\Response\Response;
-use Neo\Core\Routing\Attribute\MainRoute;
-use Neo\Core\Routing\Attribute\Route;
-use Neo\Core\Testing\Attribute\Test;
+use Neo\Core\Controller\AbstractController;use Neo\Core\Http\Response\Types\Response;use Neo\Core\Routing\Attribute\MainRoute;use Neo\Core\Testing\Attribute\Test;
 
 #[MainRoute(path: '/login', name: 'login')]
 final class AuthController extends AbstractController

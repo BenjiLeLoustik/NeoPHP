@@ -14,7 +14,7 @@ use Neo\Core\Event\Event\RequestEvent;
 use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\EventManager;
 use Neo\Core\Http\Request\Request;
-use Neo\Core\Http\Response\Response;
+use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Module\Exception\ModuleException;
 use Neo\Core\Module\ModuleManager;
 use Neo\Core\Routing\RouterManager;

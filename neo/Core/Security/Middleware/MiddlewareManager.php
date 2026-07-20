@@ -7,7 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Client\Flash\Flash;
-use Neo\Core\Http\Response\Response;
+use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Routing\Attribute\Maintenance;
 use Neo\Core\Routing\Attribute\RateLimit;
 use Neo\Core\Routing\Exception\RouteNotFoundException;

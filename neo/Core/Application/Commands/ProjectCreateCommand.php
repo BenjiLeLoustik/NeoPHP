@@ -158,12 +158,7 @@ declare(strict_types=1);
 
 namespace Neo\Src\\$name\App\Controllers;
 
-use Neo\Core\Controller\AbstractController;
-use Neo\Core\Routing\Attribute\MainRoute;
-use Neo\Core\Routing\Attribute\Route;
-use Neo\Core\Http\Response\Response;
-use Neo\Core\Http\Response\RedirectResponse;
-use Neo\Core\Translation\TranslationManager;
+use Neo\Core\Controller\AbstractController;use Neo\Core\Http\Response\Types\RedirectResponse;use Neo\Core\Http\Response\Types\Response;use Neo\Core\Routing\Attribute\MainRoute;use Neo\Core\Routing\Attribute\Route;use Neo\Core\Translation\TranslationManager;
 
 #[MainRoute(path: '/', name: 'default')]
 final class DefaultController extends AbstractController
