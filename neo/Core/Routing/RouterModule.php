@@ -7,7 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\Abstract\AbstractModule;
 use Neo\Core\Routing\Extension\RouterViewExtension;
-use Neo\Core\Security\SecurityModule;
+use Neo\Core\Security\Middleware\MiddlewareModule;
 use Neo\Core\View\ViewModule;
 
 class RouterModule extends AbstractModule
@@ -16,7 +16,7 @@ class RouterModule extends AbstractModule
     {
         return [
             ViewModule::class,
-            SecurityModule::class,
+            MiddlewareModule::class,
         ];
     }
 
@@ -25,7 +25,7 @@ class RouterModule extends AbstractModule
         $container->set(RouterManager::class, fn(Container $c) => new RouterManager($c));
 
         $container->set(RouterViewExtension::class, fn(Container $c) =>
-            new RouterViewExtension($c->get(RouterManager::class))
+        new RouterViewExtension($c->get(RouterManager::class))
         );
 
         $container->tag(RouterViewExtension::class, 'twig.extension');
