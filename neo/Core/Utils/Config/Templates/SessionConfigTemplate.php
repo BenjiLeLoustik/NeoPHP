@@ -21,7 +21,7 @@ final class SessionConfigTemplate implements ConfigTemplateInterface
 <?php
 declare(strict_types=1);
 
-// ./src/$projectName/ConfigManager/session.config.php
+// ./src/$projectName/Config/session.config.php
 
 return [
     'session' => [

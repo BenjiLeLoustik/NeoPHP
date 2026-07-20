@@ -23,7 +23,7 @@ final class MakeConfigCommand extends AbstractCommand
     {
         $this->addArgument(
             name: 'configName',
-            description: 'ConfigManager file name',
+            description: 'Config file name',
             mode: InputArgument::OPTIONAL,
         );
 
@@ -44,7 +44,7 @@ final class MakeConfigCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $configName = strtolower($input->getArgument('configName') ?? Input::ask('ConfigManager file name ?'));
+        $configName = strtolower($input->getArgument('configName') ?? Input::ask('Config file name ?'));
         if (!$configName) return ExitCode::INVALID;
 
         $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
@@ -56,11 +56,11 @@ final class MakeConfigCommand extends AbstractCommand
             return ExitCode::FAILURE;
         }
 
-        $configDir = "$basePath/ConfigManager";
+        $configDir = "$basePath/Config";
         $configFile = "$configDir/$configName.config.php";
 
         if (file_exists($configFile) && !$force) {
-            if (!Input::confirm("ConfigManager '$configName' exists. Overwrite ?", false)) {
+            if (!Input::confirm("Config '$configName' exists. Overwrite ?", false)) {
                 Output::muted('Cancelled.');
                 return ExitCode::SUCCESS;
             }
@@ -72,7 +72,7 @@ final class MakeConfigCommand extends AbstractCommand
         Fs::ensureDir($configDir);
         file_put_contents($configFile, $this->buildFileContent($configName, $project, $entries));
 
-        Output::success("ConfigManager generated.");
+        Output::success("Config generated.");
         return ExitCode::SUCCESS;
     }
 
@@ -115,7 +115,7 @@ final class MakeConfigCommand extends AbstractCommand
     private function buildFileContent(string $name, string $proj, array $entries): string
     {
         $body = $this->buildArray($entries, 1);
-        return "<?php\ndeclare(strict_types=1);\n\n// ./src/$proj/ConfigManager/$name.config.php\n\nreturn $body;";
+        return "<?php\ndeclare(strict_types=1);\n\n// ./src/$proj/Config/$name.config.php\n\nreturn $body;";
     }
 
     /**

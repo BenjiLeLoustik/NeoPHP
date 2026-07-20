@@ -59,7 +59,7 @@ return [
 ];
 PHP;
             file_put_contents($dbConfigPath, $dbConfigContent);
-            echo "Fichier généré : src/$project/Tests/ConfigManager/database.config.test.php\n";
+            echo "Fichier généré : src/$project/Tests/Config/database.config.test.php\n";
         }
 
         $content = <<<PHP
@@ -71,7 +71,7 @@ declare(strict_types=1);
  *
  * Chargé automatiquement par PHPUnit avant les tests.
  * Initialise le framework en mode test, injecte le nom du projet
- * et surcharge les configs via Tests/ConfigManager/ si ce dossier existe.
+ * et surcharge les configs via Tests/Config/ si ce dossier existe.
  * Synchronise également le schéma de la BDD dev → BDD test.
  */
 
@@ -85,7 +85,7 @@ require_once ROOT_DIR . '/vendor/autoload.php';
 \$_SERVER['SERVER_PORT'] = '80';
 \$_SERVER['HTTP_HOST']   = 'localhost';
 
-\$testConfigsPath = __DIR__ . '/ConfigManager';
+\$testConfigsPath = __DIR__ . '/Config';
 
 if (is_dir(\$testConfigsPath)) {
     \$GLOBALS['_NEO_TEST_CONFIGS_PATH'] = \$testConfigsPath;

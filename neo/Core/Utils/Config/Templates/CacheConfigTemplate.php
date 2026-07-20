@@ -18,7 +18,7 @@ final class CacheConfigTemplate implements ConfigTemplateInterface
 <?php
 declare(strict_types=1);
 
-// ./src/$projectName/ConfigManager/cache.config.php
+// ./src/$projectName/Config/cache.config.php
 
 return [
     'enabled' => true,

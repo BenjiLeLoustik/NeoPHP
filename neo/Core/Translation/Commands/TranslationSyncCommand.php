@@ -141,7 +141,7 @@ final class TranslationSyncCommand extends AbstractCommand
      */
     private function discoverLocales(string $project, string $translationsPath): array
     {
-        $configPath = ROOT_DIR . "src/$project/ConfigManager/app.config.php";
+        $configPath = ROOT_DIR . "src/$project/Config/app.config.php";
 
         if (is_file($configPath)) {
             $config = require $configPath;

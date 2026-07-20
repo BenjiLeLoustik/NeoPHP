@@ -18,7 +18,7 @@ final class TwigConfigTemplate implements ConfigTemplateInterface
 <?php
 declare(strict_types=1);
 
-// ./src/$projectName/ConfigManager/twig.config.php
+// ./src/$projectName/Config/twig.config.php
 
 return [
     'cache'            => true,

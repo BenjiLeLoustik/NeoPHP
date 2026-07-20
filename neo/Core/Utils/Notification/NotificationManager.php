@@ -151,7 +151,7 @@ class NotificationManager
             $apiConfig = $config->from('api')->get($keyPath);
         } catch (ConfigException $e) {
             throw new NotificationException(
-                title: 'Missing API ConfigManager File',
+                title: 'Missing API Config File',
                 message: sprintf(
                     "Channel '%s' requires 'api.config.php' with key '%s', but the config file was not found. "
                     . "Please create neo/config/api.config.php and add the '%s' key.",
@@ -165,7 +165,7 @@ class NotificationManager
 
         if (!is_array($apiConfig) || empty($apiConfig)) {
             throw new NotificationException(
-                title: 'Missing API ConfigManager Key',
+                title: 'Missing API Config Key',
                 message: sprintf(
                     "Channel '%s' requires key '%s' in api.config.php, but it is absent or empty. "
                     . "Please add the '%s' configuration block.",
