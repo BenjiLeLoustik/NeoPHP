@@ -4,11 +4,12 @@ declare(strict_types=1);
 namespace Neo\Core\View;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Extension\ExtensionManager;
-use Neo\Core\Module\Abstract\AbstractModule;
+use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Utils\Config\ConfigModule;
 
-class ViewModule extends AbstractModule
+class ViewModule implements ModuleInterface
 {
     public function dependencies(): array
     {
@@ -22,13 +23,19 @@ class ViewModule extends AbstractModule
         $container->set(ViewManager::class, fn(Container $c) => new ViewManager($c));
     }
 
-    protected function resolveDependencies(): void
+    /**
+     * @throws ContainerException
+     */
+    public function init(Container $container): object
     {
-        $view = $this->get(ViewManager::class);
-        $extensions = $this->get(ExtensionManager::class)->getViewExtensions();
+        $manager = $container->get(ViewManager::class);
+
+        $extensions = $container->get(ExtensionManager::class)->getViewExtensions();
 
         foreach ($extensions as $extension) {
-            $view->addExtension($extension);
+            $manager->addExtension($extension);
         }
+
+        return $manager;
     }
 }
