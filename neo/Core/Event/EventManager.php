@@ -122,14 +122,14 @@ class EventManager
             $cacheDir = dirname($cacheFile);
             if (!is_dir($cacheDir) && !mkdir($cacheDir, 0777, true) && !is_dir($cacheDir)) {
                 throw new EventException(
-                    title: 'Event CacheManager Directory Error',
+                    title: 'Event Cache Directory Error',
                     message: sprintf("Unable to create event cache directory '%s'.", $cacheDir),
                     code: 500
                 );
             }
             if (file_put_contents($cacheFile, serialize($this->listeners)) === false) {
                 throw new EventException(
-                    title: 'Event CacheManager Write Error',
+                    title: 'Event Cache Write Error',
                     message: sprintf("Unable to write event cache file '%s'.", $cacheFile),
                     code: 500
                 );

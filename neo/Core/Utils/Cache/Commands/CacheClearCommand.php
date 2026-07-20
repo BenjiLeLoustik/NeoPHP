@@ -34,7 +34,7 @@ final class CacheClearCommand extends AbstractCommand
         $cacheDir = ROOT_DIR . "/src/$project/Storage/var/cache";
 
         if (!is_dir($cacheDir)) {
-            Output::warning("CacheManager directory not found.");
+            Output::warning("Cache directory not found.");
             return ExitCode::FAILURE;
         }
 
@@ -44,7 +44,7 @@ final class CacheClearCommand extends AbstractCommand
         }
 
         Fs::emptyDir($cacheDir);
-        Output::success("CacheManager cleared for '$project'.");
+        Output::success("Cache cleared for '$project'.");
 
         return ExitCode::SUCCESS;
     }
