@@ -28,6 +28,10 @@ class CsrfModule implements ModuleInterface
 
     public function init(Container $container): object
     {
+        if (PHP_SAPI === 'cli') {
+            return $this;
+        }
+
         $container->get(CsrfTokenManager::class);
 
         return $container->get(CsrfManager::class);

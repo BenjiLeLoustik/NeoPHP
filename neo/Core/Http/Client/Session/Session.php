@@ -27,6 +27,8 @@ class Session
      */
     protected array $config;
 
+    private bool $isCli;
+
     /**
      * @throws FrameworkException
      * @throws ContainerException
@@ -34,6 +36,12 @@ class Session
     public function __construct(Container $container)
     {
         $this->container = $container;
+
+        $this->isCli = PHP_SAPI === 'cli';
+
+        if ($this->isCli) {
+            return;
+        }
 
         $config = $this->container->get('client.configModule');
         $this->config = $config->from('session')->get('session');
@@ -84,21 +92,25 @@ class Session
 
     public function set(string $key, mixed $value): void
     {
+        if ($this->isCli) return;
         $_SESSION[$key] = $value;
     }
 
     public function get(string $key, mixed $default = null): mixed
     {
+        if ($this->isCli) return $default;
         return $_SESSION[$key] ?? $default;
     }
 
     public function has(string $key): bool
     {
+        if ($this->isCli) return false;
         return array_key_exists($key, $_SESSION);
     }
 
     public function remove(string $key): void
     {
+        if ($this->isCli) return;
         unset($_SESSION[$key]);
     }
 
@@ -107,21 +119,25 @@ class Session
      */
     public function all(): array
     {
+        if ($this->isCli) return [];
         return $_SESSION;
     }
 
     public function clear(): void
     {
+        if ($this->isCli) return;
         $_SESSION = [];
     }
 
     public function destroy(): void
     {
+        if ($this->isCli) return;
         session_destroy();
     }
 
     public function regenerate(): void
     {
+        if ($this->isCli) return;
         session_regenerate_id(true);
     }
 }

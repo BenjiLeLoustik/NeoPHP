@@ -12,6 +12,10 @@ class CsrfTokenManager
 
     public function __construct()
     {
+        if (PHP_SAPI === 'cli') {
+            return;
+        }
+
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -28,17 +32,21 @@ class CsrfTokenManager
     {
         $value = bin2hex(random_bytes(32));
         $token = new CsrfToken($id, $value, $expiry);
-        $_SESSION[self::SESSION_KEY][$id] = $token;
+        if (PHP_SAPI !== 'cli') {
+            $_SESSION[self::SESSION_KEY][$id] = $token;
+        }
         return $token;
     }
 
     public function getToken(string $id): ?CsrfToken
     {
+        if (PHP_SAPI === 'cli') return null;
         return $_SESSION[self::SESSION_KEY][$id] ?? null;
     }
 
     public function validateToken(string $id, string $value, bool $invalidate = true): bool
     {
+        if (PHP_SAPI === 'cli') return false;
         $token = $this->getToken($id);
         if (!$token) return false;
 
