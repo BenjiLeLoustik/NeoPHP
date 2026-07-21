@@ -19,6 +19,11 @@ class ConfigManager
     /** @var array<string, mixed> */
     private array $current = [];
 
+    /** @var array<string, string> */
+    private array $files = [];
+
+    private ?string $currentKey = null;
+
     private Container $container;
 
     private bool $hasSelected = false;
@@ -62,6 +67,7 @@ class ConfigManager
             }
 
             $this->configs[$key] = $data;
+            $this->files[$key] = $file;
         }
     }
 
@@ -126,6 +132,7 @@ class ConfigManager
         }
 
         $this->current = $this->configs[$key];
+        $this->currentKey = $key;
         $this->hasSelected = true;
         return $this;
     }
@@ -157,6 +164,84 @@ class ConfigManager
     {
         $this->assertSelected();
         return $this->current;
+    }
+
+    /**
+     * @throws ConfigException
+     */
+    public function set(string $path, mixed $value): self
+    {
+        $this->assertSelected();
+
+        $segments = explode('.', $path);
+        $lastKey = array_key_last($segments);
+        $ref = &$this->current;
+
+        foreach ($segments as $i => $segment) {
+            if ($i === $lastKey) {
+                $ref[$segment] = $value;
+                break;
+            }
+
+            if (!isset($ref[$segment]) || !is_array($ref[$segment])) {
+                $ref[$segment] = [];
+            }
+
+            $ref = &$ref[$segment];
+        }
+        unset($ref);
+
+        if ($this->currentKey !== null) {
+            $this->configs[$this->currentKey] = $this->current;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @throws ConfigException
+     */
+    public function save(): self
+    {
+        $this->assertSelected();
+
+        if ($this->container->has('testConfigsPath')) {
+            throw new ConfigException(
+                title: "Config Save Forbidden",
+                message: "Saving configuration is forbidden while the test environment is active.",
+                code: 500
+            );
+        }
+
+        $file = $this->files[$this->currentKey] ?? null;
+
+        if ($file === null) {
+            throw new ConfigException(
+                title: "Config File Not Found",
+                message: sprintf("Config file '%s' not found.", (string)$this->currentKey),
+                code: 500,
+                context: ['key' => $this->currentKey]
+            );
+        }
+
+        $content = "<?php\ndeclare(strict_types=1);\n\nreturn "
+            . var_export($this->current, true)
+            . ";\n";
+
+        if (file_put_contents($file, $content, LOCK_EX) === false) {
+            throw new ConfigException(
+                title: "Config Write Failed",
+                message: sprintf("Impossible d'écrire dans '%s'.", $file),
+                code: 500,
+                context: ['file' => $file]
+            );
+        }
+
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($file, true);
+        }
+
+        return $this;
     }
 
     /**
