@@ -3,12 +3,14 @@ declare(strict_types=1);
 
 namespace Neo\Core\Console;
 
+use Neo\App;
 use Neo\Core\Console\Abstract\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -146,6 +148,7 @@ class ConsoleManager
     /**
      * @param list<string> $argv
      * @throws ReflectionException
+     * @throws ContainerException
      */
     public function run(array $argv): ExitCode
     {
@@ -187,6 +190,17 @@ class ConsoleManager
 
         $output = new Output();
 
+        if (!$this->container->has('application')) {
+            $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+            $GLOBALS['_NEO_CLI_PROJECT'] = $project;
+
+            $app = new App();
+            $newContainer = $app->getContainer();
+
+            $instance = $newContainer->make(get_class($instance));
+            $instance->configure();
+        }
+
         return $instance->do($input, $output);
     }
 
@@ -216,5 +230,20 @@ class ConsoleManager
         }
 
         echo Output::colorize("Use 'php bin/neo <command> --help' for details.\n", 'dim');
+    }
+
+    /** @return list<string> */
+    protected function getAvailableProjects(): array
+    {
+        $srcDir = ROOT_DIR . '/src/';
+
+        if (!is_dir($srcDir)) {
+            return [];
+        }
+
+        return array_map(
+            fn(string $dir) => basename($dir),
+            glob($srcDir . '*', GLOB_ONLYDIR) ?: []
+        );
     }
 }

@@ -37,10 +37,9 @@ class ClientModule implements ModuleInterface
      */
     public function init(Container $container): object
     {
-        $container->get(Session::class);
-        $container->get(Cookie::class);
-
         if (php_sapi_name() !== 'cli') {
+            $container->get(Session::class);
+            $container->get(Cookie::class);
             $container->get(Flash::class);
 
             $request = $container->get(Request::class);
