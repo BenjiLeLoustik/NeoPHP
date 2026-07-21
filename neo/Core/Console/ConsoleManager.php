@@ -191,16 +191,24 @@ class ConsoleManager
         $output = new Output();
 
         if (!$this->container->has('application')) {
-            $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
-            $GLOBALS['_NEO_CLI_PROJECT'] = $project;
 
-            $app = new App();
-            $newContainer = $app->getContainer();
+            $needsProject = !empty(array_filter(
+                $instance->getOptionDefinitions(),
+                fn($def) => $def->getName() === 'project'
+            ));
 
-            $instance = $newContainer->make(get_class($instance));
-            $instance->configure();
+            if ($needsProject) {
+                $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+                $GLOBALS['_NEO_CLI_PROJECT'] = $project;
 
-            $input->forceOption('project', $project);
+                $app = new App();
+                $newContainer = $app->getContainer();
+
+                $instance = $newContainer->make(get_class($instance));
+                $instance->configure();
+
+                $input->forceOption('project', $project);
+            }
         }
 
         return $instance->do($input, $output);
