@@ -64,8 +64,7 @@ use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\DI\Container;
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Translation\TranslationManager;
-
-$modelNamespace\\$modelName;
+use $modelNamespace\\$modelName;
 
 
 class $formClassName
@@ -83,7 +82,7 @@ class $formClassName
 
     public function build(?AbstractModel \${$paramModelName} = null): Form
     {
-        \$form = (new FormBuilder(\${$paramModelName} ?? \$this->{$paramModelName}))
+        \$form = new FormBuilder(\${$paramModelName} ?? \$this->{$paramModelName})
             ->auto()
             ->add('submit', SubmitType::class, ['label' => 'Submit'])
             ->generate();
