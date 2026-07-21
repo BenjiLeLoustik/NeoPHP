@@ -110,11 +110,6 @@ class DatabaseConnection
 
         self::$connections[$name] = $pdo;
 
-        if (count(self::$connections) === 1) {
-            $orm = new ORM(self::$sharedContainer);
-            $orm->generate();
-        }
-
         return $pdo;
 
     }
