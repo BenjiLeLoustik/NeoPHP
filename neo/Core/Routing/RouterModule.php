@@ -29,6 +29,10 @@ class RouterModule implements ModuleInterface
      */
     public function init(Container $container): object
     {
+        if (PHP_SAPI === 'cli') {
+            return $this;
+        }
+
         return $container->get(RouterManager::class);
     }
 }
