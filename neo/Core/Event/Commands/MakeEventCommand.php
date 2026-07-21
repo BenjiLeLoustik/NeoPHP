@@ -47,7 +47,7 @@ final class MakeEventCommand extends AbstractCommand
         $event = $input->getArgument('event') ?? Input::ask('Event name ?');
         if (!$event) return ExitCode::INVALID;
 
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $force = (bool) $input->getOption('force');
 
         $event = $this->normalizeEventName($event);

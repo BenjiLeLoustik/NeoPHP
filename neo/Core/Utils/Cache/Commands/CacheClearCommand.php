@@ -30,7 +30,7 @@ final class CacheClearCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $cacheDir = ROOT_DIR . "/src/$project/Storage/var/cache";
 
         if (!is_dir($cacheDir)) {

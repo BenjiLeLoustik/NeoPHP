@@ -62,7 +62,7 @@ final class MakeCronCommand extends AbstractCommand
         $cron = $input->getArgument('cron') ?? Input::ask('Cron name ?');
         if (!$cron) return ExitCode::INVALID;
 
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $expression = $input->getOption('expression') ?? Input::autocomplete('Cron expression ?', self::COMMON_EXPRESSIONS, '* * * * *');
         $force = (bool) $input->getOption('force');
 

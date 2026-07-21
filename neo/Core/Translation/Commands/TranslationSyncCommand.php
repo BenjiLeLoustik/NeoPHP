@@ -43,15 +43,6 @@ final class TranslationSyncCommand extends AbstractCommand
     {
         $project = $input->getOption('project');
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
-            if (empty($projects)) {
-                Output::error('No projects found.');
-                return ExitCode::FAILURE;
-            }
-            $project = Input::choice('Which project do you want to sync?', $projects);
-        }
-
         $dryRun = (bool) $input->getOption('dry-run');
         $prune  = (bool) $input->getOption('prune');
         $path = ROOT_DIR . "src/$project/Translations";

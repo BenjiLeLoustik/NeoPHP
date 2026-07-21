@@ -57,7 +57,7 @@ final class MakeTestAutoCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $force = (bool) $input->getOption('force');
         $onlyType = $input->getOption('only');
         $dryRun = (bool) $input->getOption('dry-run');

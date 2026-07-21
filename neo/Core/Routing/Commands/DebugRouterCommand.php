@@ -65,7 +65,7 @@ final class DebugRouterCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $filterMethod = $input->getOption('method');
         $filterName = $input->getOption('name');
         $filterPath = $input->getOption('path');

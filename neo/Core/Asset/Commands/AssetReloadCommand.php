@@ -31,15 +31,6 @@ final class AssetReloadCommand extends AbstractCommand
     {
         $project = $input->getOption('project');
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
-            if (empty($projects)) {
-                Output::error('No projects found.');
-                return ExitCode::FAILURE;
-            }
-            $project = Input::choice('Which project do you want to reload ?', $projects);
-        }
-
         $buildDir = ROOT_DIR . "/public/builds/{$project}";
 
         if (!is_dir($buildDir)) {

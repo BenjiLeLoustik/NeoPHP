@@ -62,17 +62,6 @@ final class MakeServiceCommand extends AbstractCommand
             }
         }
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
-
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return ExitCode::FAILURE;
-            }
-
-            $project = Input::choice('Target project ?', $projects);
-        }
-
         if (!$directory) {
             $raw = Input::ask('Sub-folder ? (leave empty to skip)', '');
             $directory = $raw !== '' ? $raw : null;

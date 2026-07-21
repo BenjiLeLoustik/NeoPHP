@@ -50,7 +50,7 @@ final class RunTestAllCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $format = strtolower($input->getOption('format') ?? 'console');
         $withCoverage = (bool) $input->getOption('coverage');
         $stopOnFailure = (bool) $input->getOption('stop-on-failure');

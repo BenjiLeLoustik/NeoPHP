@@ -34,7 +34,7 @@ final class GenerateDefaultConfigCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $projectPath = ROOT_DIR . "/src/$project";
 
         if (!is_dir($projectPath)) {

@@ -40,8 +40,7 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
-
+        $project = $input->getOption('project');
         $basePath = ROOT_DIR . "/src/$project";
         $migrationsPath = "$basePath/Database/Migrations";
 

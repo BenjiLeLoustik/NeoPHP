@@ -70,15 +70,6 @@ final class MakeCommand extends AbstractCommand
             }
         }
 
-        if (!$project) {
-            $projects = $this->getAvailableProjects();
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return ExitCode::FAILURE;
-            }
-            $project = Input::choice('Target project ?', $projects);
-        }
-
         if (!$cmdName) {
             $guessed = $this->guessCommandName($commandName);
             $cmdName = Input::ask('Command name ? (e.g. cache:clear)', $guessed);

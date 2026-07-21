@@ -54,7 +54,7 @@ final class MakeCrudCommand extends AbstractCommand
         $entity = $input->getArgument('entity') ?? Input::ask('Entity name ?');
         if (!$entity) return ExitCode::INVALID;
 
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $directory = $input->getOption('dir') ?? Input::ask('Sub-folder ?');
         $force = (bool) $input->getOption('force');
 

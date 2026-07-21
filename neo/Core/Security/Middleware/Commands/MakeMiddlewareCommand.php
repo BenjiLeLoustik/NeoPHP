@@ -54,7 +54,7 @@ final class MakeMiddlewareCommand extends AbstractCommand
         $middleware = $input->getArgument('middleware') ?? Input::ask('Middleware name ?', 'Auth');
         if (!$middleware) return ExitCode::INVALID;
 
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $directory = $input->getOption('dir');
         $force = (bool) $input->getOption('force');
 

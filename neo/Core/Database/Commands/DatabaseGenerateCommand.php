@@ -53,7 +53,7 @@ final class DatabaseGenerateCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $only = $input->getOption('only') ?? Input::choice('What to generate ?', ['all', 'models', 'repositories', 'forms'], 'all');
         $force = (bool) $input->getOption('force');
 
