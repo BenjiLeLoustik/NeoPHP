@@ -146,6 +146,13 @@ final class Input
         }
     }
 
+    public function forceOption(string $name, mixed $value): void
+    {
+        $def = $this->optionDefinitions[$name] ?? null;
+        $canonical = $def?->getName() ?? $name;
+        $this->options[$canonical] = $value;
+    }
+
     public function getArgument(string $name): mixed
     {
         return $this->arguments[$name] ?? null;

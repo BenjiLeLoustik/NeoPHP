@@ -53,7 +53,7 @@ final class MakeTestCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $testName = $input->getArgument('testName');
+        $testName = $input->getArgument('testName') ?? Input::ask('Test class name ?');
         $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
         $type = strtolower($input->getOption('type') ?? '');
         $force = (bool) $input->getOption('force');
@@ -66,6 +66,11 @@ final class MakeTestCommand extends AbstractCommand
         if (!is_dir($basePath)) {
             Output::error("Project '$project' not found.");
             return ExitCode::FAILURE;
+        }
+
+        if (!$testName) {
+            Output::error('Test class name is required.');
+            return ExitCode::INVALID;
         }
 
         $testName = $this->normalizeTestName($testName);

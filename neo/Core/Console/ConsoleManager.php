@@ -199,6 +199,8 @@ class ConsoleManager
 
             $instance = $newContainer->make(get_class($instance));
             $instance->configure();
+
+            $input->forceOption('project', $project);
         }
 
         return $instance->do($input, $output);
