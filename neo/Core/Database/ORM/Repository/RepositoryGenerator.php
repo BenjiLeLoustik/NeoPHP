@@ -57,6 +57,31 @@ use $modelNamespace\\$modelName;
 class $repoClassName extends AbstractRepository
 {
     protected string \$modelClass = $modelName::class;
+    
+    /*
+     * Exemples :
+     *
+     * public function findActive(): static
+     * {
+     *     \$this->builder = \$this->qb()->where('active', '=', 1);
+     *     \$rows = \$this->builder->get();
+     *     \$this->hydrateMany(\$rows);
+     *     return \$this;
+     * }
+     *
+     * public function findBySlug(string \$slug): ?$modelName
+     * {
+     *     return \$this->findBy('slug', \$slug);
+     * }
+     *
+     * // With relations :
+     * // \$this->with('relation')->findAll()->getModels();
+     *
+     * // With pagination :
+     * // \$this->qb()->where('active', '=', 1);
+     * // return \$this->paginate(perPage: 15);
+     */
+   
 }
 
 PHP;
