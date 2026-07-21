@@ -29,8 +29,10 @@ class ViewControllerExtension implements ControllerExtensionInterface
             $view = $container->get(ViewManager::class);
             $response = $container->get(Response::class);
 
+            $config = $container->get('view.configModule');
+
             $app = array_merge(
-                $view->getTwig()->getGlobals()['app'] ?? [],
+                $config->from('app')->get('general') ?? [],
                 [
                     'session' => $container->get(Session::class),
                     'cookie' => $container->get(Cookie::class),
