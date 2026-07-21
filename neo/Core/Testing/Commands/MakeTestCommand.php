@@ -53,7 +53,7 @@ final class MakeTestCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $testName = $input->getArgument('testName') ?? Input::ask('Test name ?', 'ExampleTest');
+        $testName = $input->getArgument('testName');
         $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
         $type = strtolower($input->getOption('type') ?? '');
         $force = (bool) $input->getOption('force');

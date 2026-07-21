@@ -47,7 +47,7 @@ final class MakeConfigCommand extends AbstractCommand
         $configName = strtolower($input->getArgument('configName') ?? Input::ask('Config file name ?'));
         if (!$configName) return ExitCode::INVALID;
 
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $force = (bool) $input->getOption('force');
 
         $basePath = ROOT_DIR . "/src/$project";

@@ -60,17 +60,6 @@ final class ComposerRequireCommand extends AbstractCommand
             $version = Input::ask('Version constraint ?', '*');
         }
 
-        if (!$projectName) {
-            $projects = $this->getAvailableProjects();
-
-            if (empty($projects)) {
-                Output::error('No projects found in ./src/');
-                return ExitCode::FAILURE;
-            }
-
-            $projectName = Input::choice('Target project ?', $projects);
-        }
-
         $projectPath = ROOT_DIR . '/src/' . $projectName;
         $composerPath = $projectPath . '/composer.json';
 

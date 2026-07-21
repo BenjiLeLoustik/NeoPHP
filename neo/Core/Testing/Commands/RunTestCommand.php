@@ -53,7 +53,7 @@ final class RunTestCommand extends AbstractCommand
         $testName = $input->getArgument('testName') ?? Input::ask('Test name ?');
         if (!$testName) return ExitCode::INVALID;
 
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $filter = $input->getOption('filter');
         $type = $input->getOption('type');
 

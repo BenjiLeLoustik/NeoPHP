@@ -61,7 +61,7 @@ final class MakeEventListenerCommand extends AbstractCommand
         $listener = $input->getArgument('listener') ?? Input::ask('Listener name ?');
         if (!$listener) return ExitCode::INVALID;
 
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
         $event = $input->getOption('event') ?? $this->resolveEvent($project);
         $priority = (int) ($input->getOption('priority') ?? Input::ask('Priority ?', '0'));
         $force = (bool) $input->getOption('force');

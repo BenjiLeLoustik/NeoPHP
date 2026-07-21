@@ -37,7 +37,7 @@ final class CronRunCommand extends AbstractCommand
 
     public function do(Input $input, Output $output): ExitCode
     {
-        $project = $input->getOption('project') ?? Input::choice('Target project ?', $this->getAvailableProjects());
+        $project = $input->getOption('project');
 
         if (!is_dir(ROOT_DIR . "/src/$project")) {
             Output::error("Project '$project' not found.");
