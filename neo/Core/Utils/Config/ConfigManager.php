@@ -225,7 +225,7 @@ class ConfigManager
         }
 
         $content = "<?php\ndeclare(strict_types=1);\n\nreturn "
-            . var_export($this->current, true)
+            . $this->exportArray($this->current)
             . ";\n";
 
         if (file_put_contents($file, $content, LOCK_EX) === false) {
@@ -242,6 +242,40 @@ class ConfigManager
         }
 
         return $this;
+    }
+
+    /**
+     * @param array<int|string, mixed> $data
+     */
+    private function exportArray(array $data, int $indent = 0): string
+    {
+        $pad = str_repeat('    ', $indent + 1);
+        $padEnd = str_repeat('    ', $indent);
+        $lines = [];
+
+        foreach ($data as $key => $value) {
+            $keyStr = is_int($key) ? (string) $key : "'" . addslashes((string) $key) . "'";
+
+            $lines[] = is_array($value)
+                ? $pad . $keyStr . ' => ' . $this->exportArray($value, $indent + 1)
+                : $pad . $keyStr . ' => ' . $this->exportScalar($value);
+        }
+
+        if ($lines === []) {
+            return '[]';
+        }
+
+        return "[\n" . implode(",\n", $lines) . ",\n" . $padEnd . "]";
+    }
+
+    private function exportScalar(mixed $value): string
+    {
+        return match (true) {
+            is_string($value) => "'" . addslashes($value) . "'",
+            is_bool($value)   => $value ? 'true' : 'false',
+            is_null($value)   => 'null',
+            default           => (string) $value,
+        };
     }
 
     /**
