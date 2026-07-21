@@ -52,51 +52,62 @@ final class ExtensionManager
         $results = [];
         $basePath = realpath(__DIR__ . '/../../../');
 
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($basePath)
-        );
+        $scanPaths = [
+            $basePath . '/neo',
+            $basePath . '/src',
+        ];
 
-        foreach ($iterator as $file) {
-            if (!$file->isFile() || $file->getExtension() !== 'php') {
+        foreach ($scanPaths as $scanPath) {
+            if (!is_dir($scanPath)) {
                 continue;
             }
 
-            if (!str_ends_with($file->getFilename(), 'Extension.php')) {
-                continue;
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($scanPath)
+            );
+
+            foreach ($iterator as $file) {
+                if (!$file->isFile() || $file->getExtension() !== 'php') {
+                    continue;
+                }
+
+                if (!str_ends_with($file->getFilename(), 'Extension.php')) {
+                    continue;
+                }
+
+                $fqcn = $this->resolveFqcn($file->getRealPath());
+                if ($fqcn === null) {
+                    continue;
+                }
+
+                require_once $file->getRealPath();
+                if (!class_exists($fqcn)) {
+                    continue;
+                }
+
+                $ref = new \ReflectionClass($fqcn);
+                if ($ref->isAbstract() || $ref->isInterface()) {
+                    continue;
+                }
+
+                $scanResults = new ScannerAttributeManager($fqcn)
+                    ->onClass()
+                    ->withAttribute(Extension::class)
+                    ->scan();
+
+                if (empty($scanResults)) {
+                    continue;
+                }
+
+                /** @var Extension $meta */
+                $meta = $scanResults[0]['attribute'];
+
+                if ($meta->type !== $type) {
+                    continue;
+                }
+
+                $results[] = $this->container->get($fqcn);
             }
-
-            $fqcn = $this->resolveFqcn($file->getRealPath());
-            if ($fqcn === null) {
-                continue;
-            }
-
-            require_once $file->getRealPath();
-            if (!class_exists($fqcn)) {
-                continue;
-            }
-
-            $ref = new \ReflectionClass($fqcn);
-            if ($ref->isAbstract() || $ref->isInterface()) {
-                continue;
-            }
-
-            $scanResults = new ScannerAttributeManager($fqcn)
-                ->onClass()
-                ->withAttribute(Extension::class)
-                ->scan();
-
-            if (empty($scanResults)) {
-                continue;
-            }
-
-            /** @var Extension $meta */
-            $meta = $scanResults[0]['attribute'];
-
-            if ($meta->type !== $type) {
-                continue;
-            }
-
-            $results[] = $this->container->get($fqcn);
         }
 
         return $results;
