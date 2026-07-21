@@ -19,9 +19,6 @@ class ConfigManager
     /** @var array<string, mixed> */
     private array $current = [];
 
-    /** @var array<string, string> */
-    private array $files = [];
-
     private ?string $currentKey = null;
 
     private Container $container;
@@ -67,7 +64,6 @@ class ConfigManager
             }
 
             $this->configs[$key] = $data;
-            $this->files[$key] = $file;
         }
     }
 
@@ -196,86 +192,6 @@ class ConfigManager
         }
 
         return $this;
-    }
-
-    /**
-     * @throws ConfigException
-     */
-    public function save(): self
-    {
-        $this->assertSelected();
-
-        if ($this->container->has('testConfigsPath')) {
-            throw new ConfigException(
-                title: "Config Save Forbidden",
-                message: "Saving configuration is forbidden while the test environment is active.",
-                code: 500
-            );
-        }
-
-        $file = $this->files[$this->currentKey] ?? null;
-
-        if ($file === null) {
-            throw new ConfigException(
-                title: "Config File Not Found",
-                message: sprintf("Config file '%s' not found.", (string)$this->currentKey),
-                code: 500,
-                context: ['key' => $this->currentKey]
-            );
-        }
-
-        $content = "<?php\ndeclare(strict_types=1);\n\nreturn "
-            . $this->exportArray($this->current)
-            . ";\n";
-
-        if (file_put_contents($file, $content, LOCK_EX) === false) {
-            throw new ConfigException(
-                title: "Config Write Failed",
-                message: sprintf("Impossible d'écrire dans '%s'.", $file),
-                code: 500,
-                context: ['file' => $file]
-            );
-        }
-
-        if (function_exists('opcache_invalidate')) {
-            opcache_invalidate($file, true);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param array<int|string, mixed> $data
-     */
-    private function exportArray(array $data, int $indent = 0): string
-    {
-        $pad = str_repeat('    ', $indent + 1);
-        $padEnd = str_repeat('    ', $indent);
-        $lines = [];
-
-        foreach ($data as $key => $value) {
-            $keyStr = is_int($key) ? (string) $key : "'" . addslashes((string) $key) . "'";
-
-            $lines[] = is_array($value)
-                ? $pad . $keyStr . ' => ' . $this->exportArray($value, $indent + 1)
-                : $pad . $keyStr . ' => ' . $this->exportScalar($value);
-        }
-
-        if ($lines === []) {
-            return '[]';
-        }
-
-        return "[\n" . implode(",\n", $lines) . ",\n" . $padEnd . "]";
-    }
-
-    private function exportScalar(mixed $value): string
-    {
-        return match (true) {
-            is_string($value) => "'" . addslashes($value) . "'",
-            is_bool($value)   => $value ? 'true' : 'false',
-            is_null($value)   => 'null',
-            default           => (string) $value,
-        };
     }
 
     /**
