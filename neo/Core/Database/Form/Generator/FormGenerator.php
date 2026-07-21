@@ -58,6 +58,7 @@ declare(strict_types=1);
 
 namespace $namespaceForm;
 
+use Neo\Core\Database\Form\Form;
 use Neo\Core\Database\Builder\FormBuilder;
 use Neo\Core\Database\Form\Type\SubmitType;
 use Neo\Core\Database\ORM\Model\AbstractModel;
@@ -79,22 +80,20 @@ class $formClassName
         \$this->translationManager = \$container->get(TranslationManager::class);
         \$this->{$paramModelName} = new {$modelName}();
     }
-
-    public function build(?AbstractModel \${$paramModelName} = null): Form
-    {
-        \$form = new FormBuilder(\${$paramModelName} ?? \$this->{$paramModelName})
-            ->auto()
-            ->add('submit', SubmitType::class, ['label' => 'Submit'])
-            ->generate();
-
-        \$form->addCsrfField();
-        
-        \$form->handleRequest(\$this->request);
-        \$form->setData(\${$paramModelName} ?? \$this->{$paramModelName});
-        \$form->populateData();
-        
-        return \$form;
-    }
+    
+    /**
+     * public function myBuilder(?AbstractModel \$myModel): Form
+     * {
+     *      \$form = new FormBuilder(\$myModel ?? \$this->myModel)
+     *                  ->auto()
+     *                  ->generate();      
+     * 
+     *      \$form->addCsrfField(); 
+     *      \$form->setData(\$myModel ?? \$this->myModel); 
+     *      \$form->populateData();
+     *      return \$form; 
+     * } 
+     */
 }
 
 PHP;
