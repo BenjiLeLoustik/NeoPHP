@@ -18,6 +18,8 @@ abstract class AbstractModel
 
     protected static ?string $table = null;
 
+    protected static ?string $connection = null;
+
     protected static string $primaryKey = 'id';
 
     /** @var array<string, mixed> */
@@ -122,6 +124,11 @@ abstract class AbstractModel
         }
 
         $this->setAttribute($name, $value);
+    }
+
+    public function getConnection(): ?string
+    {
+        return static::$connection;
     }
 
     protected function setAttribute(string $name, mixed $value): static
