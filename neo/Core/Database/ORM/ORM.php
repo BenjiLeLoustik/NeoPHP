@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM;
 
+use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Access\Introspector\DatabaseIntrospector;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Form\Generator\FormGenerator;
@@ -15,8 +16,8 @@ use Psr\Container\NotFoundExceptionInterface;
 class ORM
 {
     protected Container $container;
-    private DatabaseIntrospector $introspector;
-    private ModelGenerator $modelGenerator;
+    protected DatabaseIntrospector $introspector;
+    protected ModelGenerator $modelGenerator;
     private RepositoryGenerator $repositoryGenerator;
     private FormGenerator $formGenerator;
 
@@ -56,6 +57,16 @@ class ORM
             force: $force,
             bypassLock: true,
         );
+    }
+
+    public static function on(Container $container, string $connection): self
+    {
+        DatabaseConnection::connectTo($connection);
+        $orm = new self($container);
+        $orm->introspector = DatabaseIntrospector::on($container, $connection);
+        $orm->modelGenerator->setConnection($connection);
+
+        return $orm;
     }
 
     /**
