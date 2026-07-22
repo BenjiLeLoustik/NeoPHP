@@ -320,7 +320,7 @@ PHP;
         }
 
         $connectionLine = $this->connectionName !== null && $this->connectionName !== DatabaseConnection::getDefaultName()
-            ? "     protected static ?string \$connection = '{$this->connectionName}';"
+            ? "protected static ?string \$connection = '{$this->connectionName}';"
             : '';
 
         $content = <<<PHP

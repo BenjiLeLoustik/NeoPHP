@@ -126,7 +126,7 @@ abstract class AbstractModel
         $this->setAttribute($name, $value);
     }
 
-    public function getConnection(): ?string
+    public static function getConnection(): ?string
     {
         return static::$connection;
     }
