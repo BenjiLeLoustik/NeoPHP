@@ -15,6 +15,7 @@ class ModelGenerator
     private string $appName;
     private string $modelDir;
     private string $prefix;
+    private ?string $connectionName = null;
 
     /**
      * @throws NotFoundExceptionInterface
@@ -37,6 +38,13 @@ class ModelGenerator
                 code: 500
             );
         }
+    }
+
+    public function setConnection(string $connection): void
+    {
+        $this->connectionName = $this->container->get('database.configModule')
+            ->from('database')
+            ->get("connections.{$connection}.prefix") ?? '';
     }
 
     /**
@@ -311,12 +319,17 @@ PHP;
             $header = rtrim($header);
         }
 
+        $connectionLine = $this->connectionName !== null && $this->connectionName !== DatabaseConnection::getDefaultName()
+            ? "     protected static ?string \$connection = '{$this->connectionName}';"
+            : '';
+
         $content = <<<PHP
 $header
 $classAttributes
 class {$className} extends AbstractModel 
 {
     protected static ?string \$table = '{$modelData['table']}';
+    {$connectionLine}
     {$hiddenLine}
     
 $propsString
