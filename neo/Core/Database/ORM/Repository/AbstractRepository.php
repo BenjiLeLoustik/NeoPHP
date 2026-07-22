@@ -58,7 +58,12 @@ abstract class AbstractRepository
             );
         }
 
-        $this->pdo = DatabaseConnection::getPdo();
+        $connectionName = $this->modelClass::getConnection();
+        if ($connectionName !== null) {
+            DatabaseConnection::connectTo($connectionName);
+        }
+
+        $this->pdo = DatabaseConnection::getPdo($connectionName);
 
         $rawTable = $this->modelClass::getTable();
 
