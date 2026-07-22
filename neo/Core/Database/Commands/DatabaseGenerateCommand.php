@@ -37,6 +37,13 @@ final class DatabaseGenerateCommand extends AbstractCommand
         );
 
         $this->addOption(
+            name: 'connection',
+            mode: InputOption::OPTIONAL,
+            description: 'Database connection to use',
+            default: null
+        );
+
+        $this->addOption(
             name: 'only',
             shortcut: null,
             mode: InputOption::REQUIRED,
@@ -83,7 +90,11 @@ final class DatabaseGenerateCommand extends AbstractCommand
 
             Output::info(count($tables) . ' table(s) found.');
 
-            $orm = new ORM($this->container);
+            $connection = $input->getOption('connection');
+            $orm = $connection !== null
+                ? ORM::on($this->container, $connection)
+                : new ORM($this->container);
+
             $orm->generateSelective(
                 generateModels: in_array($only, ['all', 'models'], true),
                 generateRepositories: in_array($only, ['all', 'repositories'], true),
