@@ -382,6 +382,13 @@ PHP;
         foreach (glob($this->modelDir . '/*.php') ?: [] as $file) {
             $className = basename($file, '.php');
 
+            if ($this->prefix !== '') {
+                $prefixClass = $this->convertToClassName(ltrim($this->prefix, '_'));
+                if (!str_starts_with($className, $prefixClass)) {
+                    continue;
+                }
+            }
+
             if (!in_array($className, $validClassNames, true)) {
                 $orphans[] = $className;
             }
