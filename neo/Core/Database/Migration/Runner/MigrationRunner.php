@@ -65,13 +65,19 @@ final class MigrationRunner
      */
     public function getMigrationFiles(string $migrationsPath): array
     {
-        if (!is_dir($migrationsPath)) {
-            return [];
+        $files = [];
+
+        $files = array_merge(
+            $files, glob($migrationsPath . '/MigrationVersion_*.php') ?: []
+        );
+
+        foreach (glob($migrationsPath . '/*', GLOB_ONLYDIR) ?: [] as $subDir) {
+            $files = array_merge(
+                $files, glob($subDir . '/MigrationVersion_*.php') ?: []
+            );
         }
 
-        $files = glob($migrationsPath . '/MigrationVersion_*.php') ?: [];
         sort($files);
-
         return $files;
     }
 
