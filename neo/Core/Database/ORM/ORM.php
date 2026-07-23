@@ -65,6 +65,8 @@ class ORM
         $orm = new self($container);
         $orm->introspector = DatabaseIntrospector::on($container, $connection);
         $orm->modelGenerator->setConnection($connection);
+        $orm->repositoryGenerator->setConnection($connection);
+        $orm->formGenerator->setConnection($connection);
 
         return $orm;
     }
