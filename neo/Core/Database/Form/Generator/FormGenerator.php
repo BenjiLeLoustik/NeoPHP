@@ -12,6 +12,8 @@ class FormGenerator
 {
     protected Container $container;
     private string $formDir;
+    private ?string $subNamespace = null;
+    private string $baseFormDir;
 
     /**
      * @throws ContainerExceptionInterface
@@ -22,6 +24,22 @@ class FormGenerator
     {
         $this->container = $container;
         $this->formDir   = $this->container->get('formPath');
+        $this->baseFormDir = $this->container->get('formPath');
+        $this->formDir = $this->baseFormDir;
+
+        if (!is_dir($this->formDir) && !mkdir($this->formDir, 0777, true) && !is_dir($this->formDir)) {
+            throw new DatabaseException(
+                title: 'Form Generator Error',
+                message: sprintf("Unable to create the forms directory '%s'.", $this->formDir),
+                code: 500
+            );
+        }
+    }
+
+    public function setConnection(string $connection): void
+    {
+        $this->subNamespace = str_replace(' ', '', ucwords(str_replace('_', ' ', $connection)));
+        $this->formDir = $this->baseFormDir . '/' . $this->subNamespace;
 
         if (!is_dir($this->formDir) && !mkdir($this->formDir, 0777, true) && !is_dir($this->formDir)) {
             throw new DatabaseException(
@@ -41,9 +59,16 @@ class FormGenerator
     {
         $modelParts = explode('\\', $modelClass);
         $modelName = array_pop($modelParts);
-        $modelNamespace = implode('\\', $modelParts);
+
+        $modelNamespace = $this->subNamespace !== null
+            ? $this->container->get('modelNamespace') . '\\' . $this->subNamespace
+            : implode('\\', $modelParts);
+
         $formClassName = $modelName . 'Form';
-        $namespaceForm = $this->container->get('formNamespace');
+
+        $namespaceForm = $this->container->get('formNamespace')
+            . ($this->subNamespace !== null ? '\\' . $this->subNamespace : '');
+
         $file = "{$this->formDir}/$formClassName.php";
 
         if (file_exists($file)) {
