@@ -66,7 +66,7 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
             }
 
             $db = new DatabaseManager();
-            $runner = new MigrationRunner($db);
+            $runner = new MigrationRunner($db, 'default');
             $pending = $runner->getPending($migrationsPath);
 
             if (empty($pending)) {

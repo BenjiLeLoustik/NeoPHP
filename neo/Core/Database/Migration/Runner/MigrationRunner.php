@@ -12,8 +12,10 @@ final class MigrationRunner
 {
     private const string TABLE = 'neo_migrations';
 
-    public function __construct(private DatabaseManager $db)
-    {
+    public function __construct(
+        private DatabaseManager $db,
+        private string $connection = 'default',
+    ) {
         $this->ensureTable();
     }
 
@@ -22,6 +24,7 @@ final class MigrationRunner
         $this->db->execute(sprintf("
             CREATE TABLE IF NOT EXISTS `%s` (
                 `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `connection` VARCHAR(50)  NOT NULL DEFAULT 'default',
                 `migration`  VARCHAR(255) NOT NULL,
                 `batch`      INT UNSIGNED NOT NULL,
                 `applied_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -39,9 +42,9 @@ final class MigrationRunner
     {
         return array_column(
             $this->db->fetchAll(sprintf(
-                'SELECT migration, batch, applied_at FROM `%s` ORDER BY id ASC',
+                'SELECT migration, batch, applied_at FROM `%s` WHERE connection = :connection ORDER BY id ASC',
                 self::TABLE
-            )),
+            ), ['connection' => $this->connection]),
             null,
             'migration'
         );
@@ -53,9 +56,9 @@ final class MigrationRunner
     public function getLastBatch(): int
     {
         $row = $this->db->fetch(sprintf(
-            'SELECT MAX(batch) AS last_batch FROM `%s`',
+            'SELECT MAX(batch) AS last_batch FROM `%s` WHERE connection = :connection',
             self::TABLE
-        ));
+        ), ['connection' => $this->connection]);
 
         return (int) ($row['last_batch'] ?? 0);
     }
@@ -154,7 +157,7 @@ final class MigrationRunner
             $db = $this->db;
         }
 
-        $runner = new self($db);
+        $runner = new self($db, $connection ?? 'default');
         $pending = $runner->getPending($path);
 
         if (empty($pending)) {
@@ -172,9 +175,9 @@ final class MigrationRunner
                 $instance = new $className();
                 $instance->up($db);
 
-                $db->execute(
-                    sprintf('INSERT INTO `%s` (migration, batch) VALUES (:migration, :batch)', self::TABLE),
-                    ['migration' => $className, 'batch' => $batch]
+                $this->db->execute(
+                    sprintf('INSERT INTO `%s` (connection, migration, batch) VALUES (:connection, :migration, :batch)', self::TABLE),
+                    ['connection' => $this->connection, 'migration' => $className, 'batch' => $batch]
                 );
             }
 
@@ -193,9 +196,9 @@ final class MigrationRunner
         $lastBatch = $this->getLastBatch();
         if ($lastBatch === 0) return [];
 
-        $rows = $db->fetchAll(
-            sprintf('SELECT migration FROM `%s` WHERE batch = :batch ORDER BY id DESC', self::TABLE),
-            ['batch' => $lastBatch]
+        $rows = $this->db->fetchAll(
+            sprintf('SELECT migration FROM `%s` WHERE connection = :connection AND batch = :batch ORDER BY id DESC', self::TABLE),
+            ['connection' => $this->connection, 'batch' => $lastBatch]
         );
 
         $rolledBack = [];
@@ -209,9 +212,9 @@ final class MigrationRunner
                 $instance->down($db);
             }
 
-            $db->execute(
-                sprintf('DELETE FROM `%s` WHERE migration = :migration', self::TABLE),
-                ['migration' => $className]
+            $this->db->execute(
+                sprintf('DELETE FROM `%s` WHERE connection = :connection AND migration = :migration', self::TABLE),
+                ['connection' => $this->connection, 'migration' => $className]
             );
 
             $rolledBack[] = $className;
