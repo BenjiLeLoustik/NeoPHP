@@ -39,6 +39,14 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
         );
 
         $this->addOption(
+            name: 'connection',
+            shortcut: null,
+            mode: InputOption::OPTIONAL,
+            description: 'Database connection to use',
+            default: null
+        );
+
+        $this->addOption(
             name: 'name',
             shortcut: null,
             mode: InputOption::REQUIRED,
@@ -60,7 +68,6 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
         $dryRun = (bool) $input->getOption('dry-run');
 
         $basePath = ROOT_DIR . "/src/$project";
-        $migrationsPath = "$basePath/Database/Migrations";
 
         if (!is_dir($basePath)) {
             Output::error("Project '$project' not found.");
@@ -69,6 +76,12 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
 
         try {
             new ApplicationPaths($this->container)->register($project);
+
+            $connection = $input->getOption('connection');
+            if ($connection !== null) {
+                DatabaseConnection::connectTo($connection);
+            }
+
             $this->container->get(DatabaseConnection::class);
 
             if (!DatabaseConnection::isConnected()) {
@@ -76,7 +89,14 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
                 return ExitCode::FAILURE;
             }
 
-            $introspector = new DatabaseIntrospector($this->container);
+            $migrationsPath = $connection !== null
+                ? "{$basePath}/Database/Migrations/{$connection}"
+                : "{$basePath}/Database/Migrations";
+
+            $introspector = $connection !== null
+                ? DatabaseIntrospector::on($this->container, $connection)
+                : new DatabaseIntrospector($this->container);
+
             $tables = $introspector->getTables();
 
             if (empty($tables)) {
@@ -85,7 +105,7 @@ final class DatabaseMigrationGenerateCommand extends AbstractCommand
             }
 
             $db = $this->container->get(DatabaseManager::class);
-            $snapshot = new MigrationSchemaSnapshot($db, $introspector);
+            $snapshot = new MigrationSchemaSnapshot($db, $introspector, $connection ?? 'default');
             $generator = new MigrationGenerator($introspector);
             $differ = new SchemaDiffer();
 
