@@ -29,7 +29,7 @@ final class MigrationRunner
                 `batch`      INT UNSIGNED NOT NULL,
                 `applied_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (`id`),
-                UNIQUE KEY `uq_migration` (`migration`)
+                UNIQUE KEY `uq_migration` (`connection`, `migration`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ", self::TABLE));
     }
@@ -42,9 +42,9 @@ final class MigrationRunner
     {
         return array_column(
             $this->db->fetchAll(sprintf(
-                'SELECT migration, batch, applied_at FROM `%s` WHERE connection = :connection ORDER BY id ASC',
+                'SELECT migration, batch, applied_at FROM `%s` ORDER BY id ASC',
                 self::TABLE
-            ), ['connection' => $this->connection]),
+            )),
             null,
             'migration'
         );
@@ -67,18 +67,16 @@ final class MigrationRunner
      * @param string $migrationsPath
      * @return array<int, string>
      */
-    public function getMigrationFiles(string $migrationsPath): array
+    public function getMigrationFiles(string $migrationsPath, bool $recursive = true): array
     {
-        $files = [];
+        $files = glob($migrationsPath . '/MigrationVersion_*.php') ?: [];
 
-        $files = array_merge(
-            $files, glob($migrationsPath . '/MigrationVersion_*.php') ?: []
-        );
-
-        foreach (glob($migrationsPath . '/*', GLOB_ONLYDIR) ?: [] as $subDir) {
-            $files = array_merge(
-                $files, glob($subDir . '/MigrationVersion_*.php') ?: []
-            );
+        if ($recursive) {
+            foreach (glob($migrationsPath . '/*', GLOB_ONLYDIR) ?: [] as $subDir) {
+                $files = array_merge(
+                    $files, glob($subDir . '/MigrationVersion_*.php') ?: []
+                );
+            }
         }
 
         sort($files);
@@ -90,12 +88,14 @@ final class MigrationRunner
      * @return array<int, string>
      * @throws DatabaseException
      */
-    public function getPending(string $migrationsPath): array
+    public function getPending(string $migrationsPath, bool $recursive = true): array
     {
         $applied = $this->getApplied();
-        $files = $this->getMigrationFiles($migrationsPath);
+        $files = $this->getMigrationFiles($migrationsPath, $recursive);
 
-        return array_filter($files, fn(string $f) => !isset($applied[basename($f, '.php')]));
+        return array_values(array_filter(
+            $files, fn(string $f) => !isset($applied[basename($f, '.php')])
+        ));
     }
 
     /**
@@ -158,7 +158,7 @@ final class MigrationRunner
         }
 
         $runner = new self($db, $connection ?? 'default');
-        $pending = $runner->getPending($path);
+        $pending = $runner->getPending($path, false);
 
         if (empty($pending)) {
             return [];
@@ -175,9 +175,9 @@ final class MigrationRunner
                 $instance = new $className();
                 $instance->up($db);
 
-                $this->db->execute(
+                $db->execute(
                     sprintf('INSERT INTO `%s` (connection, migration, batch) VALUES (:connection, :migration, :batch)', self::TABLE),
-                    ['connection' => $this->connection, 'migration' => $className, 'batch' => $batch]
+                    ['connection' => $connection ?? $this->connection, 'migration' => $className, 'batch' => $batch]
                 );
             }
 
