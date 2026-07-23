@@ -42,9 +42,22 @@ class ModelGenerator
 
     public function setConnection(string $connection): void
     {
-        $this->connectionName = $this->container->get('database.configModule')
+        $this->connectionName = $connection;
+        $this->prefix = $this->container->get('database.configModule')
             ->from('database')
             ->get("connections.{$connection}.prefix") ?? '';
+
+        $subFolder = str_replace(' ', '', ucwords(str_replace('_', ' ', $connection)));
+        $baseModelDir = $this->container->get('modelPath');
+        $this->modelDir = $baseModelDir . '/' . $subFolder;
+
+        if (!is_dir($this->modelDir) && !mkdir($this->modelDir, 0777, true) && !is_dir($this->modelDir)) {
+            throw new DatabaseException(
+                title: 'Model Generator Error',
+                message: sprintf("Unable to create the models directory '%s'.", $this->modelDir),
+                code: 500
+            );
+        }
     }
 
     /**
@@ -65,13 +78,15 @@ class ModelGenerator
             'columns' => []
         ];
 
+        $subNamespace = $this->connectionName !== null
+            ? '\\' . str_replace(' ', '', ucwords(str_replace('_', ' ', $this->connectionName)))
+            : '';
+
         $header = <<<PHP
 <?php
 declare(strict_types=1);
 
-namespace Neo\\Src\\{$this->appName}\\Database\\Model;
-
-use Neo\Core\Database\ORM\Model\AbstractModel;
+namespace Neo\\Src\\{$this->appName}\\Database\\Model{$subNamespace};
 PHP;
 
         $existingColumns = ['columns' => []];
