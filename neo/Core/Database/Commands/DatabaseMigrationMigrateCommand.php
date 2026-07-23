@@ -11,9 +11,7 @@ use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
-use Neo\Core\Database\Access\Introspector\DatabaseIntrospector;
 use Neo\Core\Database\DatabaseManager;
-use Neo\Core\Database\Migration\MigrationSchemaSnapshot;
 use Neo\Core\Database\Migration\Runner\MigrationRunner;
 use Neo\Core\DI\Container;
 
@@ -68,7 +66,6 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
             }
 
             $db = new DatabaseManager();
-            $snapshot = new MigrationSchemaSnapshot($db, new DatabaseIntrospector($this->container));
             $runner = new MigrationRunner($db);
             $pending = $runner->getPending($migrationsPath);
 
@@ -92,7 +89,7 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
                 return ExitCode::SUCCESS;
             }
 
-            $ran = $runner->run($migrationsPath, false, $snapshot);
+            $ran = $runner->run($migrationsPath, false);
             foreach ($ran as $name) {
                 Output::success("Applied: $name");
             }
