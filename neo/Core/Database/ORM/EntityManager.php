@@ -78,8 +78,23 @@ class EntityManager
         $modelName = array_pop($parts);
 
         $repositoryNamespace = $this->container->get('repositoryNamespace');
+        $modelNamespace = $this->container->get('modelNamespace');
 
-        return rtrim($repositoryNamespace, '\\') . '\\' . $modelName . 'Repository';
+        $baseModelNamespace = rtrim($modelNamespace, '\\') . '\\';
+        $fullModelNamespace = implode('\\', $parts) . '\\';
+
+        $subNamespace = '';
+        if (str_starts_with($fullModelNamespace, $baseModelNamespace)) {
+            $subNamespace = substr($fullModelNamespace, strlen($baseModelNamespace));
+            $subNamespace = rtrim($subNamespace, '\\');
+        }
+
+        $repoNamespace = rtrim($repositoryNamespace, '\\');
+        if ($subNamespace !== '') {
+            $repoNamespace .= '\\' . $subNamespace;
+        }
+
+        return $repoNamespace . '\\' . $modelName . 'Repository';
     }
 
     /**
