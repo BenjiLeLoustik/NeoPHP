@@ -87,6 +87,8 @@ class ModelGenerator
 declare(strict_types=1);
 
 namespace Neo\\Src\\{$this->appName}\\Database\\Model{$subNamespace};
+
+use Neo\Core\Database\ORM\Model\AbstractModel;
 PHP;
 
         $existingColumns = ['columns' => []];
