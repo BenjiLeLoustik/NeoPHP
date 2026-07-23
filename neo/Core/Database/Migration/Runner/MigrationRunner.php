@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Migration\Runner;
 
+use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Migration\MigrationSchemaSnapshot;
@@ -103,35 +104,13 @@ final class MigrationRunner
         bool $dryRun = false,
         ?MigrationSchemaSnapshot $snapshot = null
     ): array {
-        $pending = $this->getPending($migrationsPath);
-
-        if (count($pending) === 0) {
-            return [];
-        }
-
-        $batch = $this->getLastBatch() + 1;
         $ran = [];
 
-        foreach ($pending as $file) {
-            $className = basename($file, '.php');
+        $ran = array_merge($ran, $this->runForPath($migrationsPath, null, $dryRun, $snapshot));
 
-            if (!$dryRun) {
-                require_once $file;
-
-                $instance = new $className();
-                $instance->up($this->db);
-
-                $this->db->execute(
-                    sprintf('INSERT INTO `%s` (migration, batch) VALUES (:migration, :batch)', self::TABLE),
-                    ['migration' => $className, 'batch' => $batch]
-                );
-            }
-
-            $ran[] = $className;
-        }
-
-        if (!$dryRun && $snapshot !== null) {
-            $snapshot->take();
+        foreach (glob($migrationsPath . '/*', GLOB_ONLYDIR) ?: [] as $subDir) {
+            $connection = basename($subDir);
+            $ran = array_merge($ran, $this->runForPath($subDir, $connection, $dryRun, $snapshot));
         }
 
         return $ran;
@@ -143,40 +122,99 @@ final class MigrationRunner
      */
     public function rollback(string $migrationsPath, ?MigrationSchemaSnapshot $snapshot = null): array
     {
-        $lastBatch = $this->getLastBatch();
+        $rolledBack = [];
 
-        if ($lastBatch === 0) {
+        foreach (glob($migrationsPath . '/*', GLOB_ONLYDIR) ?: [] as $subDir) {
+            $connection = basename($subDir);
+            DatabaseConnection::connectTo($connection);
+            $db = DatabaseManager::on($connection);
+            $runner = new self($db);
+            $rolledBack = array_merge($rolledBack, $runner->rollbackForPath($subDir, $db));
+        }
+
+        $rolledBack = array_merge($rolledBack, $this->rollbackForPath($migrationsPath, $this->db));
+
+        if ($snapshot !== null && count($rolledBack) > 0) {
+            $snapshot->take();
+        }
+
+        return $rolledBack;
+    }
+
+    private function runForPath(
+        string $path,
+        ?string $connection,
+        bool $dryRun,
+        ?MigrationSchemaSnapshot $snapshot
+    ): array {
+        if ($connection !== null) {
+            DatabaseConnection::connectTo($connection);
+            $db = DatabaseManager::on($connection);
+        } else {
+            $db = $this->db;
+        }
+
+        $runner = new self($db);
+        $pending = $runner->getPending($path);
+
+        if (empty($pending)) {
             return [];
         }
 
-        $rows = $this->db->fetchAll(
+        $batch = $runner->getLastBatch() + 1;
+        $ran = [];
+
+        foreach ($pending as $file) {
+            $className = basename($file, '.php');
+
+            if (!$dryRun) {
+                require_once $file;
+                $instance = new $className();
+                $instance->up($db);
+
+                $db->execute(
+                    sprintf('INSERT INTO `%s` (migration, batch) VALUES (:migration, :batch)', self::TABLE),
+                    ['migration' => $className, 'batch' => $batch]
+                );
+            }
+
+            $ran[] = $className;
+        }
+
+        if (!$dryRun && $snapshot !== null && $connection === null) {
+            $snapshot->take();
+        }
+
+        return $ran;
+    }
+
+    private function rollbackForPath(string $path, DatabaseManager $db): array
+    {
+        $lastBatch = $this->getLastBatch();
+        if ($lastBatch === 0) return [];
+
+        $rows = $db->fetchAll(
             sprintf('SELECT migration FROM `%s` WHERE batch = :batch ORDER BY id DESC', self::TABLE),
             ['batch' => $lastBatch]
         );
 
         $rolledBack = [];
-
         foreach ($rows as $row) {
             $className = $row['migration'];
-            $file = "$migrationsPath/$className.php";
+            $file = "$path/$className.php";
 
             if (file_exists($file)) {
                 require_once $file;
-
                 $instance = new $className();
-                $instance->down($this->db);
+                $instance->down($db);
             }
 
-            $this->db->execute(
+            $db->execute(
                 sprintf('DELETE FROM `%s` WHERE migration = :migration', self::TABLE),
                 ['migration' => $className]
             );
 
             $rolledBack[] = $className;
-        }
-
-        if ($snapshot !== null && count($rolledBack) > 0) {
-            $snapshot->take();
         }
 
         return $rolledBack;
