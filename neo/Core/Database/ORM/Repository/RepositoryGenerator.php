@@ -12,6 +12,8 @@ class RepositoryGenerator
 {
     protected Container $container;
     private string $repoDir;
+    private ?string $subNamespace = null;
+    private string $baseRepoDir;
 
     /**
      * @throws ContainerExceptionInterface
@@ -22,6 +24,22 @@ class RepositoryGenerator
     {
         $this->container = $container;
         $this->repoDir = $this->container->get('repositoryPath');
+        $this->baseRepoDir = $this->container->get('repositoryPath');
+        $this->repoDir = $this->baseRepoDir;
+
+        if (!is_dir($this->repoDir) && !mkdir($this->repoDir, 0777, true) && !is_dir($this->repoDir)) {
+            throw new DatabaseException(
+                title: 'Repository Generator Error',
+                message: sprintf("Unable to create the repositories directory '%s'.", $this->repoDir),
+                code: 500
+            );
+        }
+    }
+
+    public function setConnection(string $connection): void
+    {
+        $this->subNamespace = str_replace(' ', '', ucwords(str_replace('_', ' ', $connection)));
+        $this->repoDir = $this->baseRepoDir . '/' . $this->subNamespace;
 
         if (!is_dir($this->repoDir) && !mkdir($this->repoDir, 0777, true) && !is_dir($this->repoDir)) {
             throw new DatabaseException(
@@ -41,9 +59,15 @@ class RepositoryGenerator
     {
         $modelParts = explode('\\', $modelClass);
         $modelName = array_pop($modelParts);
-        $modelNamespace = implode('\\', $modelParts);
+
+        $modelNamespace = $this->subNamespace !== null
+            ? $this->container->get('modelNamespace') . '\\' . $this->subNamespace
+            : implode('\\', $modelParts);
+
         $repoClassName = $modelName . 'Repository';
-        $namespaceRepo = $this->container->get('repositoryNamespace');
+
+        $namespaceRepo = $this->container->get('repositoryNamespace')
+            . ($this->subNamespace !== null ? '\\' . $this->subNamespace : '');
 
         $code = <<<PHP
 <?php
