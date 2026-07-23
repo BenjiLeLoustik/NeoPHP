@@ -13,7 +13,8 @@ final class MigrationSchemaSnapshot
 
     public function __construct(
         private readonly DatabaseManager $db,
-        private readonly DatabaseIntrospector $introspector
+        private readonly DatabaseIntrospector $introspector,
+        private readonly string $connection = 'default',
     ) {
         $this->ensureTable();
     }
@@ -23,6 +24,7 @@ final class MigrationSchemaSnapshot
         $this->db->execute(sprintf("
             CREATE TABLE IF NOT EXISTS `%s` (
                 `id`          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `connection`  VARCHAR(50)  NOT NULL DEFAULT 'default',
                 `schema_hash` VARCHAR(64)  NOT NULL,
                 `schema_dump` LONGTEXT     NOT NULL,
                 `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -41,12 +43,13 @@ final class MigrationSchemaSnapshot
 
         $this->db->execute(
             sprintf(
-                'INSERT INTO `%s` (schema_hash, schema_dump) VALUES (:hash, :dump)',
+                'INSERT INTO `%s` (connection, schema_hash, schema_dump) VALUES (:connection, :hash, :dump)',
                 self::TABLE
             ),
             [
+                'connection' => $this->connection,
                 'hash' => $hash,
-                'dump' => $dump
+                'dump' => $dump,
             ]
         );
     }
@@ -58,9 +61,9 @@ final class MigrationSchemaSnapshot
     public function getLastSchema(): ?array
     {
         $row = $this->db->fetch(sprintf(
-            'SELECT schema_dump FROM `%s` ORDER BY id DESC LIMIT 1',
+            'SELECT schema_dump FROM `%s` WHERE connection = :connection ORDER BY id DESC LIMIT 1',
             self::TABLE
-        ));
+        ), ['connection' => $this->connection]);
 
         if ($row === null || !isset($row['schema_dump'])) {
             return null;
