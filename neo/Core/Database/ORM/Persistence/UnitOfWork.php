@@ -6,15 +6,17 @@ namespace Neo\Core\Database\ORM\Persistence;
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Mapping\ClassMetaData;
+use Neo\Core\Database\ORM\Collection\Collection;
+use Neo\Core\Database\ORM\Collection\LazyCollection;
 use PDO;
 use Throwable;
 
 final class UnitOfWork
 {
-    public const int STATE_MANAGED  = 1;
-    public const int STATE_NEW      = 2;
+    public const int STATE_MANAGED = 1;
+    public const int STATE_NEW = 2;
     public const int STATE_DETACHED = 3;
-    public const int STATE_REMOVED  = 4;
+    public const int STATE_REMOVED = 4;
 
     /** @var array<class-string, array<string, object>> */
     private array $identityMap = [];
@@ -42,6 +44,9 @@ final class UnitOfWork
 
     /** @var array<class-string, EntityPersister> */
     private array $persisters = [];
+
+    /** @var array<string, array<string, mixed>> */
+    private array $collectionSnapshots = [];
 
     private ?PDO $pdo = null;
 
@@ -183,10 +188,12 @@ final class UnitOfWork
     public function commit(): void
     {
         $this->computeChangeSets();
+        $collectionCandidates = $this->manyToManyCandidates();
 
         if ($this->entityInsertions === []
             && $this->entityUpdates === []
             && $this->entityDeletions === []
+            && !$this->hasCollectionChanges($collectionCandidates)
         ) {
             return;
         }
@@ -214,7 +221,10 @@ final class UnitOfWork
                 $this->refreshOriginalData($entity);
             }
 
+            $this->executeManyToManyUpdates($collectionCandidates);
+
             foreach (array_reverse($this->entityDeletions, true) as $entity) {
+                $this->clearOwningManyToMany($entity);
                 $this->getEntityPersister($entity::class)->delete($entity);
                 $this->removeFromIdentityMap($entity);
             }
@@ -230,8 +240,8 @@ final class UnitOfWork
         }
 
         $this->entityInsertions = [];
-        $this->entityUpdates    = [];
-        $this->entityDeletions  = [];
+        $this->entityUpdates = [];
+        $this->entityDeletions = [];
         $this->entityChangeSets = [];
     }
 
@@ -307,6 +317,212 @@ final class UnitOfWork
         }
 
         return $changeSet;
+    }
+
+    /**
+     * @param list<object> $targets
+     */
+    public function snapshotManyToMany(object $owner, string $field, array $targets): void
+    {
+        $this->collectionSnapshots[spl_object_id($owner) . ':' . $field] = $this->targetIdMap($targets);
+    }
+
+    /**
+     * @return list<array{entity: object, field: string, assoc: array<string, mixed>}>
+     */
+    private function manyToManyCandidates(): array
+    {
+        $seen = [];
+        $candidates = [];
+
+        $pools = [$this->entityInsertions];
+        foreach ($this->identityMap as $entities) {
+            $pools[] = $entities;
+        }
+
+        foreach ($pools as $pool) {
+            foreach ($pool as $entity) {
+                $oid = spl_object_id($entity);
+                if (isset($seen[$oid]) || isset($this->entityDeletions[$oid])) {
+                    continue;
+                }
+                $seen[$oid] = true;
+
+                $metadata = $this->em->getClassMetadata($entity::class);
+                foreach ($metadata->associationMappings as $field => $assoc) {
+                    if (empty($assoc['isOwningSide']) || $assoc['type'] !== ClassMetaData::MANY_TO_MANY) {
+                        continue;
+                    }
+                    if (!$this->isInitializedCollection($this->readAssociation($metadata, $entity, $field))) {
+                        continue;
+                    }
+                    $candidates[] = ['entity' => $entity, 'field' => $field, 'assoc' => $assoc];
+                }
+            }
+        }
+
+        return $candidates;
+    }
+
+    /**
+     * @param list<array{entity: object, field: string, assoc: array<string, mixed>}> $candidates
+     */
+    private function hasCollectionChanges(array $candidates): bool
+    {
+        foreach ($candidates as $c) {
+            if ($this->collectionDiffers($c['entity'], $c['field'])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function collectionDiffers(object $entity, string $field): bool
+    {
+        $metadata = $this->em->getClassMetadata($entity::class);
+        $collection = $this->readAssociation($metadata, $entity, $field);
+        $snapshot = $this->collectionSnapshots[spl_object_id($entity) . ':' . $field] ?? null;
+
+        foreach ($this->toIterable($collection) as $target) {
+            if (is_object($target) && $this->extractId($target) === null) {
+                return true;
+            }
+        }
+
+        $current = $this->targetIdMap($this->toIterable($collection));
+
+        if ($snapshot === null) {
+            return $current !== [];
+        }
+        if (count($current) !== count($snapshot)) {
+            return true;
+        }
+        foreach ($current as $hash => $_) {
+            if (!isset($snapshot[$hash])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param list<array{entity: object, field: string, assoc: array<string, mixed>}> $candidates
+     */
+    private function executeManyToManyUpdates(array $candidates): void
+    {
+        foreach ($candidates as $c) {
+            $entity = $c['entity'];
+            $field = $c['field'];
+            $assoc = $c['assoc'];
+
+            $metadata = $this->em->getClassMetadata($entity::class);
+            $ownerId = $metadata->getIdentifierValue($entity);
+            if ($ownerId === null) {
+                continue;
+            }
+
+            $current = $this->targetIdMapStrict(
+                $this->toIterable($this->readAssociation($metadata, $entity, $field)),
+                $assoc['targetEntity']
+            );
+
+            $key = spl_object_id($entity) . ':' . $field;
+            $snapshot = $this->collectionSnapshots[$key] ?? null;
+            $persister = $this->getEntityPersister($entity::class);
+
+            if ($snapshot === null) {
+                $persister->clearManyToMany($assoc, $ownerId);
+                $persister->synchronizeManyToMany($assoc, $ownerId, array_values($current), []);
+            } else {
+                $added = [];
+                foreach ($current as $hash => $id) {
+                    if (!isset($snapshot[$hash])) {
+                        $added[] = $id;
+                    }
+                }
+                $removed = [];
+                foreach ($snapshot as $hash => $id) {
+                    if (!isset($current[$hash])) {
+                        $removed[] = $id;
+                    }
+                }
+                if ($added !== [] || $removed !== []) {
+                    $persister->synchronizeManyToMany($assoc, $ownerId, $added, $removed);
+                }
+            }
+
+            $this->collectionSnapshots[$key] = $current;
+        }
+    }
+
+    private function clearOwningManyToMany(object $entity): void
+    {
+        $metadata = $this->em->getClassMetadata($entity::class);
+        $ownerId = $metadata->getIdentifierValue($entity);
+        if ($ownerId === null) {
+            return;
+        }
+
+        $persister = $this->getEntityPersister($entity::class);
+        foreach ($metadata->associationMappings as $assoc) {
+            if (!empty($assoc['isOwningSide']) && $assoc['type'] === ClassMetaData::MANY_TO_MANY) {
+                $persister->clearManyToMany($assoc, $ownerId);
+            }
+        }
+    }
+
+    private function isInitializedCollection(mixed $collection): bool
+    {
+        if ($collection instanceof LazyCollection) {
+            return $collection->isInitialized();
+        }
+        return $collection instanceof Collection;
+    }
+
+    /**
+     * @param iterable<mixed> $targets
+     * @return array<string, mixed>
+     */
+    private function targetIdMap(iterable $targets): array
+    {
+        $map = [];
+        foreach ($targets as $target) {
+            if (!is_object($target)) {
+                continue;
+            }
+            $id = $this->extractId($target);
+            if ($id !== null) {
+                $map[$this->idHash($id)] = $id;
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * @param iterable<mixed> $targets
+     * @return array<string, mixed>
+     */
+    private function targetIdMapStrict(iterable $targets, string $targetEntity): array
+    {
+        $map = [];
+        foreach ($targets as $target) {
+            if (!is_object($target)) {
+                continue;
+            }
+            $id = $this->extractId($target);
+            if ($id === null) {
+                throw new DatabaseException(
+                    title: 'UnitOfWork Error',
+                    message: sprintf(
+                        "A related '%s' entity has no identifier; persist it (or enable cascade persist) before flushing the owning collection.",
+                        $targetEntity
+                    ),
+                    code: 500
+                );
+            }
+            $map[$this->idHash($id)] = $id;
+        }
+        return $map;
     }
 
     /**
@@ -436,6 +652,7 @@ final class UnitOfWork
         $this->entityUpdates = [];
         $this->entityDeletions = [];
         $this->entityChangeSets = [];
+        $this->collectionSnapshots = [];
     }
 
     public function getEntityPersister(string $className): EntityPersister
