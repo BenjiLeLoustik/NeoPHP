@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace Neo\Core\Security\Auth\Guard\Interface;
 
-use Neo\Core\Database\ORM\Model\AbstractModel;
-
 interface GuardInterface
 {
     /**
@@ -12,13 +10,13 @@ interface GuardInterface
      */
     public function attempt(array $credentials): bool;
 
-    public function login(AbstractModel $user): void;
+    public function login(object $user): void;
 
     public function logout(): void;
 
     public function check(): bool;
 
-    public function user(): ?AbstractModel;
+    public function user(): ?object;
 
     public function hasRole(string $role): bool;
 }

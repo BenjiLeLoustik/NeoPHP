@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Neo\Core\Security\Auth\Guard;
 
-use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
-use Neo\Core\Database\ORM\Model\AbstractModel;
+use Neo\Core\Database\Form\PropertyAccessor;
+use Neo\Core\Database\ORM\Persistence\EntityManager;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;
@@ -17,18 +17,24 @@ final class SessionGuard implements GuardInterface
     private const string SESSION_LAST_ACTIVITY_KEY = '_auth_last_activity';
     private const int DEFAULT_TIMEOUT = 1800;
 
+    private readonly PropertyAccessor $accessor;
+
     /**
+     * @param class-string $model
      * @param array<string, mixed> $role
      */
     public function __construct(
         private readonly Session $session,
         private readonly PasswordManager $passwordManager,
+        private readonly EntityManager $em,
         private readonly string $model,
         private readonly string $identifier,
         private readonly string $password,
         private readonly array $role = [],
         private readonly int $timeout = self::DEFAULT_TIMEOUT,
-    ) {}
+    ) {
+        $this->accessor = new PropertyAccessor();
+    }
 
     /**
      * @param array<string, mixed> $credentials
@@ -37,30 +43,27 @@ final class SessionGuard implements GuardInterface
      */
     public function attempt(array $credentials): bool
     {
-        $identifierField = $this->identifier;
-        $passwordField = $this->password;
-
-        if (!isset($credentials[$identifierField], $credentials[$passwordField])) {
+        if (!isset($credentials[$this->identifier], $credentials[$this->password])) {
             throw new AuthException(
                 title: 'Auth Error',
-                message: sprintf("Credentials must contain '%s' and '%s'.", $identifierField, $passwordField),
+                message: sprintf("Credentials must contain '%s' and '%s'.", $this->identifier, $this->password),
                 code: 400
             );
         }
 
-        $user = $this->findByIdentifier($credentials[$identifierField]);
+        $user = $this->findByIdentifier($credentials[$this->identifier]);
 
-        if (!$user) {
+        if ($user === null) {
             return false;
         }
 
-        $hashedPassword = $user->{$passwordField} ?? null;
+        $hashedPassword = $this->accessor->getValue($user, $this->password);
 
-        if (!$hashedPassword) {
+        if (!is_string($hashedPassword) || $hashedPassword === '') {
             return false;
         }
 
-        if (!$this->passwordManager->verify($credentials[$passwordField], $hashedPassword)) {
+        if (!$this->passwordManager->verify($credentials[$this->password], $hashedPassword)) {
             return false;
         }
 
@@ -69,11 +72,12 @@ final class SessionGuard implements GuardInterface
         return true;
     }
 
-    public function login(AbstractModel $user): void
+    public function login(object $user): void
     {
-        $pk = $user::getPrimaryKey();
+        $id = $this->em->getClassMetadata($user::class)->getIdentifierValue($user);
+
         $this->session->regenerate();
-        $this->session->set(self::SESSION_KEY, $user->{$pk});
+        $this->session->set(self::SESSION_KEY, $id);
         $this->session->set(self::SESSION_LAST_ACTIVITY_KEY, time());
     }
 
@@ -100,33 +104,21 @@ final class SessionGuard implements GuardInterface
         return true;
     }
 
-    public function user(): ?AbstractModel
+    public function user(): ?object
     {
         if (!$this->check()) {
             return null;
         }
 
         $id = $this->session->get(self::SESSION_KEY);
-        $modelClass = $this->model;
+        $user = $this->em->find($this->model, $id);
 
-        $user = $modelClass::getIdentity($id);
-
-        if ($user) {
-            return $user;
-        }
-
-        $stmt = DatabaseConnection::getPdo()->prepare(
-            "SELECT * FROM {$modelClass::getTable()} WHERE {$modelClass::getPrimaryKey()} = ? LIMIT 1"
-        );
-        $stmt->execute([$id]);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if (!$row) {
+        if ($user === null) {
             $this->logout();
             return null;
         }
 
-        return new $modelClass($row);
+        return $user;
     }
 
     /**
@@ -134,65 +126,38 @@ final class SessionGuard implements GuardInterface
      */
     public function hasRole(string $role): bool
     {
-        if (empty($this->role)) {
+        if ($this->role === []) {
             return false;
         }
 
         $user = $this->user();
 
-        if (!$user) {
+        if ($user === null) {
             return false;
         }
 
-        $foreignKey = $this->role['foreign_key'];
-        $roleModelClass = $this->role['model'];
+        $roleValue = $this->accessor->getValue($user, $this->role['relation']);
+
+        if ($roleValue === null) {
+            return false;
+        }
+
         $field = $this->role['field'];
 
-        $roleId = $user->{$foreignKey} ?? null;
-
-        if (!$roleId) {
-            return false;
+        if (is_object($roleValue)) {
+            return $this->accessor->getValue($roleValue, $field) === $role;
         }
 
-        $stmt = DatabaseConnection::getPdo()->prepare(
-            "SELECT * FROM {$roleModelClass::getTable()} WHERE {$roleModelClass::getPrimaryKey()} = ? LIMIT 1"
-        );
-        $stmt->execute([$roleId]);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $roleEntity = $this->em->find($this->role['model'], $roleValue);
 
-        if (!$row) {
-            return false;
-        }
-
-        $roleModel = new $roleModelClass($row);
-
-        return $roleModel->{$field} === $role;
+        return $roleEntity !== null && $this->accessor->getValue($roleEntity, $field) === $role;
     }
 
     /**
      * @throws DatabaseException
-     * @throws AuthException
      */
-    private function findByIdentifier(mixed $value): ?AbstractModel
+    private function findByIdentifier(mixed $value): ?object
     {
-        $modelClass = $this->model;
-        $field = $this->identifier;
-        $instance = new $modelClass();
-
-        if (!empty($instance->fillable) && !in_array($field, $instance->fillable, true)) {
-            throw new AuthException(
-                title: 'Auth Error',
-                message: "Invalid identifier field.",
-                code: 400
-            );
-        }
-
-        $stmt = DatabaseConnection::getPdo()->prepare(
-            "SELECT * FROM {$modelClass::getTable()} WHERE {$field} = ? AND deleted_at IS NULL LIMIT 1"
-        );
-        $stmt->execute([$value]);
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        return $row ? new $modelClass($row) : null;
+        return $this->em->getRepository($this->model)->findOneBy([$this->identifier => $value]);
     }
 }

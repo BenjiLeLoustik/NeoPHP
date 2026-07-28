@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Security\Auth;
 
-use Neo\Core\Database\ORM\Model\AbstractModel;
+use Neo\Core\Database\ORM\Persistence\EntityManager;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Request\Request;
@@ -66,7 +66,7 @@ class AuthManager
     /**
      * @throws AuthException
      */
-    public function login(AbstractModel $user): void
+    public function login(object $user): void
     {
         $this->ensureEnabled();
         $this->guard->login($user);
@@ -87,7 +87,7 @@ class AuthManager
         return $this->guard->check();
     }
 
-    public function user(): ?AbstractModel
+    public function user(): ?object
     {
         if ($this->guard === null) return null;
         return $this->guard->user();
@@ -102,7 +102,7 @@ class AuthManager
     /**
      * @throws AuthException
      */
-    public function generateToken(AbstractModel $user): string
+    public function generateToken(object $user): string
     {
         $this->ensureEnabled();
 
@@ -127,6 +127,8 @@ class AuthManager
         $options = $this->config['options'] ?? [];
         $role = $this->config['role'] ?? [];
 
+        $em = $this->container->get(EntityManager::class);
+
         return match($guardType) {
             'token' => new TokenGuard(
                 $this->container->get(Request::class),
@@ -136,6 +138,7 @@ class AuthManager
                     $options['algorithm']  ?? 'HS256'
                 ),
                 $this->container->get(PasswordManager::class),
+                $em,
                 $this->config['model'],
                 $this->config['identifier'] ?? 'email',
                 $this->config['password'] ?? 'password',
@@ -144,6 +147,7 @@ class AuthManager
             default => new SessionGuard(
                 $this->container->get('auth.clientModule')->session(),
                 $this->container->get(PasswordManager::class),
+                $em,
                 $this->config['model'],
                 $this->config['identifier'] ?? 'email',
                 $this->config['password'] ?? 'password',
