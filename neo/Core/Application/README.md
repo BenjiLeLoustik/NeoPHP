@@ -89,14 +89,10 @@ $appPaths->register('MyProject'); // Force un projet spécifique
 | `controllersPath`       | `{appPath}/App/Controllers`                         |
 | `assetsPath`            | `{appPath}/Assets/`                                 |
 | `repositoryPath`        | `{appPath}/Database/Repository`                     |
-| `modelPath`             | `{appPath}/Database/Model`                          |
-| `formPath`              | `{appPath}/Database/Forms`                          |
 | `listenersPath`         | `{appPath}/App/Event/Listener`                      |
 | `cronsPath`             | `{appPath}/App/Crons`                               |
 | `controllerNamespace`   | `Neo\Src\MyProject\App\Controllers\`                |
-| `modelNamespace`        | `Neo\Src\MyProject\Database\Model`                  |
 | `repositoryNamespace`   | `Neo\Src\MyProject\Database\Repository`             |
-| `formNamespace`         | `Neo\Src\MyProject\Database\Forms`                  |
 | `manifestFilename`      | `manifest.json`                                     |
 
 ### Résolution du dossier public
