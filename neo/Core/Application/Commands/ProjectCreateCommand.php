@@ -91,9 +91,8 @@ final class ProjectCreateCommand extends AbstractCommand
             'Assets/',
             'Config/',
             'Database/Migrations/',
-            'Database/Model/',
+            'Database/Entity/',
             'Database/Repository/',
-            'Database/Forms/',
             'Storage/',
             'Translations',
         ];
