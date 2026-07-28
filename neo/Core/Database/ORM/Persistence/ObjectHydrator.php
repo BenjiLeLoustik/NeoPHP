@@ -90,15 +90,22 @@ final class ObjectHydrator
     private function writeToManyField(ClassMetaData $metadata, object $entity, string $field, array $assoc, mixed $ownerId): void
     {
         $em = $this->em;
-        $loader = static function () use ($em, $assoc, $ownerId): array {
-            return $em->getUnitOfWork()
+        $loader = static function () use ($em, $entity, $field, $assoc, $ownerId): array {
+            $items = $em->getUnitOfWork()
                 ->getEntityPersister($assoc['targetEntity'])
                 ->loadCollection($assoc, $ownerId);
+
+            if ($assoc['type'] === ClassMetaData::MANY_TO_MANY && !empty($assoc['isOwningSide'])) {
+                $em->getUnitOfWork()->snapshotManyToMany($entity, $field, $items);
+            }
+
+            return $items;
         };
 
         try {
             $metadata->setFieldValue($entity, $field, new LazyCollection($loader));
         } catch (\TypeError) {
+
         }
     }
 
