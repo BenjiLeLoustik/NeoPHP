@@ -384,10 +384,14 @@ class RouterManager
         $route = '/' . trim($route, '/');
 
         $pattern = preg_replace_callback(
-            '/\/\{([a-zA-Z0-9_]+)(\?)?\}/',
+            '/(\/\{([a-zA-Z0-9_]+)(\?)?\})|([^{]+)/',
             function ($m) use ($requirements) {
-                $paramName = $m[1];
-                $isOptional = isset($m[2]);
+                if ($m[1] === '') {
+                    return preg_quote($m[4], '#');
+                }
+
+                $paramName = $m[2];
+                $isOptional = isset($m[3]) && $m[3] === '?';
                 $regex = $requirements[$paramName] ?? '[^/]+';
 
                 set_error_handler(static fn() => true);

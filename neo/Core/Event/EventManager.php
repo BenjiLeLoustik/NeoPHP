@@ -55,7 +55,8 @@ class EventManager
         $cacheFile = $this->container->get('storagePath') . '/var/cache/events/listeners.php';
 
         if (!$this->isDebug() && file_exists($cacheFile)) {
-            $this->listeners = unserialize(file_get_contents($cacheFile));
+            $decoded = json_decode(file_get_contents($cacheFile), true);
+            $this->listeners = is_array($decoded) ? $decoded : [];
             return;
         }
 
@@ -131,7 +132,7 @@ class EventManager
                     code: 500
                 );
             }
-            if (file_put_contents($cacheFile, serialize($this->listeners)) === false) {
+            if (file_put_contents($cacheFile, json_encode($this->listeners, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) === false) {
                 throw new EventException(
                     title: 'Event Cache Write Error',
                     message: sprintf("Unable to write event cache file '%s'.", $cacheFile),
