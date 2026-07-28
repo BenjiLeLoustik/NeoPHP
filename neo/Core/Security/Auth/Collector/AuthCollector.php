@@ -40,8 +40,7 @@ class AuthCollector implements CollectorInterface
             ];
         }
 
-        $pk = $user::getPrimaryKey();
-        $attributes = $user->toArray();
+        $attributes = $this->extractAttributes($user);
 
         foreach (['password', 'remember_token', 'token'] as $sensitive) {
             unset($attributes[$sensitive]);
@@ -50,7 +49,7 @@ class AuthCollector implements CollectorInterface
         return [
             'authenticated' => true,
             'user' => [
-                'id' => $user->{$pk} ?? null,
+                'id' => $attributes['id'] ?? null,
                 'attributes' => $attributes,
             ],
         ];
@@ -116,5 +115,29 @@ HTML;
 </div>
 <dl class="n-kv">{$rows}</dl>
 HTML;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function extractAttributes(object $user): array
+    {
+        $attributes = [];
+
+        foreach (new \ReflectionObject($user)->getProperties() as $prop) {
+            if ($prop->isStatic() || !$prop->isInitialized($user)) {
+                continue;
+            }
+
+            $value = $prop->getValue($user);
+
+            if (is_object($value)) {
+                continue;
+            }
+
+            $attributes[$prop->getName()] = $value;
+        }
+
+        return $attributes;
     }
 }
