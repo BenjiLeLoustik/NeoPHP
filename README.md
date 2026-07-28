@@ -460,7 +460,7 @@ final class PostController extends AbstractController
     public function index(): Response
     {
         return $this->render('pages/posts/index.html.twig', [
-            'posts' => $this->postRepository->findAll()->getModels(),
+            'posts' => $this->postRepository->findAll(),
         ]);
     }
 
@@ -468,7 +468,7 @@ final class PostController extends AbstractController
     public function show(int $id): Response
     {
         return $this->render('pages/posts/show.html.twig', [
-            'post' => $this->postRepository->with('author')->find($id),
+            'post' => $this->postRepository->find($id),
         ]);
     }
 }
@@ -1361,7 +1361,7 @@ final class ApiAuthController extends AbstractController
             return $this->jsonError('Identifiants invalides', 401);
         }
 
-        $user = $this->userRepository->findBy('email', $email);
+        $user = $this->userRepository->findOneBy(['email' => $email]);
 
         if ($user === null) {
             return $this->jsonError('Utilisateur introuvable', 401);
@@ -1547,13 +1547,16 @@ Exemple dans un contrôleur :
 #[Route(path: '/register', name: 'register', methods: ['POST'])]
 public function register(): Response
 {
-    $user = new \Neo\Src\Blog\Database\Model\User();
+    $user = new \Neo\Src\Blog\Database\Entity\User();
     $user->setFirstname((string) $this->request->body('firstname'));
     $user->setEmail((string) $this->request->body('email'));
     $user->setPassword($this->getPasswordManager()->hash(
         (string) $this->request->body('password')
     ));
-    $user->save();
+
+    $em = $this->entityManager();
+    $em->persist($user);
+    $em->flush();
 
     $this->dispatch(new \Neo\Src\Blog\App\Event\UserRegisteredEvent((int) $user->getId()));
 
@@ -2106,13 +2109,13 @@ declare(strict_types=1);
 
 namespace Neo\Src\Blog\Database\Repository;
 
-use Neo\Core\Database\ORM\Repository\AbstractRepository;
+use Neo\Core\Database\ORM\Persistence\EntityRepository;
 use Neo\Core\Testing\Attribute\Test;
-use Neo\Src\Blog\Database\Model\User;
+use Neo\Src\Blog\Database\Entity\User;
 
 #[Test(
     type: 'database',
-    cases: ['find_by_email', 'save'],
+    cases: ['find_by_email', 'create'],
     dataset: [
         'table' => 'users',
         'data' => [
@@ -2121,9 +2124,8 @@ use Neo\Src\Blog\Database\Model\User;
         ],
     ],
 )]
-final class UserRepository extends AbstractRepository
+final class UserRepository extends EntityRepository
 {
-    protected string $modelClass = User::class;
 }
 ```
 
