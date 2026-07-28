@@ -1,34 +1,19 @@
 <?php
-declare(strict_types=1);
 
 namespace Neo\Core\Database\Access\Connection;
 
 use Neo\Core\Database\Exception\DatabaseException;
-use Neo\Core\Database\ORM\ORM;
 use Neo\Core\DI\Container;
-use Neo\Core\DI\Exception\ContainerException;
 use PDO;
 use PDOException;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
 class DatabaseConnection
 {
     protected Container $container;
-
-    /** @var array<string, PDO> */
     private static array $connections = [];
-
     private static ?string $defaultName = null;
-
     private static ?Container $sharedContainer = null;
 
-    /**
-     * @throws NotFoundExceptionInterface
-     * @throws ContainerExceptionInterface
-     * @throws DatabaseException
-     * @throws ContainerException
-     */
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -38,21 +23,35 @@ class DatabaseConnection
             return;
         }
 
-        $dbEnabled = $container->get('database.configModule')->from('database')->get('enabled');
+        $dbEnabled = $container->get('database.configModule')
+            ->from('database')
+            ->get('enabled');
 
         if ($dbEnabled !== true) {
             return;
         }
 
-        $defaultName = $container->get('database.configModule')->from('database')->get('use');
-        self::$defaultName = $defaultName;
-        self::connectTo($defaultName);
+        $defaultName = $container->get('database.configModule')
+            ->from('database')
+            ->get('use');
+
+        try {
+            self::connectTo($defaultName);
+            self::$defaultName = $defaultName;
+        } catch (DatabaseException $e) {
+            if (!self::isUnknownDatabase($e)) {
+                throw $e;
+            }
+        }
     }
 
-    /**
-     * @throws DatabaseException
-     * @throws ContainerException
-     */
+    private static function isUnknownDatabase(DatabaseException $e): bool
+    {
+        $message = $e->getMessage();
+
+        return str_contains($message, '1049') || stripos($message, 'unknown database') !== false;
+    }
+
     public static function connectTo(string $name): PDO
     {
         if (isset(self::$connections[$name])) {
@@ -67,21 +66,20 @@ class DatabaseConnection
             );
         }
 
-        $config = self::$sharedContainer->get('database.configModule')->from('database')->get("connections.{$name}");
+        $config = self::$sharedContainer->get('database.configModule')
+            ->from('database')
+            ->get("connections.{$name}");
 
         if (!is_array($config)) {
             throw new DatabaseException(
                 title: "Database Connection Error",
-                message: sprintf(
-                    "No configuration found for database connection '%s'.",
-                    $name
-                ),
+                message: sprintf("No configuration found for database connection '%s'.", $name),
                 code: 500
             );
         }
 
         $dsn = sprintf(
-            '%s:host=%s;port=%d;dbname=%s;charset=%s',
+            "%s:host=%s;port=%s;dbname=%s;charset=%s",
             $config['driver'],
             $config['host'],
             $config['port'] ?? 3306,
@@ -97,7 +95,7 @@ class DatabaseConnection
                 [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_EMULATE_PREPARES => false,
+                    PDO::ATTR_EMULATE_PREPARES => false
                 ]
             );
         } catch (PDOException $e) {
@@ -111,12 +109,8 @@ class DatabaseConnection
         self::$connections[$name] = $pdo;
 
         return $pdo;
-
     }
 
-    /**
-     * @throws DatabaseException
-     */
     public static function getPdo(?string $name = null): PDO
     {
         $name ??= self::$defaultName;
@@ -150,9 +144,6 @@ class DatabaseConnection
         return self::$defaultName;
     }
 
-    /**
-     * @return array<int, string>
-     */
     public static function getConnectionNames(): array
     {
         return array_keys(self::$connections);

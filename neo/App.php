@@ -6,7 +6,6 @@ namespace Neo;
 use Neo\Core\Application\ApplicationDetector;
 use Neo\Core\Application\ApplicationPaths;
 use Neo\Core\Application\Exception\ApplicationException;
-use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\ContainerRegistry;
 use Neo\Core\DI\Exception\ContainerException;
@@ -34,8 +33,6 @@ class App
      */
     public function __construct()
     {
-        AbstractModel::clearIdentityMap();
-
         $this->container = new Container();
         $this->container->set(Container::class, fn() => $this->container);
 

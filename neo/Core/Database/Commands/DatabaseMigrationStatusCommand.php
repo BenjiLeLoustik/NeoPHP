@@ -100,7 +100,7 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
 
             if ($lastSchema !== null && $lastSchema !== $snapshot->getCurrentSchema()) {
                 Output::newLine();
-                Output::warning('Schema has changed. Run database:migration:generate ?');
+                Output::warning('Schema has changed. Run database:orm:diff ?');
             }
 
             return ExitCode::SUCCESS;
