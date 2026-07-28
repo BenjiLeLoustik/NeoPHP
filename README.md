@@ -28,6 +28,7 @@ Si le besoin est un framework plus petit, plus prévisible et plus facile a suiv
 - [Vues Twig, assets et traductions](#vues-twig-assets-et-traductions)
 - [Base de donnees et QueryBuilder](#base-de-donnees-et-querybuilder)
 - [ORM et repositories](#orm-et-repositories)
+- [ORM Data Mapper (entités)](#orm-data-mapper-entités)
 - [Formulaires, upload et validation](#formulaires-upload-et-validation)
 - [Securite: auth, mot de passe, middlewares, csrf](#securite-auth-mot-de-passe-middlewares-csrf)
 - [Events](#events)
@@ -184,8 +185,8 @@ Les commandes qui opèrent sur un projet existant attendent en général `--proj
 
 Exceptions notables :
 
-- `app:make:project`
-- `app:sync:projects`
+- `project:create`
+- `project:sync`
 - `app:serve`
 
 Exemple :
@@ -219,9 +220,8 @@ src/Blog/
 |   |-- session.config.php
 |   `-- twig.config.php
 |-- Database/
-|   |-- Forms/
+|   |-- Entity/
 |   |-- Migrations/
-|   |-- Model/
 |   |-- Repository/
 |-- Storage/
 `-- Translations/
@@ -248,7 +248,8 @@ Certains dossiers sont créés plus tard, quand la fonctionnalité est activée 
 
 - `App/Crons/` via `make:cron`
 - `App/Event/Listener/` via `make:event` et `make:event:listener`
-- `Database/Migrations/` via `database:migration:generate`
+- `Database/Entity/` via `make:entity`
+- `Database/Migrations/` au premier `database:orm:diff` ou `database:migration:migrate`
 - `Tests/` via `make:test` ou `make:test:auto`
 
 Les configs sensibles `database.config.php`, `deploy.config.php`, `api.config.php` et `mailer.config.php` sont prévues pour être ignorées par Git dans le `.gitignore` généré.
@@ -486,7 +487,10 @@ Helpers exposés par `AbstractController` :
 - `auth()`
 - `dispatch()`
 - `upload()`
-- accès a `Session`, `Cookie`, `Flash`, `Logger`, `Cache`, `Config`
+- `getSession()`
+- `getFlash()`
+- `getCookie()`
+- accès à `Logger`, `Cache`, `Config`
 
 Twig expose aussi :
 
@@ -691,10 +695,10 @@ Le framework embarque une CLI dédiée à la base de données :
 
 - `database:create`
   crée la base déclarée dans `database.config.php`
-- `database:generate`
-  génère les `Model`, `Repository` et `Database/Forms` à partir du schéma courant
-- `database:migration:generate`
-  génère un fichier de migration dans `src/<Projet>/Database/Migrations/`
+- `make:entity`
+  génère une entité Data Mapper (POPO) et son repository dans `Database/Entity/` et `Database/Repository/`
+- `database:orm:diff`
+  compare les entités avec la base de données courante et génère un fichier de migration dans `Database/Migrations/`
 - `database:migration:migrate`
   applique toutes les migrations en attente
 - `database:migration:rollback`
@@ -704,19 +708,20 @@ Le framework embarque une CLI dédiée à la base de données :
 
 Comportements notables :
 
-- `database:generate` supporte `--only=all|models|repositories|forms`
-- `database:generate --force` écrase les repositories existants si nécessaire
-- les tables internes `neo_migrations` et `neo_schema_snapshots` sont exclues de l'introspection et de la génération
-- les formulaires générés sont écrits dans `src/<Projet>/Database/Forms/`
+- `make:entity` est interactif : il demande le nom de l'entité, ses propriétés et leurs types
+- `make:entity --no-repository` ignore la génération du repository
+- `database:orm:diff --dry-run` affiche le diff sans écrire de fichier
+- `database:orm:diff --connection=<nom>` cible une connexion spécifique pour les projets multi-base
+- les tables internes `neo_migrations` et `neo_schema_snapshots` sont exclues de l'introspection
+- les migrations générées sont écrites dans `src/<Projet>/Database/Migrations/`
 
 Exemples :
 
 ```bash
 php bin/neo database:create --project=Blog
-php bin/neo database:generate --project=Blog
-php bin/neo database:generate --project=Blog --only=models
-php bin/neo database:generate --project=Blog --only=forms
-php bin/neo database:generate --project=Blog --only=repositories --force
+php bin/neo make:entity Post --project=Blog
+php bin/neo database:orm:diff --project=Blog --name=add_posts_table
+php bin/neo database:orm:diff --project=Blog --name=add_posts_table --dry-run
 ```
 
 ### QueryBuilder
@@ -788,7 +793,8 @@ Le snapshot permet à `database:migration:status` de prévenir quand le schéma 
 Exemple de workflow :
 
 ```bash
-php bin/neo database:migration:generate --project=Blog --name=initial_schema
+php bin/neo make:entity Post --project=Blog
+php bin/neo database:orm:diff --project=Blog --name=initial_schema
 php bin/neo database:migration:status --project=Blog
 php bin/neo database:migration:migrate --project=Blog
 php bin/neo database:migration:rollback --project=Blog
@@ -816,124 +822,54 @@ final class MigrationVersion_20260606120000
 
 ## ORM et repositories
 
-### ORM
+L'ORM de NeoPHP est un Data Mapper. Les entités sont des POPOs annotés avec des attributs de mapping. Aucune classe mère n'est requise. La persistance passe par l'`EntityManager`.
 
-`AbstractModel` couvre notamment :
+### EntityManager
 
-- table et clé primaire configurables
-- hydratation typée via reflexion
-- `save()`
-- `fill()`
-- `toArray()`
-- `toDatabase()`
-- identity map
-- chargement lazy et eager des relations
-- support du soft delete si colonne `deleted_at`
+`EntityManager` est le point d'entrée pour toutes les opérations de persistance.
 
-Relations disponibles :
+API principale :
 
-- `#[HasOne(...)]`
-- `#[HasMany(...)]`
-- `#[BelongsTo(...)]`
-- `#[BelongsToMany(...)]`
+- `persist(object $entity)` — enregistre une entité pour insertion ou mise à jour
+- `remove(object $entity)` — marque une entité pour suppression
+- `flush()` — écrit tous les changements en base de données
+- `find(string $class, mixed $id)` — recherche par clé primaire
+- `getRepository(string $class)` — retourne le repository de l'entité
+- `wrapInTransaction(callable $callback)` — exécute un callback dans une transaction
+- `contains(object $entity)` — vérifie si une entité est gérée par l'UnitOfWork
+- `clear()` — vide l'identity map
 
-La génération ORM depuis le schéma passe par `database:generate` :
-
-- `ModelGenerator` met à jour les propriétés depuis les colonnes SQL
-- `RepositoryGenerator` génère les repositories manquants
-- `FormGenerator` génère un formulaire par modèle dans `Database/Forms/`
-- les tables internes de migration sont ignorées
-
-Exemple de modèles :
-
-```php
-<?php
-declare(strict_types=1);
-
-namespace Neo\Src\Blog\Database\Model;
-
-use Neo\Core\Database\ORM\Attribute\BelongsTo;
-use Neo\Core\Database\ORM\Attribute\HasMany;
-use Neo\Core\Database\ORM\Model\AbstractModel;
-
-final class User extends AbstractModel
-{
-    protected static ?string $table = 'users';
-
-    private ?int $id = null;
-    private string $firstname;
-    private string $email;
-
-    #[HasMany(target: Post::class, foreignKey: 'user_id', localKey: 'id')]
-    private array $posts = [];
-
-    public function getId(): ?int { return $this->id; }
-
-    public function getFirstname(): string { return $this->firstname; }
-    public function setFirstname(string $firstname): void { $this->firstname = $firstname; }
-
-    public function getEmail(): string { return $this->email; }
-    public function setEmail(string $email): void { $this->email = $email; }
-
-    public function getPosts(): array { return $this->posts; }
-}
-
-final class Post extends AbstractModel
-{
-    protected static ?string $table = 'posts';
-
-    private ?int $id = null;
-    private int $user_id;
-    private string $title;
-    private string $content;
-
-    #[BelongsTo(target: User::class, foreignKey: 'user_id', ownerKey: 'id')]
-    private ?User $author = null;
-
-    public function getId(): ?int { return $this->id; }
-
-    public function getUserId(): int { return $this->user_id; }
-    public function setUserId(int $user_id): void { $this->user_id = $user_id; }
-
-    public function getTitle(): string { return $this->title; }
-    public function setTitle(string $title): void { $this->title = $title; }
-
-    public function getContent(): string { return $this->content; }
-    public function setContent(string $content): void { $this->content = $content; }
-
-    public function getAuthor(): ?User { return $this->author; }
-}
-```
-
-Exemple d'utilisation :
-
-```php
-$post = new Post();
-$post->setUserId(1);
-$post->setTitle('Premier post');
-$post->setContent('Contenu');
-$post->save();
-```
-
-### Repositories
-
-`AbstractRepository` fournit :
-
-- `find()`
-- `findAll()`
-- `findBy()`
-- `create()`
-- `update()`
-- `delete()`
-- `restore()`
-- `forceDelete()`
-- `with()`
-- `withTrashed()`
-- `onlyTrashed()`
-- `paginate()`
-- accès au `QueryBuilder`
+Dans un contrôleur, `EntityManager` est accessible via `$this->entityManager` (enregistré par `DatabaseControllerExtension`).
 
 Exemple :
+
+```php
+#[Route(path: '/', name: 'store', methods: ['POST'])]
+public function store(): Response
+{
+    $post = new Post();
+    $post->setTitle((string) $this->request->body('title'));
+
+    $this->entityManager->persist($post);
+    $this->entityManager->flush();
+
+    return $this->jsonSuccess(['id' => $post->getId()], 201);
+}
+```
+
+### EntityRepository
+
+`EntityRepository` est la classe de base générée par `make:entity`.
+
+API disponible :
+
+- `find($id)` — recherche par clé primaire
+- `findAll()` — retourne toutes les entités
+- `findBy(array $criteria, array $orderBy, ?int $limit, ?int $offset)` — recherche avec critères
+- `findOneBy(array $criteria, array $orderBy)` — retourne un seul résultat
+- `count(array $criteria)` — compte les entités correspondant aux critères
+
+Exemple de repository :
 
 ```php
 <?php
@@ -941,25 +877,221 @@ declare(strict_types=1);
 
 namespace Neo\Src\Blog\Database\Repository;
 
-use Neo\Core\Database\ORM\Repository\AbstractRepository;
-use Neo\Src\Blog\Database\Model\Post;
+use Neo\Core\Database\ORM\Persistence\EntityRepository;
+use Neo\Src\Blog\Database\Entity\Post;
 
-final class PostRepository extends AbstractRepository
+/**
+ * @extends EntityRepository<Post>
+ */
+final class PostRepository extends EntityRepository
 {
-    protected string $modelClass = Post::class;
 }
 ```
 
-Exemple d'utilisation :
+Utilisation dans un contrôleur :
 
 ```php
-$posts = $postRepository
-    ->with('author')
-    ->findAll()
-    ->getModels();
+public function __construct(private PostRepository $posts) {}
 
-$post = $postRepository->find(10);
+public function index(): Response
+{
+    return $this->render('pages/posts/index.html.twig', [
+        'posts' => $this->posts->findAll(),
+    ]);
+}
+
+public function show(int $id): Response
+{
+    $post = $this->posts->find($id);
+
+    return $this->render('pages/posts/show.html.twig', ['post' => $post]);
+}
 ```
+
+### Relations
+
+Relations disponibles par attributs :
+
+- `#[OneToOne(targetEntity: ..., inversedBy: ...)]` avec `#[JoinColumn]`
+- `#[ManyToOne(targetEntity: ..., inversedBy: ...)]` avec `#[JoinColumn]`
+- `#[OneToMany(targetEntity: ..., mappedBy: ...)]`
+- `#[ManyToMany(targetEntity: ..., inversedBy: ...)]` avec `#[JoinTable]`
+
+Les collections (`OneToMany`, `ManyToMany`) utilisent la classe `Collection`. Le chargement est lazy par défaut, géré via des proxies transparents.
+
+Exemple d'entité avec relations :
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace Neo\Src\Blog\Database\Entity;
+
+use Neo\Core\Database\ORM\Collection\Collection;
+use Neo\Core\Database\ORM\Mapping\Attribute\Column;
+use Neo\Core\Database\ORM\Mapping\Attribute\Entity;
+use Neo\Core\Database\ORM\Mapping\Attribute\GeneratedValue;
+use Neo\Core\Database\ORM\Mapping\Attribute\Id;
+use Neo\Core\Database\ORM\Mapping\Attribute\JoinColumn;
+use Neo\Core\Database\ORM\Mapping\Attribute\ManyToOne;
+use Neo\Core\Database\ORM\Mapping\Attribute\OneToMany;
+use Neo\Core\Database\ORM\Mapping\Attribute\Table;
+use Neo\Src\Blog\Database\Repository\PostRepository;
+
+#[Entity(repositoryClass: PostRepository::class)]
+#[Table(name: 'posts')]
+final class Post
+{
+    #[Id]
+    #[GeneratedValue]
+    #[Column(type: 'integer', unsigned: true)]
+    private ?int $id = null;
+
+    #[Column(type: 'string', length: 255)]
+    private string $title;
+
+    #[ManyToOne(targetEntity: User::class, inversedBy: 'posts')]
+    #[JoinColumn(name: 'user_id', nullable: false)]
+    private User $author;
+
+    /** @var Collection<Comment> */
+    #[OneToMany(targetEntity: Comment::class, mappedBy: 'post')]
+    private Collection $comments;
+
+    public function __construct()
+    {
+        $this->comments = new Collection();
+    }
+
+    public function getId(): ?int { return $this->id; }
+
+    public function getTitle(): string { return $this->title; }
+    public function setTitle(string $title): static { $this->title = $title; return $this; }
+
+    public function getAuthor(): User { return $this->author; }
+    public function setAuthor(User $author): static { $this->author = $author; return $this; }
+
+    /** @return Collection<Comment> */
+    public function getComments(): Collection { return $this->comments; }
+}
+```
+
+Voir la section [ORM Data Mapper (entités)](#orm-data-mapper-entités) pour la création des entités via la CLI et le workflow de migration.
+
+## ORM Data Mapper (entités)
+
+L'ORM de NeoPHP repose sur le Data Mapper. `make:entity` crée une entité et son repository. `database:orm:diff` génère la migration à partir de la différence entre les entités et la base de données.
+
+### Créer une entité
+
+```bash
+php bin/neo make:entity Post --project=Blog
+```
+
+Le générateur est interactif : il demande le nom, puis les propriétés et leurs types.
+
+Exemple d'entité générée dans `Database/Entity/Post.php` :
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace Neo\Src\Blog\Database\Entity;
+
+use Neo\Core\Database\ORM\Mapping\Attribute\Column;
+use Neo\Core\Database\ORM\Mapping\Attribute\Entity;
+use Neo\Core\Database\ORM\Mapping\Attribute\GeneratedValue;
+use Neo\Core\Database\ORM\Mapping\Attribute\Id;
+use Neo\Core\Database\ORM\Mapping\Attribute\Table;
+use Neo\Src\Blog\Database\Repository\PostRepository;
+
+#[Entity(repositoryClass: PostRepository::class)]
+#[Table(name: 'posts')]
+final class Post
+{
+    #[Id]
+    #[GeneratedValue]
+    #[Column(type: 'integer', unsigned: true)]
+    private ?int $id = null;
+
+    #[Column(type: 'string', length: 255)]
+    private string $title;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
+    public function setTitle(string $title): static
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+}
+```
+
+Types scalaires disponibles :
+
+- `string`, `text`
+- `integer`, `bigint`, `smallint`
+- `boolean`, `float`, `decimal`
+- `datetime`, `date`, `time`
+- `json`
+
+Relations disponibles :
+
+- `#[OneToOne(...)]` avec `#[JoinColumn(...)]`
+- `#[ManyToOne(...)]` avec `#[JoinColumn(...)]`
+- `#[OneToMany(...)]`
+- `#[ManyToMany(...)]` avec `#[JoinTable(...)]`
+
+Les côtés `OneToMany` et `ManyToMany` utilisent `Collection` pour gérer les collections d'objets liés.
+
+### Repository Data Mapper
+
+Le repository généré étend `EntityRepository` :
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace Neo\Src\Blog\Database\Repository;
+
+use Neo\Core\Database\ORM\Persistence\EntityRepository;
+use Neo\Src\Blog\Database\Entity\Post;
+
+/**
+ * @extends EntityRepository<Post>
+ */
+final class PostRepository extends EntityRepository
+{
+}
+```
+
+Option `--no-repository` disponible pour ignorer la génération du repository.
+
+### Générer la migration depuis les entités
+
+```bash
+# Comparer les entités avec la base courante et générer la migration
+php bin/neo database:orm:diff --project=Blog --name=add_posts_table
+
+# Prévisualiser le diff sans écrire de fichier
+php bin/neo database:orm:diff --project=Blog --name=add_posts_table --dry-run
+
+# Appliquer
+php bin/neo database:migration:migrate --project=Blog
+```
+
+Sur un projet multi-base, l'option `--connection=<nom>` cible une connexion spécifique.
+
+Les migrations générées par `database:orm:diff` suivent le même format `up()` / `down()` que les migrations manuelles et sont stockées dans `Database/Migrations/`.
 
 ## Formulaires, upload et validation
 
@@ -967,12 +1099,23 @@ $post = $postRepository->find(10);
 
 NeoPHP embarque :
 
-- `FormBuilder`
-- `Form`
-- plusieurs types de champs
+- `FormFactory` — point d'entrée pour créer des formulaires
+- `FormBuilder` — API fluide de construction
+- `Form` — objet formulaire
+- `FieldType` — enum des types de champs disponibles
 - rendu Twig
-- CSRF
-- validation
+- CSRF intégré
+- validation par contraintes
+
+Types de champs disponibles via `FieldType` :
+
+- `text`, `textarea`
+- `email`, `password`
+- `number`
+- `hidden`
+- `checkbox`
+- `select`
+- `date`, `datetime-local`
 
 Helpers Twig disponibles :
 
@@ -984,43 +1127,31 @@ Helpers Twig disponibles :
 - `form_error()`
 - `form_errors()`
 - `form_csrf()`
-- helpers pour les collections
 
-Exemple de classe de formulaire :
+Exemple de construction via `FormFactory` :
 
 ```php
 <?php
 declare(strict_types=1);
 
-namespace Neo\Src\Blog\Database\Forms;
+namespace Neo\Src\Blog\App\Services;
 
-use Neo\Core\Database\Builder\FormBuilder;use Neo\Core\Database\Form\Form;use Neo\Core\Database\Form\Type\EmailType;use Neo\Core\Database\Form\Type\SubmitType;use Neo\Core\Database\Form\Type\TextType;use Neo\Core\DI\Container;use Neo\Core\Http\Request\Request;use Neo\Src\Blog\Database\Model\User;
+use Neo\Core\Database\Form\Form;
+use Neo\Core\Database\Form\FormFactory;
+use Neo\Src\Blog\Database\Entity\User;
 
-final class UserForm
+final class UserFormService
 {
-    private Request $request;
-
-    public function __construct(Container $container)
-    {
-        $this->request = $container->get(Request::class);
-    }
+    public function __construct(private FormFactory $factory) {}
 
     public function build(?User $user = null): Form
     {
         $user ??= new User();
 
-        $form = (new FormBuilder($user))
-            ->add('firstname', TextType::class, ['label' => 'Prénom'])
-            ->add('email', EmailType::class, ['label' => 'Email'])
-            ->add('submit', SubmitType::class, ['label' => 'Enregistrer'])
-            ->generate();
-
-        $form->addCsrfField();
-        $form->handleRequest($this->request);
-        $form->setData($user);
-        $form->populateData();
-
-        return $form;
+        return $this->factory->createFor($user)
+            ->add('firstname', 'text', ['label' => 'Prénom', 'required' => true])
+            ->add('email', 'email', ['label' => 'Email'])
+            ->getForm();
     }
 }
 ```
@@ -1088,7 +1219,7 @@ Affichage ensuite :
 
 ### Validation
 
-Le validateur repose sur des attributs de contraintes posés sur les propriétés des modèles.
+Le validateur repose sur des attributs de contraintes posés sur les propriétés de n'importe quelle classe (entité, DTO, etc.).
 
 Contraintes présentes dans le framework :
 
@@ -1103,21 +1234,20 @@ Contraintes présentes dans le framework :
 - `Unique`
 - `EqualToField`
 
-Exemple :
+Exemple sur un DTO :
 
 ```php
 <?php
 declare(strict_types=1);
 
-namespace Neo\Src\Blog\Database\Model;
+namespace Neo\Src\Blog\App\Dto;
 
-use Neo\Core\Database\ORM\Model\AbstractModel;
 use Neo\Core\Validator\Assert\Email;
 use Neo\Core\Validator\Assert\EqualToField;
 use Neo\Core\Validator\Assert\Length;
 use Neo\Core\Validator\Assert\NotBlank;
 
-final class RegisterUser extends AbstractModel
+final class RegisterDto
 {
     #[NotBlank(message: 'Le prenom est obligatoire.')]
     public string $firstname = '';
@@ -1272,17 +1402,20 @@ $ok = $this->getPasswordManager()->verify('secret123', $hash);
 
 Attributs supportés :
 
-- `#[Middleware(...)]`
-- `#[RateLimit(...)]`
-- `#[Maintenance(...)]`
+- `#[Middleware(...)]` — attache un middleware à une classe ou méthode
+- `#[RateLimit(...)]` — limite de débit sur une route
+- `#[Maintenance(...)]` — mode maintenance
+- `#[IsGranted(roles: [...])]` — accès par rôle(s), raccourci de `RoleMiddleware`
 
 Middlewares coeur :
 
-- `AuthMiddleware`
-- `GuestMiddleware`
-- `RoleMiddleware`
-- `RateLimitMiddleware`
-- `ExampleMiddleware`
+- `AuthMiddleware` — vérifie que l'utilisateur est authentifié
+- `GuestMiddleware` — vérifie que l'utilisateur n'est pas connecté
+- `RoleMiddleware` — vérifie un rôle spécifique
+- `IsGrantedMiddleware` — vérifie un ou plusieurs rôles via `#[IsGranted]`
+- `RateLimitMiddleware` — limite de débit générale
+- `AuthRateLimitMiddleware` — limite de débit sur l'authentification
+- `CsrfMiddleware` — validation CSRF sur les requêtes POST/PUT/PATCH/DELETE
 
 Exemple de middleware applicatif :
 
@@ -1312,7 +1445,7 @@ final class AdminAccessMiddleware implements MiddlewareInterface
 }
 ```
 
-Exemple d'utilisation :
+Exemple d'utilisation avec `#[Middleware]` :
 
 ```php
 #[MainRoute(path: '/admin', name: 'admin')]
@@ -1325,6 +1458,22 @@ final class DashboardController extends AbstractController
     public function index(): Response
     {
         return $this->render('pages/admin/index.html.twig');
+    }
+}
+```
+
+Exemple avec `#[IsGranted]` :
+
+```php
+#[MainRoute(path: '/admin', name: 'admin')]
+#[IsGranted(roles: ['admin'])]
+final class DashboardController extends AbstractController
+{
+    #[Route(path: '/users', name: 'users', methods: ['GET'])]
+    #[IsGranted(roles: ['admin', 'superadmin'])]
+    public function users(): Response
+    {
+        return $this->render('pages/admin/users.html.twig');
     }
 }
 ```
@@ -1750,21 +1899,19 @@ La console charge automatiquement :
 
 Commandes natives disponibles :
 
-- `app:make:project`
-- `app:delete:project`
-- `app:sync:projects`
+- `project:create`
+- `project:delete`
+- `project:sync`
 - `app:serve`
 - `app:make:command`
 - `app:make:service`
 - `app:composer:require`
-- `app:make:deployment`
 - `asset:reload`
 - `cache:clear`
 - `cron:list`
 - `cron:run`
 - `database:create`
-- `database:generate`
-- `database:migration:generate`
+- `database:orm:diff`
 - `database:migration:migrate`
 - `database:migration:rollback`
 - `database:migration:status`
@@ -1773,10 +1920,10 @@ Commandes natives disponibles :
 - `make:config`
 - `make:controller`
 - `make:cron`
+- `make:entity`
 - `make:middleware`
 - `make:event`
 - `make:event:listener`
-- `make:crud`
 - `make:test`
 - `make:test:auto`
 - `run:test`
@@ -1788,7 +1935,7 @@ Commandes natives disponibles :
 Exemples :
 
 ```bash
-php bin/neo app:make:project Blog
+php bin/neo project:create Blog
 php bin/neo make:controller PostController --project=Blog
 php bin/neo make:controller ApiPostController --api --project=Blog
 php bin/neo app:make:command CleanupLogs --name=logs:clean --project=Blog
@@ -1797,11 +1944,10 @@ php bin/neo make:middleware AdminAccess --project=Blog
 php bin/neo make:event UserRegistered --project=Blog
 php bin/neo make:event:listener SendWelcomeEmail --event=UserRegistered --project=Blog
 php bin/neo make:cron CleanupTempFiles --project=Blog
-php bin/neo make:crud Post --project=Blog
+php bin/neo make:entity Post --project=Blog
 php bin/neo make:config mail --project=Blog
 php bin/neo database:create --project=Blog
-php bin/neo database:generate --project=Blog --only=all
-php bin/neo database:migration:generate --project=Blog --name=initial_schema
+php bin/neo database:orm:diff --project=Blog --name=initial_schema
 ```
 
 Exemple de commande intéractive de config :
@@ -1837,7 +1983,7 @@ Exemples :
 ```bash
 php bin/neo generate:default:config --project=Blog
 php bin/neo app:composer:require league/flysystem --project=Blog
-php bin/neo app:sync:projects
+php bin/neo project:sync
 php bin/neo app:serve Blog
 php bin/neo debug:router --project=Blog
 php bin/neo cache:clear --project=Blog
@@ -2105,13 +2251,14 @@ NeoPHP couvre aujourd'hui :
 - contrôleurs et vues Twig
 - pipeline d'assets CSS, JS et Less
 - traduction par chaînes, un fichier par locale, synchronisation via CLI
-- QueryBuilder, ORM avec getters/setters, repositories, formulaires générés et génération depuis le schéma
+- ORM Data Mapper : entités POPO annotées (`#[Entity]`, `#[Column]`, relations), `EntityManager`, `EntityRepository`
+- migrations pilotées depuis les entités via `database:orm:diff`
 - migrations de base de données et suivi des snapshots de schéma
-- formulaires, validation, upload et CSRF
-- auth session / token, mot de passe et middlewares
+- formulaires via `FormFactory` / `FormBuilder`, validation, upload et CSRF
+- auth session / token, mot de passe, middlewares et `#[IsGranted]`
 - events et crons
 - cache, logs, mailer, profiler et gestion des erreurs
-- CLI de génération et d'administration
+- CLI de génération et d'administration (`project:create`, `make:entity`, `database:orm:diff`, etc.)
 - testing manuel et génération automatique via `#[Test]`
 - déploiement FTP intégré
 
