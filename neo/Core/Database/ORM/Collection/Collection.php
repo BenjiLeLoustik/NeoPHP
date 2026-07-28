@@ -8,31 +8,54 @@ use Countable;
 use IteratorAggregate;
 use Traversable;
 
+/**
+ * @template TKey of array-key
+ * @template TValue
+ *
+ * @implements IteratorAggregate<TKey, TValue>
+ * @implements ArrayAccess<TKey, TValue>
+ */
 class Collection implements Countable, IteratorAggregate, ArrayAccess
 {
+    /**
+     * @param array<TKey, TValue> $elements
+     */
     public function __construct(
         protected array $elements = []
     ) {
     }
 
+    /**
+     * @return array<TKey, TValue>
+     */
     public function toArray(): array
     {
         $this->initialize();
         return $this->elements;
     }
 
+    /**
+     * @param TValue $element
+     */
     public function add(mixed $element): void
     {
         $this->initialize();
         $this->elements[] = $element;
     }
 
+    /**
+     * @param TValue $element
+     */
     public function contains(mixed $element): bool
     {
         $this->initialize();
         return in_array($element, $this->elements, true);
     }
 
+    /**
+     * @param TKey $key
+     * @return TValue|null
+     */
     public function remove(int|string $key): mixed
     {
         $this->initialize();
@@ -41,6 +64,9 @@ class Collection implements Countable, IteratorAggregate, ArrayAccess
         return $removed;
     }
 
+    /**
+     * @param TValue $element
+     */
     public function removeElement(mixed $element): bool
     {
         $this->initialize();
@@ -52,6 +78,9 @@ class Collection implements Countable, IteratorAggregate, ArrayAccess
         return true;
     }
 
+    /**
+     * @return TValue|null
+     */
     public function first(): mixed
     {
         $this->initialize();

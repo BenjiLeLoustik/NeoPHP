@@ -10,6 +10,7 @@ use PDOException;
 class DatabaseConnection
 {
     protected Container $container;
+    /** @var array<string, PDO> */
     private static array $connections = [];
     private static ?string $defaultName = null;
     private static ?Container $sharedContainer = null;
@@ -144,6 +145,9 @@ class DatabaseConnection
         return self::$defaultName;
     }
 
+    /**
+     * @return list<string>
+     */
     public static function getConnectionNames(): array
     {
         return array_keys(self::$connections);

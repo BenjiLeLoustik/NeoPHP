@@ -51,6 +51,9 @@ final class MigrationSchemaSnapshot
         );
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getLastSchema(): ?array
     {
         $row = $this->db->fetch(sprintf(
@@ -67,11 +70,17 @@ final class MigrationSchemaSnapshot
         return is_array($decoded) ? $decoded : null;
     }
 
+    /**
+     * @return array<string, list<array{name: string, type: string, nullable: bool, default: string|null, key: string, extra: string}>>
+     */
     public function getCurrentSchema(): array
     {
         return $this->buildDumpArray();
     }
 
+    /**
+     * @return array<string, list<array{name: string, type: string, nullable: bool, default: string|null, key: string, extra: string}>>
+     */
     private function buildDumpArray(): array
     {
         $tables = $this->introspector->getTables();

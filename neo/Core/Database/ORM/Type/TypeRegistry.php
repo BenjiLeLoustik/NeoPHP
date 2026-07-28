@@ -7,6 +7,7 @@ use Neo\Core\Database\Exception\DatabaseException;
 
 final class TypeRegistry
 {
+    /** @var array<string, Type> */
     private static array $types = [];
 
     private static bool $initialized = false;

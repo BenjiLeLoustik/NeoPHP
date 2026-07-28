@@ -3,8 +3,17 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Migration;
 
+/**
+ * @phpstan-type ColumnDef array<string, mixed>
+ * @phpstan-type Schema array<string, list<ColumnDef>>
+ */
 final class SchemaDiffer
 {
+    /**
+     * @param Schema $previous
+     * @param Schema $current
+     * @return array<string, mixed>
+     */
     public function diff(array $previous, array $current): array
     {
         $tablesToCreate = [];
@@ -64,6 +73,9 @@ final class SchemaDiffer
         ];
     }
 
+    /**
+     * @param array<string, mixed> $diff
+     */
     public function isEmpty(array $diff): bool
     {
         return empty($diff['tablesToCreate'])
@@ -73,6 +85,11 @@ final class SchemaDiffer
             && empty($diff['columnRenames']);
     }
 
+    /**
+     * @param Schema $tablesToCreate
+     * @param Schema $tablesToDrop
+     * @return list<array{from: string, to: string}>
+     */
     public function findTableRenameCandidates(array $tablesToCreate, array $tablesToDrop): array
     {
         $dropSignatures = [];
@@ -101,6 +118,11 @@ final class SchemaDiffer
         return $candidates;
     }
 
+    /**
+     * @param list<ColumnDef> $removed
+     * @param list<ColumnDef> $added
+     * @return list<array{from: string, to: string}>
+     */
     public function findColumnRenameCandidates(array $removed, array $added): array
     {
         $removedBySignature = [];
@@ -129,6 +151,11 @@ final class SchemaDiffer
         return $candidates;
     }
 
+    /**
+     * @param Schema $tablesToCreate
+     * @param array<string, mixed> $tableChanges
+     * @return list<array{table: string, column: string, context: string}>
+     */
     public function findRiskyNotNullChanges(array $tablesToCreate, array $tableChanges): array
     {
         $risks = [];
@@ -153,6 +180,10 @@ final class SchemaDiffer
         return $risks;
     }
 
+    /**
+     * @param list<ColumnDef> $columns
+     * @return array<string, ColumnDef>
+     */
     private function indexByName(array $columns): array
     {
         $indexed = [];
@@ -162,6 +193,9 @@ final class SchemaDiffer
         return $indexed;
     }
 
+    /**
+     * @param ColumnDef $col
+     */
     private function signature(array $col): string
     {
         return implode('|', [
@@ -173,6 +207,9 @@ final class SchemaDiffer
         ]);
     }
 
+    /**
+     * @param list<ColumnDef> $columns
+     */
     private function buildTableSignature(array $columns): string
     {
         $parts = [];
@@ -186,6 +223,9 @@ final class SchemaDiffer
         return implode('|', $parts);
     }
 
+    /**
+     * @param ColumnDef $col
+     */
     private function isAutoIncrementPrimary(array $col): bool
     {
         return ($col['key'] ?? '') === 'PRI'

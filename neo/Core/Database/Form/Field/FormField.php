@@ -3,12 +3,19 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Form\Field;
 
+use Neo\Core\Validator\Abstract\AbstractConstraint;
+
 final class FormField
 {
     private mixed $value = null;
 
+    /** @var list<string> */
     private array $errors = [];
 
+    /**
+     * @param list<AbstractConstraint> $constraints
+     * @param array<string, mixed> $options
+     */
     public function __construct(
         private readonly string $name,
         private readonly FieldType $type,
@@ -33,16 +40,25 @@ final class FormField
         return $this->label;
     }
 
+    /**
+     * @return list<AbstractConstraint>
+     */
     public function getConstraints(): array
     {
         return $this->constraints;
     }
 
+    /**
+     * @return list<class-string>
+     */
     public function getRemovedConstraints(): array
     {
         return array_values((array) ($this->options['removeConstraints'] ?? []));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getOptions(): array
     {
         return $this->options;
@@ -63,6 +79,9 @@ final class FormField
         return (bool) ($this->options['required'] ?? false);
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function getChoices(): array
     {
         return (array) ($this->options['choices'] ?? []);
@@ -83,6 +102,9 @@ final class FormField
         $this->errors[] = $error;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getErrors(): array
     {
         return $this->errors;

@@ -8,6 +8,9 @@ use Attribute;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 final class ManyToMany
 {
+    /**
+     * @param list<string> $cascade
+     */
     public function __construct(
         public string $targetEntity,
         public ?string $mappedBy = null,

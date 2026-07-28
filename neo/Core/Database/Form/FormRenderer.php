@@ -9,6 +9,9 @@ use Neo\Core\Database\Form\Field\FormField;
 
 final class FormRenderer
 {
+    /**
+     * @param array<string, string> $attributes
+     */
     public function render(Form $form, string $action = '', string $method = 'POST', array $attributes = []): string
     {
         $html = $this->start($form, $action, $method, $attributes);
@@ -22,6 +25,9 @@ final class FormRenderer
         return $html;
     }
 
+    /**
+     * @param array<string, string> $attributes
+     */
     public function start(Form $form, string $action = '', string $method = 'POST', array $attributes = []): string
     {
         $attr = $this->attributes(array_merge([
@@ -192,6 +198,9 @@ HTML;
         return $value === null ? '' : (string) $value;
     }
 
+    /**
+     * @param array<string, mixed> $attributes
+     */
     private function attributes(array $attributes): string
     {
         $html = '';

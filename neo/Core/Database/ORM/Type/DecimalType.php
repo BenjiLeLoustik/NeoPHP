@@ -11,6 +11,9 @@ final class DecimalType extends Type
         return self::DECIMAL;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         $precision = (int)($column['precision'] ?? 10);

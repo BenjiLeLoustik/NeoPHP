@@ -31,6 +31,9 @@ class DatabaseManager
         return $this->connection ?? DatabaseConnection::getDefaultName();
     }
 
+    /**
+     * @param array<string|int, mixed> $params
+     */
     public function query(string $sql, array $params = []): PDOStatement
     {
         try {
@@ -56,6 +59,10 @@ class DatabaseManager
         }
     }
 
+    /**
+     * @param array<string|int, mixed> $params
+     * @return array<string, mixed>|null
+     */
     public function fetch(string $sql, array $params = []): ?array
     {
         $result = $this->query($sql, $params)->fetch();
@@ -64,11 +71,18 @@ class DatabaseManager
             : null;
     }
 
+    /**
+     * @param array<string|int, mixed> $params
+     * @return list<array<string, mixed>>
+     */
     public function fetchAll(string $sql, array $params = []): array
     {
         return $this->query($sql, $params)->fetchAll();
     }
 
+    /**
+     * @param array<string|int, mixed> $params
+     */
     public function execute(string $sql, array $params = []): bool
     {
         try {

@@ -10,16 +10,25 @@ final class MySQLPlatform extends AbstractPlatform
         return 'mysql';
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getIntegerTypeDeclarationSQL(array $column): string
     {
         return 'int' . ($this->unsigned($column) ? ' unsigned' : '');
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSmallIntTypeDeclarationSQL(array $column): string
     {
         return 'smallint' . ($this->unsigned($column) ? ' unsigned' : '');
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getBigIntTypeDeclarationSQL(array $column): string
     {
         return 'bigint' . ($this->unsigned($column) ? ' unsigned' : '');
@@ -70,6 +79,9 @@ final class MySQLPlatform extends AbstractPlatform
         return $t;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     private function unsigned(array $column): bool
     {
         return !empty($column['unsigned']);

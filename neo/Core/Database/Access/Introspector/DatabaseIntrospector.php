@@ -32,6 +32,9 @@ class DatabaseIntrospector
         return new self($container, $connection);
     }
 
+    /**
+     * @return list<string>
+     */
     public function getTables(): array
     {
         try {
@@ -65,6 +68,9 @@ class DatabaseIntrospector
         }
     }
 
+    /**
+     * @return list<array{name: string, type: string, nullable: bool, default: string|null, key: string, extra: string}>
+     */
     public function getColumns(string $table): array
     {
         try {
@@ -94,6 +100,9 @@ class DatabaseIntrospector
         }
     }
 
+    /**
+     * @return list<array{name: string, column: string, referencedTable: string, referencedColumn: string, onDelete: string, onUpdate: string}>
+     */
     public function getForeignKeys(string $table): array
     {
         $sql = <<<SQL
@@ -141,6 +150,9 @@ class DatabaseIntrospector
         }
     }
 
+    /**
+     * @return list<array{name: string, columns: list<string>, unique: bool}>
+     */
     public function getIndexes(string $table): array
     {
         try {

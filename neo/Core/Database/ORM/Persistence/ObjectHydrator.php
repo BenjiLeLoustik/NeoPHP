@@ -4,16 +4,20 @@ declare(strict_types=1);
 namespace Neo\Core\Database\ORM\Persistence;
 
 use Neo\Core\Database\ORM\Collection\LazyCollection;
-use Neo\Core\Database\ORM\Mapping\ClassMetadata;
+use Neo\Core\Database\ORM\Mapping\ClassMetaData;
 use Neo\Core\Database\ORM\Type\TypeRegistry;
 
 final class ObjectHydrator
 {
     public function __construct(
         private readonly EntityManager $em,
-    ) {}
+    ) {
+    }
 
-    public function hydrate(ClassMetadata $metadata, array $row, ?object $into = null): object
+    /**
+     * @param array<string, mixed> $row
+     */
+    public function hydrate(ClassMetaData $metadata, array $row, ?object $into = null): object
     {
         $platform = $this->em->getPlatform();
         $uow = $this->em->getUnitOfWork();
@@ -50,7 +54,7 @@ final class ObjectHydrator
         }
 
         foreach ($metadata->associationMappings as $field => $assoc) {
-            if ($assoc['isOwningSide'] && ($assoc['type'] & ClassMetadata::TO_ONE)) {
+            if ($assoc['isOwningSide'] && ($assoc['type'] & ClassMetaData::TO_ONE)) {
                 $jc = $assoc['joinColumns'][0] ?? null;
                 $refValue = $jc !== null ? ($row[$jc['name']] ?? null) : null;
 
@@ -66,7 +70,7 @@ final class ObjectHydrator
                 continue;
             }
 
-            if ($assoc['type'] & ClassMetadata::TO_MANY) {
+            if ($assoc['type'] & ClassMetaData::TO_MANY) {
                 $this->writeToManyField($metadata, $entity, $field, $assoc, $id);
             }
         }
@@ -80,7 +84,10 @@ final class ObjectHydrator
         return $entity;
     }
 
-    private function writeToManyField(ClassMetadata $metadata, object $entity, string $field, array $assoc, mixed $ownerId): void
+    /**
+     * @param array<string, mixed> $assoc
+     */
+    private function writeToManyField(ClassMetaData $metadata, object $entity, string $field, array $assoc, mixed $ownerId): void
     {
         $em = $this->em;
         $loader = static function () use ($em, $assoc, $ownerId): array {
@@ -95,7 +102,7 @@ final class ObjectHydrator
         }
     }
 
-    private function writeField(ClassMetadata $metadata, object $entity, string $field, mixed $value): void
+    private function writeField(ClassMetaData $metadata, object $entity, string $field, mixed $value): void
     {
         try {
             $metadata->setFieldValue($entity, $field, $value);

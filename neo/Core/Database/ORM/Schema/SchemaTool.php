@@ -3,16 +3,25 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM\Schema;
 
-use Neo\Core\Database\ORM\Mapping\ClassMetadata;
+use Neo\Core\Database\ORM\Mapping\ClassMetaData;
 use Neo\Core\Database\ORM\Persistence\EntityManager;
 use Neo\Core\Database\ORM\Type\TypeRegistry;
 
+/**
+ * @phpstan-type ColumnDef array{name: string, type: string, nullable: bool, default: string|null, key: string, extra: string}
+ * @phpstan-type Schema array<string, list<ColumnDef>>
+ */
 final class SchemaTool
 {
     public function __construct(
         private readonly EntityManager $em,
-    ) {}
+    ) {
+    }
 
+    /**
+     * @param list<class-string> $entityClasses
+     * @return Schema
+     */
     public function getSchema(array $entityClasses): array
     {
         $schema = [];
@@ -25,7 +34,7 @@ final class SchemaTool
         foreach ($entityClasses as $class) {
             $metadata = $this->em->getClassMetadata($class);
             foreach ($metadata->associationMappings as $assoc) {
-                if ($assoc['type'] === ClassMetadata::MANY_TO_MANY && $assoc['isOwningSide']) {
+                if ($assoc['type'] === ClassMetaData::MANY_TO_MANY && $assoc['isOwningSide']) {
                     $pivot = $assoc['joinTable'];
                     $schema[$pivot['name']] = $this->buildPivotColumns($pivot);
                 }
@@ -35,6 +44,10 @@ final class SchemaTool
         return $schema;
     }
 
+    /**
+     * @param list<class-string> $entityClasses
+     * @return list<array{table: string, column: string, referencedTable: string, referencedColumn: string, onDelete: string|null, onUpdate: string|null}>
+     */
     public function getForeignKeys(array $entityClasses): array
     {
         $fks = [];
@@ -42,7 +55,7 @@ final class SchemaTool
         foreach ($entityClasses as $class) {
             $metadata = $this->em->getClassMetadata($class);
             foreach ($metadata->associationMappings as $assoc) {
-                if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetadata::TO_ONE)) {
+                if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetaData::TO_ONE)) {
                     continue;
                 }
                 $targetMeta = $this->em->getClassMetadata($assoc['targetEntity']);
@@ -62,6 +75,10 @@ final class SchemaTool
         return $fks;
     }
 
+    /**
+     * @param list<class-string> $entityClasses
+     * @return list<array{table: string, name: string, columns: list<string>, unique: bool}>
+     */
     public function getIndexes(array $entityClasses): array
     {
         $indexes = [];
@@ -89,7 +106,10 @@ final class SchemaTool
         return $indexes;
     }
 
-    private function buildColumns(ClassMetadata $metadata): array
+    /**
+     * @return list<ColumnDef>
+     */
+    private function buildColumns(ClassMetaData $metadata): array
     {
         $platform = $this->em->getPlatform();
         $columns = [];
@@ -119,7 +139,7 @@ final class SchemaTool
         }
 
         foreach ($metadata->associationMappings as $assoc) {
-            if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetadata::TO_ONE)) {
+            if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetaData::TO_ONE)) {
                 continue;
             }
             $targetMeta = $this->em->getClassMetadata($assoc['targetEntity']);
@@ -141,6 +161,10 @@ final class SchemaTool
         return $columns;
     }
 
+    /**
+     * @param array<string, mixed> $pivot
+     * @return list<ColumnDef>
+     */
     private function buildPivotColumns(array $pivot): array
     {
         $columns = [];

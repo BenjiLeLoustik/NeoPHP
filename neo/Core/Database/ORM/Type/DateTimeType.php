@@ -13,6 +13,9 @@ final class DateTimeType extends Type
         return self::DATETIME;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return 'datetime';

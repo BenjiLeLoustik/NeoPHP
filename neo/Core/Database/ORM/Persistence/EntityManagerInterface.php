@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database\ORM\Persistence;
 
 use Neo\Core\Database\DatabaseManager;
-use Neo\Core\Database\ORM\Mapping\ClassMetadata;
+use Neo\Core\Database\ORM\Mapping\ClassMetaData;
 use Neo\Core\Database\ORM\Mapping\MetadataFactory;
 use Neo\Core\Database\ORM\Platform\AbstractPlatform;
 
@@ -20,9 +20,12 @@ interface EntityManagerInterface
 
     public function getReference(string $className, mixed $id): object;
 
+    /**
+     * @return EntityRepository<object>
+     */
     public function getRepository(string $className): EntityRepository;
 
-    public function getClassMetadata(string $className): ClassMetadata;
+    public function getClassMetadata(string $className): ClassMetaData;
 
     public function getMetadataFactory(): MetadataFactory;
 

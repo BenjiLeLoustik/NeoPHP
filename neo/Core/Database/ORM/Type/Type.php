@@ -20,6 +20,10 @@ abstract class Type
     public const string JSON = 'json';
 
     abstract public function getName(): string;
+
+    /**
+     * @param array<string, mixed> $column
+     */
     abstract public function getSQLDeclaration(array $column, AbstractPlatform $platform): string;
 
     public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): mixed

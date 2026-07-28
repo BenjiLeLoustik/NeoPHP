@@ -12,6 +12,7 @@ use Neo\Core\Validator\ValidatorManager;
 
 final class FormBuilder
 {
+    /** @var array<string, array{type: string, options: array<string, mixed>}> */
     private array $definitions = [];
 
     public function __construct(
@@ -20,8 +21,12 @@ final class FormBuilder
         private readonly ValidatorManager $validator,
         private readonly ?CsrfManager $csrf = null,
         private readonly ?object $entity = null,
-    ) {}
+    ) {
+    }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function add(string $name, string $type = 'text', array $options = []): self
     {
         $this->definitions[$name] = ['type' => $type, 'options' => $options];
@@ -64,6 +69,9 @@ final class FormBuilder
         return $form;
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     private function buildField(string $name, string $type, array $options): FormField
     {
         $fieldType = FieldType::fromName($type);

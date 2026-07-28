@@ -11,6 +11,9 @@ final class FloatType extends Type
         return self::FLOAT;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return 'double';
