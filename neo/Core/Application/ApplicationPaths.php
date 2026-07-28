@@ -36,15 +36,11 @@ readonly class ApplicationPaths
         $this->container->set('controllersPath', $basePath . '/src/' . $appName . '/App/Controllers');
         $this->container->set('assetsPath', $basePath . '/src/' . $appName . '/Assets/');
         $this->container->set('repositoryPath', $basePath . '/src/' . $appName . '/Database/Repository');
-        $this->container->set('modelPath', $basePath . '/src/' . $appName . '/Database/Model');
-        $this->container->set('formPath', $basePath . '/src/' . $appName . '/Database/Forms');
         $this->container->set('listenersPath', $basePath . '/src/' . $appName . '/App/Event/Listener');
         $this->container->set('cronsPath', $basePath . '/src/' . $appName . '/App/Crons');
         $this->container->set('manifestFilename', 'manifest.json');
         $this->container->set('controllerNamespace', 'Neo\\Src\\' . $appName . '\\App\\Controllers\\');
-        $this->container->set('modelNamespace', 'Neo\\Src\\' . $appName . '\\Database\\Model');
         $this->container->set('repositoryNamespace', 'Neo\\Src\\' . $appName . '\\Database\\Repository');
-        $this->container->set('formNamespace', 'Neo\\Src\\' . $appName . '\\Database\\Forms');
 
         if (!empty($GLOBALS['_NEO_TEST_CONFIGS_PATH'])) {
             $this->container->set('testConfigsPath', $GLOBALS['_NEO_TEST_CONFIGS_PATH']);
