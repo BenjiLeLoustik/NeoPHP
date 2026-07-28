@@ -321,4 +321,58 @@ final class EntityPersister
 
         return $targetMeta->getFieldValue($target, (string) $field);
     }
+
+    /**
+     * @param array<string, mixed> $assoc
+     * @param list<mixed> $addedIds
+     * @param list<mixed> $removedIds
+     */
+    public function synchronizeManyToMany(array $assoc, mixed $ownerId, array $addedIds, array $removedIds): void
+    {
+        if (empty($assoc['isOwningSide']) || $assoc['type'] !== ClassMetaData::MANY_TO_MANY) {
+            return;
+        }
+
+        $platform = $this->em->getPlatform();
+        $joinTable = $assoc['joinTable'];
+        $pivot = $platform->quoteIdentifier($joinTable['name']);
+        $ownerColumn = $platform->quoteIdentifier($joinTable['joinColumns'][0]['name']);
+        $targetColumn = $platform->quoteIdentifier($joinTable['inverseJoinColumns'][0]['name']);
+
+        if ($removedIds !== []) {
+            $placeholders = implode(', ', array_fill(0, count($removedIds), '?'));
+            $this->em->getDatabase()->query(
+                sprintf('DELETE FROM %s WHERE %s = ? AND %s IN (%s)', $pivot, $ownerColumn, $targetColumn, $placeholders),
+                [$ownerId, ...array_values($removedIds)]
+            );
+        }
+
+        foreach ($addedIds as $targetId) {
+            $this->em->getDatabase()->query(
+                sprintf('INSERT INTO %s (%s, %s) VALUES (?, ?)', $pivot, $ownerColumn, $targetColumn),
+                [$ownerId, $targetId]
+            );
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $assoc
+     */
+    public function clearManyToMany(array $assoc, mixed $ownerId): void
+    {
+        if (empty($assoc['isOwningSide']) || $assoc['type'] !== ClassMetaData::MANY_TO_MANY) {
+            return;
+        }
+
+        $platform = $this->em->getPlatform();
+        $joinTable = $assoc['joinTable'];
+        $this->em->getDatabase()->query(
+            sprintf(
+                'DELETE FROM %s WHERE %s = ?',
+                $platform->quoteIdentifier($joinTable['name']),
+                $platform->quoteIdentifier($joinTable['joinColumns'][0]['name'])
+            ),
+            [$ownerId]
+        );
+    }
 }
