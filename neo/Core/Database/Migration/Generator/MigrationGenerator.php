@@ -12,9 +12,6 @@ final class MigrationGenerator
         private readonly DatabaseIntrospector $introspector
     ) {}
 
-    /**
-     * @throws DatabaseException
-     */
     public function generate(string $migrationsPath, string $name): string
     {
         $tables = $this->introspector->getTables();
@@ -41,15 +38,6 @@ final class MigrationGenerator
         );
     }
 
-    /**
-     * @param array{
-     *     tablesToCreate: array<string, array<int, array<string, mixed>>>,
-     *     tablesToDrop: array<string, array<int, array<string, mixed>>>,
-     *     tableChanges: array<string, array{added: array<int, array<string,mixed>>, removed: array<int, array<string,mixed>>, modified: array<int, array{before: array<string,mixed>, after: array<string,mixed>}>}>,
-     *     tableRenames?: array<int, array{from: string, to: string}>,
-     *     columnRenames?: array<string, array<int, array{from: string, to: string}>>
-     * } $diff
-     */
     public function generateDiff(string $migrationsPath, string $name, array $diff): string
     {
         $upLines = [];
@@ -103,9 +91,6 @@ final class MigrationGenerator
         );
     }
 
-    /**
-     * @param array<int, array<string, mixed>> $columns
-     */
     private function guardedCreateTable(string $table, array $columns): string
     {
         $sql = $this->buildCreateTableSql($table, $columns);
@@ -145,9 +130,6 @@ PHP;
 PHP;
     }
 
-    /**
-     * @param array<string, mixed> $col
-     */
     private function guardedAddColumn(string $table, array $col): string
     {
         $def = $this->escape($this->buildColumnDefinition($col));
@@ -168,9 +150,6 @@ PHP;
 PHP;
     }
 
-    /**
-     * @param array<string, mixed> $col
-     */
     private function guardedModifyColumn(string $table, array $col): string
     {
         $def = $this->escape($this->buildColumnDefinition($col));
@@ -249,9 +228,6 @@ PHP;
 PHP;
     }
 
-    /**
-     * @param array<int, array<string, mixed>> $columns
-     */
     private function buildCreateTableSql(string $table, array $columns): string
     {
         $defs = [];
@@ -274,9 +250,6 @@ PHP;
         return "CREATE TABLE IF NOT EXISTS `$table` (\n$colsSql\n    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     }
 
-    /**
-     * @param array<string, mixed> $col
-     */
     private function buildColumnDefinition(array $col): string
     {
         $def = "`{$col['name']}` {$col['type']}";

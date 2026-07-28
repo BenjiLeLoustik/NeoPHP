@@ -25,7 +25,7 @@ class ValidatorManager
             $propertyName = $prop->getName();
             $handledFields[$propertyName] = true;
 
-            $value = $prop->getValue($model);
+            $value = $prop->isInitialized($model) ? $prop->getValue($model) : null;
 
             $constraints = [];
 
@@ -88,7 +88,10 @@ class ValidatorManager
                 $ref = new \ReflectionClass($model);
 
                 if ($ref->hasProperty($constraint->field)) {
-                    $otherValue = $ref->getProperty($constraint->field)->getValue($model);
+                    $otherProp = $ref->getProperty($constraint->field);
+                    $otherValue = $otherProp->isInitialized($model)
+                        ? $otherProp->getValue($model)
+                        : null;
 
                 } elseif ($form && $form->getField($constraint->field) !== null) {
                     $otherValue = $form->getField($constraint->field)->getValue();

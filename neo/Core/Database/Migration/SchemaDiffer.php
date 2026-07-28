@@ -5,19 +5,6 @@ namespace Neo\Core\Database\Migration;
 
 final class SchemaDiffer
 {
-    /**
-     * @param array<string, array<int, array<string, mixed>>> $previous
-     * @param array<string, array<int, array<string, mixed>>> $current
-     * @return array{
-     *     tablesToCreate: array<string, array<int, array<string, mixed>>>,
-     *     tablesToDrop: array<string, array<int, array<string, mixed>>>,
-     *     tableChanges: array<string, array{
-     *         added: array<int, array<string, mixed>>,
-     *         removed: array<int, array<string, mixed>>,
-     *         modified: array<int, array{before: array<string, mixed>, after: array<string, mixed>}>
-     *     }>
-     * }
-     */
     public function diff(array $previous, array $current): array
     {
         $tablesToCreate = [];
@@ -77,9 +64,6 @@ final class SchemaDiffer
         ];
     }
 
-    /**
-     * @param array{tablesToCreate: array<string, mixed>, tablesToDrop: array<string, mixed>, tableChanges: array<string, mixed>} $diff
-     */
     public function isEmpty(array $diff): bool
     {
         return empty($diff['tablesToCreate'])
@@ -89,11 +73,6 @@ final class SchemaDiffer
             && empty($diff['columnRenames']);
     }
 
-    /**
-     * @param array<string, array<int, array<string, mixed>>> $tablesToCreate
-     * @param array<string, array<int, array<string, mixed>>> $tablesToDrop
-     * @return array<int, array{from: string, to: string}>
-     */
     public function findTableRenameCandidates(array $tablesToCreate, array $tablesToDrop): array
     {
         $dropSignatures = [];
@@ -110,7 +89,7 @@ final class SchemaDiffer
 
         foreach ($dropSignatures as $signature => $droppedTables) {
             if (count($droppedTables) !== 1 || empty($createSignatures[$signature]) || count($createSignatures[$signature]) !== 1) {
-                continue; // ambiguous match on either side, skip
+                continue;
             }
 
             $candidates[] = [
@@ -122,11 +101,6 @@ final class SchemaDiffer
         return $candidates;
     }
 
-    /**
-     * @param array<int, array<string, mixed>> $removed
-     * @param array<int, array<string, mixed>> $added
-     * @return array<int, array{from: string, to: string}>
-     */
     public function findColumnRenameCandidates(array $removed, array $added): array
     {
         $removedBySignature = [];
@@ -155,11 +129,6 @@ final class SchemaDiffer
         return $candidates;
     }
 
-    /**
-     * @param array<string, array<int, array<string, mixed>>> $tablesToCreate
-     * @param array<string, array{added: array<int, array<string,mixed>>, removed: array<int, array<string,mixed>>, modified: array<int, array{before: array<string,mixed>, after: array<string,mixed>}>}> $tableChanges
-     * @return array<int, array{table: string, column: string, context: string}>
-     */
     public function findRiskyNotNullChanges(array $tablesToCreate, array $tableChanges): array
     {
         $risks = [];
@@ -184,10 +153,6 @@ final class SchemaDiffer
         return $risks;
     }
 
-    /**
-     * @param array<int, array<string, mixed>> $columns
-     * @return array<string, array<string, mixed>>
-     */
     private function indexByName(array $columns): array
     {
         $indexed = [];
@@ -197,23 +162,17 @@ final class SchemaDiffer
         return $indexed;
     }
 
-    /**
-     * @param array<string, mixed> $col
-     */
     private function signature(array $col): string
     {
         return implode('|', [
-            (string) ($col['type'] ?? ''),
+            (string)($col['type'] ?? ''),
             !empty($col['nullable']) ? '1' : '0',
-            (string) ($col['default'] ?? ''),
-            (string) ($col['extra'] ?? ''),
-            (string) ($col['key'] ?? ''),
+            (string)($col['default'] ?? ''),
+            (string)($col['extra'] ?? ''),
+            (string)($col['key'] ?? ''),
         ]);
     }
 
-    /**
-     * @param array<int, array<string, mixed>> $columns
-     */
     private function buildTableSignature(array $columns): string
     {
         $parts = [];
@@ -227,9 +186,6 @@ final class SchemaDiffer
         return implode('|', $parts);
     }
 
-    /**
-     * @param array<string, mixed> $col
-     */
     private function isAutoIncrementPrimary(array $col): bool
     {
         return ($col['key'] ?? '') === 'PRI'

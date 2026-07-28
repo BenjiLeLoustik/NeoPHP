@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace Neo\Core\Database;
 
@@ -15,19 +14,12 @@ class DatabaseManager
     private PDO $pdo;
     private ?string $connection;
 
-    /**
-     * @throws DatabaseException
-     */
     public function __construct(?string $connection = null)
     {
         $this->connection = $connection;
         $this->pdo = DatabaseConnection::getPdo($connection);
     }
 
-    /**
-     * @throws DatabaseException
-     * @throws ContainerException
-     */
     public static function on(string $connection): self
     {
         DatabaseConnection::connectTo($connection);
@@ -39,10 +31,6 @@ class DatabaseManager
         return $this->connection ?? DatabaseConnection::getDefaultName();
     }
 
-    /**
-     * @param array<string, mixed> $params
-     * @throws DatabaseException
-     */
     public function query(string $sql, array $params = []): PDOStatement
     {
         try {
@@ -68,31 +56,19 @@ class DatabaseManager
         }
     }
 
-    /**
-     * @param array<string, mixed> $params
-     * @return array<string, mixed>|null
-     * @throws DatabaseException
-     */
     public function fetch(string $sql, array $params = []): ?array
     {
         $result = $this->query($sql, $params)->fetch();
-        return $result !== false ? $result : null;
+        return $result !== false
+            ? $result
+            : null;
     }
 
-    /**
-     * @param array<string, mixed> $params
-     * @return array<int, array<string, mixed>>
-     * @throws DatabaseException
-     */
     public function fetchAll(string $sql, array $params = []): array
     {
         return $this->query($sql, $params)->fetchAll();
     }
 
-    /**
-     * @param array<string|int, mixed> $params
-     * @throws DatabaseException
-     */
     public function execute(string $sql, array $params = []): bool
     {
         try {

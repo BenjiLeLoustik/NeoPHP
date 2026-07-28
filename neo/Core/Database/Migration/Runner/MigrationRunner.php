@@ -5,7 +5,6 @@ namespace Neo\Core\Database\Migration\Runner;
 
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\DatabaseManager;
-use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Migration\MigrationSchemaSnapshot;
 
 final class MigrationRunner
@@ -34,10 +33,6 @@ final class MigrationRunner
         ", self::TABLE));
     }
 
-    /**
-     * @return array<string, array{migration: string, batch: int, applied_at: string}>
-     * @throws DatabaseException
-     */
     public function getApplied(): array
     {
         return array_column(
@@ -50,9 +45,6 @@ final class MigrationRunner
         );
     }
 
-    /**
-     * @throws DatabaseException
-     */
     public function getLastBatch(): int
     {
         $row = $this->db->fetch(sprintf(
@@ -63,10 +55,6 @@ final class MigrationRunner
         return (int) ($row['last_batch'] ?? 0);
     }
 
-    /**
-     * @param string $migrationsPath
-     * @return array<int, string>
-     */
     public function getMigrationFiles(string $migrationsPath, bool $recursive = true): array
     {
         $files = glob($migrationsPath . '/MigrationVersion_*.php') ?: [];
@@ -83,11 +71,6 @@ final class MigrationRunner
         return $files;
     }
 
-    /**
-     * @param string $migrationsPath
-     * @return array<int, string>
-     * @throws DatabaseException
-     */
     public function getPending(string $migrationsPath, bool $recursive = true): array
     {
         $applied = $this->getApplied();
@@ -98,10 +81,6 @@ final class MigrationRunner
         ));
     }
 
-    /**
-     * @return array<int, string>
-     * @throws DatabaseException
-     */
     public function run(
         string $migrationsPath,
         bool $dryRun = false,
@@ -119,10 +98,6 @@ final class MigrationRunner
         return $ran;
     }
 
-    /**
-     * @return array<int, string>
-     * @throws DatabaseException
-     */
     public function rollback(string $migrationsPath, ?MigrationSchemaSnapshot $snapshot = null): array
     {
         $rolledBack = [];

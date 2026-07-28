@@ -1,0 +1,291 @@
+<?php
+declare(strict_types=1);
+
+namespace Neo\Core\Database\ORM\Persistence;
+
+use Neo\Core\Database\Exception\DatabaseException;
+use Neo\Core\Database\ORM\Mapping\ClassMetadata;
+use Neo\Core\Database\ORM\Type\TypeRegistry;
+
+final class EntityPersister
+{
+    private ObjectHydrator $hydrator;
+
+    public function __construct(
+        private readonly EntityManager $em,
+        private readonly ClassMetadata $metadata,
+    ) {
+        $this->hydrator = new ObjectHydrator($em);
+    }
+
+    public function insert(object $entity): ?string
+    {
+        $platform = $this->em->getPlatform();
+        $columns = [];
+        $values = [];
+
+        foreach ($this->metadata->fieldMappings as $field => $mapping) {
+            if ($mapping['id'] && $this->metadata->usesIdGenerator()) {
+                $current = $this->metadata->getFieldValue($entity, $field);
+                if ($current === null) {
+                    continue;
+                }
+            }
+            $columns[] = $mapping['columnName'];
+            $values[] = TypeRegistry::get($mapping['type'])
+                ->convertToDatabaseValue($this->metadata->getFieldValue($entity, $field), $platform);
+        }
+
+        foreach ($this->owningToOneAssociations() as $field => $assoc) {
+            $jc = $assoc['joinColumns'][0];
+            $target = $this->metadata->getFieldValue($entity, $field);
+            $columns[] = $jc['name'];
+            $values[] = $target !== null ? $this->referencedValue($target, $jc['referencedColumnName']) : null;
+        }
+
+        $cols = implode(', ', array_map($platform->quoteIdentifier(...), $columns));
+        $placeholders = implode(', ', array_fill(0, count($columns), '?'));
+        $sql = sprintf(
+            'INSERT INTO %s (%s) VALUES (%s)',
+            $platform->quoteIdentifier($this->metadata->table),
+            $cols,
+            $placeholders
+        );
+
+        $this->em->getDatabase()->query($sql, $values);
+
+        return $this->metadata->usesIdGenerator()
+            ? $this->em->getDatabase()->lastInsertId()
+            : null;
+    }
+
+    public function update(object $entity, array $changeSet): void
+    {
+        if ($changeSet === []) {
+            return;
+        }
+
+        $platform = $this->em->getPlatform();
+        $sets = [];
+        $values = [];
+
+        foreach ($changeSet as $field => [$old, $new]) {
+            if ($this->metadata->hasField($field)) {
+                $mapping = $this->metadata->fieldMappings[$field];
+                $sets[] = $platform->quoteIdentifier($mapping['columnName']) . ' = ?';
+                $values[] = TypeRegistry::get($mapping['type'])->convertToDatabaseValue($new, $platform);
+                continue;
+            }
+
+            if ($this->metadata->hasAssociation($field)) {
+                $assoc = $this->metadata->associationMappings[$field];
+                if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetadata::TO_ONE)) {
+                    continue;
+                }
+                $jc = $assoc['joinColumns'][0];
+                $sets[] = $platform->quoteIdentifier($jc['name']) . ' = ?';
+                $values[] = $new !== null ? $this->referencedValue($new, $jc['referencedColumnName']) : null;
+            }
+        }
+
+        if ($sets === []) {
+            return;
+        }
+
+        $idColumn = $this->metadata->getSingleIdColumnName();
+        $values[] = $this->metadata->getIdentifierValue($entity);
+
+        $sql = sprintf(
+            'UPDATE %s SET %s WHERE %s = ?',
+            $platform->quoteIdentifier($this->metadata->table),
+            implode(', ', $sets),
+            $platform->quoteIdentifier($idColumn)
+        );
+
+        $this->em->getDatabase()->query($sql, $values);
+    }
+
+    public function delete(object $entity): void
+    {
+        $platform = $this->em->getPlatform();
+        $sql = sprintf(
+            'DELETE FROM %s WHERE %s = ?',
+            $platform->quoteIdentifier($this->metadata->table),
+            $platform->quoteIdentifier($this->metadata->getSingleIdColumnName())
+        );
+
+        $this->em->getDatabase()->query($sql, [$this->metadata->getIdentifierValue($entity)]);
+    }
+
+    public function loadById(array $criteria, ?object $into = null): ?object
+    {
+        $row = $this->fetchOne($criteria);
+        if ($row === null) {
+            if ($into !== null) {
+                throw new DatabaseException(
+                    title: 'Entity Not Found',
+                    message: sprintf("No '%s' row matched the referenced identifier.", $this->metadata->name),
+                    code: 404
+                );
+            }
+            return null;
+        }
+
+        return $this->hydrator->hydrate($this->metadata, $row, $into);
+    }
+
+    public function loadInto(object $entity, mixed $id): void
+    {
+        $this->loadById([$this->metadata->getSingleIdColumnName() => $id], $entity);
+    }
+
+    public function loadAll(array $criteria = [], array $orderBy = [], ?int $limit = null, ?int $offset = null): array
+    {
+        $platform = $this->em->getPlatform();
+        [$where, $values] = $this->buildWhere($criteria);
+
+        $sql = 'SELECT * FROM ' . $platform->quoteIdentifier($this->metadata->table) . $where;
+
+        if ($orderBy !== []) {
+            $parts = [];
+            foreach ($orderBy as $field => $direction) {
+                $col = $this->metadata->getColumnName($field);
+                $dir = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
+                $parts[] = $platform->quoteIdentifier($col) . ' ' . $dir;
+            }
+            $sql .= ' ORDER BY ' . implode(', ', $parts);
+        }
+
+        if ($limit !== null) {
+            $sql .= ' LIMIT ' . $limit;
+            if ($offset !== null) {
+                $sql .= ' OFFSET ' . $offset;
+            }
+        }
+
+        $rows = $this->em->getDatabase()->fetchAll($sql, $values);
+
+        return array_map(fn(array $row) => $this->hydrator->hydrate($this->metadata, $row), $rows);
+    }
+
+    public function count(array $criteria = []): int
+    {
+        $platform = $this->em->getPlatform();
+        [$where, $values] = $this->buildWhere($criteria);
+
+        $sql = 'SELECT COUNT(*) AS c FROM ' . $platform->quoteIdentifier($this->metadata->table) . $where;
+        $row = $this->em->getDatabase()->fetch($sql, $values);
+
+        return (int) ($row['c'] ?? 0);
+    }
+
+    public function loadCollection(array $assoc, mixed $ownerId): array
+    {
+        if ($assoc['type'] === ClassMetadata::ONE_TO_MANY) {
+            $targetMeta = $this->em->getClassMetadata($assoc['targetEntity']);
+            $owningAssoc = $targetMeta->associationMappings[$assoc['mappedBy']] ?? null;
+            if ($owningAssoc === null) {
+                return [];
+            }
+            $col = $owningAssoc['joinColumns'][0]['name'];
+            return $this->em->getUnitOfWork()
+                ->getEntityPersister($assoc['targetEntity'])
+                ->loadAll([$col => $ownerId]);
+        }
+
+        if ($assoc['type'] === ClassMetadata::MANY_TO_MANY) {
+            return $this->loadManyToMany($assoc, $ownerId);
+        }
+
+        return [];
+    }
+
+    private function loadManyToMany(array $assoc, mixed $ownerId): array
+    {
+        $platform = $this->em->getPlatform();
+        $targetMeta = $this->em->getClassMetadata($assoc['targetEntity']);
+        $targetPersister = $this->em->getUnitOfWork()->getEntityPersister($assoc['targetEntity']);
+
+        if ($assoc['isOwningSide']) {
+            $joinTable = $assoc['joinTable'];
+            $ownerColumn = $joinTable['joinColumns'][0]['name'];
+            $targetColumn = $joinTable['inverseJoinColumns'][0]['name'];
+            $pivot = $joinTable['name'];
+        } else {
+            $ownerAssoc = $targetMeta->associationMappings[$assoc['mappedBy']];
+            $joinTable = $ownerAssoc['joinTable'];
+            $ownerColumn = $joinTable['inverseJoinColumns'][0]['name'];
+            $targetColumn = $joinTable['joinColumns'][0]['name'];
+            $pivot = $joinTable['name'];
+        }
+
+        $targetTable = $targetMeta->table;
+        $targetId = $targetMeta->getSingleIdColumnName();
+
+        $sql = sprintf(
+            'SELECT t.* FROM %s t INNER JOIN %s p ON t.%s = p.%s WHERE p.%s = ?',
+            $platform->quoteIdentifier($targetTable),
+            $platform->quoteIdentifier($pivot),
+            $platform->quoteIdentifier($targetId),
+            $platform->quoteIdentifier($targetColumn),
+            $platform->quoteIdentifier($ownerColumn)
+        );
+
+        $rows = $this->em->getDatabase()->fetchAll($sql, [$ownerId]);
+        $hydrator = new ObjectHydrator($this->em);
+
+        return array_map(fn(array $row) => $hydrator->hydrate($targetMeta, $row), $rows);
+    }
+
+    private function fetchOne(array $criteria): ?array
+    {
+        $platform = $this->em->getPlatform();
+        [$where, $values] = $this->buildWhere($criteria);
+
+        $sql = 'SELECT * FROM ' . $platform->quoteIdentifier($this->metadata->table) . $where . ' LIMIT 1';
+        return $this->em->getDatabase()->fetch($sql, $values);
+    }
+
+    private function buildWhere(array $criteria): array
+    {
+        if ($criteria === []) {
+            return ['', []];
+        }
+
+        $platform = $this->em->getPlatform();
+        $clauses = [];
+        $values = [];
+
+        foreach ($criteria as $column => $value) {
+            if ($value === null) {
+                $clauses[] = $platform->quoteIdentifier($column) . ' IS NULL';
+                continue;
+            }
+            $clauses[] = $platform->quoteIdentifier($column) . ' = ?';
+            $values[] = $value;
+        }
+
+        return [' WHERE ' . implode(' AND ', $clauses), $values];
+    }
+
+    private function owningToOneAssociations(): iterable
+    {
+        foreach ($this->metadata->associationMappings as $field => $assoc) {
+            if ($assoc['isOwningSide'] && ($assoc['type'] & ClassMetadata::TO_ONE)) {
+                yield $field => $assoc;
+            }
+        }
+    }
+
+    private function referencedValue(object $target, string $referencedColumn): mixed
+    {
+        $targetMeta = $this->em->getClassMetadata($target::class);
+        $field = $targetMeta->getFieldForColumn($referencedColumn) ?? $targetMeta->identifier;
+
+        if ($field === $targetMeta->identifier) {
+            return $targetMeta->getIdentifierValue($target);
+        }
+
+        return $targetMeta->getFieldValue($target, (string) $field);
+    }
+}

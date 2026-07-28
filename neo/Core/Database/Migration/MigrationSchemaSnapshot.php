@@ -33,9 +33,6 @@ final class MigrationSchemaSnapshot
         ", self::TABLE));
     }
 
-    /**
-     * @throws DatabaseException
-     */
     public function take(): void
     {
         $dump = $this->buildDump();
@@ -54,10 +51,6 @@ final class MigrationSchemaSnapshot
         );
     }
 
-    /**
-     * @return array<string, array<int, array<string, mixed>>>|null
-     * @throws DatabaseException
-     */
     public function getLastSchema(): ?array
     {
         $row = $this->db->fetch(sprintf(
@@ -74,19 +67,11 @@ final class MigrationSchemaSnapshot
         return is_array($decoded) ? $decoded : null;
     }
 
-    /**
-     * @return array<string, array<int, array<string, mixed>>>
-     * @throws DatabaseException
-     */
     public function getCurrentSchema(): array
     {
         return $this->buildDumpArray();
     }
 
-    /**
-     * @return array<string, array<int, array<string, mixed>>>
-     * @throws DatabaseException
-     */
     private function buildDumpArray(): array
     {
         $tables = $this->introspector->getTables();
@@ -105,9 +90,6 @@ final class MigrationSchemaSnapshot
         return $dump;
     }
 
-    /**
-     * @throws DatabaseException
-     */
     private function buildDump(): string
     {
         return json_encode(

@@ -1,0 +1,29 @@
+<?php
+declare(strict_types=1);
+
+namespace Neo\Core\Database\ORM\Type;
+
+use Neo\Core\Database\ORM\Platform\AbstractPlatform;
+
+final class StringType extends Type
+{
+    public function getName(): string
+    {
+        return self::STRING;
+    }
+
+    public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
+    {
+        return $platform->getVarcharTypeDeclarationSQL((int) ($column['length'] ?? 255));
+    }
+
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?string
+    {
+        return $value === null ? null : (string) $value;
+    }
+
+    public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?string
+    {
+        return $value === null ? null : (string) $value;
+    }
+}
