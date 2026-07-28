@@ -12,6 +12,9 @@ final class TextType extends Type
         return self::TEXT;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return 'text';

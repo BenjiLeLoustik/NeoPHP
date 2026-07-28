@@ -24,9 +24,10 @@ use ReflectionProperty;
 
 final class MetadataFactory
 {
+    /** @var array<class-string, ClassMetaData> */
     private array $loaded = [];
 
-    public function getMetadataFor(string $className): ClassMetadata
+    public function getMetadataFor(string $className): ClassMetaData
     {
         if (isset($this->loaded[$className])) {
             return $this->loaded[$className];
@@ -35,7 +36,7 @@ final class MetadataFactory
         return $this->loaded[$className] = $this->build($className);
     }
 
-    private function build(string $className): ClassMetadata
+    private function build(string $className): ClassMetaData
     {
         if (!class_exists($className)) {
             throw new DatabaseException(
@@ -56,7 +57,7 @@ final class MetadataFactory
             );
         }
 
-        $metadata = new ClassMetadata($className);
+        $metadata = new ClassMetaData($className);
         $metadata->repositoryClass = $entityAttr->repositoryClass;
         $metadata->readOnly = $entityAttr->readOnly;
         $metadata->table = $this->resolveTableName($refl, $className);
@@ -88,7 +89,7 @@ final class MetadataFactory
         return $metadata;
     }
 
-    private function mapProperty(ClassMetadata $metadata, ReflectionProperty $prop): void
+    private function mapProperty(ClassMetaData $metadata, ReflectionProperty $prop): void
     {
         $name = $prop->getName();
 
@@ -116,7 +117,7 @@ final class MetadataFactory
         $generated = null;
         if ($isId) {
             $genAttr = $this->firstAttribute($prop, GeneratedValue::class);
-            $generated = $genAttr?->strategy ?? GeneratedValue::NONE;
+            $generated = $genAttr->strategy ?? GeneratedValue::NONE;
         }
 
         $metadata->fieldMappings[$name] = [
@@ -144,19 +145,19 @@ final class MetadataFactory
     }
 
     private function mapAssociation(
-        ClassMetadata $metadata,
+        ClassMetaData      $metadata,
         ReflectionProperty $prop,
-        ?ManyToOne $manyToOne,
-        ?OneToMany $oneToMany,
-        ?OneToOne $oneToOne,
-        ?ManyToMany $manyToMany,
+        ?ManyToOne         $manyToOne,
+        ?OneToMany         $oneToMany,
+        ?OneToOne          $oneToOne,
+        ?ManyToMany        $manyToMany,
     ): void {
         $field = $prop->getName();
 
         if ($manyToOne !== null) {
             $metadata->associationMappings[$field] = [
                 'fieldName' => $field,
-                'type' => ClassMetadata::MANY_TO_ONE,
+                'type' => ClassMetaData::MANY_TO_ONE,
                 'targetEntity' => $manyToOne->targetEntity,
                 'isOwningSide' => true,
                 'mappedBy' => null,
@@ -174,7 +175,7 @@ final class MetadataFactory
             $isOwning = $oneToOne->mappedBy === null;
             $metadata->associationMappings[$field] = [
                 'fieldName' => $field,
-                'type' => ClassMetadata::ONE_TO_ONE,
+                'type' => ClassMetaData::ONE_TO_ONE,
                 'targetEntity' => $oneToOne->targetEntity,
                 'isOwningSide' => $isOwning,
                 'mappedBy' => $oneToOne->mappedBy,
@@ -193,7 +194,7 @@ final class MetadataFactory
         if ($oneToMany !== null) {
             $metadata->associationMappings[$field] = [
                 'fieldName' => $field,
-                'type' => ClassMetadata::ONE_TO_MANY,
+                'type' => ClassMetaData::ONE_TO_MANY,
                 'targetEntity' => $oneToMany->targetEntity,
                 'isOwningSide' => false,
                 'mappedBy' => $oneToMany->mappedBy,
@@ -215,7 +216,7 @@ final class MetadataFactory
             }
             $metadata->associationMappings[$field] = [
                 'fieldName' => $field,
-                'type' => ClassMetadata::MANY_TO_MANY,
+                'type' => ClassMetaData::MANY_TO_MANY,
                 'targetEntity' => $manyToMany->targetEntity,
                 'isOwningSide' => $isOwning,
                 'mappedBy' => $manyToMany->mappedBy,
@@ -229,6 +230,9 @@ final class MetadataFactory
         }
     }
 
+    /**
+     * @return list<array{name: string, referencedColumnName: string, nullable: bool, unique: bool, onDelete: string|null, onUpdate: string|null}>
+     */
     private function readJoinColumns(ReflectionProperty $prop, string $field): array
     {
         $columns = [];
@@ -258,7 +262,7 @@ final class MetadataFactory
         return $columns;
     }
 
-    private function registerFkColumns(ClassMetadata $metadata, string $field): void
+    private function registerFkColumns(ClassMetaData $metadata, string $field): void
     {
         foreach ($metadata->associationMappings[$field]['joinColumns'] as $jc) {
             $col = $jc['name'];
@@ -266,10 +270,14 @@ final class MetadataFactory
         }
     }
 
+    /**
+     * @return array{name: string, joinColumns: list<array<string, mixed>>, inverseJoinColumns: list<array<string, mixed>>}
+     */
     private function buildJoinTable(?JoinTable $jt, string $ownerTable, string $targetEntity, string $field): array
     {
         $targetShort = strtolower((new ReflectionClass($targetEntity))->getShortName());
 
+        /** @phpstan-ignore nullsafe.neverNull */
         $name = $jt?->name ?? ($ownerTable . '_' . $targetShort);
 
         $joinColumns = $jt !== null && $jt->joinColumns !== []
@@ -287,6 +295,9 @@ final class MetadataFactory
         ];
     }
 
+    /**
+     * @return array{name: string|null, referencedColumnName: string, nullable: bool, onDelete: string|null}
+     */
     private function joinColumnToArray(JoinColumn $jc): array
     {
         return [
@@ -297,12 +308,18 @@ final class MetadataFactory
         ];
     }
 
+    /**
+     * @param ReflectionClass<object>|ReflectionProperty $target
+     */
     private function firstAttribute(ReflectionClass|ReflectionProperty $target, string $attributeClass): ?object
     {
         $attrs = $target->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF);
         return $attrs === [] ? null : $attrs[0]->newInstance();
     }
 
+    /**
+     * @param ReflectionClass<object> $refl
+     */
     private function resolveTableName(ReflectionClass $refl, string $className): string
     {
         $tableAttr = $this->firstAttribute($refl, Table::class);

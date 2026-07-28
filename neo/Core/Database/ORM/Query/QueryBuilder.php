@@ -9,14 +9,30 @@ use Neo\Core\Database\Exception\DatabaseException;
 final class QueryBuilder
 {
     private string $table = '';
+
+    /** @var list<string> */
     private array $columns = ['*'];
+
+    /** @var list<array{table: string, first: string, operator: string, second: string, type: string}> */
     private array $joins = [];
+
+    /** @var list<array<string, mixed>> */
     private array $wheres = [];
+
+    /** @var list<mixed> */
     private array $bindings = [];
+
+    /** @var list<string> */
     private array $groups = [];
+
+    /** @var list<array{column: string, operator: string}> */
     private array $havings = [];
+
+    /** @var list<array{column: string, direction: string}> */
     private array $orders = [];
+
     private ?int $limit = null;
+
     private ?int $offset = null;
 
     public function __construct(
@@ -74,6 +90,9 @@ final class QueryBuilder
         return $this;
     }
 
+    /**
+     * @param list<mixed> $values
+     */
     public function whereIn(string $column, array $values, string $boolean = 'AND'): self
     {
         if ($values === []) {
@@ -120,11 +139,17 @@ final class QueryBuilder
         return $this;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     public function get(): array
     {
         return $this->db->fetchAll($this->toSql(), $this->bindings);
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function first(): ?array
     {
         $this->limit = 1;
@@ -144,6 +169,9 @@ final class QueryBuilder
         return (int) ($row['aggregate'] ?? 0);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function insert(array $data): bool
     {
         $columns = implode(', ', array_map($this->quote(...), array_keys($data)));
@@ -152,12 +180,18 @@ final class QueryBuilder
         return $this->db->execute($sql, array_values($data));
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function insertGetId(array $data): string
     {
         $this->insert($data);
         return $this->db->lastInsertId();
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function update(array $data): bool
     {
         $sets = [];
@@ -220,6 +254,10 @@ final class QueryBuilder
         return $sql;
     }
 
+    /**
+     * @return array{string, list<mixed>}
+     * @throws DatabaseException
+     */
     private function compileWheres(): array
     {
         if ($this->wheres === []) {
@@ -234,6 +272,11 @@ final class QueryBuilder
                     'null' => $this->quote($where['column']) . ' IS NULL',
                     'in' => $this->quote($where['column']) . ' IN (' . implode(', ', array_fill(0, $where['count'], '?')) . ')',
                     'raw' => $where['sql'],
+                    default => throw new DatabaseException(
+                        title: 'Query Builder Error',
+                        message: sprintf('Unknown where clause type: %s', is_scalar($where['type']) ? (string) $where['type'] : gettype($where['type'])),
+                        code: 500
+                    ),
                 };
         }
 

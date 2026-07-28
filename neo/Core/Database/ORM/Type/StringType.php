@@ -12,6 +12,9 @@ final class StringType extends Type
         return self::STRING;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return $platform->getVarcharTypeDeclarationSQL((int) ($column['length'] ?? 255));

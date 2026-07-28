@@ -4,10 +4,13 @@ declare(strict_types=1);
 namespace Neo\Core\Database\ORM\Mapping;
 
 use ReflectionClass;
-use ReflectionException;
 use ReflectionProperty;
 
-final class ClassMetadata
+/**
+ * @phpstan-type FieldMapping array<string, mixed>
+ * @phpstan-type AssociationMapping array<string, mixed>
+ */
+final class ClassMetaData
 {
     public const int MANY_TO_ONE  = 1;
     public const int ONE_TO_MANY  = 2;
@@ -23,24 +26,32 @@ final class ClassMetadata
 
     public bool $readOnly = false;
 
+    /** @var array<string, FieldMapping> */
     public array $fieldMappings = [];
 
+    /** @var array<string, string> */
     public array $columnNames = [];
 
+    /** @var array<string, string> */
     public array $fieldNames = [];
 
     public ?string $identifier = null;
 
     public string $idGenerator = 'NONE';
 
+    /** @var array<string, AssociationMapping> */
     public array $associationMappings = [];
 
+    /** @var list<array{name?: string, columns: list<string>}> */
     public array $indexes = [];
 
+    /** @var list<array{name?: string, columns: list<string>}> */
     public array $uniqueConstraints = [];
 
+    /** @var ReflectionClass<object> */
     public ReflectionClass $reflClass;
 
+    /** @var array<string, ReflectionProperty> */
     private array $reflProps = [];
 
     public function __construct(
@@ -69,6 +80,9 @@ final class ClassMetadata
         return $this->fieldMappings[$fieldName]['type'] ?? null;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getFieldNames(): array
     {
         return array_keys($this->fieldMappings);
@@ -106,6 +120,9 @@ final class ClassMetadata
             && (bool) ($this->associationMappings[$fieldName]['type'] & self::TO_MANY);
     }
 
+    /**
+     * @return array<string, AssociationMapping>
+     */
     public function getAssociationMappings(): array
     {
         return $this->associationMappings;

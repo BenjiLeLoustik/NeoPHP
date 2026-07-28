@@ -6,6 +6,9 @@ namespace Neo\Core\Database\Migration\Generator;
 use Neo\Core\Database\Access\Introspector\DatabaseIntrospector;
 use Neo\Core\Database\Exception\DatabaseException;
 
+/**
+ * @phpstan-type ColumnDef array{name: string, type: string, nullable?: bool, default?: string|null, key?: string, extra?: string}
+ */
 final class MigrationGenerator
 {
     public function __construct(
@@ -38,6 +41,9 @@ final class MigrationGenerator
         );
     }
 
+    /**
+     * @param array<string, mixed> $diff
+     */
     public function generateDiff(string $migrationsPath, string $name, array $diff): string
     {
         $upLines = [];
@@ -91,6 +97,9 @@ final class MigrationGenerator
         );
     }
 
+    /**
+     * @param list<ColumnDef> $columns
+     */
     private function guardedCreateTable(string $table, array $columns): string
     {
         $sql = $this->buildCreateTableSql($table, $columns);
@@ -130,6 +139,9 @@ PHP;
 PHP;
     }
 
+    /**
+     * @param ColumnDef $col
+     */
     private function guardedAddColumn(string $table, array $col): string
     {
         $def = $this->escape($this->buildColumnDefinition($col));
@@ -150,6 +162,9 @@ PHP;
 PHP;
     }
 
+    /**
+     * @param ColumnDef $col
+     */
     private function guardedModifyColumn(string $table, array $col): string
     {
         $def = $this->escape($this->buildColumnDefinition($col));
@@ -228,6 +243,9 @@ PHP;
 PHP;
     }
 
+    /**
+     * @param list<ColumnDef> $columns
+     */
     private function buildCreateTableSql(string $table, array $columns): string
     {
         $defs = [];
@@ -250,6 +268,9 @@ PHP;
         return "CREATE TABLE IF NOT EXISTS `$table` (\n$colsSql\n    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     }
 
+    /**
+     * @param ColumnDef $col
+     */
     private function buildColumnDefinition(array $col): string
     {
         $def = "`{$col['name']}` {$col['type']}";

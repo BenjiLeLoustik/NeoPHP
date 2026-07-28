@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database\ORM\Persistence;
 
 use Neo\Core\Database\DatabaseManager;
-use Neo\Core\Database\ORM\Mapping\ClassMetadata;
+use Neo\Core\Database\ORM\Mapping\ClassMetaData;
 use Neo\Core\Database\ORM\Mapping\MetadataFactory;
 use Neo\Core\Database\ORM\Platform\AbstractPlatform;
 use Neo\Core\Database\ORM\Platform\MySQLPlatform;
@@ -19,6 +19,7 @@ final class EntityManager implements EntityManagerInterface
     private AbstractPlatform $platform;
     private DatabaseManager $db;
 
+    /** @var array<class-string, EntityRepository<object>> */
     private array $repositories = [];
 
     public function __construct(
@@ -82,6 +83,9 @@ final class EntityManager implements EntityManagerInterface
         return $proxy;
     }
 
+    /**
+     * @return EntityRepository<object>
+     */
     public function getRepository(string $className): EntityRepository
     {
         if (isset($this->repositories[$className])) {
@@ -98,7 +102,7 @@ final class EntityManager implements EntityManagerInterface
         return $this->repositories[$className] = $repository;
     }
 
-    public function getClassMetadata(string $className): ClassMetadata
+    public function getClassMetadata(string $className): ClassMetaData
     {
         return $this->metadataFactory->getMetadataFor($className);
     }

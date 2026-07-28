@@ -33,6 +33,9 @@ final class MigrationRunner
         ", self::TABLE));
     }
 
+    /**
+     * @return array<string, array{migration: string, batch: int|string, applied_at: string}>
+     */
     public function getApplied(): array
     {
         return array_column(
@@ -55,6 +58,9 @@ final class MigrationRunner
         return (int) ($row['last_batch'] ?? 0);
     }
 
+    /**
+     * @return list<string>
+     */
     public function getMigrationFiles(string $migrationsPath, bool $recursive = true): array
     {
         $files = glob($migrationsPath . '/MigrationVersion_*.php') ?: [];
@@ -71,6 +77,9 @@ final class MigrationRunner
         return $files;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getPending(string $migrationsPath, bool $recursive = true): array
     {
         $applied = $this->getApplied();
@@ -81,6 +90,9 @@ final class MigrationRunner
         ));
     }
 
+    /**
+     * @return list<string>
+     */
     public function run(
         string $migrationsPath,
         bool $dryRun = false,
@@ -98,6 +110,9 @@ final class MigrationRunner
         return $ran;
     }
 
+    /**
+     * @return list<string>
+     */
     public function rollback(string $migrationsPath, ?MigrationSchemaSnapshot $snapshot = null): array
     {
         $rolledBack = [];
@@ -119,6 +134,9 @@ final class MigrationRunner
         return $rolledBack;
     }
 
+    /**
+     * @return list<string>
+     */
     private function runForPath(
         string $path,
         ?string $connection,
@@ -166,6 +184,9 @@ final class MigrationRunner
         return $ran;
     }
 
+    /**
+     * @return list<string>
+     */
     private function rollbackForPath(string $path, DatabaseManager $db): array
     {
         $lastBatch = $this->getLastBatch();

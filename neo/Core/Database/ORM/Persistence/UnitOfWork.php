@@ -5,7 +5,7 @@ namespace Neo\Core\Database\ORM\Persistence;
 
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
-use Neo\Core\Database\ORM\Mapping\ClassMetadata;
+use Neo\Core\Database\ORM\Mapping\ClassMetaData;
 use PDO;
 use Throwable;
 
@@ -16,22 +16,31 @@ final class UnitOfWork
     public const int STATE_DETACHED = 3;
     public const int STATE_REMOVED  = 4;
 
+    /** @var array<class-string, array<string, object>> */
     private array $identityMap = [];
 
+    /** @var array<int, int> */
     private array $entityStates = [];
 
+    /** @var array<int, mixed> */
     private array $entityIdentifiers = [];
 
+    /** @var array<int, array<string, mixed>> */
     private array $originalEntityData = [];
 
+    /** @var array<int, object> */
     private array $entityInsertions = [];
 
+    /** @var array<int, object> */
     private array $entityUpdates = [];
 
+    /** @var array<int, object> */
     private array $entityDeletions = [];
 
+    /** @var array<int, array<string, array{mixed, mixed}>> */
     private array $entityChangeSets = [];
 
+    /** @var array<class-string, EntityPersister> */
     private array $persisters = [];
 
     private ?PDO $pdo = null;
@@ -46,6 +55,9 @@ final class UnitOfWork
         $this->doPersist($entity, $visited);
     }
 
+    /**
+     * @param array<int, bool> $visited
+     */
     private function doPersist(object $entity, array &$visited): void
     {
         $oid = spl_object_id($entity);
@@ -81,7 +93,7 @@ final class UnitOfWork
         $this->cascadePersist($metadata, $entity, $visited);
     }
 
-    private function persistNew(ClassMetadata $metadata, object $entity): void
+    private function persistNew(ClassMetaData $metadata, object $entity): void
     {
         $oid = spl_object_id($entity);
         $this->entityStates[$oid] = self::STATE_MANAGED;
@@ -102,6 +114,9 @@ final class UnitOfWork
         $this->doRemove($entity, $visited);
     }
 
+    /**
+     * @param array<int, bool> $visited
+     */
     private function doRemove(object $entity, array &$visited): void
     {
         $oid = spl_object_id($entity);
@@ -129,7 +144,10 @@ final class UnitOfWork
         $this->cascadeRemove($metadata, $entity, $visited);
     }
 
-    private function cascadePersist(ClassMetadata $metadata, object $entity, array &$visited): void
+    /**
+     * @param array<int, bool> $visited
+     */
+    private function cascadePersist(ClassMetaData $metadata, object $entity, array &$visited): void
     {
         foreach ($metadata->associationMappings as $field => $assoc) {
             if (!$this->cascades($assoc, 'persist')) {
@@ -144,7 +162,10 @@ final class UnitOfWork
         }
     }
 
-    private function cascadeRemove(ClassMetadata $metadata, object $entity, array &$visited): void
+    /**
+     * @param array<int, bool> $visited
+     */
+    private function cascadeRemove(ClassMetaData $metadata, object $entity, array &$visited): void
     {
         foreach ($metadata->associationMappings as $field => $assoc) {
             if (!$this->cascades($assoc, 'remove') && empty($assoc['orphanRemoval'])) {
@@ -256,7 +277,10 @@ final class UnitOfWork
         }
     }
 
-    private function buildChangeSet(ClassMetadata $metadata, object $entity): array
+    /**
+     * @return array<string, array{mixed, mixed}>
+     */
+    private function buildChangeSet(ClassMetaData $metadata, object $entity): array
     {
         $oid = spl_object_id($entity);
         $original = $this->originalEntityData[$oid] ?? [];
@@ -271,7 +295,7 @@ final class UnitOfWork
         }
 
         foreach ($metadata->associationMappings as $field => $assoc) {
-            if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetadata::TO_ONE)) {
+            if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetaData::TO_ONE)) {
                 continue;
             }
             $target = $this->readAssociation($metadata, $entity, $field);
@@ -285,6 +309,9 @@ final class UnitOfWork
         return $changeSet;
     }
 
+    /**
+     * @return list<class-string>
+     */
     private function getCommitOrder(): array
     {
         $classes = [];
@@ -299,7 +326,7 @@ final class UnitOfWork
         foreach ($classes as $class) {
             $metadata = $this->em->getClassMetadata($class);
             foreach ($metadata->associationMappings as $assoc) {
-                if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetadata::TO_ONE)) {
+                if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetaData::TO_ONE)) {
                     continue;
                 }
                 $target = $assoc['targetEntity'];
@@ -349,6 +376,9 @@ final class UnitOfWork
         return $this->identityMap[$className][$this->idHash($id)] ?? null;
     }
 
+    /**
+     * @param array<string, mixed> $originalData
+     */
     public function registerManaged(object $entity, mixed $id, array $originalData): void
     {
         $oid = spl_object_id($entity);
@@ -387,7 +417,7 @@ final class UnitOfWork
             $snapshot[$field] = $metadata->getFieldValue($entity, $field);
         }
         foreach ($metadata->associationMappings as $field => $assoc) {
-            if ($assoc['isOwningSide'] && ($assoc['type'] & ClassMetadata::TO_ONE)) {
+            if ($assoc['isOwningSide'] && ($assoc['type'] & ClassMetaData::TO_ONE)) {
                 $target = $this->readAssociation($metadata, $entity, $field);
                 $snapshot[$field] = $target !== null ? $this->extractId($target) : null;
             }
@@ -451,7 +481,7 @@ final class UnitOfWork
         return self::STATE_NEW;
     }
 
-    private function readAssociation(ClassMetadata $metadata, object $entity, string $field): mixed
+    private function readAssociation(ClassMetaData $metadata, object $entity, string $field): mixed
     {
         return $metadata->getFieldValue($entity, $field);
     }
@@ -462,7 +492,7 @@ final class UnitOfWork
         return $metadata->getIdentifierValue($target);
     }
 
-    private function castId(ClassMetadata $metadata, mixed $generatedId): mixed
+    private function castId(ClassMetaData $metadata, mixed $generatedId): mixed
     {
         $type = $metadata->getTypeOfField((string) $metadata->identifier);
         return in_array($type, ['integer', 'smallint', 'bigint'], true)
@@ -470,12 +500,18 @@ final class UnitOfWork
             : $generatedId;
     }
 
+    /**
+     * @param array<string, mixed> $assoc
+     */
     private function cascades(array $assoc, string $op): bool
     {
         $cascade = $assoc['cascade'] ?? [];
         return in_array($op, $cascade, true) || in_array('all', $cascade, true);
     }
 
+    /**
+     * @return iterable<mixed>
+     */
     private function toIterable(mixed $value): iterable
     {
         if ($value === null) {

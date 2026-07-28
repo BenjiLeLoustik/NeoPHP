@@ -149,6 +149,9 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
         return ExitCode::SUCCESS;
     }
 
+    /**
+     * @return list<class-string>
+     */
     private function discoverEntities(string $entityDir, string $project): array
     {
         $rii = new \RecursiveIteratorIterator(
@@ -185,6 +188,10 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
         return $classes;
     }
 
+    /**
+     * @param array<string, list<array<string, mixed>>> $schema
+     * @return array<string, list<array<string, mixed>>>
+     */
     private function canonicalizeSchema(array $schema, AbstractPlatform $platform): array
     {
         foreach ($schema as $table => $columns) {
@@ -197,6 +204,9 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
         return $schema;
     }
 
+    /**
+     * @param array<string, mixed> $diff
+     */
     private function isEmptyDiff(array $diff): bool
     {
         return empty($diff['tablesToCreate'])
@@ -205,6 +215,9 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
                 !empty($c['added']) || !empty($c['removed']) || !empty($c['modified'])));
     }
 
+    /**
+     * @param array<string, mixed> $diff
+     */
     private function printSummary(array $diff, Output $output): void
     {
         foreach (array_keys($diff['tablesToCreate'] ?? []) as $table) {

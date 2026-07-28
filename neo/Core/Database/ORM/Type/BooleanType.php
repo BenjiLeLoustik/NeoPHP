@@ -11,6 +11,9 @@ final class BooleanType extends Type
         return self::BOOLEAN;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return $platform->getBooleanTypeDeclarationSQL();

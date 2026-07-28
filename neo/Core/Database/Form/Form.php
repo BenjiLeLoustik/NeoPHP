@@ -7,12 +7,14 @@ use Neo\Core\Database\Form\Field\FieldType;
 use Neo\Core\Database\Form\Field\FormField;
 use Neo\Core\Security\Csrf\CsrfManager;
 use Neo\Core\Validator\ValidatorManager;
+use Neo\Core\Validator\Abstract\AbstractConstraint;
 use stdClass;
 
 final class Form
 {
     public const string CSRF_FIELD = '_csrf_token';
 
+    /** @var array<string, FormField> */
     private array $fields = [];
 
     private bool $submitted = false;
@@ -46,6 +48,9 @@ final class Form
         return $this->fields[$name] ?? null;
     }
 
+    /**
+     * @return array<string, FormField>
+     */
     public function getFields(): array
     {
         return $this->fields;
@@ -61,6 +66,9 @@ final class Form
         return $this->entity;
     }
 
+    /**
+     * @return list<AbstractConstraint>
+     */
     public function getAddedConstraints(string $name): array
     {
         return $this->getField($name)?->getConstraints() ?? [];
@@ -95,6 +103,9 @@ final class Form
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function handleRequest(array $data): self
     {
         $this->submitted = true;
@@ -156,6 +167,9 @@ final class Form
         return true;
     }
 
+    /**
+     * @return array<string, list<string>>
+     */
     public function getErrors(): array
     {
         $errors = [];
@@ -167,6 +181,9 @@ final class Form
         return $errors;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getData(): array
     {
         $data = [];

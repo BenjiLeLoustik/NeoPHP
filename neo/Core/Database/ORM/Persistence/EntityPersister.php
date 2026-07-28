@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database\ORM\Persistence;
 
 use Neo\Core\Database\Exception\DatabaseException;
-use Neo\Core\Database\ORM\Mapping\ClassMetadata;
+use Neo\Core\Database\ORM\Mapping\ClassMetaData;
 use Neo\Core\Database\ORM\Type\TypeRegistry;
 
 final class EntityPersister
@@ -13,7 +13,7 @@ final class EntityPersister
 
     public function __construct(
         private readonly EntityManager $em,
-        private readonly ClassMetadata $metadata,
+        private readonly ClassMetaData $metadata,
     ) {
         $this->hydrator = new ObjectHydrator($em);
     }
@@ -59,6 +59,9 @@ final class EntityPersister
             : null;
     }
 
+    /**
+     * @param array<string, array{mixed, mixed}> $changeSet
+     */
     public function update(object $entity, array $changeSet): void
     {
         if ($changeSet === []) {
@@ -79,7 +82,7 @@ final class EntityPersister
 
             if ($this->metadata->hasAssociation($field)) {
                 $assoc = $this->metadata->associationMappings[$field];
-                if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetadata::TO_ONE)) {
+                if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetaData::TO_ONE)) {
                     continue;
                 }
                 $jc = $assoc['joinColumns'][0];
@@ -117,6 +120,9 @@ final class EntityPersister
         $this->em->getDatabase()->query($sql, [$this->metadata->getIdentifierValue($entity)]);
     }
 
+    /**
+     * @param array<string, mixed> $criteria
+     */
     public function loadById(array $criteria, ?object $into = null): ?object
     {
         $row = $this->fetchOne($criteria);
@@ -139,6 +145,11 @@ final class EntityPersister
         $this->loadById([$this->metadata->getSingleIdColumnName() => $id], $entity);
     }
 
+    /**
+     * @param array<string, mixed> $criteria
+     * @param array<string, string> $orderBy
+     * @return list<object>
+     */
     public function loadAll(array $criteria = [], array $orderBy = [], ?int $limit = null, ?int $offset = null): array
     {
         $platform = $this->em->getPlatform();
@@ -168,6 +179,9 @@ final class EntityPersister
         return array_map(fn(array $row) => $this->hydrator->hydrate($this->metadata, $row), $rows);
     }
 
+    /**
+     * @param array<string, mixed> $criteria
+     */
     public function count(array $criteria = []): int
     {
         $platform = $this->em->getPlatform();
@@ -179,9 +193,13 @@ final class EntityPersister
         return (int) ($row['c'] ?? 0);
     }
 
+    /**
+     * @param array<string, mixed> $assoc
+     * @return list<object>
+     */
     public function loadCollection(array $assoc, mixed $ownerId): array
     {
-        if ($assoc['type'] === ClassMetadata::ONE_TO_MANY) {
+        if ($assoc['type'] === ClassMetaData::ONE_TO_MANY) {
             $targetMeta = $this->em->getClassMetadata($assoc['targetEntity']);
             $owningAssoc = $targetMeta->associationMappings[$assoc['mappedBy']] ?? null;
             if ($owningAssoc === null) {
@@ -193,13 +211,17 @@ final class EntityPersister
                 ->loadAll([$col => $ownerId]);
         }
 
-        if ($assoc['type'] === ClassMetadata::MANY_TO_MANY) {
+        if ($assoc['type'] === ClassMetaData::MANY_TO_MANY) {
             return $this->loadManyToMany($assoc, $ownerId);
         }
 
         return [];
     }
 
+    /**
+     * @param array<string, mixed> $assoc
+     * @return list<object>
+     */
     private function loadManyToMany(array $assoc, mixed $ownerId): array
     {
         $platform = $this->em->getPlatform();
@@ -237,6 +259,10 @@ final class EntityPersister
         return array_map(fn(array $row) => $hydrator->hydrate($targetMeta, $row), $rows);
     }
 
+    /**
+     * @param array<string, mixed> $criteria
+     * @return array<string, mixed>|null
+     */
     private function fetchOne(array $criteria): ?array
     {
         $platform = $this->em->getPlatform();
@@ -246,6 +272,10 @@ final class EntityPersister
         return $this->em->getDatabase()->fetch($sql, $values);
     }
 
+    /**
+     * @param array<string, mixed> $criteria
+     * @return array{string, list<mixed>}
+     */
     private function buildWhere(array $criteria): array
     {
         if ($criteria === []) {
@@ -268,10 +298,13 @@ final class EntityPersister
         return [' WHERE ' . implode(' AND ', $clauses), $values];
     }
 
+    /**
+     * @return iterable<string, array<string, mixed>>
+     */
     private function owningToOneAssociations(): iterable
     {
         foreach ($this->metadata->associationMappings as $field => $assoc) {
-            if ($assoc['isOwningSide'] && ($assoc['type'] & ClassMetadata::TO_ONE)) {
+            if ($assoc['isOwningSide'] && ($assoc['type'] & ClassMetaData::TO_ONE)) {
                 yield $field => $assoc;
             }
         }

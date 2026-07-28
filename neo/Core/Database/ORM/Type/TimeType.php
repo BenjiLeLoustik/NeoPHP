@@ -13,6 +13,9 @@ final class TimeType extends Type
         return self::TIME;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return 'time';

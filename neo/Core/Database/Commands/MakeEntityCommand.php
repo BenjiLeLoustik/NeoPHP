@@ -126,14 +126,16 @@ final class MakeEntityCommand extends AbstractCommand
         return ExitCode::SUCCESS;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     private function collectFields(): array
     {
         $fields = [];
 
         while (true) {
             Output::newLine();
-            $name = Input::ask('New property name (press <return> to stop adding fields):');
-            $name = $name !== null ? trim($name) : '';
+            $name = trim(Input::ask('New property name (press <return> to stop adding fields)'));
             if ($name === '') {
                 break;
             }
@@ -193,6 +195,9 @@ final class MakeEntityCommand extends AbstractCommand
         return self::RELATION_TYPES[$lower] ?? null;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function askScalar(string $name, string $type): array
     {
         $length = null;
@@ -207,6 +212,9 @@ final class MakeEntityCommand extends AbstractCommand
         return ['kind' => 'scalar', 'name' => $name, 'type' => $type, 'nullable' => $nullable, 'length' => $length];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function askManyToOne(string $name): array
     {
         $target = $this->askTarget();
@@ -220,6 +228,9 @@ final class MakeEntityCommand extends AbstractCommand
         return ['kind' => 'manyToOne', 'name' => $name, 'target' => $target, 'nullable' => $nullable, 'inversedBy' => $inversedBy];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function askOneToMany(string $name): array
     {
         $target = $this->askTarget();
@@ -230,6 +241,9 @@ final class MakeEntityCommand extends AbstractCommand
         return ['kind' => 'oneToMany', 'name' => $name, 'target' => $target, 'mappedBy' => $mappedBy];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function askOneToOne(string $name): array
     {
         $target = $this->askTarget();
@@ -253,6 +267,9 @@ final class MakeEntityCommand extends AbstractCommand
         return ['kind' => 'oneToOne', 'name' => $name, 'target' => $target, 'owning' => false, 'nullable' => true, 'inversedBy' => null, 'mappedBy' => $mappedBy];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function askManyToMany(string $name): array
     {
         $target = $this->askTarget();
@@ -284,8 +301,7 @@ final class MakeEntityCommand extends AbstractCommand
 
     private function askWithDefault(string $question, string $default): string
     {
-        $answer = Input::ask($question);
-        $answer = $answer !== null ? trim($answer) : '';
+        $answer = trim(Input::ask($question));
 
         return $answer === '' ? $default : $answer;
     }
@@ -301,8 +317,7 @@ final class MakeEntityCommand extends AbstractCommand
     private function askRequiredRaw(string $question): string
     {
         while (true) {
-            $answer = Input::ask($question);
-            $answer = $answer !== null ? trim($answer) : '';
+            $answer = trim(Input::ask($question));
             if ($answer !== '') {
                 return $answer;
             }
@@ -317,8 +332,7 @@ final class MakeEntityCommand extends AbstractCommand
 
     private function askOptionalRaw(string $question): ?string
     {
-        $answer = Input::ask($question);
-        $answer = $answer !== null ? trim($answer) : '';
+        $answer = trim(Input::ask($question));
 
         return $answer === '' ? null : $answer;
     }
@@ -330,6 +344,9 @@ final class MakeEntityCommand extends AbstractCommand
         return $raw === null ? null : lcfirst(Fs::pascalCase($raw));
     }
 
+    /**
+     * @param list<array<string, mixed>> $fields
+     */
     private function render(string $namespace, string $entity, array $fields, ?string $repositoryName = null, ?string $repositoryFqcn = null): string
     {
         $uses = [
@@ -471,6 +488,9 @@ final class $repositoryName extends EntityRepository
 PHP;
     }
 
+    /**
+     * @param array<string, mixed> $field
+     */
     private function renderScalarProp(array $field): string
     {
         $phpType = $this->phpType($field['type']);
@@ -489,6 +509,9 @@ PHP;
         return "    #[Column($argList)]\n    private {$nullable}{$phpType} \${$field['name']}{$default};";
     }
 
+    /**
+     * @param array<string, mixed> $field
+     */
     private function renderScalarAccessors(array $field): string
     {
         $phpType = $this->phpType($field['type']);
@@ -500,6 +523,9 @@ PHP;
             . "    public function set$studly({$nullable}{$phpType} \${$name}): static\n    {\n        \$this->{$name} = \${$name};\n\n        return \$this;\n    }";
     }
 
+    /**
+     * @param array<string, mixed> $field
+     */
     private function renderManyToOneProp(array $field): string
     {
         $nullable = $field['nullable'] ? '?' : '';
@@ -516,6 +542,9 @@ PHP;
             . "    private {$nullable}{$field['target']} \${$field['name']}{$default};";
     }
 
+    /**
+     * @param array<string, mixed> $field
+     */
     private function renderOneToOneProp(array $field): string
     {
         if ($field['owning']) {
@@ -537,6 +566,9 @@ PHP;
             . "    private ?{$field['target']} \${$field['name']} = null;";
     }
 
+    /**
+     * @param array<string, mixed> $field
+     */
     private function renderOneToManyProp(array $field): string
     {
         return "    /** @var Collection<{$field['target']}> */\n"
@@ -544,6 +576,9 @@ PHP;
             . "    private Collection \${$field['name']};";
     }
 
+    /**
+     * @param array<string, mixed> $field
+     */
     private function renderManyToManyProp(array $field): string
     {
         $doc = "    /** @var Collection<{$field['target']}> */\n";
@@ -569,6 +604,9 @@ PHP;
             . "    private Collection \${$field['name']};";
     }
 
+    /**
+     * @param array<string, mixed> $field
+     */
     private function renderToOneAccessors(array $field): string
     {
         $nullable = $field['nullable'] ? '?' : '';
@@ -580,6 +618,9 @@ PHP;
             . "    public function set$studly({$nullable}$target \${$name}): static\n    {\n        \$this->{$name} = \${$name};\n\n        return \$this;\n    }";
     }
 
+    /**
+     * @param array<string, mixed> $field
+     */
     private function renderCollectionAccessors(array $field): string
     {
         $studly = ucfirst($field['name']);

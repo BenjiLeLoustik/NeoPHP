@@ -11,6 +11,9 @@ final class IntegerType extends Type
         return self::INTEGER;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return $platform->getIntegerTypeDeclarationSQL($column);

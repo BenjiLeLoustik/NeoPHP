@@ -11,12 +11,15 @@ final class BigIntType extends Type
         return self::BIGINT;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return $platform->getBigIntTypeDeclarationSQL($column);
     }
 
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): int|string|null
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?int
     {
         return $value === null ? null : (int) $value;
     }

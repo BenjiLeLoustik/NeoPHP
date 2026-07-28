@@ -11,6 +11,9 @@ final class JsonType extends Type
         return self::JSON;
     }
 
+    /**
+     * @param array<string, mixed> $column
+     */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return 'json';
