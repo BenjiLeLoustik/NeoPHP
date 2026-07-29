@@ -15,7 +15,7 @@ final class EmailValidator implements ConstraintValidatorInterface
             && preg_match('/^[^@]+@[a-zA-Z0-9\-]+(\.[a-zA-Z]{2,})+$/', (string) $value) === 1;
 
         if (!$valid) {
-            $context->addViolation($constraint->message ?: 'This value is not a valid email address.');
+            $context->addViolation($constraint->getMessage() ?: 'This value is not a valid email address.');
         }
     }
 }

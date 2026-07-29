@@ -17,12 +17,12 @@ final class EqualToFieldValidator implements ConstraintValidatorInterface
         }
 
         if (!$context->fieldExists($constraint->field)) {
-            $context->addViolation($constraint->message ?: 'The compared field does not exist.');
+            $context->addViolation($constraint->getMessage() ?: 'The compared field does not exist.');
             return;
         }
 
         if ($value !== $context->getValue($constraint->field)) {
-            $context->addViolation($constraint->message ?: 'This value does not match.');
+            $context->addViolation($constraint->getMessage() ?: 'This value does not match.');
         }
     }
 }

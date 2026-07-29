@@ -17,17 +17,17 @@ final class RangeValidator implements ConstraintValidatorInterface
         }
 
         if (!is_numeric($value)) {
-            $context->addViolation($constraint->message ?: 'This value must be a number.');
+            $context->addViolation($constraint->getMessage() ?: 'This value must be a number.');
             return;
         }
 
         if ($constraint->min !== null && $value < $constraint->min) {
-            $context->addViolation($constraint->message ?: sprintf('This value must be %s or more.', $constraint->min));
+            $context->addViolation($constraint->getMessage() ?: sprintf('This value must be %s or more.', $constraint->min));
             return;
         }
 
         if ($constraint->max !== null && $value > $constraint->max) {
-            $context->addViolation($constraint->message ?: sprintf('This value must be %s or less.', $constraint->max));
+            $context->addViolation($constraint->getMessage() ?: sprintf('This value must be %s or less.', $constraint->max));
         }
     }
 }

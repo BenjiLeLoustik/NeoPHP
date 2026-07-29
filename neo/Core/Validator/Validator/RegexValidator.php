@@ -17,7 +17,7 @@ final class RegexValidator implements ConstraintValidatorInterface
         }
 
         if (preg_match($constraint->pattern, (string) $value) !== 1) {
-            $context->addViolation($constraint->message ?: 'This value is not in the expected format.');
+            $context->addViolation($constraint->getMessage() ?: 'This value is not in the expected format.');
         }
     }
 }

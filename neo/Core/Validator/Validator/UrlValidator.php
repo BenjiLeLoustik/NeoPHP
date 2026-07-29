@@ -12,7 +12,7 @@ final class UrlValidator implements ConstraintValidatorInterface
     public function validate(mixed $value, ConstraintInterface $constraint, ValidationContext $context): void
     {
         if (filter_var($value, FILTER_VALIDATE_URL) === false) {
-            $context->addViolation($constraint->message ?: 'This value is not a valid URL.');
+            $context->addViolation($constraint->getMessage() ?: 'This value is not a valid URL.');
         }
     }
 }
