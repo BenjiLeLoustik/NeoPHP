@@ -18,7 +18,7 @@ final class NotBlankValidator implements ConstraintValidatorInterface
         };
 
         if (!$ok) {
-            $context->addViolation($constraint->message ?: 'This field is required.');
+            $context->addViolation($constraint->getMessage() ?: 'This field is required.');
         }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Neo\Core\Validator\Interface;
 
+use Neo\Core\Validator\Interface\ConstraintInterface;
 use Neo\Core\Validator\ValidationContext;
 
 interface ConstraintValidatorInterface

@@ -36,7 +36,7 @@ final class ExistsValidator implements ConstraintValidatorInterface
         $row = $this->em->getDatabase()->fetch($sql, [$value]);
 
         if ((int) ($row['c'] ?? 0) === 0) {
-            $context->addViolation($constraint->message ?: 'This value does not exist.');
+            $context->addViolation($constraint->getMessage() ?: 'This value does not exist.');
         }
     }
 }

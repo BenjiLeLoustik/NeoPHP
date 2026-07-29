@@ -17,7 +17,7 @@ final class ChoiceValidator implements ConstraintValidatorInterface
         }
 
         if (!$this->isValid($value, $constraint->choices)) {
-            $context->addViolation($constraint->message ?: 'This value is not a valid choice.');
+            $context->addViolation($constraint->getMessage() ?: 'This value is not a valid choice.');
         }
     }
 

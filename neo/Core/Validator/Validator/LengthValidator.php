@@ -19,12 +19,12 @@ final class LengthValidator implements ConstraintValidatorInterface
         $len = mb_strlen((string) $value);
 
         if ($constraint->min !== null && $len < $constraint->min) {
-            $context->addViolation($constraint->message ?: sprintf('This value is too short (min %d characters).', $constraint->min));
+            $context->addViolation($constraint->getMessage() ?: sprintf('This value is too short (min %d characters).', $constraint->min));
             return;
         }
 
         if ($constraint->max !== null && $len > $constraint->max) {
-            $context->addViolation($constraint->message ?: sprintf('This value is too long (max %d characters).', $constraint->max));
+            $context->addViolation($constraint->getMessage() ?: sprintf('This value is too long (max %d characters).', $constraint->max));
         }
     }
 }

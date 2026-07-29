@@ -11,6 +11,11 @@ abstract class AbstractConstraint implements ConstraintInterface
     ) {
     }
 
+    public function getMessage(): string
+    {
+        return $this->message;
+    }
+
     public function runOnEmpty(): bool
     {
         return false;

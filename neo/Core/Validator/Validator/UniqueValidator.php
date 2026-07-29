@@ -53,7 +53,7 @@ final class UniqueValidator implements ConstraintValidatorInterface
         $row = $this->em->getDatabase()->fetch($sql, $params);
 
         if ((int) ($row['c'] ?? 0) > 0) {
-            $context->addViolation($constraint->message ?: 'This value is already used.');
+            $context->addViolation($constraint->getMessage() ?: 'This value is already used.');
         }
     }
 }

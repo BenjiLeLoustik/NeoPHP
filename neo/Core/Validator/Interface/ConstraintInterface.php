@@ -4,6 +4,8 @@ namespace Neo\Core\Validator\Interface;
 
 interface ConstraintInterface
 {
+    public function getMessage(): string;
+
     /**
      * @return class-string<ConstraintValidatorInterface>
      */

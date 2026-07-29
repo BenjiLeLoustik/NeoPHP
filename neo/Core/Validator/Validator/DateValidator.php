@@ -20,14 +20,14 @@ final class DateValidator implements ConstraintValidatorInterface
 
         $date = $this->normalize($value, $constraint->format);
         if ($date === null) {
-            $context->addViolation($constraint->message ?: 'This value is not a valid date.');
+            $context->addViolation($constraint->getMessage() ?: 'This value is not a valid date.');
             return;
         }
 
         if ($constraint->min !== null) {
             $min = $this->normalize($constraint->min, $constraint->format);
             if ($min === null || $date < $min) {
-                $context->addViolation($constraint->message ?: 'This date is too early.');
+                $context->addViolation($constraint->getMessage() ?: 'This date is too early.');
                 return;
             }
         }
@@ -35,7 +35,7 @@ final class DateValidator implements ConstraintValidatorInterface
         if ($constraint->max !== null) {
             $max = $this->normalize($constraint->max, $constraint->format);
             if ($max === null || $date > $max) {
-                $context->addViolation($constraint->message ?: 'This date is too late.');
+                $context->addViolation($constraint->getMessage() ?: 'This date is too late.');
             }
         }
     }
