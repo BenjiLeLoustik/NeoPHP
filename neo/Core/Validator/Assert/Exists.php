@@ -4,15 +4,17 @@ declare(strict_types=1);
 namespace Neo\Core\Validator\Assert;
 
 use Neo\Core\Validator\Abstract\AbstractConstraint;
-use Neo\Core\Validator\Validator\DateValidator;
+use Neo\Core\Validator\Validator\ExistsValidator;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-final class Date extends AbstractConstraint
+final class Exists extends AbstractConstraint
 {
+    /**
+     * @param class-string $entity
+     */
     public function __construct(
-        public string $format = 'Y-m-d',
-        public string|\DateTimeInterface|null $min = null,
-        public string|\DateTimeInterface|null $max = null,
+        public string $entity,
+        public string $field,
         string $message = '',
     ) {
         parent::__construct($message);
@@ -20,6 +22,6 @@ final class Date extends AbstractConstraint
 
     public function validatedBy(): string
     {
-        return DateValidator::class;
+        return ExistsValidator::class;
     }
 }

@@ -4,20 +4,18 @@ declare(strict_types=1);
 namespace Neo\Core\Validator\Assert;
 
 use Neo\Core\Validator\Abstract\AbstractConstraint;
+use Neo\Core\Validator\Validator\NotBlankValidator;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class NotBlank extends AbstractConstraint
+final class NotBlank extends AbstractConstraint
 {
-    public function validate(mixed $value, ?object $object = null): bool
+    public function runOnEmpty(): bool
     {
-        if (is_array($value)) {
-            return !empty($value);
-        }
+        return true;
+    }
 
-        if (is_string($value)) {
-            return trim($value) !== '';
-        }
-
-        return $value !== null;
+    public function validatedBy(): string
+    {
+        return NotBlankValidator::class;
     }
 }
