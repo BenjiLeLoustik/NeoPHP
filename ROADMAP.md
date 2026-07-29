@@ -182,13 +182,6 @@ neo/Core/
 
 ### 💡 Nouvelles fonctionnalités — Priorité haute
 
-- [ ] 🟡 **Database Seeding**
-  - Classe de base `AbstractSeeder` avec méthode `run(EntityManager $em): void`
-  - Commande `database:seed --project=Blog [--class=UserSeeder]`
-  - Commande `make:seeder UserSeeder --project=Blog` pour générer le squelette
-  - Seeders dans `src/<Projet>/Database/Seeders/`
-  - Possibilité d'appeler d'autres seeders depuis `DatabaseSeeder::run()`
-
 - [ ] 🟠 **Validation avancée**
   - Contrainte `Unique` actuelle est un placeholder — implémenter la vérification réelle en base via `EntityManager`
   - Ajouter `Exists` : vérifie qu'une valeur existe dans une table (utile pour les foreign keys)
