@@ -1,12 +1,30 @@
 {
-    "name": "bboezio/neophp",
-    "description": "NeoPHP - PHP8 Framework",
-    "type": "project",
+    "name": "neophp-dev/neophp",
+    "description": "Modern PHP 8.5 MVC framework with ORM, Twig templating, routing and CLI tools.",
+    "type": "library",
     "license": "MIT",
     "authors": [
         {
-            "name": "Benjamin Boezio"
+            "name": "Benjamin Boezio",
+            "homepage": "https://github.com/BenjiLeLoustik"
         }
+    ],
+    "homepage": "https://github.com/NeoPHP-Dev/NeoPHP",
+    "support": {
+        "issues": "https://github.com/NeoPHP-Dev/NeoPHP/issues"
+    },
+    "keywords": [
+        "neophp",
+        "php",
+        "framework",
+        "mvc",
+        "orm",
+        "twig",
+        "php8",
+        "web",
+        "router",
+        "cli",
+        "database"
     ],
     "require": {
         "php": ">=8.5",
@@ -28,7 +46,7 @@
         "predis/predis": "3.5.1"
     },
     "require-dev": {
-        "phpunit/phpunit": "13.2.4",
+        "phpunit/phpunit": "^13.0",
         "phpstan/phpstan": "^2.1"
     },
     "autoload": {
@@ -41,7 +59,7 @@
             "/src/*/Storage/"
         ]
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "repositories": []
 }
