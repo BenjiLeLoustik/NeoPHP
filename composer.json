@@ -6,7 +6,9 @@
     "authors": [
         {
             "name": "Benjamin Boezio",
-            "homepage": "https://github.com/BenjiLeLoustik"
+            "homepage": "https://github.com/BenjiLeLoustik",
+            "email": "email@example.com",
+            "role": "Developer"
         }
     ],
     "homepage": "https://github.com/NeoPHP-Dev/NeoPHP",
