@@ -2,15 +2,19 @@
 
 Le module Validator fournit un système de validation basé sur les **attributs PHP 8** (`#[Attribute]`). Les contraintes se posent directement sur les propriétés des modèles ou objets. Le `ValidatorManager` inspecte ces attributs par réflexion et retourne un tableau d'erreurs par champ.
 
+Depuis la refactorisation, chaque contrainte est **scindée en deux fichiers** : un attribut PHP (dans `Assert/`) et un validator dédié (dans `Validator/`).
+
 ---
 
 ## Sommaire
 
 1. [Structure du module](#structure-du-module)
-2. [Fonctionnement général](#fonctionnement-général)
-3. [ValidatorManager](#validatormanager)
-4. [AbstractConstraint](#abstractconstraint)
-5. [Contraintes disponibles](#contraintes-disponibles)
+2. [Interfaces](#interfaces)
+3. [Fonctionnement général](#fonctionnement-général)
+4. [ValidatorManager](#validatormanager)
+5. [AbstractConstraint](#abstractconstraint)
+6. [ValidationContext](#validationcontext)
+7. [Contraintes disponibles](#contraintes-disponibles)
    - [NotBlank](#notblank)
    - [Length](#length)
    - [Email](#email)
@@ -20,10 +24,11 @@ Le module Validator fournit un système de validation basé sur les **attributs 
    - [Date](#date)
    - [Url](#url)
    - [Unique](#unique)
+   - [Exists](#exists)
    - [EqualToField](#equaltofield)
-6. [Intégration avec les formulaires (Form)](#intégration-avec-les-formulaires-form)
-7. [Créer une contrainte personnalisée](#créer-une-contrainte-personnalisée)
-8. [Exemple complet](#exemple-complet)
+8. [Intégration avec les formulaires (Form)](#intégration-avec-les-formulaires-form)
+9. [Créer une contrainte personnalisée](#créer-une-contrainte-personnalisée)
+10. [Exemple complet](#exemple-complet)
 
 ---
 
@@ -31,22 +36,80 @@ Le module Validator fournit un système de validation basé sur les **attributs 
 
 ```
 Validator/
-├── ValidatorManager.php            # Orchestrateur de la validation
-├── ValidatorModule.php             # Enregistrement dans le conteneur DI
+├── ValidatorManager.php                # Orchestrateur de la validation
+├── ValidatorModule.php                 # Enregistrement dans le conteneur DI
+├── ValidationContext.php               # Contexte passé à chaque validator
 ├── Abstract/
-│   └── AbstractConstraint.php      # Classe abstraite de base pour toutes les contraintes
-└── Assert/
-    ├── NotBlank.php                # Champ requis (non vide)
-    ├── Length.php                  # Longueur de chaîne (min, max, exactly)
-    ├── Email.php                   # Format e-mail valide
-    ├── Regex.php                   # Expression régulière
-    ├── Choice.php                  # Valeur parmi une liste autorisée
-    ├── Range.php                   # Valeur numérique dans une plage
-    ├── Date.php                    # Date valide (format et bornes optionnelles)
-    ├── Url.php                     # URL valide
-    ├── Unique.php                  # Unicité en base de données
-    └── EqualToField.php            # Égalité avec un autre champ
+│   └── AbstractConstraint.php         # Classe abstraite de base pour toutes les contraintes
+├── Interface/
+│   ├── ConstraintInterface.php        # Contrat d'une contrainte
+│   └── ConstraintValidatorInterface.php # Contrat d'un validator
+├── Assert/                            # Attributs PHP (déclaration sur les propriétés)
+│   ├── NotBlank.php
+│   ├── Length.php
+│   ├── Email.php
+│   ├── Regex.php
+│   ├── Choice.php
+│   ├── Range.php
+│   ├── Date.php
+│   ├── Url.php
+│   ├── Unique.php
+│   ├── Exists.php
+│   └── EqualToField.php
+└── Validator/                         # Logique de validation (un fichier par contrainte)
+    ├── NotBlankValidator.php
+    ├── LengthValidator.php
+    ├── EmailValidator.php
+    ├── RegexValidator.php
+    ├── ChoiceValidator.php
+    ├── RangeValidator.php
+    ├── DateValidator.php
+    ├── UrlValidator.php
+    ├── UniqueValidator.php
+    ├── ExistsValidator.php
+    └── EqualToFieldValidator.php
 ```
+
+**Principe du split :** L'attribut (dans `Assert/`) porte uniquement les paramètres de configuration et déclare le validator via `validatedBy()`. Le validator (dans `Validator/`) contient toute la logique de validation et reçoit la valeur, la contrainte et le `ValidationContext`.
+
+---
+
+## Interfaces
+
+### ConstraintInterface
+
+```php
+namespace Neo\Core\Validator\Interface;
+
+interface ConstraintInterface
+{
+    public function getMessage(): string;
+
+    /** @return class-string<ConstraintValidatorInterface> */
+    public function validatedBy(): string;
+
+    public function runOnEmpty(): bool;
+}
+```
+
+| Méthode | Description |
+|---------|-------------|
+| `getMessage()` | Retourne le message d'erreur |
+| `validatedBy()` | Retourne le FQCN du validator associé |
+| `runOnEmpty()` | `true` si la contrainte doit s'appliquer même quand la valeur est `null` ou `''` |
+
+### ConstraintValidatorInterface
+
+```php
+namespace Neo\Core\Validator\Interface;
+
+interface ConstraintValidatorInterface
+{
+    public function validate(mixed $value, ConstraintInterface $constraint, ValidationContext $context): void;
+}
+```
+
+Le validator ne retourne rien : il appelle `$context->addViolation(string $message)` pour signaler une erreur.
 
 ---
 
@@ -54,11 +117,12 @@ Validator/
 
 1. Les contraintes sont déclarées comme **attributs PHP 8** sur les propriétés d'une classe.
 2. `ValidatorManager::validate()` inspecte la classe par réflexion et parcourt toutes les propriétés.
-3. Chaque contrainte est instanciée et sa méthode `validate()` est appelée avec la valeur de la propriété.
-4. Le résultat est un tableau `['nomChamp' => ['message erreur 1', ...]]`.
-5. Si le tableau est vide, la validation est réussie.
+3. Pour chaque contrainte trouvée, le `ValidatorManager` résout le validator via le conteneur DI (`validatedBy()`).
+4. Le validator reçoit la valeur, la contrainte et un `ValidationContext`. Il appelle `$context->addViolation()` si la valeur est invalide.
+5. Le résultat est un tableau `['nomChamp' => ['message erreur 1', ...]]`.
+6. Si le tableau est vide, la validation est réussie.
 
-**Comportement clé : les contraintes autres que `NotBlank` et `EqualToField` sont ignorées si la valeur est `null` ou `''`.** Cela permet de combiner `NotBlank` avec d'autres contraintes pour rendre un champ obligatoire.
+**Comportement clé : les contraintes autres que `NotBlank` et `EqualToField` sont ignorées si la valeur est `null` ou `''` et que `runOnEmpty()` retourne `false`.** Cela permet de combiner `NotBlank` avec d'autres contraintes pour rendre un champ obligatoire.
 
 ---
 
@@ -67,8 +131,7 @@ Validator/
 ```php
 use Neo\Core\Validator\ValidatorManager;
 
-$validator = new ValidatorManager();
-// ou via le conteneur :
+// Via le conteneur (recommandé) :
 $validator = $container->get(ValidatorManager::class);
 
 $errors = $validator->validate($monObjet);
@@ -85,13 +148,15 @@ if (!empty($errors)) {
 **Signature :**
 
 ```php
-public function validate(object $model, ?Form $form = null): array<string, array<int, string>>
+public function validate(object $model, ?Form $form = null): array<string, list<string>>
 ```
 
 | Paramètre | Description |
 |---|---|
 | `$model` | L'objet à valider (instancié avec les valeurs à contrôler) |
 | `$form` | Instance `Form` optionnelle pour les contraintes ajoutées dynamiquement |
+
+Le `ValidatorManager` est injecté avec un `Container` qui lui permet de résoudre les validators à la demande. Les instances de validators sont mises en cache pour la durée de la requête.
 
 ---
 
@@ -100,19 +165,52 @@ public function validate(object $model, ?Form $form = null): array<string, array
 Toutes les contraintes étendent `Neo\Core\Validator\Abstract\AbstractConstraint`.
 
 ```php
-abstract class AbstractConstraint
+abstract class AbstractConstraint implements ConstraintInterface
 {
-    public string $message;
+    public function __construct(
+        public string $message = '',
+    ) {}
 
-    public function __construct(string $message = '') { ... }
+    public function getMessage(): string { return $this->message; }
 
-    public function setPropertyName(string $name): void { ... }
+    public function runOnEmpty(): bool { return false; }
 
-    abstract public function validate(mixed $value, ?object $object = null): bool;
+    abstract public function validatedBy(): string;
 }
 ```
 
-Le `ValidatorManager` appelle `setPropertyName()` avant `validate()` pour permettre aux contraintes d'accéder au nom de la propriété en cours de validation (utile notamment pour `Unique`).
+Pour créer une contrainte personnalisée, étendre `AbstractConstraint` et surcharger `validatedBy()` (et éventuellement `runOnEmpty()`).
+
+---
+
+## ValidationContext
+
+Le `ValidationContext` est l'objet passé à chaque validator lors de la validation. Il donne accès au champ courant, au modèle global et au formulaire optionnel.
+
+```php
+final class ValidationContext
+{
+    public function getField(): string;
+    public function getModel(): object;
+    public function getForm(): ?Form;
+
+    public function addViolation(string $message): void;
+    public function getViolations(): list<string>;
+    public function hasViolations(): bool;
+
+    public function fieldExists(string $field): bool;
+    public function getValue(string $field): mixed;
+}
+```
+
+| Méthode | Description |
+|---------|-------------|
+| `getField()` | Nom de la propriété en cours de validation |
+| `getModel()` | Objet complet (utile pour les validators cross-champs) |
+| `getForm()` | Formulaire lié, si présent |
+| `addViolation(string $message)` | Ajoute une erreur pour ce champ |
+| `fieldExists(string $field)` | Vérifie si un champ existe sur le modèle ou le formulaire |
+| `getValue(string $field)` | Lit la valeur d'un autre champ (utile pour `EqualToField`) |
 
 ---
 
@@ -120,7 +218,7 @@ Le `ValidatorManager` appelle `setPropertyName()` avant `validate()` pour permet
 
 ### NotBlank
 
-Vérifie que la valeur n'est pas vide. C'est la seule contrainte qui s'applique même quand la valeur est `null` ou `''`. Si `NotBlank` échoue, les autres contraintes du même champ ne sont pas évaluées.
+Vérifie que la valeur n'est pas vide. C'est la seule contrainte qui s'applique même quand la valeur est `null` ou `''` (`runOnEmpty()` retourne `true`). Si `NotBlank` échoue, les autres contraintes du même champ ne sont pas évaluées.
 
 ```php
 use Neo\Core\Validator\Assert\NotBlank;
@@ -154,9 +252,6 @@ class Article
 
     #[Length(exactly: 6, message: 'Le code postal doit faire exactement {%min%} caractères.')]
     public string $codePostal;
-
-    #[Length(min: 10, message: 'La description doit faire au moins {%min%} caractères.')]
-    public ?string $description = null;
 }
 ```
 
@@ -184,8 +279,6 @@ class Contact
 }
 ```
 
-La contrainte passe si la valeur est `null` ou `''` (utiliser `NotBlank` pour rendre le champ obligatoire).
-
 ---
 
 ### Regex
@@ -199,9 +292,6 @@ class Produit
 {
     #[Regex(pattern: '/^[A-Z]{2}-\d{4}$/', message: 'Format de référence invalide (ex: AB-1234).')]
     public string $reference;
-
-    #[Regex(pattern: '/^\d{10}$/', message: 'Le numéro de téléphone doit contenir 10 chiffres.')]
-    public ?string $telephone = null;
 }
 ```
 
@@ -213,7 +303,7 @@ class Produit
 
 ### Choice
 
-Vérifie que la valeur fait partie d'un tableau de choix autorisés. Supporte aussi bien les tableaux indexés que les tableaux associatifs (la valeur peut être une clé ou une valeur du tableau).
+Vérifie que la valeur fait partie d'un tableau de choix autorisés. Supporte les tableaux indexés et associatifs.
 
 ```php
 use Neo\Core\Validator\Assert\Choice;
@@ -225,12 +315,6 @@ class Commande
         message: 'Statut invalide.'
     )]
     public string $statut;
-
-    #[Choice(
-        choices: ['fr' => 'Français', 'en' => 'English', 'es' => 'Español'],
-        message: 'Langue non supportée.'
-    )]
-    public string $langue;
 }
 ```
 
@@ -247,9 +331,6 @@ class Produit
 {
     #[Range(min: 0.01, max: 99999.99, message: 'Le prix doit être entre 0.01 et 99999.99 €.')]
     public float $prix;
-
-    #[Range(min: 1, message: 'La quantité doit être au moins 1.')]
-    public int $quantite;
 }
 ```
 
@@ -257,8 +338,6 @@ class Produit
 |---|---|---|
 | `min` | `?float` | Valeur minimale incluse |
 | `max` | `?float` | Valeur maximale incluse |
-
-Retourne `false` si la valeur n'est pas numérique.
 
 ---
 
@@ -274,15 +353,6 @@ class Evenement
     #[Date(format: 'Y-m-d', message: 'Format de date invalide (AAAA-MM-JJ).')]
     public string $dateDebut;
 
-    #[Date(
-        format: 'Y-m-d',
-        min: '2020-01-01',
-        max: '2030-12-31',
-        message: 'La date doit être entre 2020 et 2030.'
-    )]
-    public ?string $dateFin = null;
-
-    // Relative : la date doit être dans le futur
     #[Date(format: 'Y-m-d', min: 'now', message: 'La date doit être dans le futur.')]
     public ?string $dateExpiration = null;
 }
@@ -291,7 +361,7 @@ class Evenement
 | Paramètre | Type | Description |
 |---|---|---|
 | `format` | `string` | Format PHP de date (`'Y-m-d'` par défaut) |
-| `min` | `string\|DateTimeInterface\|null` | Borne inférieure (valeur relative acceptée : `'+1 day'`, `'now'`, `'-1 year'`) |
+| `min` | `string\|DateTimeInterface\|null` | Borne inférieure (valeur relative acceptée : `'+1 day'`, `'now'`) |
 | `max` | `string\|DateTimeInterface\|null` | Borne supérieure |
 
 ---
@@ -307,9 +377,6 @@ class Profil
 {
     #[Url(message: "L'URL du site est invalide.")]
     public ?string $siteWeb = null;
-
-    #[Url(message: "L'URL de l'avatar est invalide.")]
-    public ?string $avatar = null;
 }
 ```
 
@@ -321,31 +388,18 @@ Vérifie l'unicité d'une valeur directement en base de données via une requêt
 
 ```php
 use Neo\Core\Validator\Assert\Unique;
-use Neo\Core\Validator\Assert\NotBlank;
-use Neo\Core\Validator\Assert\Email;
 
 class Utilisateur
 {
     public string $table = 'users';
 
-    #[NotBlank(message: "L'e-mail est obligatoire.")]
-    #[Email(message: "Format d'e-mail invalide.")]
+    #[NotBlank]
+    #[Email]
     #[Unique(message: 'Cet e-mail est déjà utilisé.')]
     public string $email;
 
-    // Avec table et colonne explicites
-    #[Unique(
-        message: 'Ce pseudo est déjà pris.',
-        table: 'users',
-        column: 'username'
-    )]
-    public string $pseudo;
-
     // Exclure l'ID en cours (pour les mises à jour)
-    #[Unique(
-        message: 'Cet e-mail est déjà utilisé.',
-        excludedId: 42  // ID à ignorer dans la vérification
-    )]
+    #[Unique(message: 'Cet e-mail est déjà utilisé.', excludedId: 42)]
     public string $emailEdition;
 }
 ```
@@ -364,22 +418,45 @@ class Utilisateur
 
 ---
 
-### EqualToField
+### Exists
 
-Vérifie que la valeur de la propriété est identique à celle d'un autre champ du même objet. Utilisée typiquement pour la confirmation de mot de passe.
+Vérifie qu'une valeur **existe** en base de données (contrairement à `Unique` qui vérifie l'absence). Utile pour valider qu'une clé étrangère référence bien un enregistrement existant.
 
 ```php
-use Neo\Core\Validator\Assert\NotBlank;
-use Neo\Core\Validator\Assert\Length;
+use Neo\Core\Validator\Assert\Exists;
+
+class Commande
+{
+    #[Exists(table: 'users', column: 'id', message: 'Cet utilisateur n\'existe pas.')]
+    public int $userId;
+
+    #[Exists(table: 'products', column: 'id', message: 'Ce produit n\'existe pas.')]
+    public int $productId;
+}
+```
+
+| Paramètre | Type | Description |
+|---|---|---|
+| `table` | `string` | Nom de la table à interroger |
+| `column` | `string` | Nom de la colonne à vérifier |
+| `conditions` | `array` | Conditions supplémentaires `['col' => 'valeur']` |
+
+---
+
+### EqualToField
+
+Vérifie que la valeur de la propriété est identique à celle d'un autre champ du même objet. Utilisée typiquement pour la confirmation de mot de passe. S'applique même si la valeur est vide (`runOnEmpty()` retourne `true`).
+
+```php
 use Neo\Core\Validator\Assert\EqualToField;
 
 class FormulaireInscription
 {
-    #[NotBlank(message: 'Le mot de passe est obligatoire.')]
-    #[Length(min: 8, message: 'Le mot de passe doit faire au moins {%min%} caractères.')]
+    #[NotBlank]
+    #[Length(min: 8)]
     public string $motDePasse;
 
-    #[NotBlank(message: 'La confirmation est obligatoire.')]
+    #[NotBlank]
     #[EqualToField(field: 'motDePasse', message: 'Les mots de passe ne correspondent pas.')]
     public string $confirmation;
 }
@@ -388,8 +465,6 @@ class FormulaireInscription
 | Paramètre | Type | Description |
 |---|---|---|
 | `field` | `string` | Nom de la propriété à comparer |
-
-Contrairement aux autres contraintes, `EqualToField` s'applique même si la valeur est vide (pour garantir que la confirmation est bien présente).
 
 ---
 
@@ -411,7 +486,9 @@ Les champs présents dans le formulaire mais absents de la classe sont égalemen
 
 ## Créer une contrainte personnalisée
 
-Pour ajouter une contrainte spécifique au projet, il suffit d'étendre `AbstractConstraint` :
+Depuis la refactorisation, une contrainte personnalisée se compose de **deux fichiers** :
+
+**1. L'attribut** dans `Assert/` — porte les paramètres et pointe vers le validator :
 
 ```php
 <?php
@@ -420,30 +497,56 @@ declare(strict_types=1);
 namespace Neo\Src\MonProjet\Validator\Assert;
 
 use Neo\Core\Validator\Abstract\AbstractConstraint;
+use Neo\Src\MonProjet\Validator\Validator\MinAgeValidator;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class MinAge extends AbstractConstraint
+final class MinAge extends AbstractConstraint
 {
     public function __construct(
         public int $minAge = 18,
-        string $message = 'Vous devez avoir au moins :age ans.'
+        string $message = 'Vous devez avoir au moins :age ans.',
     ) {
         parent::__construct(str_replace(':age', (string) $minAge, $message));
     }
 
-    public function validate(mixed $value, ?object $object = null): bool
+    public function validatedBy(): string
+    {
+        return MinAgeValidator::class;
+    }
+}
+```
+
+**2. Le validator** dans `Validator/` — contient toute la logique :
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace Neo\Src\MonProjet\Validator\Validator;
+
+use Neo\Core\Validator\Interface\ConstraintInterface;
+use Neo\Core\Validator\Interface\ConstraintValidatorInterface;
+use Neo\Core\Validator\ValidationContext;
+
+final class MinAgeValidator implements ConstraintValidatorInterface
+{
+    public function validate(mixed $value, ConstraintInterface $constraint, ValidationContext $context): void
     {
         if ($value === null || $value === '') {
-            return true;
+            return; // Laisse NotBlank gérer les valeurs vides
         }
 
+        /** @var \Neo\Src\MonProjet\Validator\Assert\MinAge $constraint */
         $date = \DateTimeImmutable::createFromFormat('Y-m-d', (string) $value);
         if (!$date) {
-            return false;
+            $context->addViolation('Date invalide.');
+            return;
         }
 
         $age = $date->diff(new \DateTimeImmutable())->y;
-        return $age >= $this->minAge;
+        if ($age < $constraint->minAge) {
+            $context->addViolation($constraint->getMessage());
+        }
     }
 }
 ```
@@ -455,10 +558,12 @@ use Neo\Src\MonProjet\Validator\Assert\MinAge;
 
 class Membre
 {
-    #[MinAge(minAge: 18, message: 'Vous devez avoir au moins :age ans.')]
+    #[MinAge(minAge: 18)]
     public ?string $dateNaissance = null;
 }
 ```
+
+Le validator est résolu par le conteneur DI : il peut donc recevoir des dépendances (par ex. `DatabaseManager`) dans son constructeur.
 
 ---
 

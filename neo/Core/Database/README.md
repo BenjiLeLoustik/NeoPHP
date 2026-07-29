@@ -33,8 +33,12 @@ Ce module fournit l'ensemble de la couche d'accès aux données du framework Neo
 6. [Accès base de données](#accès-base-de-données)
    - [DatabaseManager](#databasemanager)
    - [DatabaseConnection](#databaseconnection)
-7. [Commandes CLI](#commandes-cli)
-8. [Points techniques importants](#points-techniques-importants)
+7. [Seeding](#seeding)
+   - [SeedInterface](#seedinterface)
+   - [Attribut #[Seeder]](#attribut-seeder)
+   - [SeedManager](#seedmanager)
+8. [Commandes CLI](#commandes-cli)
+9. [Points techniques importants](#points-techniques-importants)
 
 ---
 
@@ -890,6 +894,194 @@ return [
 
 ---
 
+## Seeding
+
+Le module Seeder permet de peupler la base de données avec des données de référence ou de démonstration. Il est structuré autour d'une interface, d'un attribut de configuration et d'un `SeedManager`.
+
+```
+Database/Seeder/
+├── SeedManager.php                         # Découverte, filtrage et exécution des seeders
+├── Interface/
+│   └── SeedInterface.php                  # Contrat d'un seeder
+├── Attribute/
+│   └── Seeder.php                         # Attribut de configuration
+└── Commands/
+    ├── DatabaseMakeSeedCommand.php         # Générateur de seeder
+    └── DatabaseRunSeedCommand.php          # Exécution des seeders
+```
+
+### SeedInterface
+
+Tout seeder doit implémenter `SeedInterface` :
+
+```php
+namespace Neo\Core\Database\Seeder\Interface;
+
+use Neo\Core\Database\ORM\Persistence\EntityManager;
+
+interface SeedInterface
+{
+    public function run(EntityManager $entityManager): void;
+}
+```
+
+La méthode `run()` reçoit directement l'`EntityManager`, ce qui permet de persister des entités sans instancier manuellement l'ORM.
+
+### Attribut `#[Seeder]`
+
+L'attribut `#[Seeder]` se pose sur la classe et configure deux paramètres :
+
+```php
+use Neo\Core\Database\Seeder\Attribute\Seeder;
+
+#[Seeder(order: 10, group: 'reference')]
+final class CountrySeeder implements SeedInterface { ... }
+```
+
+| Paramètre | Type | Défaut | Description |
+|-----------|------|--------|-------------|
+| `order` | `int` | `0` | Ordre d'exécution (croissant). Les seeders sans dépendances peuvent garder `0`. |
+| `group` | `string` | `'reference'` | Groupe du seeder. Valeurs conventionnelles : `'reference'` (données stables, toujours exécutées) et `'demo'` (données de développement/test). |
+
+Un seeder sans l'attribut `#[Seeder]` est ignoré par le `SeedManager`.
+
+### SeedManager
+
+`SeedManager` orchestre la découverte, le filtrage et l'exécution des seeders.
+
+**Découverte** — `discover(string $directory, string $namespace): array`
+
+Scanne un répertoire récursivement, charge les classes PHP trouvées, vérifie la présence de l'attribut `#[Seeder]` et de l'interface `SeedInterface`, puis retourne la liste triée par `order` croissant :
+
+```php
+$manager = new SeedManager($container);
+
+$seeders = $manager->discover(
+    '/var/www/app/src/Blog/Database/Seeder',
+    'Neo\Src\Blog\Database\Seeder'
+);
+// [['class' => 'Neo\Src\Blog\Database\Seeder\CountrySeeder', 'order' => 10, 'group' => 'reference'], ...]
+```
+
+**Filtrage** — `filterByGroup(array $seeders, ?string $group, bool $includeDev): array`
+
+| Appel | Résultat |
+|-------|----------|
+| `filterByGroup($seeders, null, false)` | Uniquement le groupe `'reference'` |
+| `filterByGroup($seeders, null, true)` | Tous les groupes |
+| `filterByGroup($seeders, 'demo', false)` | Uniquement le groupe `'demo'` |
+
+**Exécution** — `run(array $seeders): list<string>`
+
+Résout chaque seeder via le conteneur DI, appelle `run($em)` et retourne la liste des FQCN exécutés.
+
+### Commandes CLI
+
+#### `database:make:seed`
+
+Génère un fichier de seeder dans `src/<Projet>/Database/Seeder/`.
+
+```bash
+php bin/neo database:make:seed CountrySeeder --project=Blog
+php bin/neo database:make:seed CountrySeeder --project=Blog --order=10 --group=reference
+php bin/neo database:make:seed DemoPostSeeder --project=Blog --order=50 --group=demo
+php bin/neo database:make:seed CountrySeeder --project=Blog --force   # Écrase si existant
+```
+
+Options :
+
+| Option | Description |
+|--------|-------------|
+| `--project` | Projet cible (obligatoire) |
+| `--order` | Ordre d'exécution (défaut : `0`) |
+| `--group` | Groupe (défaut : `'reference'`) |
+| `--force` | Écrase le fichier sans confirmation |
+
+Le nom est automatiquement converti en PascalCase et suffixé par `Seeder` s'il ne l'est pas déjà.
+
+#### `database:run:seed`
+
+Exécute les seeders d'un projet.
+
+```bash
+# Exécuter les seeders 'reference' uniquement (comportement par défaut)
+php bin/neo database:run:seed --project=Blog
+
+# Inclure les seeders de développement (tous les groupes)
+php bin/neo database:run:seed --project=Blog --dev
+
+# Exécuter uniquement un groupe spécifique
+php bin/neo database:run:seed --project=Blog --group=demo
+
+# Prévisualiser sans exécuter
+php bin/neo database:run:seed --project=Blog --dry-run
+```
+
+Options :
+
+| Option | Description |
+|--------|-------------|
+| `--project` | Projet cible (obligatoire) |
+| `--group` | Filtre sur un groupe précis |
+| `--dev` | Inclut tous les groupes (dont `demo`) |
+| `--dry-run` | Liste les seeders qui seraient exécutés sans les lancer |
+
+La commande affiche la liste ordonnée des seeders avant exécution et demande une confirmation interactive.
+
+### Exemple complet
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace Neo\Src\Blog\Database\Seeder;
+
+use Neo\Core\Database\ORM\Persistence\EntityManager;
+use Neo\Core\Database\Seeder\Attribute\Seeder;
+use Neo\Core\Database\Seeder\Interface\SeedInterface;
+use Neo\Src\Blog\Database\Entity\Country;
+
+#[Seeder(order: 10, group: 'reference')]
+final class CountrySeeder implements SeedInterface
+{
+    public function run(EntityManager $entityManager): void
+    {
+        $countries = [
+            ['code' => 'FR', 'name' => 'France'],
+            ['code' => 'DE', 'name' => 'Allemagne'],
+            ['code' => 'ES', 'name' => 'Espagne'],
+        ];
+
+        foreach ($countries as $data) {
+            $country = new Country();
+            $country->setCode($data['code']);
+            $country->setName($data['name']);
+            $entityManager->persist($country);
+        }
+
+        $entityManager->flush();
+    }
+}
+```
+
+Workflow type :
+
+```bash
+# Générer un seeder
+php bin/neo database:make:seed CountrySeeder --project=Blog --order=10
+
+# Prévisualiser
+php bin/neo database:run:seed --project=Blog --dry-run
+
+# Exécuter
+php bin/neo database:run:seed --project=Blog
+
+# Données de demo uniquement
+php bin/neo database:run:seed --project=Blog --group=demo
+```
+
+---
+
 ## Commandes CLI
 
 | Commande | Description |
@@ -900,6 +1092,8 @@ return [
 | `database:migration:migrate` | Applique toutes les migrations en attente |
 | `database:migration:rollback` | Annule le dernier batch de migrations |
 | `database:migration:status` | Affiche l'état des migrations |
+| `database:make:seed` | Génère un seeder dans le projet cible |
+| `database:run:seed` | Exécute les seeders d'un projet |
 
 ### `make:entity`
 

@@ -29,6 +29,7 @@ Si le besoin est un framework plus petit, plus prévisible et plus facile a suiv
 - [Base de donnees et QueryBuilder](#base-de-donnees-et-querybuilder)
 - [ORM et repositories](#orm-et-repositories)
 - [ORM Data Mapper (entités)](#orm-data-mapper-entités)
+- [Seeding](#seeding)
 - [Formulaires, upload et validation](#formulaires-upload-et-validation)
 - [Securite: auth, mot de passe, middlewares, csrf](#securite-auth-mot-de-passe-middlewares-csrf)
 - [Events](#events)
@@ -108,44 +109,28 @@ Le projet d'éxemple présent dans le dépôt est `src/Test/`.
 
 Le noyau `neo/Core/` est structuré par sous-système :
 
-- `Asset/`
-  gestion des assets, compilation CSS / JS / Less, manifest, helper Twig `asset()`
-- `Console/`
-  chargement automatique des commandes CLI et générateurs
-- `Controller/`
-  `AbstractController` et les raccourcis HTTP / auth / events / upload
-- `Cron/`
-  attribut `#[Cron]`, scan de `App/Crons`, listing et éxécution planifiée avec timezone et lock optionnel
-- `Database/`
-  connexion PDO, `DatabaseManager`, introspection, `QueryBuilder`, formulaires, pagination, ORM, repositories, génération depuis le schéma et migrations
-- `DI/`
-  conteneur de dépendances et autowiring
-- `Error/`
-  `ErrorHandler` et `FrameworkException`
-- `Event/`
-  event dispatcher, attributs listeners, subscribers et evenements coeur
-- `Extension/`
-  extensions utilitaires `Array`, `Date`, `File`, `Html`, `Json`, `Number`, `Path`, `String`, `Url` exposées en PHP et dans Twig
-- `Http/`
-  `Request`, responses, fichiers uploades, session, cookie, flash
-- `Module/`
-  système de modules, découverte des `*Module.php`, résolution des dépendances et cycle `register()` / `boot()`
-- `Profiler/`
-  barre de debug en environnement `dev`, collecteurs request / router / SQL / events / logs / auth / traduction / mail
-- `Routing/`
-  route collection, scan des contrôleurs, génération d'URL, attributs `Route`, `MainRoute`, `RateLimit`, `Maintenance`
-- `Security/`
-  auth session / token, JWT, middlewares, mot de passe, CSRF
-- `Testing/`
-  base de tests, scaffold PHPUnit, generation auto via `#[Test]`
-- `Translation/`
-  résolution de locale, chargement / écriture des traductions, extension Twig, synchronisation des clés via CLI
-- `Utils/`
-  config, cache, logs, mailer et commandes utilitaires
-- `Validator/`
-  contraintes et moteur de validation
-- `View/`
-  intégration Twig et enregistrement des fonctions / filtres
+| Module | Description | Complexité | Avancement | Doc |
+|--------|-------------|:----------:|:----------:|-----|
+| `Application/` | Détection du projet courant (HTTP/CLI), résolution des chemins, commandes `project:*` | 🟢 Faible | ✅ Stable | [README](neo/Core/Application/README.md) |
+| `Asset/` | Compilation CSS / JS / Less, manifest versioning, helper Twig `asset()` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Asset/README.md) |
+| `Console/` | Framework CLI : scan des commandes, `AbstractCommand`, Input/Output colorisé | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Console/README.md) |
+| `Controller/` | `AbstractController` avec helpers HTTP, auth, events, upload, extensions dynamiques | 🟢 Faible | ✅ Stable | [README](neo/Core/Controller/README.md) |
+| `Cron/` | Attribut `#[Cron]`, scanner, runner avec lock, expressions cron standard | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Cron/README.md) |
+| `Database/` | ORM Data Mapper complet, QueryBuilder, migrations diff, formulaires, seeding | 🔴 Haute | ✅ Stable | [README](neo/Core/Database/README.md) |
+| `DI/` | Conteneur PSR-11, autowiring par réflexion, détection des dépendances circulaires | 🟡 Moyenne | ✅ Stable | [README](neo/Core/DI/README.md) |
+| `Error/` | `ErrorHandler`, `FrameworkException`, comportement dev/prod différencié | 🟢 Faible | ✅ Stable | [README](neo/Core/Error/README.md) |
+| `Event/` | Dispatcher, `#[AsListener]`, subscribers, priorités, cache JSON en prod | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Event/README.md) |
+| `Extension/` | Extensions utilitaires (Array, Date, File, Html, Json, Number, Path, String, Url) | 🟢 Faible | ✅ Stable | [README](neo/Core/Extension/README.md) |
+| `Http/` | Request, Response, JsonResponse, RedirectResponse, Session, Flash, Cookie, Upload | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Http/README.md) |
+| `Module/` | Découverte des `*Module.php`, tri topologique des dépendances, cycle `register()`/`boot()` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Module/README.md) |
+| `Profiler/` | Barre de debug dev, collecteurs pluggables (SQL, router, events, logs…) | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Profiler/README.md) |
+| `Routing/` | Attributs `#[Route]`/`#[MainRoute]`, cache JSON prod, injection de paramètres, `debug:router` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Routing/README.md) |
+| `Security/` | Auth session/token, JWT, `#[IsGranted]`, middlewares, CSRF | 🔴 Haute | ✅ Stable | [README](neo/Core/Security/README.md) |
+| `Testing/` | `TestCase`, `DatabaseTestCase`, `FeatureTestCase`, scaffold auto via `#[Test]` | 🟡 Moyenne | 🔧 En cours | [README](neo/Core/Testing/README.md) |
+| `Translation/` | Domaines, `LocaleManager`, cache, Twig, `translation:sync` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Translation/README.md) |
+| `Utils/` | Cache (File/Redis/Array), Config, Logger, Notifications (Email/Slack/SMS), Scanner | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Utils/README.md) |
+| `Validator/` | Contraintes attributs + validators séparés, `ValidatorManager`, 11 contraintes | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Validator/README.md) |
+| `View/` | Intégration Twig 3.x, extensions, variable globale `app`, cache templates | 🟢 Faible | ✅ Stable | [README](neo/Core/View/README.md) |
 
 Sous-dossiers notables dans `neo/Core/` :
 
@@ -1053,6 +1038,15 @@ Relations disponibles :
 
 Les côtés `OneToMany` et `ManyToMany` utilisent `Collection` pour gérer les collections d'objets liés.
 
+> **Note ManyToMany — persistence automatique au flush :** Les collections ManyToMany sont désormais persistées automatiquement lors du `flush()`. Un snapshot de la collection est pris au chargement de l'entité ; au moment du flush, l'UoW calcule le diff (ajouts/suppressions) et synchronise la table de jointure sans action manuelle.
+
+```php
+$article = $em->find(Article::class, 1);
+$article->getTags()->add($em->find(Tag::class, 5)); // Ajout
+$article->getTags()->remove($existingTag);           // Suppression
+$em->flush(); // Synchronise automatiquement la table article_tag
+```
+
 ### Repository Data Mapper
 
 Le repository généré étend `EntityRepository` :
@@ -1221,6 +1215,8 @@ Affichage ensuite :
 
 Le validateur repose sur des attributs de contraintes posés sur les propriétés de n'importe quelle classe (entité, DTO, etc.).
 
+Depuis la refactorisation, chaque contrainte est **scindée en deux fichiers** : un attribut PHP dans `Assert/` (qui déclare les paramètres) et un validator dans `Validator/` (qui contient la logique). Le `ValidatorManager` résout le validator via le conteneur DI grâce à la méthode `validatedBy()` de la contrainte.
+
 Contraintes présentes dans le framework :
 
 - `NotBlank`
@@ -1232,6 +1228,7 @@ Contraintes présentes dans le framework :
 - `Regex`
 - `Url`
 - `Unique`
+- `Exists` — vérifie qu'une valeur existe en base de données (utile pour valider une clé étrangère)
 - `EqualToField`
 
 Exemple sur un DTO :
@@ -1262,6 +1259,62 @@ final class RegisterDto
     #[EqualToField(field: 'password', message: 'Les mots de passe doivent etre identiques.')]
     public string $password_confirm = '';
 }
+```
+
+## Seeding
+
+Le module Seeder permet de peupler la base de données avec des données de référence ou de démonstration.
+
+Un seeder est une classe annotée `#[Seeder]` qui implémente `SeedInterface::run(EntityManager $em)` :
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace Neo\Src\Blog\Database\Seeder;
+
+use Neo\Core\Database\ORM\Persistence\EntityManager;
+use Neo\Core\Database\Seeder\Attribute\Seeder;
+use Neo\Core\Database\Seeder\Interface\SeedInterface;
+use Neo\Src\Blog\Database\Entity\Country;
+
+#[Seeder(order: 10, group: 'reference')]
+final class CountrySeeder implements SeedInterface
+{
+    public function run(EntityManager $entityManager): void
+    {
+        $country = new Country();
+        $country->setCode('FR')->setName('France');
+        $entityManager->persist($country);
+        $entityManager->flush();
+    }
+}
+```
+
+L'attribut `#[Seeder]` configure deux paramètres :
+
+| Paramètre | Défaut | Description |
+|-----------|--------|-------------|
+| `order` | `0` | Ordre d'exécution croissant |
+| `group` | `'reference'` | `'reference'` pour les données stables, `'demo'` pour les données de développement |
+
+Commandes disponibles :
+
+```bash
+# Générer un seeder
+php bin/neo database:make:seed CountrySeeder --project=Blog --order=10 --group=reference
+
+# Prévisualiser sans exécuter
+php bin/neo database:run:seed --project=Blog --dry-run
+
+# Exécuter les seeders 'reference' (défaut)
+php bin/neo database:run:seed --project=Blog
+
+# Inclure les seeders de développement
+php bin/neo database:run:seed --project=Blog --dev
+
+# Filtrer par groupe
+php bin/neo database:run:seed --project=Blog --group=demo
 ```
 
 ## Securite: auth, mot de passe, middlewares, csrf
