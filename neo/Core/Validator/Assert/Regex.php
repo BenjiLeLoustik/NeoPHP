@@ -4,20 +4,20 @@ declare(strict_types=1);
 namespace Neo\Core\Validator\Assert;
 
 use Neo\Core\Validator\Abstract\AbstractConstraint;
+use Neo\Core\Validator\Validator\RegexValidator;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class Regex extends AbstractConstraint
+final class Regex extends AbstractConstraint
 {
     public function __construct(
         public string $pattern,
-        string $message = ""
+        string $message = '',
     ) {
         parent::__construct($message);
     }
 
-    public function validate(mixed $value, ?object $object = null): bool
+    public function validatedBy(): string
     {
-        if ($value === null) return true;
-        return preg_match($this->pattern, (string)$value) === 1;
+        return RegexValidator::class;
     }
 }

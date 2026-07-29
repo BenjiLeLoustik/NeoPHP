@@ -1,60 +1,58 @@
 <?php
-declare(strict_types=1);
 
 namespace Neo\Core\Validator;
 
 use Neo\Core\Database\Form\Form;
-use Neo\Core\Validator\Abstract\AbstractConstraint;
-use Neo\Core\Validator\Assert\EqualToField;
+use Neo\Core\DI\Container;
 use Neo\Core\Validator\Assert\NotBlank;
+use Neo\Core\Validator\Contract\ConstraintInterface;
+use Neo\Core\Validator\Contract\ConstraintValidatorInterface;
+use ReflectionAttribute;
+use ReflectionClass;
+use ReflectionProperty;
 
 class ValidatorManager
 {
+    /** @var array<class-string, ConstraintValidatorInterface> */
+    private array $validators = [];
+
+    public function __construct(
+        private Container $container,
+    ) {
+    }
+
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, list<string>>
      */
     public function validate(object $model, ?Form $form = null): array
     {
         $errors = [];
+        $handled = [];
 
-        $refClass = new \ReflectionClass($model);
-
-        $handledFields = [];
+        $refClass = new ReflectionClass($model);
 
         foreach ($refClass->getProperties() as $prop) {
-            $propertyName = $prop->getName();
-            $handledFields[$propertyName] = true;
+            $field = $prop->getName();
+            $handled[$field] = true;
 
             $value = $prop->isInitialized($model) ? $prop->getValue($model) : null;
 
-            $constraints = [];
-
-            $attributes = $prop->getAttributes(AbstractConstraint::class, \ReflectionAttribute::IS_INSTANCEOF);
-            foreach ($attributes as $attr) {
-                $constraints[] = $attr->newInstance();
+            $constraints = $this->attributeConstraints($prop);
+            if ($form !== null) {
+                $constraints = array_merge($constraints, $form->getAddedConstraints($field));
             }
 
-            if ($form) {
-                $constraints = array_merge(
-                    $constraints,
-                    $form->getAddedConstraints($propertyName)
-                );
-            }
-
-            $this->runConstraints($constraints, $value, $model, $propertyName, $form, $errors);
+            $this->runField($field, $value, $constraints, $model, $form, $errors);
         }
 
-        if ($form) {
-            foreach ($form->getFields() as $field) {
-                $fieldName = $field->getName();
+        if ($form !== null) {
+            foreach ($form->getFields() as $formField) {
+                $field = $formField->getName();
+                if (isset($handled[$field])) {
+                    continue;
+                }
 
-                if (isset($handledFields[$fieldName])) continue;
-
-                $value = $field->getValue();
-
-                $constraints = $form->getAddedConstraints($fieldName);
-
-                $this->runConstraints($constraints, $value, $model, $fieldName, $form, $errors);
+                $this->runField($field, $formField->getValue(), $form->getAddedConstraints($field), $model, $form, $errors);
             }
         }
 
@@ -62,64 +60,53 @@ class ValidatorManager
     }
 
     /**
-     * @param array<int, AbstractConstraint> $constraints
-     * @param array<string, array<int, string>> $errors
+     * @param list<ConstraintInterface> $constraints
+     * @param array<string, list<string>> $errors
      */
-    private function runConstraints(
-        array $constraints,
-        mixed $value,
-        object $model,
-        string $fieldName,
-        ?Form $form,
-        array &$errors
-    ): void {
-
+    private function runField(string $field, mixed $value, array $constraints, object $model, ?Form $form, array &$errors): void
+    {
         $isEmpty = $value === null || $value === '';
 
         foreach ($constraints as $constraint) {
-            $constraint->setPropertyName($fieldName);
-
-            $skipIfEmpty = !($constraint instanceof NotBlank || $constraint instanceof EqualToField);
-            if ($isEmpty && $skipIfEmpty) {
+            if ($form !== null && $form->isConstraintRemoved($field, $constraint::class)) {
+                continue;
+            }
+            if ($isEmpty && !$constraint->runOnEmpty()) {
                 continue;
             }
 
-            if ($constraint instanceof EqualToField) {
-                $ref = new \ReflectionClass($model);
+            $context = new ValidationContext($field, $model, $form);
+            $this->resolveValidator($constraint->validatedBy())->validate($value, $constraint, $context);
 
-                if ($ref->hasProperty($constraint->field)) {
-                    $otherProp = $ref->getProperty($constraint->field);
-                    $otherValue = $otherProp->isInitialized($model)
-                        ? $otherProp->getValue($model)
-                        : null;
-
-                } elseif ($form && $form->getField($constraint->field) !== null) {
-                    $otherValue = $form->getField($constraint->field)->getValue();
-
-                } else {
-                    $errors[$fieldName][] = $constraint->message;
-                    continue;
-
-                }
-
-                if ($value !== $otherValue) {
-                    $errors[$fieldName][] = $constraint->message;
-                }
-
-                continue;
+            foreach ($context->getViolations() as $message) {
+                $errors[$field][] = $message;
             }
 
-            if ($form && $form->isConstraintRemoved($fieldName, get_class($constraint))) {
-                continue;
-            }
-
-            if (!$constraint->validate($value, $model)) {
-                $errors[$fieldName][] = $constraint->message;
-
-                if ($constraint instanceof NotBlank) {
-                    break;
-                }
+            if ($context->hasViolations() && $constraint instanceof NotBlank) {
+                break;
             }
         }
+    }
+
+    /**
+     * @return list<ConstraintInterface>
+     */
+    private function attributeConstraints(ReflectionProperty $prop): array
+    {
+        $constraints = [];
+
+        foreach ($prop->getAttributes(ConstraintInterface::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
+            $constraints[] = $attribute->newInstance();
+        }
+
+        return $constraints;
+    }
+
+    /**
+     * @param class-string<ConstraintValidatorInterface> $class
+     */
+    private function resolveValidator(string $class): ConstraintValidatorInterface
+    {
+        return $this->validators[$class] ??= $this->container->get($class);
     }
 }
