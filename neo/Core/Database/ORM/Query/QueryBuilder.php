@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Database\Query;
+namespace Neo\Core\Database\ORM\Query;
 
 use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Database\Exception\DatabaseException;
