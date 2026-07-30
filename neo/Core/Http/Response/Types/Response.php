@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Neo\Core\Http\Response\Types;
 
+use Neo\Core\Http\HttpClient\Exception\HttpClientException;
+
 class Response
 {
     protected int $statusCode = 200;
@@ -56,6 +58,34 @@ class Response
     public function getContent(): string
     {
         return $this->content;
+    }
+
+    /**
+     * @return array<string, mixed>
+     * @throws HttpClientException
+     */
+    public function toArray(): array
+    {
+        try {
+            $decoded = json_decode($this->content, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new HttpClientException(
+                title: 'HTTP Response Not JSON',
+                message: sprintf('The response body is not valid JSON: %s.', $e->getMessage()),
+                code: 500,
+                previous: $e
+            );
+        }
+
+        if (!is_array($decoded)) {
+            throw new HttpClientException(
+                title: 'HTTP Response Not An Object',
+                message: 'The JSON response did not decode to an array.',
+                code: 500
+            );
+        }
+
+        return $decoded;
     }
 
     public function send(): void
