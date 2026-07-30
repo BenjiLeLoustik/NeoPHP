@@ -35,6 +35,7 @@ Si le besoin est un framework plus petit, plus prévisible et plus facile a suiv
 - [Events](#events)
 - [Crons](#crons)
 - [Cache, logs, mailer, profiler et erreurs](#cache-logs-mailer-profiler-et-erreurs)
+- [Markdown](#markdown)
 - [CLI et generateurs](#cli-et-generateurs)
 - [Tests PHPUnit](#tests-phpunit)
 - [Deploiement](#deploiement)
@@ -84,6 +85,8 @@ Le coeur passe par `Neo\App`, qui :
 |       |-- Security/
 |       |-- Testing/
 |       |-- Translation/
+|       |-- Tools/
+|       |   `-- Markdown/
 |       |-- Utils/
 |       |-- Validator/
 |       `-- View/
@@ -127,6 +130,7 @@ Le noyau `neo/Core/` est structuré par sous-système :
 | `Routing/` | Attributs `#[Route]`/`#[MainRoute]`, cache JSON prod, injection de paramètres, `debug:router` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Routing/README.md) |
 | `Security/` | Auth session/token, JWT, `#[IsGranted]`, middlewares, CSRF | 🔴 Haute | ✅ Stable | [README](neo/Core/Security/README.md) |
 | `Testing/` | `TestCase`, `DatabaseTestCase`, `FeatureTestCase`, scaffold auto via `#[Test]` | 🟡 Moyenne | 🔧 En cours | [README](neo/Core/Testing/README.md) |
+| `Tools/Markdown/` | Parseur Markdown sans dépendance, tableau de blocs, fonction Twig `markdown_blocks()` et filtre `md_inline` | 🟢 Faible | ✅ Stable | [README](neo/Core/Tools/Markdown/README.md) |
 | `Translation/` | Domaines, `LocaleManager`, cache, Twig, `translation:sync` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Translation/README.md) |
 | `Utils/` | Cache (File/Redis/Array), Config, Logger, Notifications (Email/Slack/SMS), Scanner | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Utils/README.md) |
 | `Validator/` | Contraintes attributs + validators séparés, `ValidatorManager`, 11 contraintes | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Validator/README.md) |
@@ -150,6 +154,7 @@ Profiler/   -> Collector/, Toolbar/
 Routing/    -> Attribute/, Commands/, Exception/
 Security/   -> Auth/, Csrf/, Middleware/
 Testing/    -> Attribute/, Commands/, Context/, Enum/, Exception/, Generator/, Scaffold/, Scanner/, Template/
+Tools/      -> Markdown/
 Translation/-> Commands/, Exception/, Helper/, Interface/
 Utils/      -> Cache/, Config/, Logger/, Mailer/
 Validator/  -> Assert/
@@ -1933,6 +1938,49 @@ Exemple `404.html.twig` :
     <p>{{ message }}</p>
 {% endblock %}
 ```
+
+## Markdown
+
+Le module `Tools/Markdown` fournit un parseur Markdown sans dépendance externe. Il convertit du texte Markdown ou un fichier `.md` en tableau de blocs structurés, rendus via Twig.
+
+### Utilisation depuis un template
+
+La fonction `markdown_blocks()` est disponible dans tous les templates Twig :
+
+```twig
+{# Depuis un fichier .md (chemin relatif à ROOT_DIR) #}
+{% include 'markdown/document.html.twig'
+    with { blocks: markdown_blocks('neo/Core/Asset/README.md') } %}
+
+{# Depuis une variable contenant du Markdown brut #}
+{% set blocks = markdown_blocks(article.content) %}
+```
+
+Le filtre `md_inline` applique la mise en forme inline (**gras**, *italique*, `code`, liens) :
+
+```twig
+{% for block in blocks %}
+    {% if block.type == 'heading' %}
+        <h{{ block.level }}>{{ block.text|md_inline|raw }}</h{{ block.level }}>
+    {% elseif block.type == 'paragraph' %}
+        <p>{{ block.text|md_inline|raw }}</p>
+    {% endif %}
+{% endfor %}
+```
+
+### Utilisation depuis PHP
+
+```php
+$manager = $container->get(MarkdownManager::class);
+
+// Depuis un fichier
+$blocks = $manager->blocks('docs/guide.md');
+
+// Depuis une chaîne
+$blocks = $manager->parse("## Titre\n\nContenu.");
+```
+
+Types de blocs retournés : `heading`, `paragraph`, `code`, `list`, `table`, `quote`, `hr`.
 
 ## CLI et generateurs
 
