@@ -15,10 +15,15 @@ Http/
 │   ├── ResponseManager.php                  Fabrique de réponses
 │   ├── ResponseModule.php
 │   ├── Types/
-│   │   ├── Response.php                     Réponse HTTP générique
+│   │   ├── Response.php                     Réponse HTTP (getters + toArray())
 │   │   ├── JsonResponse.php                 Réponse JSON
 │   │   └── RedirectResponse.php             Réponse de redirection
 │   └── Extension/ResponseControllerExtension.php
+├── HttpClient/
+│   ├── HttpClientManager.php                Client HTTP cURL sortant
+│   ├── HttpClientModule.php
+│   ├── Interface/HttpClientInterface.php
+│   └── Exception/HttpClientException.php
 ├── Client/
 │   ├── ClientManager.php
 │   ├── ClientModule.php
@@ -47,7 +52,8 @@ Http/
 | Composant | Description | README |
 |-----------|-------------|--------|
 | `Request` | Requête HTTP entrante, lecture des données, fichiers, IP | [Request/README.md](Request/README.md) |
-| `Response` | Réponses HTTP, JSON, redirection, ResponseManager | [Response/README.md](Response/README.md) |
+| `Response` | Réponses HTTP, JSON, redirection, getters, `toArray()` | [Response/README.md](Response/README.md) |
+| `HttpClient` | Client HTTP cURL sortant, options, auth, `toArray()` | [HttpClient/README.md](HttpClient/README.md) |
 | `Session` | Session PHP native, configuration, méthodes, no-op CLI | [Client/Session/README.md](Client/Session/README.md) |
 | `Flash` | Messages flash session, rendu HTML, Twig | [Client/Flash/README.md](Client/Flash/README.md) |
 | `Cookie` | Cookies avec préfixage, configuration, lecture/écriture | [Client/Cookie/README.md](Client/Cookie/README.md) |

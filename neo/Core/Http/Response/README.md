@@ -15,6 +15,8 @@ Le sous-module `Response` couvre les trois types de réponses HTTP et le `Respon
 
 ---
 
+---
+
 ## Structure
 
 ```
@@ -56,6 +58,24 @@ $response->setHeader('Cache-Control', 'no-cache');
 $response->addHeader('Cache-Control', 'no-store');
 // Résultat : 'no-cache, no-store'
 ```
+
+### Lecture
+
+```php
+$response->getStatusCode();  // int : code HTTP
+$response->getHeaders();     // array<string, string> : en-têtes
+$response->getContent();     // string : corps brut
+```
+
+### Décodage JSON
+
+```php
+// Décode le corps JSON en tableau PHP
+// Lève HttpClientException si le corps n'est pas un JSON valide ou n'est pas un tableau
+$data = $response->toArray();
+```
+
+Utilisé principalement avec `HttpClientManager` pour consommer des API JSON.
 
 ### Envoi
 

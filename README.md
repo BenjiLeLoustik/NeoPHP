@@ -124,7 +124,7 @@ Le noyau `neo/Core/` est structuré par sous-système :
 | `Error/` | `ErrorHandler`, `FrameworkException`, comportement dev/prod différencié | 🟢 Faible | ✅ Stable | [README](neo/Core/Error/README.md) |
 | `Event/` | Dispatcher, `#[AsListener]`, subscribers, priorités, cache JSON en prod | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Event/README.md) |
 | `Extension/` | Extensions utilitaires (Array, Date, File, Html, Json, Number, Path, String, Url) | 🟢 Faible | ✅ Stable | [README](neo/Core/Extension/README.md) |
-| `Http/` | Request, Response, JsonResponse, RedirectResponse, Session, Flash, Cookie, Upload | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Http/README.md) |
+| `Http/` | Request, Response, JsonResponse, RedirectResponse, HttpClient, Session, Flash, Cookie, Upload | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Http/README.md) |
 | `Module/` | Découverte des `*Module.php`, tri topologique des dépendances, cycle `register()`/`boot()` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Module/README.md) |
 | `Profiler/` | Barre de debug dev, collecteurs pluggables (SQL, router, events, logs…) | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Profiler/README.md) |
 | `Routing/` | Attributs `#[Route]`/`#[MainRoute]`, cache JSON prod, injection de paramètres, `debug:router` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Routing/README.md) |
@@ -148,7 +148,7 @@ DI/         -> Exception/
 Error/      -> Exception/
 Event/      -> Attribute/, Commands/, Interface/, Event/, Exception/
 Extension/  -> Array/, Date/, File/, Html/, Json/, Number/, Path/, String/, Url/
-Http/       -> Client/, File/, Response/
+Http/       -> Client/, File/, HttpClient/, Request/, Response/
 Module/     -> Exception/, Interface/
 Profiler/   -> Collector/, Toolbar/
 Routing/    -> Attribute/, Commands/, Exception/
@@ -319,13 +319,10 @@ return [
 
 La couche HTTP est composée principalement de :
 
-- `Request`
-- `Response`
-- `JsonResponse`
-- `RedirectResponse`
-- `Session`
-- `Cookie`
-- `Flash`
+- `Request` — requête entrante
+- `Response` / `JsonResponse` / `RedirectResponse` — réponses HTTP
+- `HttpClient` — client HTTP cURL pour les requêtes sortantes
+- `Session` / `Cookie` / `Flash` — état client
 
 ### Request
 
@@ -378,6 +375,28 @@ return $this->jsonError('Not found', 404);
 return $this->redirectToRoute('posts.index');
 return $this->redirectToPath('/maintenance', 302);
 ```
+
+### HttpClient
+
+`HttpClientManager` permet d'effectuer des requêtes HTTP sortantes via cURL. Il retourne un objet `Response` standard.
+
+```php
+$client = $container->get(HttpClientManager::class);
+
+// Requête GET simple
+$data = $client->request('GET', 'https://api.example.com/users')->toArray();
+
+// Requête POST JSON avec Bearer token
+$response = $client->request('POST', '/api/articles', [
+    'base_uri' => 'https://api.example.com',
+    'bearer'   => $token,
+    'json'     => ['title' => 'Mon article'],
+]);
+$response->getStatusCode(); // 201
+$response->toArray();       // ['id' => 42, ...]
+```
+
+Options courantes : `base_uri`, `query`, `headers`, `bearer`, `json`, `body`, `auth_basic`, `timeout`, `max_redirects`.
 
 ### Session, cookie et flash
 
