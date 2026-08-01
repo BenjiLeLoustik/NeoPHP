@@ -1,4 +1,4 @@
-# Session — NeoPHP
+# Session
 
 `Neo\Core\Http\Client\Session\Session` encapsule la session PHP native avec une configuration centralisée et un comportement no-op silencieux en CLI.
 

@@ -1,4 +1,4 @@
-# Scanner — NeoPHP
+# Scanner
 
 Le sous-module `Scanner` fournit un outil de réflexion pour découvrir et lire les attributs PHP 8 sur une classe, ses méthodes, ses propriétés et les paramètres de ses méthodes.
 

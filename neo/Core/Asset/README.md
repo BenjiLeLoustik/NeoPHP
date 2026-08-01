@@ -1,4 +1,4 @@
-# Module Asset
+# Asset
 
 Le module `Asset` gère le pipeline de traitement des fichiers statiques (CSS, JS, LESS) dans NeoPHP. Il compile, minifie et versionne automatiquement les assets selon l'environnement, expose une fonction Twig `asset()` pour les vues, et fournit une commande CLI pour forcer la recompilation.
 

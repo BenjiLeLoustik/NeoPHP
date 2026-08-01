@@ -1,4 +1,4 @@
-# Module Application
+# Application
 
 Le module `Application` est le point d'entrée de tout projet NeoPHP. Il est responsable de la détection de l'application active (selon le contexte HTTP ou CLI), de l'enregistrement des chemins standards dans le conteneur de dépendances, et de la gestion du cycle de vie des projets via des commandes dédiées.
 

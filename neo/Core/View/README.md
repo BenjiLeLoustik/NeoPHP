@@ -1,4 +1,4 @@
-# Module View
+# View
 
 Le module View intègre le moteur de template **Twig** dans NeoPHP. Il expose le `ViewManager` pour le rendu de templates, un système d'extensions permettant d'ajouter des fonctions et filtres Twig depuis n'importe quel module, et une extension de contrôleur qui injecte les méthodes `render()` et `template()` directement dans les contrôleurs.
 

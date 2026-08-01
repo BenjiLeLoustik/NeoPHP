@@ -1,4 +1,4 @@
-# Config — NeoPHP
+# Config
 
 Le sous-module `Config` charge, expose et permet de modifier les fichiers de configuration PHP d'un projet.
 

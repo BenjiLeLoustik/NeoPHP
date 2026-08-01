@@ -1,4 +1,4 @@
-# Response — NeoPHP
+# Responses
 
 Le sous-module `Response` couvre les trois types de réponses HTTP et le `ResponseManager` qui les expose via le conteneur et les contrôleurs.
 

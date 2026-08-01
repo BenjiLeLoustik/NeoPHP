@@ -1,4 +1,4 @@
-# Module Error — Gestion des Erreurs et Exceptions
+# Gestion des Erreurs et Exceptions
 
 Le module `Error` centralise la capture, la journalisation, la diffusion et le rendu de toutes les erreurs et exceptions survenant dans NeoPHP. Il distingue les environnements `dev` (trace complète) et `prod` (message générique sécurisé), et s'intègre avec les modules Logger, Event et View.
 

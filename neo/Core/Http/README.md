@@ -1,4 +1,4 @@
-# Module Http — NeoPHP
+# Requête HTTP
 
 Le module `Http` couvre l'intégralité du cycle requête/réponse de NeoPHP : abstraction de la requête entrante, types de réponses HTTP, gestion de la session, messages flash, cookies et upload de fichiers.
 

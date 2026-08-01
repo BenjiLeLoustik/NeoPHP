@@ -1,4 +1,4 @@
-# Flash — NeoPHP
+# Messages Flash
 
 `Neo\Core\Http\Client\Flash\Flash` gère les messages éphémères stockés en session et consommés à la prochaine lecture (pattern flash message).
 

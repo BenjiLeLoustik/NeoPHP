@@ -1,4 +1,4 @@
-# Module Utils — NeoPHP
+# Utilitaires
 
 Le module `Utils` regroupe les utilitaires transversaux du framework : cache, configuration, journalisation, notifications multi-canaux et scanner d'attributs PHP.
 

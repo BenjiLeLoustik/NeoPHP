@@ -1,4 +1,4 @@
-# Request — NeoPHP
+# Request
 
 `Neo\Core\Http\Request\Request` est l'objet immuable représentant la requête HTTP entrante. Le constructeur est privé ; la création se fait exclusivement via des méthodes statiques.
 

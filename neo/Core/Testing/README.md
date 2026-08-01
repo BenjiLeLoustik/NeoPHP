@@ -1,4 +1,4 @@
-# Module Testing
+# Testing
 
 Le module Testing fournit l'infrastructure complète de tests pour les applications NeoPHP. Il s'appuie sur PHPUnit et propose quatre classes de base spécialisées, un système d'attributs PHP 8 pour déclarer les tests directement sur les classes métier, ainsi qu'un générateur automatique de fichiers de test.
 

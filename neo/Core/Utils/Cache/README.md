@@ -1,4 +1,4 @@
-# Cache — NeoPHP
+# Cache
 
 Le sous-module `Cache` fournit un système de cache avec plusieurs drivers interchangeables via une interface commune.
 

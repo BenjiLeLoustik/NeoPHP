@@ -1,4 +1,4 @@
-# HttpClient — NeoPHP
+# HttpClient
 
 `Neo\Core\Http\HttpClient\HttpClientManager` est un client HTTP basé sur cURL pour effectuer des requêtes sortantes. Il retourne un objet `Response` standard, ce qui permet d'utiliser `toArray()` pour décoder directement les réponses JSON.
 

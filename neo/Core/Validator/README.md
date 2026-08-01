@@ -1,4 +1,4 @@
-# Module Validator
+# Validator
 
 Le module Validator fournit un système de validation basé sur les **attributs PHP 8** (`#[Attribute]`). Les contraintes se posent directement sur les propriétés des modèles ou objets. Le `ValidatorManager` inspecte ces attributs par réflexion et retourne un tableau d'erreurs par champ.
 

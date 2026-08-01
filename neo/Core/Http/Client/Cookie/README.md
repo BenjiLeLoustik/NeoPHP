@@ -1,4 +1,4 @@
-# Cookie — NeoPHP
+# Cookie
 
 `Neo\Core\Http\Client\Cookie\Cookie` encapsule la gestion des cookies PHP avec préfixage automatique et configuration centralisée.
 

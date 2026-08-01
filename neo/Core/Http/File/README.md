@@ -1,4 +1,4 @@
-# File (Upload) — NeoPHP
+# Upload
 
 Le sous-module `File` gère l'upload sécurisé de fichiers. Il s'appuie sur `UploaderManager` pour valider, déplacer et nommer les fichiers uploadés.
 

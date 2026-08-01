@@ -1,4 +1,4 @@
-# Logger — NeoPHP
+# Logger
 
 Le sous-module `Logger` fournit un système de journalisation structuré avec support des niveaux RFC 5424, des canaux nommés, de la rotation des fichiers et de l'archivage automatique.
 

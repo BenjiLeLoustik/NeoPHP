@@ -1,4 +1,4 @@
-# Module DI — Injection de Dépendances
+# Injection de Dépendances
 
 Le module `DI` (Dependency Injection) est le coeur du framework NeoPHP. Il fournit un conteneur IoC (Inversion of Control) conforme à la spécification PSR-11, capable de résoudre automatiquement les dépendances par réflexion, de gérer des singletons, des bindings d'interfaces, des tags et d'appeler des callables avec auto-wiring.
 

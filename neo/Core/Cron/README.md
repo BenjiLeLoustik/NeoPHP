@@ -1,4 +1,4 @@
-# Module Cron
+# Cron
 
 Le module `Cron` permet de planifier et d'exécuter des tâches récurrentes dans NeoPHP. Les jobs sont déclarés par attribut PHP directement sur des méthodes de classes, découverts par scan automatique, et exécutés en fonction d'une expression cron standard à 5 champs. Le module supporte le verrouillage de jobs, la gestion des fuseaux horaires, et s'intègre avec le système de logs du framework.
 

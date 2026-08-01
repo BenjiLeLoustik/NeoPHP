@@ -1,4 +1,4 @@
-# Module Extension — Extensions de Contrôleurs et de Vues
+# Extensions de Contrôleurs et de Vues
 
 Le module `Extension` fournit un mécanisme de découverte automatique et d'application d'extensions pour deux cibles : les **contrôleurs** (`AbstractController`) et les **vues Twig**. Il repose sur l'attribut PHP 8 `#[Extension]` et un scan récursif du code source.
 

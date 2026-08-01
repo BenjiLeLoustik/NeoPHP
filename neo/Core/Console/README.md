@@ -1,4 +1,4 @@
-# Module Console
+# Console
 
 Le module `Console` est l'infrastructure CLI de NeoPHP. Il fournit le moteur de découverte et d'exécution des commandes, un système d'entrée/sortie typé, des helpers interactifs (questions, choix, confirmation, saisie secrète), un rendu coloré en terminal, et un générateur de commandes.
 

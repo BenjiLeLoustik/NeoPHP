@@ -1,4 +1,4 @@
-# Module Translation
+# Translation
 
 Le module Translation offre un système d'internationalisation (i18n) complet pour les applications NeoPHP. Il gère la résolution automatique de la locale, le chargement de fichiers de traduction PHP par domaine, l'écriture automatique des clés manquantes en mode développement, ainsi qu'une intégration native avec Twig et le Profiler.
 

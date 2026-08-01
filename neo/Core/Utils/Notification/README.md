@@ -1,4 +1,4 @@
-# Notification — NeoPHP
+# Notification
 
 Le sous-module `Notification` fournit un système d'envoi multi-canaux (Email, Slack, SMS) avec un patron builder fluide et intégration automatique du Profiler.
 

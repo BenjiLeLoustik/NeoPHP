@@ -1,4 +1,4 @@
-# Module Tools/Markdown — NeoPHP
+# Markdown
 
 Parseur Markdown léger sans dépendance externe. Convertit du texte Markdown (ou un fichier `.md`) en tableau de blocs structurés, utilisables directement dans les templates Twig via la fonction `markdown_blocks()` et le filtre `md_inline`.
 

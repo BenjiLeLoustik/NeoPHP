@@ -1,4 +1,4 @@
-# Module Database — NeoPHP
+# Database & ORM
 
 Ce module fournit l'ensemble de la couche d'accès aux données du framework NeoPHP : un ORM complet de type Data Mapper, un système de migrations, un gestionnaire de formulaires et l'accès bas niveau à la base de données.
 

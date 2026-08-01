@@ -1,4 +1,4 @@
-# Module Controller
+# Controller
 
 Le module `Controller` fournit la classe de base pour tous les contrôleurs web et API d'un projet NeoPHP. Il s'appuie sur un système d'extensions dynamiques pour injecter des méthodes et propriétés (comme `render()`, `redirectToRoute()`, `json()`, etc.) sans héritage rigide, via le mécanisme d'`ExtensionManager`.
 

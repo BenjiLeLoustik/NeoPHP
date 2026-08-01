@@ -1,4 +1,4 @@
-# Module Event — Système d'Événements
+# Système d'Événements
 
 Le module `Event` implémente un système d'événements (pub/sub) pour NeoPHP. Il permet de découpler les composants en émettant des événements que des listeners peuvent intercepter, avec gestion des priorités, arrêt de propagation, découverte automatique par attribut PHP 8, interface subscriber, et cache en production.
 
