@@ -9,7 +9,7 @@ Le sous-module `Scanner` fournit un outil de réflexion pour découvrir et lire 
 1. [Structure](#structure)
 2. [ScannerAttributeManager](#scannerattributemanager)
 3. [Configuration du scan](#configuration-du-scan)
-4. [Structure d'un résultat](#structure-dun-résultat)
+4. [AttributeScanResult](#attributescanresult)
 5. [Cas d'usage](#cas-dusage)
 
 ---
@@ -19,6 +19,7 @@ Le sous-module `Scanner` fournit un outil de réflexion pour découvrir et lire 
 ```
 Scanner/
 ├── ScannerAttributeManager.php         # Outil de réflexion sur les attributs PHP
+├── AttributeScanResult.php             # DTO représentant une entrée de résultat de scan
 ├── ScannerModule.php                   # Enregistrement DI
 └── Extension/
     └── ScannerControllerExtension.php  # Injecte getScanner() dans les contrôleurs
@@ -43,6 +44,8 @@ $results = $scanner
     ->withAttribute(Route::class) // Filtrer par attribut spécifique
     ->scan();
 ```
+
+`scan()` retourne une `list<AttributeScanResult>`.
 
 ---
 
@@ -92,18 +95,36 @@ $results = (new ScannerAttributeManager(MyClass::class))
 
 ---
 
-## Structure d'un résultat
+## AttributeScanResult
 
-Chaque entrée retournée par `scan()` est un tableau associatif :
+**Fichier :** `AttributeScanResult.php`
+
+DTO qui remplace le tableau associatif `array{target, attribute, arguments, type, reflection}` autrefois retourné par `scan()`. Chaque entrée de résultat est désormais une instance de cette classe, exposée via des getters :
 
 ```php
-[
-    'target'     => 'MyController::index()',    // Étiquette lisible
-    'attribute'  => /* instance de l'attribut */,
-    'arguments'  => ['/home', 'GET'],           // Arguments bruts du constructeur
-    'type'       => 'method',                   // 'class'|'method'|'property'|'parameter'
-    'reflection' => /* ReflectionMethod */,     // Objet de réflexion
-]
+class AttributeScanResult
+{
+    public function __construct(
+        private string $target,       // Étiquette lisible, ex. 'MyController::index()'
+        private object $attribute,    // Instance de l'attribut
+        private array $arguments,     // Arguments bruts du constructeur de l'attribut
+        private string $type,         // 'class'|'method'|'property'|'parameter'
+        private ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionParameter $reflection,
+    ) {}
+}
+```
+
+Accès via `getTarget()`, `getAttribute()`, `getArguments()`, `getType()`, `getReflection()`. Le type retourné par `getReflection()` dépend de `getType()` : un consommateur qui a besoin d'un `ReflectionMethod` doit vérifier `instanceof ReflectionMethod` avant de l'utiliser (le nom de la classe étant `class`, `method`, `property` ou `parameter`, le type de réflexion associé varie en conséquence).
+
+```php
+foreach ($results as $entry) {
+    $route = $entry->getAttribute();       // instance de l'attribut, ex. Route
+    $reflection = $entry->getReflection(); // ReflectionMethod, ReflectionClass, ...
+
+    if ($reflection instanceof ReflectionMethod) {
+        echo $reflection->getName();
+    }
+}
 ```
 
 ---
@@ -121,8 +142,12 @@ $routes  = $scanner
 
 foreach ($routes as $entry) {
     /** @var Route $route */
-    $route  = $entry['attribute'];
-    $method = $entry['reflection']; // ReflectionMethod
+    $route  = $entry->getAttribute();
+    $method = $entry->getReflection(); // ReflectionMethod
+
+    if (!$method instanceof ReflectionMethod) {
+        continue;
+    }
 
     echo sprintf('%s %s → %s::%s',
         $route->method,
@@ -143,9 +168,14 @@ $injects = $scanner
     ->scan();
 
 foreach ($injects as $entry) {
-    /** @var ReflectionProperty $prop */
-    $prop    = $entry['reflection'];
-    $inject  = $entry['attribute'];
+    $prop = $entry->getReflection();
+
+    if (!$prop instanceof ReflectionProperty) {
+        continue;
+    }
+
+    /** @var Inject $inject */
+    $inject  = $entry->getAttribute();
     $service = $container->get($inject->type);
     $prop->setValue($instance, $service);
 }
