@@ -276,7 +276,6 @@ TWIG;
 # Sensitive config
 /Config/database.config.php
 /Config/api.config.php
-/Config/auth.config.php
 
 # Storage
 /Storage/
