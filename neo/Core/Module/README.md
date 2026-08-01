@@ -4,7 +4,7 @@ Le sous-système `Module` est le point d'entrée de toute fonctionnalité du fra
 
 ---
 
-## Table des matières
+## Sommaire
 
 1. [Concepts fondamentaux](#concepts-fondamentaux)
 2. [ModuleInterface](#moduleinterface)

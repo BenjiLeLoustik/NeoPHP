@@ -4,7 +4,7 @@ Le module `Profiler` est un outil de débogage visuel intégré à NeoPHP. Il co
 
 ---
 
-## Table des matières
+## Sommaire
 
 1. [Vue d'ensemble](#vue-densemble)
 2. [ProfilerModule](#profilermodule)

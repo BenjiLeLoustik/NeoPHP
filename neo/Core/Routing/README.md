@@ -4,7 +4,7 @@ Le module `Routing` est responsable de la correspondance entre les requêtes HTT
 
 ---
 
-## Table des matières
+## Sommaire
 
 1. [Vue d'ensemble](#vue-densemble)
 2. [RouterModule](#routermodule)
