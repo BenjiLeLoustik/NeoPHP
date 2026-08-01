@@ -120,7 +120,7 @@ Le site est accessible sur **http://localhost:8000**.
 
 Chaque projet possède son propre dossier `Config/`, avec un fichier dédié par domaine (application, base de données, moteur de templates, etc.). Voici les trois fichiers à connaître pour démarrer.
 
-### Configuration générale — app.config.php
+### app.config.php
 
 Fichier de configuration principal du projet. La clé `access` détermine quel projet est servi selon le domaine HTTP appelé, ce qui permet d'héberger plusieurs sites côte à côte.
 
@@ -145,7 +145,7 @@ La section `general` est disponible dans tous les templates via la variable glob
 <title>{{ app.name }}</title>
 ```
 
-### Connexion à la base de données — database.config.php
+### database.config.php
 
 Définit la ou les connexions disponibles pour le projet. Plusieurs connexions peuvent être déclarées sous `connections`, la clé `use` indiquant celle utilisée par défaut.
 
@@ -168,7 +168,7 @@ return [
 ];
 ```
 
-### Moteur de templates — twig.config.php
+### twig.config.php
 
 Réglages du rendu Twig. Pensez à activer `cache` et désactiver `debug` avant une mise en production.
 
@@ -416,7 +416,7 @@ Le système de formulaires expose des fonctions Twig natives, avec plusieurs niv
 {% endblock %}
 ```
 
-### Fonctions et variables globales disponibles dans les templates
+### Fonctions et variables globales
 
 | Élément | Description |
 |---------|-------------|
@@ -504,7 +504,7 @@ class TaskRepository extends EntityRepository
 }
 ```
 
-### Générer et appliquer les migrations
+### Migrations
 
 Une migration traduit les changements d'une entité en instructions SQL. Le flux habituel : générer, vérifier, puis appliquer.
 
@@ -519,7 +519,7 @@ php bin/neo database:orm:diff --project=MonSite --name=create_tasks_table
 php bin/neo database:migration:migrate --project=MonSite
 ```
 
-### Manipuler les entités avec l'EntityManager
+### L'EntityManager
 
 L'`EntityManager` centralise la persistance (création, modification, suppression) et est injecté automatiquement via le constructeur ou récupéré depuis le conteneur :
 
@@ -560,7 +560,7 @@ final class TaskController extends AbstractController
 }
 ```
 
-### Méthodes principales de l'EntityManager
+### Méthodes de l'EntityManager
 
 | Méthode | Description |
 |---------|-------------|
@@ -571,7 +571,7 @@ final class TaskController extends AbstractController
 | `getRepository(Task::class)` | Retourne le repository associé |
 | `wrapInTransaction(fn)` | Exécute un callback dans une transaction |
 
-### Ajouter des requêtes personnalisées dans un repository
+### Requêtes personnalisées du repository
 
 Chaque entité possède un repository dédié, où l'on peut ajouter des méthodes de requête métier via le query builder :
 
@@ -594,7 +594,7 @@ class TaskRepository extends EntityRepository
 
 Le framework dispose d'un système de formulaires complet via `FormFactory`, `FormBuilder` et `FormRenderer`. Il gère la création des champs, la validation, le mapping vers une entité et l'inclusion automatique du token CSRF.
 
-### Créer et traiter un formulaire dans le contrôleur
+### Traiter le formulaire dans le contrôleur
 
 ```php
 use Neo\Core\Database\Form\FormFactory;
@@ -706,7 +706,7 @@ Trois niveaux de rendu sont possibles, du plus automatique au plus granulaire :
 | `date` | `<input type="date">` |
 | `hidden` | `<input type="hidden">` |
 
-### Fonctions Twig pour le rendu des formulaires
+### Fonctions Twig des formulaires
 
 | Fonction | Description |
 |----------|-------------|
@@ -722,7 +722,7 @@ Trois niveaux de rendu sont possibles, du plus automatique au plus granulaire :
 
 ## 10. Authentification
 
-### Configurer le système d'authentification
+### Configuration
 
 Le mode `session` convient aux applications web classiques ; le mode `token` (JWT) est adapté aux API sans état.
 
@@ -757,7 +757,7 @@ php bin/neo make:entity User --project=MonSite
 # Propriétés : email (string), password (string), role (string)
 ```
 
-### Contrôleur de connexion et d'inscription
+### Connexion et inscription
 
 ```php
 use Neo\Core\Security\Middleware\Attribute\Middleware;
@@ -818,7 +818,7 @@ final class AuthController extends AbstractController
 }
 ```
 
-### Méthodes du service d'authentification
+### Méthodes d'authentification
 
 | Méthode | Description |
 |---------|-------------|
@@ -867,7 +867,7 @@ class AdminOnlyMiddleware implements MiddlewareInterface
 
 Les dépendances du constructeur sont injectées automatiquement par le conteneur DI.
 
-### Appliquer un middleware à une route ou un contrôleur
+### Appliquer un middleware
 
 L'attribut `#[Middleware]` est répétable et peut se placer sur la classe (toutes les routes du contrôleur) ou sur une méthode (une seule route).
 
@@ -904,7 +904,7 @@ public function admin(): Response { ... }
 | `params` | `[]` | Paramètres supplémentaires pour le constructeur |
 | `priority` | `0` | Ordre d'exécution (décroissant) |
 
-### Middlewares fournis par le framework
+### Middlewares intégrés
 
 | Classe | Description |
 |--------|-------------|
@@ -930,7 +930,7 @@ Récapitulatif de toutes les commandes `php bin/neo` disponibles, regroupées pa
 | `project:create <Nom> --skeleton` | Créer avec structure minimale |
 | `app:serve <Nom>` | Démarrer le serveur PHP intégré |
 
-### Génération de code (scaffolding)
+### Génération de code
 
 | Commande | Description |
 |----------|-------------|
@@ -953,7 +953,7 @@ Récapitulatif de toutes les commandes `php bin/neo` disponibles, regroupées pa
 | `database:migration:rollback --project=X` | Annuler la dernière migration |
 | `database:migration:status --project=X` | Statut des migrations |
 
-### Utilitaires divers
+### Utilitaires
 
 | Commande | Description |
 |----------|-------------|
