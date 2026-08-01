@@ -4,11 +4,28 @@ Le module `Event` implémente un système d'événements (pub/sub) pour NeoPHP. 
 
 ---
 
+## Sommaire
+
+1. [Fichiers du module](#fichiers-du-module)
+2. [Créer un événement](#créer-un-événement)
+3. [ListenerRegistration](#listenerregistration)
+4. [Créer un listener avec l'attribut `#[AsListener]`](#créer-un-listener-avec-lattribut-aslistener)
+5. [Créer un subscriber (multi-événements)](#créer-un-subscriber-multi-événements)
+6. [Dispatcher un événement](#dispatcher-un-événement)
+7. [Enregistrer des listeners manuellement (runtime)](#enregistrer-des-listeners-manuellement-runtime)
+8. [Inspecter les listeners enregistrés](#inspecter-les-listeners-enregistrés)
+9. [Découverte automatique et cache](#découverte-automatique-et-cache)
+10. [Événements fournis par le framework](#événements-fournis-par-le-framework)
+11. [Intégration Profiler](#intégration-profiler)
+
+---
+
 ## Fichiers du module
 
 | Fichier | Rôle |
 |---|---|
 | `EventManager.php` | Dispatcher central, découverte et exécution des listeners |
+| `Listener/ListenerRegistration.php` | DTO représentant un listener enregistré (classe, priorité, méthode, instance) |
 | `Abstract/AbstractEvent.php` | Classe de base pour tous les événements |
 | `Attribute/AsListener.php` | Attribut PHP 8 pour déclarer un listener |
 | `Interface/EventSubscriberInterface.php` | Interface pour les subscribers multi-événements |
@@ -46,6 +63,30 @@ $event->stopPropagation();
 // Vérifier l'état
 if ($event->isPropagationStopped()) { /* ... */ }
 ```
+
+---
+
+## ListenerRegistration
+
+**Fichier :** `Listener/ListenerRegistration.php`
+
+DTO qui remplace le tableau associatif `array{class, priority, method, instance}` autrefois utilisé en interne par `EventManager`. Chaque listener enregistré — qu'il vienne du scan par attribut, d'un subscriber ou d'un ajout manuel — est représenté par une instance de cette classe.
+
+```php
+final class ListenerRegistration implements \JsonSerializable
+{
+    public function __construct(
+        private readonly string $class,             // Classe du listener
+        private readonly int $priority,              // Priorité (décroissante)
+        private readonly string|array $method,        // Nom de méthode, ou tuple {0: méthode, 1?: priorité}
+        private readonly ?object $instance = null,    // Instance directe, si enregistrée via addListenerInstance()
+    ) {}
+}
+```
+
+Accès via getters : `getClass()`, `getPriority()`, `getMethod()`, `getInstance()`, ainsi que `resolveMethodName()` qui normalise `method` (chaîne ou tuple) en un simple nom de méthode.
+
+**Sérialisation :** le DTO implémente `\JsonSerializable`, ce qui permet à `EventManager` de l'écrire tel quel dans le cache (`json_encode`). À la lecture du cache, `ListenerRegistration::fromArray()` reconstruit chaque instance à partir du tableau décodé — les entrées malformées (clé `class` manquante ou de mauvais type, par exemple après une modification manuelle du fichier de cache) sont ignorées plutôt que de provoquer une erreur silencieuse plus loin dans le dispatch. Les listeners enregistrés par instance (`addListenerInstance`) ne sont jamais écrits en cache, puisqu'un objet arbitraire n'est pas sérialisable de façon fiable.
 
 ---
 
@@ -117,6 +158,8 @@ class UserSubscriber implements EventSubscriberInterface
 }
 ```
 
+La valeur associée à chaque événement peut aussi être un tuple `[méthode, priorité]`, ex. `UserRegisteredEvent::class => ['onRegister', 10]`.
+
 Les subscribers sont également découverts automatiquement au scan si la classe implémente `EventSubscriberInterface`.
 
 ---
@@ -161,6 +204,8 @@ $dispatcher->addListenerInstance(
 $dispatcher->addSubscriber(new UserSubscriber());
 ```
 
+Chacun de ces appels crée en interne une instance de `ListenerRegistration`.
+
 ---
 
 ## Inspecter les listeners enregistrés
@@ -171,7 +216,13 @@ $all = $dispatcher->getListeners();
 
 // Listeners pour un événement spécifique
 $list = $dispatcher->getListeners(UserRegisteredEvent::class);
-// Retourne : [['class' => '...', 'priority' => 10, 'method' => 'handle'], ...]
+// Retourne une liste de ListenerRegistration
+
+foreach ($list as $registration) {
+    $registration->getClass();
+    $registration->getPriority();
+    $registration->resolveMethodName();
+}
 ```
 
 ---
@@ -185,13 +236,13 @@ Au démarrage, `EventManager` scanne récursivement le dossier `listenersPath`. 
 3. Vérifie si la classe implémente `EventSubscriberInterface`
 4. Trie les listeners par priorité décroissante
 
-**En production** (`environment !== 'dev'`), le résultat est mis en cache dans :
+**En production** (`environment !== 'dev'`), le résultat (une liste de `ListenerRegistration` sérialisés via `JsonSerializable`) est mis en cache dans :
 
 ```
 storage/var/cache/events/listeners.php
 ```
 
-Ce fichier est lu directement aux démarrages suivants, sans re-scan. En mode `dev`, le scan est toujours effectué à chaque requête.
+Ce fichier est lu directement aux démarrages suivants, sans re-scan : chaque entrée décodée est reconstruite en `ListenerRegistration` via `fromArray()`, et toute entrée malformée est silencieusement ignorée. En mode `dev`, le scan est toujours effectué à chaque requête.
 
 ---
 
