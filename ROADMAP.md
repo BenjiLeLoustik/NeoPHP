@@ -139,7 +139,7 @@ neo/Core/
   - Utilisés dans le pipeline de génération de migrations (`SchemaDiffer`, `MigrationGenerator`)
   - Fichier concerné : `neo/Core/Database/Access/Introspector/DatabaseIntrospector.php`
 
-- [ ] 🟠 **`RoleConfig` DTO** — partagé entre `SessionGuard` et `TokenGuard` pour la configuration des rôles
+- [x] 🟠 **`RoleConfig` DTO** — partagé entre `SessionGuard` et `TokenGuard` pour la configuration des rôles
   - Les deux guards accèdent au même tableau `['relation', 'field', 'model']` sans contrat partagé
   - Fichiers concernés : `neo/Core/Security/Auth/Guard/SessionGuard.php`, `neo/Core/Security/Auth/Guard/TokenGuard.php`
 
