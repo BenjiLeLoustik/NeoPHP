@@ -839,15 +839,15 @@ Le rendu produit de l'HTML structuré :
 
 ```html
 <form action="/register" method="POST">
-    <input type="hidden" name="_csrf_token" value="abc123">
+   <input type="hidden" name="_csrf_token" value="abc123">
 
-    <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" value="" required="required">
-        <ul class="form-errors">
-            <li>Ce champ est requis.</li>
-        </ul>
-    </div>
+   <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" value="" required="required">
+      <ul class="form-errors">
+         <li>Ce champ est requis.</li>
+      </ul>
+   </div>
 </form>
 ```
 
@@ -932,6 +932,23 @@ return [
     ],
 ];
 ```
+
+**Connexions persistantes**
+
+Chaque connexion peut activer `PDO::ATTR_PERSISTENT` via l'option `persistent` :
+
+```php
+'connections' => [
+    'default' => [
+        // ...
+        'persistent' => true,
+    ],
+],
+```
+
+Sur un serveur PHP-FPM avec beaucoup de requêtes courtes, cela évite de rouvrir une connexion TCP/authentification à chaque requête : le worker FPM réutilise la même connexion PDO d'une requête à l'autre.
+
+> ⚠️ **Attention** : une connexion persistante survit à la requête qui l'a ouverte. Si une transaction est démarrée (`beginTransaction()`) et n'est jamais explicitement terminée par un `commit()` ou un `rollback()` — notamment en cas d'exception non gérée — l'état peut fuiter vers la requête suivante traitée par le même worker, avec un comportement indéterminé selon le driver. N'activez `persistent` que si le code applicatif garantit la fermeture systématique de toutes les transactions (y compris sur les chemins d'erreur).
 
 ---
 
