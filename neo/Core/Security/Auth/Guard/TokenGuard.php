@@ -7,6 +7,7 @@ use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Form\PropertyAccessor;
 use Neo\Core\Database\ORM\Persistence\EntityManager;
 use Neo\Core\Http\Request\Request;
+use Neo\Core\Security\Auth\Config\RoleConfig;
 use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Exception\JwtException;
 use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;
@@ -22,7 +23,6 @@ final class TokenGuard implements GuardInterface
 
     /**
      * @param class-string $model
-     * @param array<string, mixed> $role
      */
     public function __construct(
         private readonly Request $request,
@@ -32,7 +32,7 @@ final class TokenGuard implements GuardInterface
         private readonly string $model,
         private readonly string $identifier,
         private readonly string $password,
-        private readonly array $role = []
+        private readonly ?RoleConfig $role = null,
     ) {
         $this->accessor = new PropertyAccessor();
     }
@@ -114,7 +114,7 @@ final class TokenGuard implements GuardInterface
      */
     public function hasRole(string $role): bool
     {
-        if ($this->role === []) {
+        if ($this->role === null) {
             return false;
         }
 
@@ -124,19 +124,19 @@ final class TokenGuard implements GuardInterface
             return false;
         }
 
-        $roleValue = $this->accessor->getValue($user, $this->role['relation']);
+        $roleValue = $this->accessor->getValue($user, $this->role->getRelation());
 
         if ($roleValue === null) {
             return false;
         }
 
-        $field = $this->role['field'];
+        $field = $this->role->getField();
 
         if (is_object($roleValue)) {
             return $this->accessor->getValue($roleValue, $field) === $role;
         }
 
-        $roleEntity = $this->em->find($this->role['model'], $roleValue);
+        $roleEntity = $this->em->find($this->role->getModel(), $roleValue);
 
         return $roleEntity !== null && $this->accessor->getValue($roleEntity, $field) === $role;
     }
