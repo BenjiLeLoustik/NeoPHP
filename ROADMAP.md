@@ -153,7 +153,7 @@ neo/Core/
 
 ### ⚡ Améliorations — Performance
 
-- [ ] 🟢 **Connexions PDO persistentes** — option `persistent: true` dans `database.config.php`, propagée à `DatabaseConnection::connect()` via `PDO::ATTR_PERSISTENT`
+- [x] 🟢 **Connexions PDO persistentes** — option `persistent: true` dans `database.config.php`, propagée à `DatabaseConnection::connect()` via `PDO::ATTR_PERSISTENT`
   - Bénéfice : réduit le coût de reconnexion sur les serveurs FPM avec beaucoup de requêtes courtes
   - Attention : les transactions non commitées peuvent fuiter entre requêtes avec certains drivers, documenter la mise en garde
 
