@@ -83,7 +83,11 @@ jobs:
 
           file_put_contents('VERSION', ltrim($new, 'v'));
 
-          echo "VERSION=$new" >> getenv('GITHUB_OUTPUT');
+          file_put_contents(
+            getenv('GITHUB_OUTPUT'),
+            "VERSION=$new" . PHP_EOL,
+            FILE_APPEND
+          );
 
           echo $new;
           PHP
