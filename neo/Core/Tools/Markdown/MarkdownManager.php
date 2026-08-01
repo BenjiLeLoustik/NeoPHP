@@ -59,13 +59,13 @@ class MarkdownManager
     /**
      * @param list<string> $paths
      * @param list<string> $filenames
-     * @return list<array{path: string, relative: string, title: string, blocks: list<AbstractBlock>}>
+     * @return list<array{path: string, relative: string, slug: string, title: string, description: string|null, blocks: list<AbstractBlock>}>
      * @throws MarkdownException
      */
-    public function getAllMarkdown(array $paths, array $filesnames = ['README.md', 'readme.md']): array
+    public function getAllMarkdown(array $paths, array $filenames = ['README.md', 'readme.md']): array
     {
         $docs = [];
-        $wanted = array_map('strtolower', $filesnames);
+        $wanted = array_map('strtolower', $filenames);
 
         foreach ($paths as $path) {
             $root = rtrim(str_replace('\\', '/', $path), '/');
@@ -99,6 +99,7 @@ class MarkdownManager
                     ),
                     'title' => $this->extractTitle($blocks) ?? $parentName,
                     'description' => $this->extractDescription($blocks),
+                    'blocks' => $blocks,
                 ];
             }
         }
