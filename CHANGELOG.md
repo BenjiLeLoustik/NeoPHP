@@ -1,3 +1,6 @@
+v4.20.2
+- doc: update STARTUP (8234539)
+
 v4.20.1
 - docs: translate all README, STARTUP and CONTRIBUTION files (3bc4bf8)
 
