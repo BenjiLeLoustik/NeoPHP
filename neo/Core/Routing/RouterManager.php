@@ -377,6 +377,8 @@ class RouterManager
      */
     private function compilePattern(string $route, array $requirements): string
     {
+        $route = '/' . trim($route, '/');
+
         if (isset($this->compiledPatterns[$route])) {
             return $this->compiledPatterns[$route];
         }
@@ -384,27 +386,26 @@ class RouterManager
         $route = '/' . trim($route, '/');
 
         $pattern = preg_replace_callback(
-            '/(\/\{([a-zA-Z0-9_]+)(\?)?\})|([^{]+)/',
+            '/\{([a-zA-Z0-9_]+)(\?)?\}|([^{]+)/',
             function ($m) use ($requirements) {
-                if ($m[1] === '') {
-                    return preg_quote($m[4], '#');
+                if (!isset($m[1]) || $m[1] === '') {
+                    return preg_quote($m[3], '#');
                 }
 
-                $paramName = $m[2];
-                $isOptional = isset($m[3]) && $m[3] === '?';
-                $regex = $requirements[$paramName] ?? '[^/]+';
+                $paramName  = $m[1];
+                $isOptional = isset($m[2]) && $m[2] === '?';
+                $regex      = $requirements[$paramName] ?? '[^/]+';
 
                 set_error_handler(static fn() => true);
-                $isValid = preg_match('#' . $regex . '#', '') !== false;
+                $isValid = @preg_match('#' . $regex . '#', '') !== false;
                 restore_error_handler();
-
                 if (!$isValid) {
                     $regex = '[^/]+';
                 }
 
                 return $isOptional
-                    ? '(?:/(?P<' . $paramName . '>' . $regex . '))?'
-                    : '/(?P<' . $paramName . '>' . $regex . ')';
+                    ? '(?P<' . $paramName . '>' . $regex . ')?'
+                    : '(?P<' . $paramName . '>' . $regex . ')';
             },
             $route
         );
