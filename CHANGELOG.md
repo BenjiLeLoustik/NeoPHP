@@ -1,3 +1,6 @@
+v4.20.3
+- fix: replace "Table of Contents" to "Summary" (38290dc)
+
 v4.20.2
 - doc: update STARTUP (8234539)
 
