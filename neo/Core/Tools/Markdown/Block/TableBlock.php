@@ -24,7 +24,7 @@ class TableBlock extends AbstractBlock
     }
 
     /**
-     * @return list<string<string>>
+     * @return list<list<string>>
      */
     public function getRows(): array
     {
