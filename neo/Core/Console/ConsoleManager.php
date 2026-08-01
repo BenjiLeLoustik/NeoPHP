@@ -76,15 +76,15 @@ class ConsoleManager
                 continue;
             }
 
+            /** @var array{reflection: ReflectionClass<object>, attribute: Command} $row */
             $row = $results[0];
-            $reflection = $row->getReflection();
 
-            if (!$reflection instanceof ReflectionClass || $reflection->isAbstract()) {
+            if ($row['reflection']->isAbstract()) {
                 continue;
             }
 
             /** @var Command $attr */
-            $attr = $row->getAttribute();
+            $attr = $row['attribute'];
 
             if ($attr->name === $commandName) {
                 return $attr->project;
@@ -113,12 +113,14 @@ class ConsoleManager
                 continue;
             }
 
+            /** @var array{reflection: ReflectionClass<object>} $row */
             $row = $results[0];
-            $refClass = $row->getReflection();
 
-            if (!$refClass instanceof ReflectionClass || $refClass->isAbstract()) {
+            if ($row['reflection']->isAbstract()) {
                 continue;
             }
+
+            $refClass = $row['reflection'];
 
             if ($refClass->isAbstract()) {
                 continue;
