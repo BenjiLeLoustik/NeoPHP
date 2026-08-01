@@ -1,3 +1,11 @@
+v4.20.0
+- docs: update ROADMAP (4939cb5)
+- docs: document Paginator, QueryBuilder::paginate() and paginator_links in README (5605142)
+- feat: add paginator_links Twig extension for rendering pagination navigation (7e930b1)
+- feat: add EntityRepository::paginate() for entity-based pagination (6cde3ea)
+- feat: add QueryBuilder::paginate() using a cloned builder for the count query (4a23c22)
+- feat: add standalone Paginator with pagination metadata and link windowing (8d08f47)
+
 v4.19.0
 - docs: update ROADMAP (5669e0b)
 - docs: document persistent connections and transaction leak warning (2a9481c)
