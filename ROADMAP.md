@@ -135,7 +135,7 @@ neo/Core/
   - Sérialisé/désérialisé en JSON, source d'erreurs silencieuses lors de la désérialisation
   - Fichier concerné : `neo/Core/Event/EventManager.php`
 
-- [ ] 🟠 **`ColumnMetadata`, `ForeignKeyMetadata`, `IndexMetadata` DTOs** — remplace les tableaux retournés par `DatabaseIntrospector`
+- [x] 🟠 **`ColumnMetadata`, `ForeignKeyMetadata`, `IndexMetadata` DTOs** — remplace les tableaux retournés par `DatabaseIntrospector`
   - Utilisés dans le pipeline de génération de migrations (`SchemaDiffer`, `MigrationGenerator`)
   - Fichier concerné : `neo/Core/Database/Access/Introspector/DatabaseIntrospector.php`
 
