@@ -1,3 +1,6 @@
+v4.18.1
+- fix: buffer output during dispatch to prevent premature flush before headers are sent (7070295)
+
 v4.18.0
 - fix: remove redundant isAbstract() check and use AttributeScanResult getters in ConsoleManager (761732f)
 - docs: update ROADMAP (d3c04c6)
