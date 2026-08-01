@@ -131,7 +131,7 @@ neo/Core/
   - 7 types distincts avec des formes différentes : `HeadingBlock`, `CodeBlock`, `ParagraphBlock`, `ListBlock`, `TableBlock`, `QuoteBlock`, `HrBlock`
   - Fichiers concernés : `neo/Core/Tools/Markdown/MarkdownManager.php`, `neo/Core/Tools/Markdown/Extension/MarkdownViewExtension.php`
 
-- [ ] 🟠 **`ListenerRegistration` DTO** — remplace `array{class, priority, method, instance}` dans `EventManager`
+- [x] 🟠 **`ListenerRegistration` DTO** — remplace `array{class, priority, method, instance}` dans `EventManager`
   - Sérialisé/désérialisé en JSON, source d'erreurs silencieuses lors de la désérialisation
   - Fichier concerné : `neo/Core/Event/EventManager.php`
 
