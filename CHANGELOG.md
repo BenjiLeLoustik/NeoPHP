@@ -1,3 +1,10 @@
+v4.17.0
+- docs: update ROADMAP (7e1e058)
+- docs: document AttributeScanResult DTO in Scanner README (844b312)
+- refactor: consume AttributeScanResult in RouterManager, CronScanner, TestScanner and MiddlewareManager (a878659)
+- refactor: return AttributeScanResult instead of array shape in ScannerAttributeManager (bf1ccde)
+- feat: add AttributeScanResult DTO (7e52e7d)
+
 v4.16.1
 - fix: accumulate changelog entries instead of overwriting on each release (1aef400)
 
