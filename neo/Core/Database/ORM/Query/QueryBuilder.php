@@ -5,6 +5,7 @@ namespace Neo\Core\Database\ORM\Query;
 
 use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Database\Exception\DatabaseException;
+use Neo\Core\Database\Pagination\Paginator;
 
 final class QueryBuilder
 {
@@ -167,6 +168,21 @@ final class QueryBuilder
         $this->columns = ["COUNT($column) AS aggregate"];
         $row = $this->db->fetch($this->toSql(), $this->bindings);
         return (int) ($row['aggregate'] ?? 0);
+    }
+
+    /**
+     * @return Paginator<array<string, mixed>>
+     */
+    public function paginate(int $page = 1, int $perPage = 15): Paginator
+    {
+        $page = max(1, $page);
+
+        $totalItems = (clone $this)->count();
+
+        $offset = ($page - 1) * $perPage;
+        $items = $this->limit($perPage)->offset($offset)->get();
+
+        return new Paginator($items, $totalItems, $page, $perPage);
     }
 
     /**
