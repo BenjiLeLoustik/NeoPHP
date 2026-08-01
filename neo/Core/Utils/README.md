@@ -1,10 +1,10 @@
-# Utilitaires
+# Utilities
 
-Le module `Utils` regroupe les utilitaires transversaux du framework : cache, configuration, journalisation, notifications multi-canaux et scanner d'attributs PHP.
+The `Utils` module brings together the framework's cross-cutting utilities: cache, configuration, logging, multi-channel notifications, and PHP attribute scanner.
 
 ---
 
-## Structure du module
+## Module Structure
 
 ```
 Utils/
@@ -40,21 +40,21 @@ Utils/
 
 ---
 
-## Documentation par composant
+## Documentation by Component
 
-| Composant | Description | README |
+| Component | Description | README |
 |-----------|-------------|--------|
-| `Cache` | Cache fichiers / Redis / mémoire, pattern `remember` | [Cache/README.md](Cache/README.md) |
-| `Config` | Chargement des `*.config.php`, accès par point, surcharge test | [Config/README.md](Config/README.md) |
-| `Logger` | Niveaux RFC 5424, canaux, rotation quotidienne / taille, archivage ZIP | [Logger/README.md](Logger/README.md) |
+| `Cache` | File / Redis / memory cache, `remember` pattern | [Cache/README.md](Cache/README.md) |
+| `Config` | Loading of `*.config.php`, dot-notation access, test override | [Config/README.md](Config/README.md) |
+| `Logger` | RFC 5424 levels, channels, daily / size rotation, ZIP archiving | [Logger/README.md](Logger/README.md) |
 | `Notification` | Email (PHPMailer), Slack (Webhook), SMS (Twilio/Vonage/Log) | [Notification/README.md](Notification/README.md) |
-| `Scanner` | Réflexion PHP 8 sur attributs de classe, méthodes, propriétés, paramètres | [Scanner/README.md](Scanner/README.md) |
+| `Scanner` | PHP 8 reflection on class, method, property, and parameter attributes | [Scanner/README.md](Scanner/README.md) |
 
 ---
 
-## Extensions contrôleur
+## Controller Extensions
 
-| Méthode | Composant |
+| Method | Component |
 |---------|-----------|
 | `getCache()` | Cache |
 | `getConfig()` | Config |
@@ -62,10 +62,10 @@ Utils/
 
 ---
 
-## Commandes CLI
+## CLI Commands
 
-| Commande | Composant | Description |
+| Command | Component | Description |
 |----------|-----------|-------------|
-| `cache:clear` | Cache | Vide le cache d'un projet |
-| `config:generate` | Config | Génère les fichiers de config par défaut |
-| `make:config` | Config | Crée un fichier de configuration personnalisé |
+| `cache:clear` | Cache | Clears a project's cache |
+| `config:generate` | Config | Generates the default config files |
+| `make:config` | Config | Creates a custom configuration file |

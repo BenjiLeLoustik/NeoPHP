@@ -1,46 +1,46 @@
-# CONTRIBUTING — Créer un module dans NeoPHP
+# CONTRIBUTING — Creating a module in NeoPHP
 
-Ce guide explique comment ajouter un nouveau sous-système au cœur du framework (`neo/Core/`).
-Il couvre le cycle de vie d'un module, l'extension du contrôleur de base, l'ajout de fonctions Twig, la rédaction des tests et la validation avant ouverture d'une PR.
+This guide explains how to add a new subsystem to the framework core (`neo/Core/`).
+It covers a module's lifecycle, extending the base controller, adding Twig functions, writing tests, and validating before opening a PR.
 
-## Sommaire
+## Table of contents
 
-- [Prérequis](#prérequis)
-- [Le système de modules](#le-système-de-modules)
-- [Créer un module](#créer-un-module)
-- [Ajouter des méthodes à AbstractController](#ajouter-des-méthodes-à-abstractcontroller)
-- [Ajouter des fonctions et filtres Twig](#ajouter-des-fonctions-et-filtres-twig)
-- [Écrire les tests](#écrire-les-tests)
-- [Valider avant PR](#valider-avant-pr)
+- [Prerequisites](#prerequisites)
+- [The module system](#the-module-system)
+- [Creating a module](#creating-a-module)
+- [Adding methods to AbstractController](#adding-methods-to-abstractcontroller)
+- [Adding Twig functions and filters](#adding-twig-functions-and-filters)
+- [Writing tests](#writing-tests)
+- [Validating before a PR](#validating-before-a-pr)
 
 ---
 
-## Prérequis
+## Prerequisites
 
 - PHP >= 8.5
-- Composer installé
-- Dépendances à jour : `composer install`
+- Composer installed
+- Up-to-date dependencies: `composer install`
 
 ---
 
-## Le système de modules
+## The module system
 
-### Comment fonctionne la découverte
+### How discovery works
 
-Au démarrage, `Neo\App` crée un `ModuleManager` et appelle `discover(__DIR__ . '/Core')`.
+At startup, `Neo\App` creates a `ModuleManager` and calls `discover(__DIR__ . '/Core')`.
 
-Le `ModuleManager` parcourt récursivement `neo/Core/` et charge tout fichier dont le nom se termine par `Module.php`. Il retient les classes qui :
+The `ModuleManager` recursively scans `neo/Core/` and loads any file whose name ends in `Module.php`. It keeps the classes that:
 
-- implémentent `ModuleInterface`
-- ne sont pas abstraites
-- n'appartiennent pas à un namespace `Tests` ou `Fixture`
+- implement `ModuleInterface`
+- are not abstract
+- do not belong to a `Tests` or `Fixture` namespace
 
-Il résout ensuite l'ordre de démarrage en fonction des dépendances déclarées par chaque module, puis appelle dans l'ordre :
+It then resolves the boot order based on the dependencies declared by each module, and calls in order:
 
-1. `register(Container $container)` sur **tous** les modules
-2. `boot(Container $container)` sur **tous** les modules (dans l'ordre des dépendances)
+1. `register(Container $container)` on **all** modules
+2. `boot(Container $container)` on **all** modules (in dependency order)
 
-### Contrat de `ModuleInterface`
+### `ModuleInterface` contract
 
 ```php
 // neo/Core/Module/Interface/ModuleInterface.php
@@ -56,23 +56,23 @@ interface ModuleInterface
 }
 ```
 
-| Méthode | Moment d'appel | Rôle |
+| Method | When called | Role |
 |---------|---------------|------|
-| `dependencies()` | Avant tout boot | Déclarer les modules dont ce module dépend |
-| `register()` | Phase 1 | Enregistrer les services dans le conteneur DI |
-| `boot()` | Phase 2 | Initialiser les services, brancher les extensions |
+| `dependencies()` | Before any boot | Declare the modules this module depends on |
+| `register()` | Phase 1 | Register services in the DI container |
+| `boot()` | Phase 2 | Initialize services, wire up extensions |
 
-### Classe de base `AbstractModule`
+### `AbstractModule` base class
 
-Étendre `AbstractModule` plutôt qu'implémenter `ModuleInterface` directement :
+Extend `AbstractModule` rather than implementing `ModuleInterface` directly:
 
-- stocke le conteneur dans `$this->container`
-- expose `$this->get(string $class)` comme raccourci vers `$container->get()`
-- fournit un hook `resolveDependencies()` appelé au moment du `boot()`
-- implémente par défaut `dependencies()` → `[]`
+- stores the container in `$this->container`
+- exposes `$this->get(string $class)` as a shortcut to `$container->get()`
+- provides a `resolveDependencies()` hook called during `boot()`
+- implements `dependencies()` by default → `[]`
 
 ```php
-// neo/Core/Module/Abstract/AbstractModule.php (extrait)
+// neo/Core/Module/Abstract/AbstractModule.php (excerpt)
 
 class AbstractModule implements ModuleInterface
 {
@@ -102,42 +102,42 @@ class AbstractModule implements ModuleInterface
 
 ---
 
-## Créer un module
+## Creating a module
 
-### 1. Choisir l'emplacement
+### 1. Choose the location
 
-Chaque sous-système a son propre dossier sous `neo/Core/`. Créer :
+Each subsystem has its own folder under `neo/Core/`. Create:
 
 ```
 neo/Core/
-└── MonSousSystème/
-    ├── MonSousSystèmeModule.php   ← fichier obligatoire, détecté automatiquement
-    ├── MonService.php
+└── MySubsystem/
+    ├── MySubsystemModule.php   ← required file, auto-detected
+    ├── MyService.php
     └── Exception/
-        └── MonSousSystèmeException.php
+        └── MySubsystemException.php
 ```
 
-### 2. Nommer le fichier module
+### 2. Name the module file
 
-Le nom du fichier **doit** se terminer par `Module.php`. C'est le seul critère de découverte automatique.
+The file name **must** end in `Module.php`. This is the only auto-discovery criterion.
 
-### 3. Écrire le module
+### 3. Write the module
 
 ```php
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\MonSousSystème;
+namespace Neo\Core\MySubsystem;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Module\Abstract\AbstractModule;
-use Neo\Core\Utils\Config\ConfigModule; // exemple de dépendance
+use Neo\Core\Utils\Config\ConfigModule; // example dependency
 
-final class MonSousSystèmeModule extends AbstractModule
+final class MySubsystemModule extends AbstractModule
 {
     /**
-     * Déclarer les modules dont ce module a besoin.
-     * Le ModuleManager garantit qu'ils sont bootés avant celui-ci.
+     * Declare the modules this module needs.
+     * The ModuleManager guarantees they are booted before this one.
      *
      * @return array<class-string>
      */
@@ -145,47 +145,47 @@ final class MonSousSystèmeModule extends AbstractModule
     {
         return [
             ConfigModule::class,
-            // ViewModule::class, si on ajoute une extension Twig
+            // ViewModule::class, if adding a Twig extension
         ];
     }
 
     /**
-     * Enregistrer les services dans le conteneur.
-     * Toujours utiliser des factory closures (lazy initialization).
+     * Register services in the container.
+     * Always use factory closures (lazy initialization).
      */
     public function register(Container $container): void
     {
-        $container->set(MonService::class, fn(Container $c) => new MonService($c));
+        $container->set(MyService::class, fn(Container $c) => new MyService($c));
 
-        // Si ce module expose une extension Twig :
-        // $container->set(MonViewExtension::class, fn(Container $c) => new MonViewExtension(
-        //     $c->get(MonService::class)
+        // If this module exposes a Twig extension:
+        // $container->set(MyViewExtension::class, fn(Container $c) => new MyViewExtension(
+        //     $c->get(MyService::class)
         // ));
-        // $container->tag(MonViewExtension::class, 'twig.extension');
+        // $container->tag(MyViewExtension::class, 'twig.extension');
     }
 
     /**
-     * Initialiser les services critiques après l'enregistrement de tous les modules.
-     * Appel explicite uniquement si une initialisation eager est nécessaire.
+     * Initialize critical services after all modules have registered.
+     * Only call explicitly if eager initialization is needed.
      */
     protected function resolveDependencies(): void
     {
-        $this->get(MonService::class);
+        $this->get(MyService::class);
     }
 }
 ```
 
-### 4. Écrire le service
+### 4. Write the service
 
 ```php
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\MonSousSystème;
+namespace Neo\Core\MySubsystem;
 
 use Neo\Core\DI\Container;
 
-final class MonService
+final class MyService
 {
     public function __construct(private readonly Container $container)
     {
@@ -193,29 +193,29 @@ final class MonService
 
     public function doSomething(): string
     {
-        return 'résultat';
+        return 'result';
     }
 }
 ```
 
-### Règles importantes
+### Important rules
 
-- Toujours `declare(strict_types=1)` en tête de fichier.
-- Les services enregistrés dans `register()` doivent être des **factory closures** : `fn(Container $c) => new MonService(...)`.
-- Ne jamais résoudre un service dans `register()` — uniquement dans `boot()` / `resolveDependencies()`.
-- Si votre module dépend d'un autre, le déclarer dans `dependencies()` et ne jamais supposer l'ordre de chargement.
+- Always `declare(strict_types=1)` at the top of the file.
+- Services registered in `register()` must be **factory closures**: `fn(Container $c) => new MyService(...)`.
+- Never resolve a service in `register()` — only in `boot()` / `resolveDependencies()`.
+- If your module depends on another one, declare it in `dependencies()` and never assume a load order.
 
 ---
 
-## Ajouter des méthodes à AbstractController
+## Adding methods to AbstractController
 
-Quand un module doit exposer des raccourcis dans les contrôleurs applicatifs (ex : `$this->monService()`), créer un fichier `*ControllerExtension.php`.
+When a module needs to expose shortcuts in application controllers (e.g. `$this->myService()`), create a `*ControllerExtension.php` file.
 
-### Comment fonctionne la découverte
+### How discovery works
 
-`AbstractController` scanne récursivement `neo/Core/` au moment de son instanciation et charge automatiquement tout fichier se terminant par `ControllerExtension.php` qui implémente `ControllerExtensionInterface`.
+`AbstractController` recursively scans `neo/Core/` when it is instantiated and automatically loads any file ending in `ControllerExtension.php` that implements `ControllerExtensionInterface`.
 
-### Contrat
+### Contract
 
 ```php
 // neo/Core/Controller/Interface/ControllerExtensionInterface.php
@@ -226,38 +226,38 @@ interface ControllerExtensionInterface
 }
 ```
 
-### Créer une extension de contrôleur
+### Creating a controller extension
 
 ```php
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\MonSousSystème;
+namespace Neo\Core\MySubsystem;
 
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
 
-final class MonSousSystèmeControllerExtension implements ControllerExtensionInterface
+final class MySubsystemControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        // Enregistrer une méthode appelable depuis le contrôleur
+        // Register a method callable from the controller
         $controller->registerMethod(
-            'getMonService',
-            fn(): MonService => $container->get(MonService::class)
+            'getMyService',
+            fn(): MyService => $container->get(MyService::class)
         );
 
-        // Enregistrer une propriété (lazy, mise en cache après le premier accès)
+        // Register a property (lazy, cached after first access)
         $controller->registerProperty(
-            'monService',
-            fn(): MonService => $container->get(MonService::class)
+            'myService',
+            fn(): MyService => $container->get(MyService::class)
         );
     }
 }
 ```
 
-### Utilisation dans un contrôleur applicatif
+### Usage in an application controller
 
 ```php
 final class PostController extends AbstractController
@@ -265,38 +265,38 @@ final class PostController extends AbstractController
     #[Route(path: '/', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
-        // Via méthode enregistrée
-        $service = $this->getMonService();
+        // Via registered method
+        $service = $this->getMyService();
 
-        // Via propriété enregistrée (équivalent, avec cache)
-        $result = $this->monService->doSomething();
+        // Via registered property (equivalent, with caching)
+        $result = $this->myService->doSomething();
 
         return $this->render('pages/index.html.twig', ['result' => $result]);
     }
 }
 ```
 
-### API disponible dans `extend()`
+### API available in `extend()`
 
-| Appel | Comportement |
+| Call | Behavior |
 |-------|-------------|
-| `$controller->registerMethod('nom', fn() => ...)` | Ajoute une méthode appelable via `$this->nom()` |
-| `$controller->registerProperty('nom', fn() => ...)` | Ajoute une propriété lazy via `$this->nom` (mise en cache) |
+| `$controller->registerMethod('name', fn() => ...)` | Adds a method callable via `$this->name()` |
+| `$controller->registerProperty('name', fn() => ...)` | Adds a lazy property via `$this->name` (cached) |
 
 ---
 
-## Ajouter des fonctions et filtres Twig
+## Adding Twig functions and filters
 
-Quand un module doit exposer des helpers dans les templates Twig, créer un fichier `*ViewExtension.php`.
+When a module needs to expose helpers in Twig templates, create a `*ViewExtension.php` file.
 
-### Comment fonctionne l'enregistrement
+### How registration works
 
-`ViewModule` récupère tous les services tagués `'twig.extension'` dans le conteneur et les passe à `ViewManager::addExtension()` au moment du boot. Il suffit donc de :
+`ViewModule` retrieves every service tagged `'twig.extension'` in the container and passes them to `ViewManager::addExtension()` at boot time. So all you need to do is:
 
-1. Implémenter `TwigExtensionInterface`
-2. Enregistrer le service dans le module avec `$container->tag($class, 'twig.extension')`
+1. Implement `TwigExtensionInterface`
+2. Register the service in the module with `$container->tag($class, 'twig.extension')`
 
-### Contrat
+### Contract
 
 ```php
 // neo/Core/View/Interface/TwigExtensionInterface.php
@@ -311,19 +311,19 @@ interface TwigExtensionInterface
 }
 ```
 
-### Créer une extension Twig
+### Creating a Twig extension
 
 ```php
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\MonSousSystème;
+namespace Neo\Core\MySubsystem;
 
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
-final class MonSousSystèmeViewExtension implements TwigExtensionInterface
+final class MySubsystemViewExtension implements TwigExtensionInterface
 {
-    public function __construct(private readonly MonService $service)
+    public function __construct(private readonly MyService $service)
     {
     }
 
@@ -333,12 +333,12 @@ final class MonSousSystèmeViewExtension implements TwigExtensionInterface
     public function getFunctions(): array
     {
         return [
-            // Nom Twig => ['callable' => closure, 'options' => []]
-            'mon_helper' => [
-                'callable' => fn(string $valeur) => $this->service->doSomething(),
+            // Twig name => ['callable' => closure, 'options' => []]
+            'my_helper' => [
+                'callable' => fn(string $value) => $this->service->doSomething(),
                 'options'  => [],
             ],
-            'mon_autre_helper' => [
+            'my_other_helper' => [
                 'callable' => fn(int $n) => $n * 2,
                 'options'  => [],
             ],
@@ -351,8 +351,8 @@ final class MonSousSystèmeViewExtension implements TwigExtensionInterface
     public function getFilters(): array
     {
         return [
-            // Utilisable comme filtre : {{ valeur|mon_filtre }}
-            'mon_filtre' => [
+            // Usable as a filter: {{ value|my_filter }}
+            'my_filter' => [
                 'callable' => fn(string $v) => strtoupper($v),
                 'options'  => [],
             ],
@@ -361,66 +361,66 @@ final class MonSousSystèmeViewExtension implements TwigExtensionInterface
 }
 ```
 
-### Brancher l'extension dans le module
+### Wiring the extension into the module
 
-Ajouter dans `MonSousSystèmeModule` :
+Add to `MySubsystemModule`:
 
 ```php
 public function dependencies(): array
 {
     return [
         ConfigModule::class,
-        ViewModule::class, // ← obligatoire si on expose une extension Twig
+        ViewModule::class, // ← required if exposing a Twig extension
     ];
 }
 
 public function register(Container $container): void
 {
-    $container->set(MonService::class, fn(Container $c) => new MonService($c));
+    $container->set(MyService::class, fn(Container $c) => new MyService($c));
 
     $container->set(
-        MonSousSystèmeViewExtension::class,
-        fn(Container $c) => new MonSousSystèmeViewExtension($c->get(MonService::class))
+        MySubsystemViewExtension::class,
+        fn(Container $c) => new MySubsystemViewExtension($c->get(MyService::class))
     );
 
-    // Tag obligatoire pour que ViewModule découvre l'extension
-    $container->tag(MonSousSystèmeViewExtension::class, 'twig.extension');
+    // Required tag so ViewModule discovers the extension
+    $container->tag(MySubsystemViewExtension::class, 'twig.extension');
 }
 ```
 
-### Utilisation dans un template Twig
+### Usage in a Twig template
 
 ```twig
-{# Fonction #}
-{{ mon_helper('valeur') }}
-{{ mon_autre_helper(4) }}
+{# Function #}
+{{ my_helper('value') }}
+{{ my_other_helper(4) }}
 
-{# Filtre #}
-{{ 'texte'|mon_filtre }}
+{# Filter #}
+{{ 'text'|my_filter }}
 ```
 
 ---
 
-## Écrire les tests
+## Writing tests
 
-Chaque module doit avoir un dossier `Tests/` avec un `phpunit.xml` et au moins un fichier `*Test.php`.
+Each module must have a `Tests/` folder with a `phpunit.xml` and at least one `*Test.php` file.
 
-### Structure attendue
+### Expected structure
 
 ```
-neo/Core/MonSousSystème/
-├── MonSousSystèmeModule.php
-├── MonService.php
+neo/Core/MySubsystem/
+├── MySubsystemModule.php
+├── MyService.php
 └── Tests/
     ├── phpunit.xml
-    ├── MonServiceTest.php
-    └── Fixture/           ← classes de support utilisées uniquement dans les tests
+    ├── MyServiceTest.php
+    └── Fixture/           ← support classes used only in tests
         └── ...
 ```
 
 ### phpunit.xml
 
-Copier ce template en adaptant le nom de la suite (`name`) :
+Copy this template, adapting the suite name (`name`):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -435,7 +435,7 @@ Copier ce template en adaptant le nom de la suite (`name`) :
          displayDetailsOnTestsThatTriggerWarnings="true">
 
     <testsuites>
-        <testsuite name="MonSousSystème">
+        <testsuite name="MySubsystem">
             <directory suffix="Test.php">.</directory>
         </testsuite>
     </testsuites>
@@ -451,149 +451,149 @@ Copier ce template en adaptant le nom de la suite (`name`) :
 </phpunit>
 ```
 
-> **Note sur les chemins** : le chemin vers `phpunit.xsd` et `autoload.php` remonte de 4 niveaux (`../../../../`) car le fichier vit dans `neo/Core/<Sous-système>/Tests/`. Si votre dossier `Tests/` est plus profond (ex : `neo/Core/Security/Auth/Tests/`), adapter le nombre de `../`.
+> **Note on paths**: the path to `phpunit.xsd` and `autoload.php` goes up 4 levels (`../../../../`) because the file lives in `neo/Core/<Subsystem>/Tests/`. If your `Tests/` folder is nested deeper (e.g. `neo/Core/Security/Auth/Tests/`), adjust the number of `../`.
 
-### Écrire un test
+### Writing a test
 
 ```php
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\MonSousSystème\Tests;
+namespace Neo\Core\MySubsystem\Tests;
 
 use Neo\Core\DI\Container;
-use Neo\Core\MonSousSystème\MonService;
-use Neo\Core\MonSousSystème\MonSousSystèmeModule;
+use Neo\Core\MySubsystem\MyService;
+use Neo\Core\MySubsystem\MySubsystemModule;
 use PHPUnit\Framework\TestCase;
 
-final class MonServiceTest extends TestCase
+final class MyServiceTest extends TestCase
 {
-    private MonService $service;
+    private MyService $service;
 
     protected function setUp(): void
     {
         $container = new Container();
-        $module = new MonSousSystèmeModule();
+        $module = new MySubsystemModule();
         $module->register($container);
 
-        $this->service = $container->get(MonService::class);
+        $this->service = $container->get(MyService::class);
     }
 
     public function testDoSomethingReturnsExpectedResult(): void
     {
-        self::assertSame('résultat', $this->service->doSomething());
+        self::assertSame('result', $this->service->doSomething());
     }
 }
 ```
 
-### Tester l'intégration avec le ModuleManager
+### Testing integration with the ModuleManager
 
-Quand le module a des dépendances ou modifie l'état global, tester son cycle de vie complet :
+When the module has dependencies or modifies global state, test its full lifecycle:
 
 ```php
 public function testModuleRegistersService(): void
 {
     $container = new Container();
     $manager = new ModuleManager($container);
-    $manager->discover(__DIR__ . '/../..'); // pointe vers neo/Core/MonSousSystème
+    $manager->discover(__DIR__ . '/../..'); // points to neo/Core/MySubsystem
     $manager->boot();
 
-    self::assertTrue($container->has(MonService::class));
+    self::assertTrue($container->has(MyService::class));
 }
 ```
 
-### Tester une extension de contrôleur
+### Testing a controller extension
 
 ```php
 public function testControllerExtensionRegistersMethod(): void
 {
     $container = new Container();
-    $container->set(MonService::class, fn() => new MonService($container));
+    $container->set(MyService::class, fn() => new MyService($container));
 
-    // AbstractController instancie automatiquement les extensions au construct
+    // AbstractController automatically instantiates extensions in its constructor
     $controller = new class($container) extends AbstractController {};
 
-    // On vérifie que la méthode est accessible
-    self::assertInstanceOf(MonService::class, $controller->getMonService());
+    // Verify that the method is accessible
+    self::assertInstanceOf(MyService::class, $controller->getMyService());
 }
 ```
 
-### Tester une extension Twig
+### Testing a Twig extension
 
 ```php
 public function testViewExtensionExposesFunctions(): void
 {
-    $service = new MonService(new Container());
-    $ext = new MonSousSystèmeViewExtension($service);
+    $service = new MyService(new Container());
+    $ext = new MySubsystemViewExtension($service);
 
-    self::assertArrayHasKey('mon_helper', $ext->getFunctions());
-    self::assertArrayHasKey('mon_filtre', $ext->getFilters());
+    self::assertArrayHasKey('my_helper', $ext->getFunctions());
+    self::assertArrayHasKey('my_filter', $ext->getFilters());
 }
 ```
 
-### Fixtures de test
+### Test fixtures
 
-Les classes utilisées **uniquement** dans les tests (mocks, stubs, scénarios d'erreur) doivent vivre dans `Tests/Fixture/`. Le `ModuleManager` les exclut automatiquement de la découverte grâce au filtre sur les namespaces `\Tests\` et `\Fixture\`.
+Classes used **only** in tests (mocks, stubs, error scenarios) must live in `Tests/Fixture/`. The `ModuleManager` automatically excludes them from discovery thanks to the filter on `\Tests\` and `\Fixture\` namespaces.
 
 ---
 
-## Valider avant PR
+## Validating before a PR
 
-Le script `runner_dev.sh` à la racine du projet est l'unique point d'entrée pour valider un module avant d'ouvrir une PR. Il enchaîne :
+The `runner_dev.sh` script at the project root is the single entry point for validating a module before opening a PR. It runs, in sequence:
 
-1. **Tests PHPUnit** — découverte de tous les `phpunit.xml` sous `neo/Core/*/Tests/`
-2. **Analyse statique PHPStan** — niveau 6 sur `neo/`
-3. **Récapitulatif** — verdict `Oui / Non` pour l'ouverture de la PR
+1. **PHPUnit tests** — discovery of every `phpunit.xml` under `neo/Core/*/Tests/`
+2. **PHPStan static analysis** — level 6 on `neo/`
+3. **Summary** — `Yes / No` verdict on whether to open the PR
 
-### Lancer la validation
+### Running validation
 
 ```bash
 bash runner_dev.sh
 ```
 
-### Conditions pour ouvrir une PR
+### Conditions for opening a PR
 
-Le script affiche **"Oui, vous pouvez ouvrir la PR"** et retourne le code 0 uniquement si :
+The script displays **"Yes, you can open the PR"** and returns exit code 0 only if:
 
-- au moins une suite de tests est découverte (`phpunit.xml` présent)
-- toutes les suites passent sans erreur ni warning
-- PHPStan s'exécute sans erreur
+- at least one test suite is discovered (`phpunit.xml` present)
+- all suites pass with no error or warning
+- PHPStan runs with no error
 
-Dans tous les autres cas, le script retourne le code 1 et détaille la cause d'échec.
+In every other case, the script returns exit code 1 and details the cause of failure.
 
-### Configuration PHPStan
+### PHPStan configuration
 
-Le fichier `phpstan.neon` à la racine analyse `neo/` au **niveau 6** :
+The `phpstan.neon` file at the project root analyzes `neo/` at **level 6**:
 
 ```
-Niveau 6 : vérifie les types de retour, les types de paramètres,
-           les propriétés non initialisées, les méthodes inexistantes, etc.
+Level 6: checks return types, parameter types,
+           uninitialized properties, missing methods, etc.
 ```
 
-Identifiants ignorés (déjà configurés dans `phpstan.neon`) :
+Ignored identifiers (already configured in `phpstan.neon`):
 
-| Identifiant | Raison |
+| Identifier | Reason |
 |-------------|--------|
-| `constant.notFound` | Constantes définies dynamiquement |
-| `property.protected` | Pattern extension de contrôleur |
-| `method.notFound` | Méthodes enregistrées dynamiquement via `registerMethod()` |
-| `constructor.unusedParameter` | Certains constructeurs d'attributs |
-| `new.static` | Héritage statique |
-| `nullCoalesce.variable` | Variables optionnelles |
-| `attribute.abstract` | Attributs sur classes abstraites |
+| `constant.notFound` | Dynamically defined constants |
+| `property.protected` | Controller extension pattern |
+| `method.notFound` | Methods registered dynamically via `registerMethod()` |
+| `constructor.unusedParameter` | Certain attribute constructors |
+| `new.static` | Static inheritance |
+| `nullCoalesce.variable` | Optional variables |
+| `attribute.abstract` | Attributes on abstract classes |
 
-Si PHPStan remonte une erreur légitime, la corriger. Ne pas ajouter d'`ignoreErrors` sans justification documentée.
+If PHPStan reports a legitimate error, fix it. Do not add an `ignoreErrors` entry without documented justification.
 
-### Checklist avant PR
+### Pre-PR checklist
 
 ```
-[ ] Le dossier du module est dans neo/Core/<MonSousSystème>/
-[ ] Le fichier module se termine par Module.php
-[ ] Le module étend AbstractModule ou implémente ModuleInterface
-[ ] Les dépendances sont déclarées dans dependencies()
-[ ] Les services sont enregistrés via des factory closures dans register()
-[ ] Si extension Twig : ViewModule::class est dans dependencies() et le tag 'twig.extension' est posé
-[ ] Si extension contrôleur : le fichier se termine par ControllerExtension.php
-[ ] Un dossier Tests/ existe avec phpunit.xml et au moins un *Test.php
-[ ] bash runner_dev.sh retourne le code 0
+[ ] The module folder is under neo/Core/<MySubsystem>/
+[ ] The module file ends in Module.php
+[ ] The module extends AbstractModule or implements ModuleInterface
+[ ] Dependencies are declared in dependencies()
+[ ] Services are registered via factory closures in register()
+[ ] If a Twig extension: ViewModule::class is in dependencies() and the 'twig.extension' tag is set
+[ ] If a controller extension: the file ends in ControllerExtension.php
+[ ] A Tests/ folder exists with phpunit.xml and at least one *Test.php
+[ ] bash runner_dev.sh returns exit code 0
 ```

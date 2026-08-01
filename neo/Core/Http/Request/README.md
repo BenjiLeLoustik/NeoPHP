@@ -1,18 +1,18 @@
 # Request
 
-`Neo\Core\Http\Request\Request` est l'objet immuable représentant la requête HTTP entrante. Le constructeur est privé ; la création se fait exclusivement via des méthodes statiques.
+`Neo\Core\Http\Request\Request` is the immutable object representing the incoming HTTP request. The constructor is private; instances are created exclusively via static methods.
 
 ---
 
-## Sommaire
+## Summary
 
 1. [Structure](#structure)
 2. [Construction](#construction)
-3. [Lecture des données](#lecture-des-données)
-4. [Contenu brut](#contenu-brut)
-5. [Fichiers uploadés](#fichiers-uploadés)
-6. [Suivi de l'URL précédente](#suivi-de-lurl-précédente)
-7. [Limite de taille](#limite-de-taille)
+3. [Reading Data](#reading-data)
+4. [Raw Content](#raw-content)
+5. [Uploaded Files](#uploaded-files)
+6. [Previous URL Tracking](#previous-url-tracking)
+7. [Size Limit](#size-limit)
 
 ---
 
@@ -20,9 +20,9 @@
 
 ```
 Request/
-├── Request.php               # Requête HTTP entrante (immuable)
+├── Request.php               # Incoming HTTP request (immutable)
 └── Collector/
-    └── RequestCollector.php  # Collecteur Profiler
+    └── RequestCollector.php  # Profiler collector
 ```
 
 ---
@@ -30,10 +30,10 @@ Request/
 ## Construction
 
 ```php
-// À partir des superglobales PHP ($_SERVER, $_GET, $_POST, $_FILES)
+// From PHP superglobals ($_SERVER, $_GET, $_POST, $_FILES)
 $request = Request::fromGlobals();
 
-// À partir d'un tableau (tests, CLI)
+// From an array (tests, CLI)
 $request = Request::fromArray(
     method: 'POST',
     path: '/api/users',
@@ -43,44 +43,44 @@ $request = Request::fromArray(
     server: []
 );
 
-// Requête vide pour contexte CLI
+// Empty request for CLI context
 $request = Request::createEmpty();
 ```
 
 ---
 
-## Lecture des données
+## Reading Data
 
 ```php
-// Méthode HTTP (toujours en majuscules)
+// HTTP method (always uppercase)
 $request->getMethod();          // 'GET', 'POST', 'PUT', ...
 
-// Chemin URL (sanitisé, sans trailing slash)
+// URL path (sanitized, no trailing slash)
 $request->getPath();            // '/api/users'
 
-// URL complète avec query string
+// Full URL with query string
 $request->getFullUrl();         // '/api/users?page=1'
 
-// Paramètres GET
-$request->query('page', 1);    // valeur ou défaut
-$request->allQuery();           // array complet
+// GET parameters
+$request->query('page', 1);    // value or default
+$request->allQuery();           // full array
 
-// Corps de la requête (POST ou JSON décodé)
-$request->body('name');         // valeur ou null
-$request->body();               // array complet
-$request->allBody();            // alias de body()
+// Request body (POST or decoded JSON)
+$request->body('name');         // value or null
+$request->body();               // full array
+$request->allBody();            // alias for body()
 
-// En-têtes (nommés en PascalCase-With-Dash)
+// Headers (named in PascalCase-With-Dash)
 $request->header('Content-Type');         // 'application/json'
-$request->header('Authorization', null);  // valeur ou défaut
-$request->headers();                      // array complet
+$request->header('Authorization', null);  // value or default
+$request->headers();                      // full array
 
-// Données $_SERVER
+// $_SERVER data
 $request->server();
 $request->getServer();
 
-// IP du client (gère Cloudflare, X-Real-IP, X-Forwarded-For)
-$request->getIp();              // '93.184.216.34' ou null
+// Client IP (handles Cloudflare, X-Real-IP, X-Forwarded-For)
+$request->getIp();              // '93.184.216.34' or null
 
 // User-Agent
 $request->getUserAgent();
@@ -88,42 +88,42 @@ $request->getUserAgent();
 
 ---
 
-## Contenu brut
+## Raw Content
 
-Relit `php://input` et décode le JSON si `Content-Type: application/json` :
+Re-reads `php://input` and decodes JSON if `Content-Type: application/json`:
 
 ```php
-$content = $request->getContent(); // string ou array
+$content = $request->getContent(); // string or array
 ```
 
 ---
 
-## Fichiers uploadés
+## Uploaded Files
 
 ```php
-// Accéder à un fichier par son nom de champ
+// Access a file by its field name
 $file = $request->file('avatar');  // ?UploadedFile
 
-// Tous les fichiers
+// Every file
 $files = $request->allFiles();     // array<string, array>
 ```
 
-Voir [File/README.md](../File/README.md) pour l'upload et la validation des fichiers.
+See [File/README.md](../File/README.md) for file upload and validation.
 
 ---
 
-## Suivi de l'URL précédente
+## Previous URL Tracking
 
 ```php
-// Active le tracking (appel automatique par le framework)
+// Enables tracking (called automatically by the framework)
 $request->enablePreviousUrlTracking($session);
 
-// Récupérer l'URL précédente (uniquement pour les requêtes GET non-/api)
-$previous = $request->getPreviousUrl('/'); // URL ou fallback
+// Retrieve the previous URL (only for non-/api GET requests)
+$previous = $request->getPreviousUrl('/'); // URL or fallback
 ```
 
 ---
 
-## Limite de taille
+## Size Limit
 
-La taille maximale des corps de requête est limitée à **8 Mo** (`INPUT_MAX_SIZE = 8 * 1024 * 1024`). Au-delà, une réponse HTTP 413 est envoyée immédiatement.
+The maximum size of request bodies is limited to **8 MB** (`INPUT_MAX_SIZE = 8 * 1024 * 1024`). Beyond that, an HTTP 413 response is sent immediately.

@@ -1,66 +1,66 @@
 # NeoPHP
 
-Framework PHP 8.5 centré sur :
+PHP 8.5 framework centered around:
 
-- un noyau applicatif dans `neo/`
-- une CLI interne dans `bin/neo`
-- des projets applicatifs isolés dans `src/<Projet>/`
+- an application core in `neo/`
+- an internal CLI in `bin/neo`
+- isolated application projects in `src/<Project>/`
 
-NeoPHP vise un autre point d'équilibre que Symfony ou Laravel.
-L'objectif n'est pas d'empiler des couches, des bundles ou un ecosysteme très large, mais de fournir un noyau PHP lisible, compact et directement exploitable pour construire une application complete sans sortir du depot.
-Le framework mise sur une structure simple, une CLI integrée, des modules coeur autodétéctes et un workflow multi-projets qui reste explicite.
+NeoPHP aims for a different balance than Symfony or Laravel.
+The goal is not to stack layers, bundles, or a very large ecosystem, but to provide a readable, compact PHP core that can be used directly to build a complete application without leaving the repository.
+The framework relies on a simple structure, an integrated CLI, auto-discovered core modules, and a multi-project workflow that stays explicit.
 
-En pratique, NeoPHP s'adresse surtout aux projets qui veulent aller vite sans adopter toute la complexite organisationnelle des gros frameworks généralistes.
-Par rapport a Symfony, il réduit fortement la cérémonie de configuration et la fragmentation entre composants.
-Par rapport a Laravel, il se montre plus minimal, plus direct dans son architecture, et moins dépendant d'une couche "magique" ou d'un ensemble d'outils externes.
-Si le besoin est un framework plus petit, plus prévisible et plus facile a suivre de bout en bout dans le code source, c'est précisement le terrain de NeoPHP.
+In practice, NeoPHP is aimed mainly at projects that want to move fast without adopting all the organizational complexity of large general-purpose frameworks.
+Compared to Symfony, it greatly reduces configuration ceremony and fragmentation between components.
+Compared to Laravel, it is more minimal, more direct in its architecture, and less dependent on a "magic" layer or a set of external tools.
+If what you need is a smaller, more predictable framework that's easier to follow end-to-end in the source code, that's exactly where NeoPHP fits.
 
-## Sommaire
+## Table of contents
 
-- [Vue d'ensemble](#vue-densemble)
-- [Architecture du depot](#architecture-du-dépôt)
-- [Cartographie du coeur](#cartographie-du-coeur)
-- [Cycle d'execution](#cycle-déxécution)
-- [Structure d'un projet](#structure-dun-projet)
-- [Conteneur DI et configuration](#conteneur-di-et-configuration)
-- [Couche HTTP](#couche-http)
-- [Routing et controleurs](#routing-et-contrôleurs)
-- [Vues Twig, assets et traductions](#vues-twig-assets-et-traductions)
-- [Base de donnees et QueryBuilder](#base-de-donnees-et-querybuilder)
-- [ORM et repositories](#orm-et-repositories)
-- [ORM Data Mapper (entités)](#orm-data-mapper-entités)
+- [Overview](#overview)
+- [Repository architecture](#repository-architecture)
+- [Core map](#core-map)
+- [Execution cycle](#execution-cycle)
+- [Project structure](#project-structure)
+- [DI container and configuration](#di-container-and-configuration)
+- [HTTP layer](#http-layer)
+- [Routing and controllers](#routing-and-controllers)
+- [Twig views, assets, and translations](#twig-views-assets-and-translations)
+- [Database and QueryBuilder](#database-and-querybuilder)
+- [ORM and repositories](#orm-and-repositories)
+- [Data Mapper ORM (entities)](#data-mapper-orm-entities)
 - [Seeding](#seeding)
-- [Formulaires, upload et validation](#formulaires-upload-et-validation)
-- [Securite: auth, mot de passe, middlewares, csrf](#securite-auth-mot-de-passe-middlewares-csrf)
+- [Forms, upload, and validation](#forms-upload-and-validation)
+- [Security: auth, password, middlewares, csrf](#security-auth-password-middlewares-csrf)
 - [Events](#events)
 - [Crons](#crons)
-- [Cache, logs, mailer, profiler et erreurs](#cache-logs-mailer-profiler-et-erreurs)
+- [Cache, logs, mailer, profiler, and errors](#cache-logs-mailer-profiler-and-errors)
 - [Markdown](#markdown)
-- [CLI et generateurs](#cli-et-generateurs)
-- [Tests PHPUnit](#tests-phpunit)
-- [Deploiement](#deploiement)
-- [Dependances et prerequis](#dépendances-et-prérequis)
+- [CLI and generators](#cli-and-generators)
+- [PHPUnit tests](#phpunit-tests)
+- [Deployment](#deployment)
+- [Dependencies and requirements](#dependencies-and-requirements)
 
-## Vue d'ensemble
+## Overview
 
-NeoPHP repose sur deux points d'entrée :
+NeoPHP relies on two entry points:
 
-- `public/index.php` pour le runtime HTTP
-- `bin/neo` pour la CLI
+- `public/index.php` for the HTTP runtime
+- `bin/neo` for the CLI
 
-Le coeur passe par `Neo\App`, qui :
+The core goes through `Neo\App`, which:
 
-- détecte le projet courant
-- initialise le conteneur
-- enregistre les chemins applicatifs du projet courant
-- découvre automatiquement les modules `*Module.php` dans `neo/Core/`
-- ordonne ces modules selon leurs dépendances puis éxécute `register()` / `boot()`
-- active Twig, la BDD, les assets, la traduction, l'auth, le cache, les crons, le mailer et le profiler
-- scanne les contrôleurs, routes, listeners et crons applicatifs
-- éxécute la requête HTTP ou la commande CLI
-- centralise la gestion des erreurs
+- detects the current project
+- initializes the container
+- registers the current project's application paths
+- automatically discovers `*Module.php` modules in `neo/Core/`
+- orders these modules according to their dependencies, then runs `register()` / `boot()`
+- activates Twig, the DB, assets, translation, auth, cache, crons, mailer, and profiler
+- scans application controllers, routes, listeners, and crons
+- executes the HTTP request or CLI command
+- centralizes error handling
 
-## Architecture du dépôt
+## Repository architecture
 
 ```text
 .
@@ -94,7 +94,7 @@ Le coeur passe par `Neo\App`, qui :
 |   |-- index.php
 |   `-- builds/
 |-- src/
-|   `-- <Projet>/
+|   `-- <Project>/
 |       |-- App/
 |       |-- Assets/
 |       |-- Config/
@@ -106,37 +106,37 @@ Le coeur passe par `Neo\App`, qui :
 `-- vendor/
 ```
 
-Le projet d'éxemple présent dans le dépôt est `src/Test/`.
+The example project present in the repository is `src/Test/`.
 
-## Cartographie du coeur
+## Core map
 
-Le noyau `neo/Core/` est structuré par sous-système :
+The `neo/Core/` core is organized by subsystem:
 
-| Module | Description | Complexité | Avancement | Doc |
+| Module | Description | Complexity | Progress | Doc |
 |--------|-------------|:----------:|:----------:|-----|
-| `Application/` | Détection du projet courant (HTTP/CLI), résolution des chemins, commandes `project:*` | 🟢 Faible | ✅ Stable | [README](neo/Core/Application/README.md) |
-| `Asset/` | Compilation CSS / JS / Less, manifest versioning, helper Twig `asset()` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Asset/README.md) |
-| `Console/` | Framework CLI : scan des commandes, `AbstractCommand`, Input/Output colorisé | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Console/README.md) |
-| `Controller/` | `AbstractController` avec helpers HTTP, auth, events, upload, extensions dynamiques | 🟢 Faible | ✅ Stable | [README](neo/Core/Controller/README.md) |
-| `Cron/` | Attribut `#[Cron]`, scanner, runner avec lock, expressions cron standard | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Cron/README.md) |
-| `Database/` | ORM Data Mapper complet, QueryBuilder, migrations diff, formulaires, seeding | 🔴 Haute | ✅ Stable | [README](neo/Core/Database/README.md) |
-| `DI/` | Conteneur PSR-11, autowiring par réflexion, détection des dépendances circulaires | 🟡 Moyenne | ✅ Stable | [README](neo/Core/DI/README.md) |
-| `Error/` | `ErrorHandler`, `FrameworkException`, comportement dev/prod différencié | 🟢 Faible | ✅ Stable | [README](neo/Core/Error/README.md) |
-| `Event/` | Dispatcher, `#[AsListener]`, subscribers, priorités, cache JSON en prod | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Event/README.md) |
-| `Extension/` | Extensions utilitaires (Array, Date, File, Html, Json, Number, Path, String, Url) | 🟢 Faible | ✅ Stable | [README](neo/Core/Extension/README.md) |
-| `Http/` | Request, Response, JsonResponse, RedirectResponse, HttpClient, Session, Flash, Cookie, Upload | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Http/README.md) |
-| `Module/` | Découverte des `*Module.php`, tri topologique des dépendances, cycle `register()`/`boot()` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Module/README.md) |
-| `Profiler/` | Barre de debug dev, collecteurs pluggables (SQL, router, events, logs…) | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Profiler/README.md) |
-| `Routing/` | Attributs `#[Route]`/`#[MainRoute]`, cache JSON prod, injection de paramètres, `debug:router` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Routing/README.md) |
-| `Security/` | Auth session/token, JWT, `#[IsGranted]`, middlewares, CSRF | 🔴 Haute | ✅ Stable | [README](neo/Core/Security/README.md) |
-| `Testing/` | `TestCase`, `DatabaseTestCase`, `FeatureTestCase`, scaffold auto via `#[Test]` | 🟡 Moyenne | 🔧 En cours | [README](neo/Core/Testing/README.md) |
-| `Tools/Markdown/` | Parseur Markdown sans dépendance, tableau de blocs, fonction Twig `markdown_blocks()` et filtre `md_inline` | 🟢 Faible | ✅ Stable | [README](neo/Core/Tools/Markdown/README.md) |
-| `Translation/` | Domaines, `LocaleManager`, cache, Twig, `translation:sync` | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Translation/README.md) |
-| `Utils/` | Cache (File/Redis/Array), Config, Logger, Notifications (Email/Slack/SMS), Scanner | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Utils/README.md) |
-| `Validator/` | Contraintes attributs + validators séparés, `ValidatorManager`, 11 contraintes | 🟡 Moyenne | ✅ Stable | [README](neo/Core/Validator/README.md) |
-| `View/` | Intégration Twig 3.x, extensions, variable globale `app`, cache templates | 🟢 Faible | ✅ Stable | [README](neo/Core/View/README.md) |
+| `Application/` | Current project detection (HTTP/CLI), path resolution, `project:*` commands | 🟢 Low | ✅ Stable | [README](neo/Core/Application/README.md) |
+| `Asset/` | CSS / JS / Less compilation, manifest versioning, `asset()` Twig helper | 🟡 Medium | ✅ Stable | [README](neo/Core/Asset/README.md) |
+| `Console/` | CLI framework: command scanning, `AbstractCommand`, colorized Input/Output | 🟡 Medium | ✅ Stable | [README](neo/Core/Console/README.md) |
+| `Controller/` | `AbstractController` with HTTP helpers, auth, events, upload, dynamic extensions | 🟢 Low | ✅ Stable | [README](neo/Core/Controller/README.md) |
+| `Cron/` | `#[Cron]` attribute, scanner, runner with lock, standard cron expressions | 🟡 Medium | ✅ Stable | [README](neo/Core/Cron/README.md) |
+| `Database/` | Full Data Mapper ORM, QueryBuilder, diff migrations, forms, seeding | 🔴 High | ✅ Stable | [README](neo/Core/Database/README.md) |
+| `DI/` | PSR-11 container, reflection-based autowiring, circular dependency detection | 🟡 Medium | ✅ Stable | [README](neo/Core/DI/README.md) |
+| `Error/` | `ErrorHandler`, `FrameworkException`, differentiated dev/prod behavior | 🟢 Low | ✅ Stable | [README](neo/Core/Error/README.md) |
+| `Event/` | Dispatcher, `#[AsListener]`, subscribers, priorities, JSON cache in prod | 🟡 Medium | ✅ Stable | [README](neo/Core/Event/README.md) |
+| `Extension/` | Utility extensions (Array, Date, File, Html, Json, Number, Path, String, Url) | 🟢 Low | ✅ Stable | [README](neo/Core/Extension/README.md) |
+| `Http/` | Request, Response, JsonResponse, RedirectResponse, HttpClient, Session, Flash, Cookie, Upload | 🟡 Medium | ✅ Stable | [README](neo/Core/Http/README.md) |
+| `Module/` | Discovery of `*Module.php`, topological sort of dependencies, `register()`/`boot()` cycle | 🟡 Medium | ✅ Stable | [README](neo/Core/Module/README.md) |
+| `Profiler/` | Dev debug bar, pluggable collectors (SQL, router, events, logs…) | 🟡 Medium | ✅ Stable | [README](neo/Core/Profiler/README.md) |
+| `Routing/` | `#[Route]`/`#[MainRoute]` attributes, prod JSON cache, parameter injection, `debug:router` | 🟡 Medium | ✅ Stable | [README](neo/Core/Routing/README.md) |
+| `Security/` | Session/token auth, JWT, `#[IsGranted]`, middlewares, CSRF | 🔴 High | ✅ Stable | [README](neo/Core/Security/README.md) |
+| `Testing/` | `TestCase`, `DatabaseTestCase`, `FeatureTestCase`, auto scaffold via `#[Test]` | 🟡 Medium | 🔧 In progress | [README](neo/Core/Testing/README.md) |
+| `Tools/Markdown/` | Dependency-free Markdown parser, block array, `markdown_blocks()` Twig function and `md_inline` filter | 🟢 Low | ✅ Stable | [README](neo/Core/Tools/Markdown/README.md) |
+| `Translation/` | Domains, `LocaleManager`, cache, Twig, `translation:sync` | 🟡 Medium | ✅ Stable | [README](neo/Core/Translation/README.md) |
+| `Utils/` | Cache (File/Redis/Array), Config, Logger, Notifications (Email/Slack/SMS), Scanner | 🟡 Medium | ✅ Stable | [README](neo/Core/Utils/README.md) |
+| `Validator/` | Attribute constraints + separate validators, `ValidatorManager`, 11 constraints | 🟡 Medium | ✅ Stable | [README](neo/Core/Validator/README.md) |
+| `View/` | Twig 3.x integration, extensions, `app` global variable, template cache | 🟢 Low | ✅ Stable | [README](neo/Core/View/README.md) |
 
-Sous-dossiers notables dans `neo/Core/` :
+Notable subfolders in `neo/Core/`:
 
 ```text
 Asset/      -> Commands/, Compiler/, Exception/
@@ -161,33 +161,33 @@ Validator/  -> Assert/
 View/       -> Exception/, Interface/
 ```
 
-## Cycle d'éxécution
+## Execution cycle
 
-### En HTTP
+### Over HTTP
 
-`Neo\App` cherche un projet en lisant `src/*/Config/app.config.php` et compare la clé `access` a `HTTP_HOST` / `SERVER_NAME`.
+`Neo\App` looks for a project by reading `src/*/Config/app.config.php` and compares the `access` key to `HTTP_HOST` / `SERVER_NAME`.
 
-Si un seul projet existe dans `src/`, il est sélectionné automatiquement.
+If only one project exists in `src/`, it is selected automatically.
 
-### En CLI
+### In the CLI
 
-Les commandes qui opèrent sur un projet existant attendent en général `--project=NomDuProjet`.
+Commands that operate on an existing project generally expect `--project=ProjectName`.
 
-Exceptions notables :
+Notable exceptions:
 
 - `project:create`
 - `project:sync`
 - `app:serve`
 
-Exemple :
+Example:
 
 ```bash
 php bin/neo cache:clear --project=Test
 ```
 
-## Structure d'un projet
+## Project structure
 
-Un projet generé par `app:make:project` contient d'abord :
+A project generated by `app:make:project` first contains:
 
 ```text
 src/Blog/
@@ -217,7 +217,7 @@ src/Blog/
 `-- Translations/
 ```
 
-Sans l'option `--skeleton`, le générateur ajoute aussi :
+Without the `--skeleton` option, the generator also adds:
 
 ```text
 src/Blog/
@@ -234,29 +234,29 @@ src/Blog/
     `-- en.php
 ```
 
-Certains dossiers sont créés plus tard, quand la fonctionnalité est activée :
+Some folders are created later, when the feature is enabled:
 
 - `App/Crons/` via `make:cron`
-- `App/Event/Listener/` via `make:event` et `make:event:listener`
+- `App/Event/Listener/` via `make:event` and `make:event:listener`
 - `Database/Entity/` via `make:entity`
-- `Database/Migrations/` au premier `database:orm:diff` ou `database:migration:migrate`
-- `Tests/` via `make:test` ou `make:test:auto`
+- `Database/Migrations/` on the first `database:orm:diff` or `database:migration:migrate`
+- `Tests/` via `make:test` or `make:test:auto`
 
-Les configs sensibles `database.config.php`, `deploy.config.php`, `api.config.php` et `mailer.config.php` sont prévues pour être ignorées par Git dans le `.gitignore` généré.
-Le générateur ignore aussi `Storage/`.
+The sensitive configs `database.config.php`, `deploy.config.php`, `api.config.php`, and `mailer.config.php` are meant to be ignored by Git in the generated `.gitignore`.
+The generator also ignores `Storage/`.
 
-## Conteneur DI et configuration
+## DI container and configuration
 
-Le conteneur `Neo\Core\DI\Container` fournit :
+The `Neo\Core\DI\Container` container provides:
 
-- `set()` pour enregistrer un service ou une factory
-- `get()` pour résoudre un service
-- `bind()` pour mapper une abstraction vers une implémentation
-- `make()` pour instancier une classe avec des paramêtres runtime
-- autowiring via reflexion
-- support des constructeurs de contrôleurs et de services
+- `set()` to register a service or a factory
+- `get()` to resolve a service
+- `bind()` to map an abstraction to an implementation
+- `make()` to instantiate a class with runtime parameters
+- reflection-based autowiring
+- support for controller and service constructors
 
-Exemple :
+Example:
 
 ```php
 <?php
@@ -277,7 +277,7 @@ final class ReportService
 
     public function build(): array
     {
-        $this->logger->info('Génération du rapport');
+        $this->logger->info('Generating the report');
 
         return $this->cache->get('report.latest', []);
     }
@@ -286,9 +286,9 @@ final class ReportService
 
 ### Configuration
 
-Le service `Config` charge tous les fichiers `*.config.php` du projet et peut merger les fichiers `*.config.test.php` pendant les tests.
+The `Config` service loads every `*.config.php` file in the project and can merge `*.config.test.php` files during tests.
 
-Exemple :
+Example:
 
 ```php
 $appName = $this->getConfig()->from('app')->get('general.name');
@@ -296,7 +296,7 @@ $timezone = $this->getConfig()->from('app')->get('date.timezone', 'UTC');
 $twigOptions = $this->getConfig()->from('twig')->all();
 ```
 
-Exemple de `app.config.php` :
+Example `app.config.php`:
 
 ```php
 <?php
@@ -305,7 +305,7 @@ declare(strict_types=1);
 return [
     'general' => [
         'name' => 'Blog',
-        'description' => 'Mon projet NeoPHP',
+        'description' => 'My NeoPHP project',
     ],
     'environment' => 'dev',
     'access' => 'localhost:8000',
@@ -315,18 +315,18 @@ return [
 ];
 ```
 
-## Couche HTTP
+## HTTP layer
 
-La couche HTTP est composée principalement de :
+The HTTP layer is made up mainly of:
 
-- `Request` — requête entrante
-- `Response` / `JsonResponse` / `RedirectResponse` — réponses HTTP
-- `HttpClient` — client HTTP cURL pour les requêtes sortantes
-- `Session` / `Cookie` / `Flash` — état client
+- `Request` — incoming request
+- `Response` / `JsonResponse` / `RedirectResponse` — HTTP responses
+- `HttpClient` — cURL HTTP client for outgoing requests
+- `Session` / `Cookie` / `Flash` — client state
 
 ### Request
 
-`Request` expose notamment :
+`Request` notably exposes:
 
 - `getMethod()`
 - `getPath()`
@@ -338,7 +338,7 @@ La couche HTTP est composée principalement de :
 - `getUserAgent()`
 - `getPreviousUrl()`
 
-Exemple :
+Example:
 
 ```php
 #[Route(path: '/search', name: 'search', methods: ['GET'])]
@@ -355,9 +355,9 @@ public function search(): Response
 
 ### Response
 
-`Response` sert a construire les réponses HTTP de base.
+`Response` is used to build basic HTTP responses.
 
-Exemple :
+Example:
 
 ```php
 $response = new Response();
@@ -367,7 +367,7 @@ $response->setContent('OK');
 return $response;
 ```
 
-Exemples de raccourcis via `AbstractController` :
+Shortcut examples via `AbstractController`:
 
 ```php
 return $this->jsonSuccess(['saved' => true], 201);
@@ -378,31 +378,31 @@ return $this->redirectToPath('/maintenance', 302);
 
 ### HttpClient
 
-`HttpClientManager` permet d'effectuer des requêtes HTTP sortantes via cURL. Il retourne un objet `Response` standard.
+`HttpClientManager` lets you make outgoing HTTP requests via cURL. It returns a standard `Response` object.
 
 ```php
 $client = $container->get(HttpClientManager::class);
 
-// Requête GET simple
+// Simple GET request
 $data = $client->request('GET', 'https://api.example.com/users')->toArray();
 
-// Requête POST JSON avec Bearer token
+// JSON POST request with Bearer token
 $response = $client->request('POST', '/api/articles', [
     'base_uri' => 'https://api.example.com',
     'bearer'   => $token,
-    'json'     => ['title' => 'Mon article'],
+    'json'     => ['title' => 'My article'],
 ]);
 $response->getStatusCode(); // 201
 $response->toArray();       // ['id' => 42, ...]
 ```
 
-Options courantes : `base_uri`, `query`, `headers`, `bearer`, `json`, `body`, `auth_basic`, `timeout`, `max_redirects`.
+Common options: `base_uri`, `query`, `headers`, `bearer`, `json`, `body`, `auth_basic`, `timeout`, `max_redirects`.
 
-### Session, cookie et flash
+### Session, cookie, and flash
 
-Le framework configure automatiquement la session depuis `session.config.php`.
+The framework automatically configures the session from `session.config.php`.
 
-Exemple dans un contrôleur :
+Example in a controller:
 
 ```php
 $this->getSession()->set('wizard.step', 2);
@@ -411,30 +411,30 @@ $step = $this->getSession()->get('wizard.step', 1);
 $this->getCookie()->set('theme', 'dark');
 $theme = $this->getCookie()->get('theme', 'light');
 
-$this->getFlash()->add('success', 'Operation terminee');
+$this->getFlash()->add('success', 'Operation completed');
 ```
 
-Twig expose les messages flash via `flashes()` :
+Twig exposes flash messages via `flashes()`:
 
 ```twig
 {{ flashes() }}
 ```
 
-## Routing et contrôleurs
+## Routing and controllers
 
-Le routing repose sur des attributs PHP scannes dans `src/<Projet>/App/Controllers`.
+Routing is based on PHP attributes scanned in `src/<Project>/App/Controllers`.
 
-Fonctionnalités confirmées :
+Confirmed features:
 
-- prefix de route via `#[MainRoute(...)]`
-- routes multi-méthodes via `methods: [...]`
-- paramêtres dynamiques `{id}`
-- paramêtres optionnels `{slug?}`
-- contraintes regex via `requirements`
-- cache des routes hors environnement `dev`
-- injection des arguments types via le conteneur
+- route prefix via `#[MainRoute(...)]`
+- multi-method routes via `methods: [...]`
+- dynamic parameters `{id}`
+- optional parameters `{slug?}`
+- regex constraints via `requirements`
+- route caching outside the `dev` environment
+- typed argument injection via the container
 
-Exemple simple :
+Simple example:
 
 ```php
 #[MainRoute(path: '/posts', name: 'posts')]
@@ -448,7 +448,7 @@ final class PostController extends AbstractController
 }
 ```
 
-Exemple plus complet :
+More complete example:
 
 ```php
 <?php
@@ -483,7 +483,7 @@ final class PostController extends AbstractController
 }
 ```
 
-Helpers exposés par `AbstractController` :
+Helpers exposed by `AbstractController`:
 
 - `render()`
 - `template()`
@@ -499,33 +499,33 @@ Helpers exposés par `AbstractController` :
 - `getSession()`
 - `getFlash()`
 - `getCookie()`
-- accès à `Logger`, `Cache`, `Config`
+- access to `Logger`, `Cache`, `Config`
 
-Twig expose aussi :
+Twig also exposes:
 
 - `path()`
 - `currentRoute()`
 
-## Vues Twig, assets et traductions
+## Twig views, assets, and translations
 
-### Vues Twig
+### Twig views
 
-Les vues sont chargées depuis `src/<Projet>/App/Views`.
+Views are loaded from `src/<Project>/App/Views`.
 
-Twig est initialisé avec :
+Twig is initialized with:
 
-- cache optionnel
-- debug optionnel
+- optional cache
+- optional debug
 - `twig/intl-extra`
-- global `app`
-- fonctions ajoutées par le framework
+- `app` global
+- functions added by the framework
 
-Exemple :
+Example:
 
 ```twig
 {% extends 'layouts/base_layout.html.twig' %}
 
-{% block title %}Liste des posts{% endblock %}
+{% block title %}Post list{% endblock %}
 
 {% block content %}
     <h1>Posts</h1>
@@ -544,25 +544,25 @@ Exemple :
 
 ### Assets
 
-Les assets sources vivent dans `src/<Projet>/Assets/`.
+Source assets live in `src/<Project>/Assets/`.
 
-Le composant `AssetHandler` :
+The `AssetHandler` component:
 
-- expose `asset()`
-- compile `css`, `js` et `less`
-- minifie CSS et JS
-- génère des noms avec hash
-- écrit `public/builds/<Projet>/manifest.json`
-- sert les fichiers compiles depuis `public/builds/<Projet>/assets/`
+- exposes `asset()`
+- compiles `css`, `js`, and `less`
+- minifies CSS and JS
+- generates hashed file names
+- writes `public/builds/<Project>/manifest.json`
+- serves compiled files from `public/builds/<Project>/assets/`
 
-Exemple Twig :
+Twig example:
 
 ```twig
 <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 <script src="{{ asset('js/app.js') }}"></script>
 ```
 
-Arborescence source :
+Source tree:
 
 ```text
 src/Blog/Assets/
@@ -572,11 +572,11 @@ src/Blog/Assets/
     `-- app.js
 ```
 
-### Traductions
+### Translations
 
-Les traductions sont chargées depuis `src/<Projet>/Translations/<locale>.php`.
+Translations are loaded from `src/<Project>/Translations/<locale>.php`.
 
-Fonctions Twig disponibles :
+Available Twig functions:
 
 - `translate()`
 - `trans()`
@@ -584,14 +584,14 @@ Fonctions Twig disponibles :
 - `getLocale()`
 - `isEnabledTranslation()`
 
-Comportement notable :
+Notable behavior:
 
-- la locale est résolue depuis la config et les cookies
-- `setLocale()` persiste la langue dans un cookie `lang`
-- en environnement `dev`, une clé manquante est auto-enregistrée dans le fichier de la locale courante
-- `translation:sync` permet de synchroniser les clés de tous les fichiers de locale
+- the locale is resolved from the config and cookies
+- `setLocale()` persists the language in a `lang` cookie
+- in the `dev` environment, a missing key is automatically registered in the current locale's file
+- `translation:sync` lets you sync the keys across all locale files
 
-Exemple de fichier `src/Blog/Translations/fr.php` :
+Example `src/Blog/Translations/fr.php` file:
 
 ```php
 <?php
@@ -610,18 +610,18 @@ return [
 ];
 ```
 
-Exemple Twig :
+Twig example:
 
 ```twig
 <h1>{{ trans('Bienvenue sur le blog') }}</h1>
 <button>{{ trans('Enregistrer') }}</button>
 
-{{-- Avec paramètres --}}
+{{-- With parameters --}}
 {{ trans('Bonjour :name !', {'name': user.getName()}) }}
 {{ 'Bonjour :name !'|trans({'name': user.getName()}) }}
 ```
 
-Exemple dans un contrôleur :
+Example in a controller:
 
 ```php
 #[Route(path: '/change-locale/{locale}', name: 'change.locale', methods: ['GET'])]
@@ -632,14 +632,14 @@ public function changeLocale(string $locale, TranslationManager $translator): Re
 }
 ```
 
-### Extensions utilitaires
+### Utility extensions
 
-Le dossier `neo/Core/Extension/` expose des helpers réutilisables à deux niveaux :
+The `neo/Core/Extension/` folder exposes reusable helpers at two levels:
 
-- dans les contrôleurs via `getString()`, `getDate()`, `getFile()`, `getHtml()`, `getJson()`, `getNumber()`, `getPath()`, `getUrl()` et `getArray()`
-- dans Twig via des fonctions et filtres enregistrés automatiquement
+- in controllers via `getString()`, `getDate()`, `getFile()`, `getHtml()`, `getJson()`, `getNumber()`, `getPath()`, `getUrl()`, and `getArray()`
+- in Twig via automatically registered functions and filters
 
-Familles disponibles :
+Available families:
 
 - `StringExtension`
   `slugify()`, `camelCase()`, `snakeCase()`, `pascalCase()`, `truncate()`, `excerpt()`
@@ -660,25 +660,25 @@ Familles disponibles :
 - `ArrayExtension`
   `array_flatten()`, `array_pluck()`, `array_only()`, `array_except()`, `array_group_by()`
 
-Exemples :
+Examples:
 
 ```php
-$slug = $this->getString()->slugify('Mon Titre Exemple');
+$slug = $this->getString()->slugify('My Example Title');
 $price = $this->getNumber()->currency(19.99, 'EUR');
 ```
 
 ```twig
-{{ 'Mon Titre Exemple'|slugify }}
+{{ 'My Example Title'|slugify }}
 {{ currency(19.99, 'EUR') }}
 {{ date_format(post.created_at, 'd/m/Y H:i') }}
 {{ path_join('uploads', user.avatar) }}
 ```
 
-## Base de donnees et QueryBuilder
+## Database and QueryBuilder
 
-La connexion PDO est pilotée par `Config/database.config.php` via `DatabaseConnection`.
+The PDO connection is driven by `Config/database.config.php` via `DatabaseConnection`.
 
-Exemple minimal :
+Minimal example:
 
 ```php
 return [
@@ -698,33 +698,33 @@ return [
 ];
 ```
 
-### Outils de schéma
+### Schema tools
 
-Le framework embarque une CLI dédiée à la base de données :
+The framework ships a dedicated database CLI:
 
 - `database:create`
-  crée la base déclarée dans `database.config.php`
+  creates the database declared in `database.config.php`
 - `make:entity`
-  génère une entité Data Mapper (POPO) et son repository dans `Database/Entity/` et `Database/Repository/`
+  generates a Data Mapper entity (POPO) and its repository in `Database/Entity/` and `Database/Repository/`
 - `database:orm:diff`
-  compare les entités avec la base de données courante et génère un fichier de migration dans `Database/Migrations/`
+  compares entities against the current database and generates a migration file in `Database/Migrations/`
 - `database:migration:migrate`
-  applique toutes les migrations en attente
+  applies all pending migrations
 - `database:migration:rollback`
-  annule le dernier batch appliqué
+  rolls back the last applied batch
 - `database:migration:status`
-  affiche l'état des migrations et signale un écart entre le schéma courant et le dernier snapshot
+  displays migration status and flags a drift between the current schema and the latest snapshot
 
-Comportements notables :
+Notable behaviors:
 
-- `make:entity` est interactif : il demande le nom de l'entité, ses propriétés et leurs types
-- `make:entity --no-repository` ignore la génération du repository
-- `database:orm:diff --dry-run` affiche le diff sans écrire de fichier
-- `database:orm:diff --connection=<nom>` cible une connexion spécifique pour les projets multi-base
-- les tables internes `neo_migrations` et `neo_schema_snapshots` sont exclues de l'introspection
-- les migrations générées sont écrites dans `src/<Projet>/Database/Migrations/`
+- `make:entity` is interactive: it asks for the entity name, its properties, and their types
+- `make:entity --no-repository` skips repository generation
+- `database:orm:diff --dry-run` shows the diff without writing a file
+- `database:orm:diff --connection=<name>` targets a specific connection for multi-database projects
+- the internal `neo_migrations` and `neo_schema_snapshots` tables are excluded from introspection
+- generated migrations are written to `src/<Project>/Database/Migrations/`
 
-Exemples :
+Examples:
 
 ```bash
 php bin/neo database:create --project=Blog
@@ -735,7 +735,7 @@ php bin/neo database:orm:diff --project=Blog --name=add_posts_table --dry-run
 
 ### QueryBuilder
 
-Le `QueryBuilder` couvre notamment :
+`QueryBuilder` notably covers:
 
 - `table()`
 - `select()`
@@ -750,7 +750,7 @@ Le `QueryBuilder` couvre notamment :
 - `paginate()`
 - transactions via `transaction()`
 
-Exemple :
+Example:
 
 ```php
 <?php
@@ -769,7 +769,7 @@ $qb = (new QueryBuilder())
 $rows = $qb->get();
 ```
 
-Exemple avec transaction :
+Example with a transaction:
 
 ```php
 (new QueryBuilder())
@@ -777,29 +777,29 @@ Exemple avec transaction :
     ->transaction(function (QueryBuilder $qb): void {
         $qb->table('posts')->insert([
             'user_id' => 1,
-            'title' => 'Post transactionnel',
-            'content' => 'Contenu',
+            'title' => 'Transactional post',
+            'content' => 'Content',
         ]);
     });
 ```
 
 ### Migrations
 
-Les migrations vivent dans `src/<Projet>/Database/Migrations/`.
+Migrations live in `src/<Project>/Database/Migrations/`.
 
-Chaque migration expose :
+Each migration exposes:
 
 - `up(DatabaseManager $db): void`
 - `down(DatabaseManager $db): void`
 
-Le runner maintient deux tables techniques :
+The runner maintains two technical tables:
 
-- `neo_migrations` pour l'historique des migrations appliquées
-- `neo_schema_snapshots` pour mémoriser un hash du schéma après exécution
+- `neo_migrations` for the history of applied migrations
+- `neo_schema_snapshots` to store a schema hash after execution
 
-Le snapshot permet à `database:migration:status` de prévenir quand le schéma courant a changé depuis la dernière migration générée ou appliquée.
+The snapshot lets `database:migration:status` warn when the current schema has changed since the last generated or applied migration.
 
-Exemple de workflow :
+Example workflow:
 
 ```bash
 php bin/neo make:entity Post --project=Blog
@@ -809,7 +809,7 @@ php bin/neo database:migration:migrate --project=Blog
 php bin/neo database:migration:rollback --project=Blog
 ```
 
-Exemple minimal de migration :
+Minimal migration example:
 
 ```php
 <?php
@@ -829,28 +829,28 @@ final class MigrationVersion_20260606120000
 }
 ```
 
-## ORM et repositories
+## ORM and repositories
 
-L'ORM de NeoPHP est un Data Mapper. Les entités sont des POPOs annotés avec des attributs de mapping. Aucune classe mère n'est requise. La persistance passe par l'`EntityManager`.
+NeoPHP's ORM is a Data Mapper. Entities are POPOs annotated with mapping attributes. No parent class is required. Persistence goes through the `EntityManager`.
 
 ### EntityManager
 
-`EntityManager` est le point d'entrée pour toutes les opérations de persistance.
+`EntityManager` is the entry point for all persistence operations.
 
-API principale :
+Main API:
 
-- `persist(object $entity)` — enregistre une entité pour insertion ou mise à jour
-- `remove(object $entity)` — marque une entité pour suppression
-- `flush()` — écrit tous les changements en base de données
-- `find(string $class, mixed $id)` — recherche par clé primaire
-- `getRepository(string $class)` — retourne le repository de l'entité
-- `wrapInTransaction(callable $callback)` — exécute un callback dans une transaction
-- `contains(object $entity)` — vérifie si une entité est gérée par l'UnitOfWork
-- `clear()` — vide l'identity map
+- `persist(object $entity)` — registers an entity for insert or update
+- `remove(object $entity)` — marks an entity for deletion
+- `flush()` — writes all changes to the database
+- `find(string $class, mixed $id)` — lookup by primary key
+- `getRepository(string $class)` — returns the entity's repository
+- `wrapInTransaction(callable $callback)` — runs a callback within a transaction
+- `contains(object $entity)` — checks whether an entity is managed by the UnitOfWork
+- `clear()` — clears the identity map
 
-Dans un contrôleur, `EntityManager` est accessible via `$this->entityManager` (enregistré par `DatabaseControllerExtension`).
+In a controller, `EntityManager` is accessible via `$this->entityManager` (registered by `DatabaseControllerExtension`).
 
-Exemple :
+Example:
 
 ```php
 #[Route(path: '/', name: 'store', methods: ['POST'])]
@@ -868,17 +868,17 @@ public function store(): Response
 
 ### EntityRepository
 
-`EntityRepository` est la classe de base générée par `make:entity`.
+`EntityRepository` is the base class generated by `make:entity`.
 
-API disponible :
+Available API:
 
-- `find($id)` — recherche par clé primaire
-- `findAll()` — retourne toutes les entités
-- `findBy(array $criteria, array $orderBy, ?int $limit, ?int $offset)` — recherche avec critères
-- `findOneBy(array $criteria, array $orderBy)` — retourne un seul résultat
-- `count(array $criteria)` — compte les entités correspondant aux critères
+- `find($id)` — lookup by primary key
+- `findAll()` — returns all entities
+- `findBy(array $criteria, array $orderBy, ?int $limit, ?int $offset)` — search by criteria
+- `findOneBy(array $criteria, array $orderBy)` — returns a single result
+- `count(array $criteria)` — counts entities matching criteria
 
-Exemple de repository :
+Repository example:
 
 ```php
 <?php
@@ -897,7 +897,7 @@ final class PostRepository extends EntityRepository
 }
 ```
 
-Utilisation dans un contrôleur :
+Usage in a controller:
 
 ```php
 public function __construct(private PostRepository $posts) {}
@@ -919,16 +919,16 @@ public function show(int $id): Response
 
 ### Relations
 
-Relations disponibles par attributs :
+Relations available via attributes:
 
-- `#[OneToOne(targetEntity: ..., inversedBy: ...)]` avec `#[JoinColumn]`
-- `#[ManyToOne(targetEntity: ..., inversedBy: ...)]` avec `#[JoinColumn]`
+- `#[OneToOne(targetEntity: ..., inversedBy: ...)]` with `#[JoinColumn]`
+- `#[ManyToOne(targetEntity: ..., inversedBy: ...)]` with `#[JoinColumn]`
 - `#[OneToMany(targetEntity: ..., mappedBy: ...)]`
-- `#[ManyToMany(targetEntity: ..., inversedBy: ...)]` avec `#[JoinTable]`
+- `#[ManyToMany(targetEntity: ..., inversedBy: ...)]` with `#[JoinTable]`
 
-Les collections (`OneToMany`, `ManyToMany`) utilisent la classe `Collection`. Le chargement est lazy par défaut, géré via des proxies transparents.
+Collections (`OneToMany`, `ManyToMany`) use the `Collection` class. Loading is lazy by default, handled through transparent proxies.
 
-Exemple d'entité avec relations :
+Example entity with relations:
 
 ```php
 <?php
@@ -985,21 +985,21 @@ final class Post
 }
 ```
 
-Voir la section [ORM Data Mapper (entités)](#orm-data-mapper-entités) pour la création des entités via la CLI et le workflow de migration.
+See the [Data Mapper ORM (entities)](#data-mapper-orm-entities) section for creating entities via the CLI and the migration workflow.
 
-## ORM Data Mapper (entités)
+## Data Mapper ORM (entities)
 
-L'ORM de NeoPHP repose sur le Data Mapper. `make:entity` crée une entité et son repository. `database:orm:diff` génère la migration à partir de la différence entre les entités et la base de données.
+NeoPHP's ORM is built on the Data Mapper pattern. `make:entity` creates an entity and its repository. `database:orm:diff` generates the migration from the difference between the entities and the database.
 
-### Créer une entité
+### Creating an entity
 
 ```bash
 php bin/neo make:entity Post --project=Blog
 ```
 
-Le générateur est interactif : il demande le nom, puis les propriétés et leurs types.
+The generator is interactive: it asks for the name, then the properties and their types.
 
-Exemple d'entité générée dans `Database/Entity/Post.php` :
+Example entity generated in `Database/Entity/Post.php`:
 
 ```php
 <?php
@@ -1045,7 +1045,7 @@ final class Post
 }
 ```
 
-Types scalaires disponibles :
+Available scalar types:
 
 - `string`, `text`
 - `integer`, `bigint`, `smallint`
@@ -1053,27 +1053,27 @@ Types scalaires disponibles :
 - `datetime`, `date`, `time`
 - `json`
 
-Relations disponibles :
+Available relations:
 
-- `#[OneToOne(...)]` avec `#[JoinColumn(...)]`
-- `#[ManyToOne(...)]` avec `#[JoinColumn(...)]`
+- `#[OneToOne(...)]` with `#[JoinColumn(...)]`
+- `#[ManyToOne(...)]` with `#[JoinColumn(...)]`
 - `#[OneToMany(...)]`
-- `#[ManyToMany(...)]` avec `#[JoinTable(...)]`
+- `#[ManyToMany(...)]` with `#[JoinTable(...)]`
 
-Les côtés `OneToMany` et `ManyToMany` utilisent `Collection` pour gérer les collections d'objets liés.
+`OneToMany` and `ManyToMany` sides use `Collection` to manage collections of related objects.
 
-> **Note ManyToMany — persistence automatique au flush :** Les collections ManyToMany sont désormais persistées automatiquement lors du `flush()`. Un snapshot de la collection est pris au chargement de l'entité ; au moment du flush, l'UoW calcule le diff (ajouts/suppressions) et synchronise la table de jointure sans action manuelle.
+> **ManyToMany note — automatic persistence on flush:** ManyToMany collections are now persisted automatically on `flush()`. A snapshot of the collection is taken when the entity is loaded; at flush time, the UoW computes the diff (additions/removals) and syncs the join table without manual action.
 
 ```php
 $article = $em->find(Article::class, 1);
-$article->getTags()->add($em->find(Tag::class, 5)); // Ajout
-$article->getTags()->remove($existingTag);           // Suppression
-$em->flush(); // Synchronise automatiquement la table article_tag
+$article->getTags()->add($em->find(Tag::class, 5)); // Add
+$article->getTags()->remove($existingTag);           // Remove
+$em->flush(); // Automatically syncs the article_tag table
 ```
 
-### Repository Data Mapper
+### Data Mapper repository
 
-Le repository généré étend `EntityRepository` :
+The generated repository extends `EntityRepository`:
 
 ```php
 <?php
@@ -1092,40 +1092,40 @@ final class PostRepository extends EntityRepository
 }
 ```
 
-Option `--no-repository` disponible pour ignorer la génération du repository.
+`--no-repository` option available to skip repository generation.
 
-### Générer la migration depuis les entités
+### Generating the migration from entities
 
 ```bash
-# Comparer les entités avec la base courante et générer la migration
+# Compare entities with the current database and generate the migration
 php bin/neo database:orm:diff --project=Blog --name=add_posts_table
 
-# Prévisualiser le diff sans écrire de fichier
+# Preview the diff without writing a file
 php bin/neo database:orm:diff --project=Blog --name=add_posts_table --dry-run
 
-# Appliquer
+# Apply
 php bin/neo database:migration:migrate --project=Blog
 ```
 
-Sur un projet multi-base, l'option `--connection=<nom>` cible une connexion spécifique.
+On a multi-database project, the `--connection=<name>` option targets a specific connection.
 
-Les migrations générées par `database:orm:diff` suivent le même format `up()` / `down()` que les migrations manuelles et sont stockées dans `Database/Migrations/`.
+Migrations generated by `database:orm:diff` follow the same `up()` / `down()` format as manual migrations and are stored in `Database/Migrations/`.
 
-## Formulaires, upload et validation
+## Forms, upload, and validation
 
-### Formulaires
+### Forms
 
-NeoPHP embarque :
+NeoPHP ships:
 
-- `FormFactory` — point d'entrée pour créer des formulaires
-- `FormBuilder` — API fluide de construction
-- `Form` — objet formulaire
-- `FieldType` — enum des types de champs disponibles
-- rendu Twig
-- CSRF intégré
-- validation par contraintes
+- `FormFactory` — entry point for creating forms
+- `FormBuilder` — fluent building API
+- `Form` — form object
+- `FieldType` — enum of available field types
+- Twig rendering
+- built-in CSRF
+- constraint-based validation
 
-Types de champs disponibles via `FieldType` :
+Field types available via `FieldType`:
 
 - `text`, `textarea`
 - `email`, `password`
@@ -1135,7 +1135,7 @@ Types de champs disponibles via `FieldType` :
 - `select`
 - `date`, `datetime-local`
 
-Helpers Twig disponibles :
+Available Twig helpers:
 
 - `form_start()`
 - `form_end()`
@@ -1146,7 +1146,7 @@ Helpers Twig disponibles :
 - `form_errors()`
 - `form_csrf()`
 
-Exemple de construction via `FormFactory` :
+Example built via `FormFactory`:
 
 ```php
 <?php
@@ -1167,14 +1167,14 @@ final class UserFormService
         $user ??= new User();
 
         return $this->factory->createFor($user)
-            ->add('firstname', 'text', ['label' => 'Prénom', 'required' => true])
+            ->add('firstname', 'text', ['label' => 'First name', 'required' => true])
             ->add('email', 'email', ['label' => 'Email'])
             ->getForm();
     }
 }
 ```
 
-Exemple Twig :
+Twig example:
 
 ```twig
 {{ form_start(form) }}
@@ -1183,11 +1183,11 @@ Exemple Twig :
 {{ form_end(form) }}
 ```
 
-### Upload dans un controleur
+### Upload in a controller
 
-Le point d'entrée applicatif est `AbstractController::upload()`.
+The application entry point is `AbstractController::upload()`.
 
-Signature :
+Signature:
 
 ```php
 $filename = $this->upload(
@@ -1198,18 +1198,18 @@ $filename = $this->upload(
 );
 ```
 
-Ce helper :
+This helper:
 
-- récupère le fichier via `Request::file()`
-- verifie l'upload PHP
-- lit l'extension d'origine
-- refuse `php`, `phtml`, `exe`, `sh`, `js`
-- vérifie la whitelist fournie
-- crée le dossier cible dans `src/<Projet>/Assets/<directory>`
-- déplace le fichier
-- renvoie le nom final du fichier
+- retrieves the file via `Request::file()`
+- checks the PHP upload
+- reads the original extension
+- rejects `php`, `phtml`, `exe`, `sh`, `js`
+- checks the provided whitelist
+- creates the target folder in `src/<Project>/Assets/<directory>`
+- moves the file
+- returns the final file name
 
-Exemple :
+Example:
 
 ```php
 #[Route(path: '/profile/avatar', name: 'avatar.upload', methods: ['POST'])]
@@ -1229,7 +1229,7 @@ public function uploadAvatar(): Response
 }
 ```
 
-Affichage ensuite :
+Then display it:
 
 ```twig
 <img src="{{ asset('uploads/avatars/' ~ user.getAvatar()) }}" alt="Avatar">
@@ -1237,11 +1237,11 @@ Affichage ensuite :
 
 ### Validation
 
-Le validateur repose sur des attributs de contraintes posés sur les propriétés de n'importe quelle classe (entité, DTO, etc.).
+The validator relies on constraint attributes placed on the properties of any class (entity, DTO, etc.).
 
-Depuis la refactorisation, chaque contrainte est **scindée en deux fichiers** : un attribut PHP dans `Assert/` (qui déclare les paramètres) et un validator dans `Validator/` (qui contient la logique). Le `ValidatorManager` résout le validator via le conteneur DI grâce à la méthode `validatedBy()` de la contrainte.
+Since the refactor, each constraint is **split into two files**: a PHP attribute in `Assert/` (which declares the parameters) and a validator in `Validator/` (which contains the logic). `ValidatorManager` resolves the validator via the DI container using the constraint's `validatedBy()` method.
 
-Contraintes présentes dans le framework :
+Constraints present in the framework:
 
 - `NotBlank`
 - `Length`
@@ -1252,10 +1252,10 @@ Contraintes présentes dans le framework :
 - `Regex`
 - `Url`
 - `Unique`
-- `Exists` — vérifie qu'une valeur existe en base de données (utile pour valider une clé étrangère)
+- `Exists` — checks that a value exists in the database (useful for validating a foreign key)
 - `EqualToField`
 
-Exemple sur un DTO :
+Example on a DTO:
 
 ```php
 <?php
@@ -1270,26 +1270,26 @@ use Neo\Core\Validator\Assert\NotBlank;
 
 final class RegisterDto
 {
-    #[NotBlank(message: 'Le prenom est obligatoire.')]
+    #[NotBlank(message: 'First name is required.')]
     public string $firstname = '';
 
-    #[NotBlank(message: 'L email est obligatoire.')]
-    #[Email(message: 'L email est invalide.')]
+    #[NotBlank(message: 'Email is required.')]
+    #[Email(message: 'Email is invalid.')]
     public string $email = '';
 
-    #[Length(min: 8, message: 'Le mot de passe doit faire au moins 8 caracteres.')]
+    #[Length(min: 8, message: 'Password must be at least 8 characters.')]
     public string $password = '';
 
-    #[EqualToField(field: 'password', message: 'Les mots de passe doivent etre identiques.')]
+    #[EqualToField(field: 'password', message: 'Passwords must match.')]
     public string $password_confirm = '';
 }
 ```
 
 ## Seeding
 
-Le module Seeder permet de peupler la base de données avec des données de référence ou de démonstration.
+The Seeder module lets you populate the database with reference or demo data.
 
-Un seeder est une classe annotée `#[Seeder]` qui implémente `SeedInterface::run(EntityManager $em)` :
+A seeder is a class annotated `#[Seeder]` that implements `SeedInterface::run(EntityManager $em)`:
 
 ```php
 <?php
@@ -1315,46 +1315,46 @@ final class CountrySeeder implements SeedInterface
 }
 ```
 
-L'attribut `#[Seeder]` configure deux paramètres :
+The `#[Seeder]` attribute configures two parameters:
 
-| Paramètre | Défaut | Description |
+| Parameter | Default | Description |
 |-----------|--------|-------------|
-| `order` | `0` | Ordre d'exécution croissant |
-| `group` | `'reference'` | `'reference'` pour les données stables, `'demo'` pour les données de développement |
+| `order` | `0` | Increasing execution order |
+| `group` | `'reference'` | `'reference'` for stable data, `'demo'` for development data |
 
-Commandes disponibles :
+Available commands:
 
 ```bash
-# Générer un seeder
+# Generate a seeder
 php bin/neo database:make:seed CountrySeeder --project=Blog --order=10 --group=reference
 
-# Prévisualiser sans exécuter
+# Preview without running
 php bin/neo database:run:seed --project=Blog --dry-run
 
-# Exécuter les seeders 'reference' (défaut)
+# Run 'reference' seeders (default)
 php bin/neo database:run:seed --project=Blog
 
-# Inclure les seeders de développement
+# Include development seeders
 php bin/neo database:run:seed --project=Blog --dev
 
-# Filtrer par groupe
+# Filter by group
 php bin/neo database:run:seed --project=Blog --group=demo
 ```
 
-## Securite: auth, mot de passe, middlewares, csrf
+## Security: auth, password, middlewares, csrf
 
-### Authentification
+### Authentication
 
-L'auth est pilotée depuis `app.config.php`.
+Auth is driven from `app.config.php`.
 
-Le framework supporte deux guards :
+The framework supports two guards:
 
 - `session`
 - `token`
 
-Le guard `token` s'appuie sur `JwtManager`.
+The `token` guard relies on `JwtManager`.
 
-Configuration type :
+Typical configuration:
 
 ```php
 'auth' => [
@@ -1376,7 +1376,7 @@ Configuration type :
 ],
 ```
 
-API de `AuthManager` :
+`AuthManager` API:
 
 - `attempt()`
 - `login()`
@@ -1386,7 +1386,7 @@ API de `AuthManager` :
 - `hasRole()`
 - `generateToken()`
 
-Exemple de login session :
+Session login example:
 
 ```php
 #[MainRoute(path: '/login', name: 'login')]
@@ -1405,7 +1405,7 @@ final class LoginController extends AbstractController
         ]);
 
         if (!$ok) {
-            return $this->jsonError('Identifiants invalides', 401);
+            return $this->jsonError('Invalid credentials', 401);
         }
 
         return $this->redirectToRoute('dashboard.index');
@@ -1413,7 +1413,7 @@ final class LoginController extends AbstractController
 }
 ```
 
-Exemple de login token :
+Token login example:
 
 ```php
 #[MainRoute(path: '/api', name: 'api')]
@@ -1435,13 +1435,13 @@ final class ApiAuthController extends AbstractController
         ]);
 
         if (!$ok) {
-            return $this->jsonError('Identifiants invalides', 401);
+            return $this->jsonError('Invalid credentials', 401);
         }
 
         $user = $this->userRepository->findOneBy(['email' => $email]);
 
         if ($user === null) {
-            return $this->jsonError('Utilisateur introuvable', 401);
+            return $this->jsonError('User not found', 401);
         }
 
         return $this->jsonSuccess([
@@ -1451,7 +1451,7 @@ final class ApiAuthController extends AbstractController
 }
 ```
 
-Twig expose :
+Twig exposes:
 
 - `auth_check()`
 - `auth_user()`
@@ -1460,7 +1460,7 @@ Twig expose :
 
 ### PasswordManager
 
-Le service `PasswordManager` fournit :
+The `PasswordManager` service provides:
 
 - `hash()`
 - `verify()`
@@ -1468,7 +1468,7 @@ Le service `PasswordManager` fournit :
 - `generate()`
 - `getInfo()`
 
-Exemple :
+Example:
 
 ```php
 $hash = $this->getPasswordManager()->hash('secret123');
@@ -1477,24 +1477,24 @@ $ok = $this->getPasswordManager()->verify('secret123', $hash);
 
 ### Middlewares
 
-Attributs supportés :
+Supported attributes:
 
-- `#[Middleware(...)]` — attache un middleware à une classe ou méthode
-- `#[RateLimit(...)]` — limite de débit sur une route
-- `#[Maintenance(...)]` — mode maintenance
-- `#[IsGranted(roles: [...])]` — accès par rôle(s), raccourci de `RoleMiddleware`
+- `#[Middleware(...)]` — attaches a middleware to a class or method
+- `#[RateLimit(...)]` — rate limit on a route
+- `#[Maintenance(...)]` — maintenance mode
+- `#[IsGranted(roles: [...])]` — role-based access, shortcut for `RoleMiddleware`
 
-Middlewares coeur :
+Core middlewares:
 
-- `AuthMiddleware` — vérifie que l'utilisateur est authentifié
-- `GuestMiddleware` — vérifie que l'utilisateur n'est pas connecté
-- `RoleMiddleware` — vérifie un rôle spécifique
-- `IsGrantedMiddleware` — vérifie un ou plusieurs rôles via `#[IsGranted]`
-- `RateLimitMiddleware` — limite de débit générale
-- `AuthRateLimitMiddleware` — limite de débit sur l'authentification
-- `CsrfMiddleware` — validation CSRF sur les requêtes POST/PUT/PATCH/DELETE
+- `AuthMiddleware` — checks that the user is authenticated
+- `GuestMiddleware` — checks that the user is not logged in
+- `RoleMiddleware` — checks a specific role
+- `IsGrantedMiddleware` — checks one or more roles via `#[IsGranted]`
+- `RateLimitMiddleware` — general rate limiting
+- `AuthRateLimitMiddleware` — rate limiting on authentication
+- `CsrfMiddleware` — CSRF validation on POST/PUT/PATCH/DELETE requests
 
-Exemple de middleware applicatif :
+Application middleware example:
 
 ```php
 <?php
@@ -1522,7 +1522,7 @@ final class AdminAccessMiddleware implements MiddlewareInterface
 }
 ```
 
-Exemple d'utilisation avec `#[Middleware]` :
+Usage example with `#[Middleware]`:
 
 ```php
 #[MainRoute(path: '/admin', name: 'admin')]
@@ -1539,7 +1539,7 @@ final class DashboardController extends AbstractController
 }
 ```
 
-Exemple avec `#[IsGranted]` :
+Example with `#[IsGranted]`:
 
 ```php
 #[MainRoute(path: '/admin', name: 'admin')]
@@ -1557,31 +1557,31 @@ final class DashboardController extends AbstractController
 
 ### CSRF
 
-Le manager CSRF stocke les tokens en session sous `_csrf_tokens`.
+The CSRF manager stores tokens in the session under `_csrf_tokens`.
 
-Comportement :
+Behavior:
 
-- génération via `generateToken()`
-- expiration par défaut a 3600 secondes
+- generation via `generateToken()`
+- default expiration of 3600 seconds
 - validation via `validateToken()`
-- intégration dans les formulaires via `form_csrf()` et `csrf_token()`
+- integration in forms via `form_csrf()` and `csrf_token()`
 
 ## Events
 
-NeoPHP embarque un event dispatcher et plusieurs évènements coeur :
+NeoPHP ships an event dispatcher and several core events:
 
 - `RequestEvent`
 - `ResponseEvent`
 - `ExceptionEvent`
 
-Les listeners applicatifs sont attendus dans `src/<Projet>/App/Event/Listener`.
+Application listeners are expected in `src/<Project>/App/Event/Listener`.
 
-Ils peuvent être déclarés :
+They can be declared:
 
 - via `#[AsListener(event: ..., priority: ...)]`
 - via `EventSubscriberInterface`
 
-Exemple complet :
+Full example:
 
 ```php
 <?php
@@ -1618,7 +1618,7 @@ final class SendWelcomeEmailListener
 }
 ```
 
-Exemple dans un contrôleur :
+Example in a controller:
 
 ```php
 #[Route(path: '/register', name: 'register', methods: ['POST'])]
@@ -1645,77 +1645,77 @@ public function register(): Response
 
 ## Crons
 
-NeoPHP embarque un système de tâches planifiées éxécutables via la CLI.
+NeoPHP ships a scheduled task system runnable via the CLI.
 
-Les crons applicatifs sont attendus dans le projet courant et peuvent être lancés manuellement ou automatiquement via
-le système d'exploitation.
+Application crons are expected in the current project and can be run manually or automatically via
+the operating system.
 
-### Créer un cron
+### Creating a cron
 
-Pour générer un nouveau cron :
+To generate a new cron:
 
 ```bash
-php bin/neo make:cron <NomDuCron> --project=Blog
+php bin/neo make:cron <CronName> --project=Blog
 ```
 
-Exemple :
+Example:
 
 ```bash
 php bin/neo make:cron CleanupTempFiles --project=Blog
 ```
 
-Le générateur crée automatiquement le fichier du cron dans le projet cible.
+The generator automatically creates the cron file in the target project.
 
-### Lister les crons
+### Listing crons
 
-Pour afficher tous les crons disponibles d'un projet :
+To display all crons available in a project:
 
 ```bash
 php bin/neo cron:list --project=Blog
 ```
 
-Cette commande affiche notamment :
+This command notably shows:
 
-- le nom du cron
-- sa description
-- sa fréquence
-- son statut
+- the cron name
+- its description
+- its frequency
+- its status
 
-### Exécuter les crons
+### Running crons
 
-Pour éxécuter tous les crons du projet :
+To run all of a project's crons:
 
 ```bash
 php bin/neo cron:run --project=Blog
 ```
 
-Cette commande est celle qui doit être planifiée automatiquement par le systeme d'exploitation.
+This is the command that should be scheduled automatically by the operating system.
 
-### Exécution automatique des crons
+### Automatic cron execution
 
 #### Linux
 
-Sous Linux, les crons sont généralement pilotés via `crontab`.
+On Linux, crons are usually driven via `crontab`.
 
-Ouvrir la configuration cron :
+Open the cron configuration:
 
 ```bash
 crontab -e
 ```
 
-Exécuter les crons NeoPHP toutes les minutes :
+Run NeoPHP crons every minute:
 
 ```bash
 * * * * * php /path/to/project/bin/neo cron:run --project=Blog
 ```
 
-Exemple concret :
+Concrete example:
 
 ```bash
 * * * * * php /var/www/neophp/bin/neo cron:run --project=Blog
 ```
 
-Vérifier les logs cron :
+Check cron logs:
 
 ```bash
 grep CRON /var/log/syslog
@@ -1723,27 +1723,27 @@ grep CRON /var/log/syslog
 
 #### macOS
 
-macOS supporte également `crontab`.
+macOS also supports `crontab`.
 
-Ouvrir la configuration :
+Open the configuration:
 
 ```bash
 crontab -e
 ```
 
-Ajouter :
+Add:
 
 ```bash
 * * * * * php /path/to/project/bin/neo cron:run --project=Blog
 ```
 
-Exemple :
+Example:
 
 ```bash
 * * * * * php /Users/benjamin/Sites/neophp/bin/neo cron:run --project=Blog
 ```
 
-Vérifier les tâches :
+Check scheduled tasks:
 
 ```bash
 crontab -l
@@ -1751,31 +1751,31 @@ crontab -l
 
 #### Windows
 
-Sous Windows, utiliser le Planificateur de tâches.
+On Windows, use Task Scheduler.
 
-Commande a éxécuter :
+Command to run:
 
 ```bash
 php C:\path\to\project\bin\neo cron:run --project=Blog
 ```
 
-Exemple :
+Example:
 
 ```bash
 php C:\Sites\NeoPHP\bin\neo cron:run --project=Blog
 ```
 
-Configuration conseillée :
+Recommended configuration:
 
-- déclencheur : toutes les minutes
-- programme : `php.exe`
-- arguments :
+- trigger: every minute
+- program: `php.exe`
+- arguments:
 
 ```bash
 C:\Sites\NeoPHP\bin\neo cron:run --project=Blog
 ```
 
-Le Planificateur de tâches peut être ouvert avec :
+Task Scheduler can be opened with:
 
 ```text
 Win + R -> taskschd.msc
@@ -1783,7 +1783,7 @@ Win + R -> taskschd.msc
 
 #### Docker
 
-Exemple avec une boucle simple :
+Example with a simple loop:
 
 ```bash
 while true; do
@@ -1792,7 +1792,7 @@ while true; do
 done
 ```
 
-Exemple via `docker-compose` :
+Example via `docker-compose`:
 
 ```yaml
 services:
@@ -1800,32 +1800,32 @@ services:
     command: sh -c "while true; do php bin/neo cron:run --project=Blog; sleep 60; done"
 ```
 
-### Conseils
+### Recommendations
 
-En production, il est recommandé :
+In production, it is recommended to:
 
-- d'éxécuter `cron:run` toutes les minutes
-- de journaliser les erreurs via le `Logger`
-- d'eviter les traitements bloquants trop longs
-- d'utiliser des files d'attente pour les traitements lourds
-- de surveiller les éxécutions via les logs applicatifs ou système
+- run `cron:run` every minute
+- log errors via the `Logger`
+- avoid overly long blocking operations
+- use queues for heavy processing
+- monitor executions via application or system logs
 
-## Cache, logs, mailer, profiler et erreurs
+## Cache, logs, mailer, profiler, and errors
 
 ### Cache
 
-Le service `Cache` est piloté par `cache.config.php`.
+The `Cache` service is driven by `cache.config.php`.
 
-Drivers disponibles :
+Available drivers:
 
 - `files`
-  stockage dans `src/<Projet>/Storage/<path>`
+  storage in `src/<Project>/Storage/<path>`
 - `redis`
   via `predis/predis`
 - `array`
-  stockage mémoire pour usage court ou test
+  in-memory storage for short-lived use or tests
 
-API :
+API:
 
 - `set()`
 - `get()`
@@ -1834,7 +1834,7 @@ API :
 - `has()`
 - `remember()`
 
-Exemple :
+Example:
 
 ```php
 $this->getCache()->set('homepage.posts', $posts, 600);
@@ -1844,14 +1844,14 @@ $stats = $this->getCache()->remember('stats.daily', 300, fn() => $service->build
 
 ### Logger
 
-Le service `Logger` lit `logger.config.php` et gère :
+The `Logger` service reads `logger.config.php` and handles:
 
-- niveaux de logs
+- log levels
 - channels
 - rotation
-- archivage zip
+- zip archiving
 
-Niveaux supportés :
+Supported levels:
 
 - `debug`
 - `info`
@@ -1862,11 +1862,11 @@ Niveaux supportés :
 - `alert`
 - `emergency`
 
-Exemple :
+Example:
 
 ```php
 $this->getLogger()->channel('framework')->error(
-    'Erreur metier',
+    'Business error',
     ['post_id' => 12],
     'PostController::show'
 );
@@ -1874,16 +1874,16 @@ $this->getLogger()->channel('framework')->error(
 
 ### Mailer
 
-Le dossier `neo/Core/Utils/Mailer/` enregistre un service `Mailer` basé sur `PHPMailer`.
+The `neo/Core/Utils/Mailer/` folder registers a `Mailer` service based on `PHPMailer`.
 
-Configuration :
+Configuration:
 
-- `src/<Projet>/Config/mailer.config.php`
-- driver courant via `default`
-- expéditeur via `from`
+- `src/<Project>/Config/mailer.config.php`
+- current driver via `default`
+- sender via `from`
 - SMTP via `drivers.smtp`
 
-API principale :
+Main API:
 
 - `to()`
 - `subject()`
@@ -1895,59 +1895,59 @@ API principale :
 - `send()`
 - `getSentMails()`
 
-Dans un contrôleur, `getMailer()` est disponible via l'extension de contrôleur.
+In a controller, `getMailer()` is available via the controller extension.
 
-Exemple :
+Example:
 
 ```php
 $sent = $this->getMailer()
     ->to('user@example.com', 'John Doe')
-    ->subject('Bienvenue')
+    ->subject('Welcome')
     ->template('emails/welcome.html.twig', [
         'user' => $user,
     ])
     ->send();
 ```
 
-Si le mailer est désactivé, l'envoi est ignoré et un warning est journalisé.
+If the mailer is disabled, sending is skipped and a warning is logged.
 
 ### Profiler
 
-Le dossier `neo/Core/Profiler/` active une barre de debug uniquement en HTTP et uniquement quand `app.config.php` definit `environment = dev`.
+The `neo/Core/Profiler/` folder activates a debug bar only over HTTP and only when `app.config.php` sets `environment = dev`.
 
-Collecteurs exposes :
+Exposed collectors:
 
-- requête HTTP
-- route et paramètres resolvés
-- requêtes SQL
-- évènements dispatchés
+- HTTP request
+- resolved route and parameters
+- SQL queries
+- dispatched events
 - logs
-- utilisateur authentifié
-- traductions résolues et cléfs manquantes
-- mails envoyés
+- authenticated user
+- resolved translations and missing keys
+- sent emails
 
-Le toolbar est injecté dans les réponses HTML.
-Il est ignoré pour les `JsonResponse`, `RedirectResponse` et les contenus non HTML.
+The toolbar is injected into HTML responses.
+It is skipped for `JsonResponse`, `RedirectResponse`, and non-HTML content.
 
-### Gestion des erreurs
+### Error handling
 
-`ErrorHandler` :
+`ErrorHandler`:
 
-- intercepte exceptions et erreurs PHP
-- loggue les erreurs
-- dispatch un `ExceptionEvent`
-- rend `errors/<code>.html.twig` si présent
-- fournit un fallback HTML sinon
-- affiche plus de détails en `dev`
+- intercepts exceptions and PHP errors
+- logs errors
+- dispatches an `ExceptionEvent`
+- renders `errors/<code>.html.twig` if present
+- otherwise provides an HTML fallback
+- shows more detail in `dev`
 
-Exemple de vues d'erreur :
+Example error views:
 
 ```text
 src/Blog/App/Views/errors/404.html.twig
 src/Blog/App/Views/errors/500.html.twig
 ```
 
-Exemple `404.html.twig` :
+Example `404.html.twig`:
 
 ```twig
 {% extends 'layouts/base_layout.html.twig' %}
@@ -1960,22 +1960,22 @@ Exemple `404.html.twig` :
 
 ## Markdown
 
-Le module `Tools/Markdown` fournit un parseur Markdown sans dépendance externe. Il convertit du texte Markdown ou un fichier `.md` en tableau de blocs structurés, rendus via Twig.
+The `Tools/Markdown` module provides a dependency-free Markdown parser. It converts Markdown text or a `.md` file into an array of structured blocks, rendered via Twig.
 
-### Utilisation depuis un template
+### Usage from a template
 
-La fonction `markdown_blocks()` est disponible dans tous les templates Twig :
+The `markdown_blocks()` function is available in every Twig template:
 
 ```twig
-{# Depuis un fichier .md (chemin relatif à ROOT_DIR) #}
+{# From a .md file (path relative to ROOT_DIR) #}
 {% include 'markdown/document.html.twig'
     with { blocks: markdown_blocks('neo/Core/Asset/README.md') } %}
 
-{# Depuis une variable contenant du Markdown brut #}
+{# From a variable containing raw Markdown #}
 {% set blocks = markdown_blocks(article.content) %}
 ```
 
-Le filtre `md_inline` applique la mise en forme inline (**gras**, *italique*, `code`, liens) :
+The `md_inline` filter applies inline formatting (**bold**, *italic*, `code`, links):
 
 ```twig
 {% for block in blocks %}
@@ -1987,40 +1987,40 @@ Le filtre `md_inline` applique la mise en forme inline (**gras**, *italique*, `c
 {% endfor %}
 ```
 
-### Utilisation depuis PHP
+### Usage from PHP
 
 ```php
 $manager = $container->get(MarkdownManager::class);
 
-// Depuis un fichier
+// From a file
 $blocks = $manager->blocks('docs/guide.md');
 
-// Depuis une chaîne
-$blocks = $manager->parse("## Titre\n\nContenu.");
+// From a string
+$blocks = $manager->parse("## Title\n\nContent.");
 ```
 
-Types de blocs retournés : `heading`, `paragraph`, `code`, `list`, `table`, `quote`, `hr`.
+Block types returned: `heading`, `paragraph`, `code`, `list`, `table`, `quote`, `hr`.
 
-## CLI et generateurs
+## CLI and generators
 
-Afficher l'aide globale :
+Display global help:
 
 ```bash
 php bin/neo
 ```
 
-Afficher l'aide d'une commande :
+Display help for a command:
 
 ```bash
-php bin/neo <commande> --help
+php bin/neo <command> --help
 ```
 
-La console charge automatiquement :
+The console automatically loads:
 
-- les commandes natives du framework dans `neo/**/Commands/`
-- les commandes applicatives dans `src/<Projet>/App/Commands/`
+- the framework's native commands in `neo/**/Commands/`
+- application commands in `src/<Project>/App/Commands/`
 
-Commandes natives disponibles :
+Available native commands:
 
 - `project:create`
 - `project:delete`
@@ -2053,9 +2053,9 @@ Commandes natives disponibles :
 - `run:test:all`
 - `translation:sync`
 
-### Générateurs principaux
+### Main generators
 
-Exemples :
+Examples:
 
 ```bash
 php bin/neo project:create Blog
@@ -2073,35 +2073,35 @@ php bin/neo database:create --project=Blog
 php bin/neo database:orm:diff --project=Blog --name=initial_schema
 ```
 
-Exemple de commande intéractive de config :
+Example interactive config command:
 
 ```bash
 php bin/neo make:config mail --project=Blog
 ```
 
-Tu peux ensuite saisir par exemple :
+You could then enter, for example:
 
 - `smtp.host`
 - `smtp.port`
 - `smtp.user`
 - `smtp.pass`
 
-Le générateur écrira un tableau PHP imbrique.
+The generator will write a nested PHP array.
 
-### Commandes applicatives
+### Application commands
 
-`app:make:command` permet de générer une commande dans le projet cible. Une fois créée dans `src/<Projet>/App/Commands/`, elle est détectée automatiquement par la console au même titre que les commandes natives.
+`app:make:command` lets you generate a command in the target project. Once created in `src/<Project>/App/Commands/`, it is automatically detected by the console alongside native commands.
 
-Exemple :
+Example:
 
 ```bash
 php bin/neo app:make:command CleanupLogs --name=logs:clean --category=maintenance --project=Blog
 php bin/neo logs:clean --project=Blog
 ```
 
-### Maintenance de projet
+### Project maintenance
 
-Exemples :
+Examples:
 
 ```bash
 php bin/neo generate:default:config --project=Blog
@@ -2117,42 +2117,42 @@ php bin/neo translation:sync --project=Blog
 php bin/neo translation:sync --project=Blog --dry-run
 ```
 
-## Tests PHPUnit
+## PHPUnit tests
 
-Le framework embarque une couche de test par projet avec PHPUnit 13.2.
+The framework ships a per-project test layer with PHPUnit 13.2.
 
-Commandes disponibles :
+Available commands:
 
 - `make:test`
 - `make:test:auto`
 - `run:test`
 - `run:test:all`
 
-Au premier `make:test` ou `make:test:auto`, NeoPHP génère :
+On the first `make:test` or `make:test:auto`, NeoPHP generates:
 
-- `src/<Projet>/Tests/bootstrap.php`
-- `src/<Projet>/Tests/phpunit.xml`
-- `src/<Projet>/Tests/Config/database.config.test.php`
-- les dossiers `Unit`, `Feature`, `Database`, `Middleware`
+- `src/<Project>/Tests/bootstrap.php`
+- `src/<Project>/Tests/phpunit.xml`
+- `src/<Project>/Tests/Config/database.config.test.php`
+- the `Unit`, `Feature`, `Database`, `Middleware` folders
 
-Classes de base :
+Base classes:
 
 - `TestCase`
 - `FeatureTestCase`
 - `DatabaseTestCase`
 - `MiddlewareTestCase`
 
-Fonctionnalités confirmées :
+Confirmed features:
 
-- simulation de requêtes HTTP pour les tests feature
-- transactions et rollback automatique pour les tests database
-- surcharge de config via `*.config.test.php`
-- synchronisation du schema dev vers la base de test
-- rapports `junit.xml` et couverture HTML
+- HTTP request simulation for feature tests
+- transactions and automatic rollback for database tests
+- config overrides via `*.config.test.php`
+- dev-to-test schema sync
+- `junit.xml` reports and HTML coverage
 
-### Tests manuels
+### Manual tests
 
-Exemples :
+Examples:
 
 ```bash
 php bin/neo make:test UserServiceTest --type=unit --project=Blog
@@ -2161,16 +2161,16 @@ php bin/neo make:test UserRepositoryTest --type=database --project=Blog
 php bin/neo make:test AuthMiddlewareTest --type=middleware --project=Blog
 ```
 
-### Génération automatique avec `#[Test]`
+### Automatic generation with `#[Test]`
 
-Le système automatique repose sur l'attribut `Neo\Core\Testing\Attribute\Test`.
+The automatic system relies on the `Neo\Core\Testing\Attribute\Test` attribute.
 
-Il peut être posé :
+It can be placed:
 
-- sur une classe
-- sur une méthode publique
+- on a class
+- on a public method
 
-Signature actuelle :
+Current signature:
 
 ```php
 #[Test(
@@ -2184,24 +2184,24 @@ Signature actuelle :
 )]
 ```
 
-Ce que fait `make:test:auto` :
+What `make:test:auto` does:
 
-- prépare le scaffold PHPUnit si besoin
-- scanne tous les fichiers PHP du projet
-- charge les classes qui contiennent `#[Test]`
-- lit l'attribut au niveau classe et méthode
-- déduit un type de test
-- choisit un template
-- génère le fichier dans `Tests/<Type>/`
+- prepares the PHPUnit scaffold if needed
+- scans all PHP files in the project
+- loads classes that contain `#[Test]`
+- reads the attribute at the class and method level
+- infers a test type
+- picks a template
+- generates the file in `Tests/<Type>/`
 
-Inférence du type si `type = auto` :
+Type inference when `type = auto`:
 
 - `Repository` => `database`
 - `Controller` => `feature`
 - `Middleware` => `middleware`
-- sinon => `unit`
+- otherwise => `unit`
 
-Exemple sur une classe de service :
+Example on a service class:
 
 ```php
 <?php
@@ -2221,7 +2221,7 @@ final class SlugService
 }
 ```
 
-Exemple sur un repository :
+Example on a repository:
 
 ```php
 <?php
@@ -2249,7 +2249,7 @@ final class UserRepository extends EntityRepository
 }
 ```
 
-Exemple sur une méthode de contrôleur :
+Example on a controller method:
 
 ```php
 <?php
@@ -2274,7 +2274,7 @@ final class AuthController extends AbstractController
 }
 ```
 
-Options utiles :
+Useful options:
 
 ```bash
 php bin/neo make:test:auto --project=Blog
@@ -2284,22 +2284,22 @@ php bin/neo make:test:auto --project=Blog --force
 php bin/neo run:test:all --project=Blog --coverage
 ```
 
-## Deploiement
+## Deployment
 
-La commande `app:make:deployment` prépare un deploiement FTP a partir de `src/<Projet>/Config/deploy.config.php`.
+The `app:make:deployment` command prepares an FTP deployment from `src/<Project>/Config/deploy.config.php`.
 
-Le flux implémente :
+The flow implements:
 
-- patch temporaire de `app.config.php` en `prod`
-- patch temporaire de `public/index.php`
-- fusion du `composer.json` racine et du `composer.json` projet
-- installation des dépendances en `--no-dev`
-- compression de `vendor/`
-- upload FTP du framework, du projet et du dossier public
-- upload de `vendor.zip`
-- éxécution d'un script temporaire de dézippage côté serveur
+- temporary patch of `app.config.php` to `prod`
+- temporary patch of `public/index.php`
+- merge of the root `composer.json` and the project `composer.json`
+- dependency installation with `--no-dev`
+- compression of `vendor/`
+- FTP upload of the framework, the project, and the public folder
+- upload of `vendor.zip`
+- execution of a temporary unzip script on the server side
 
-Clés attendues dans `deploy.config.php` :
+Expected keys in `deploy.config.php`:
 
 - `ftp.host`
 - `ftp.user`
@@ -2308,7 +2308,7 @@ Clés attendues dans `deploy.config.php` :
 - `remote.framework_dir`
 - `remote.public_dir`
 
-Exemple :
+Example:
 
 ```php
 <?php
@@ -2328,13 +2328,13 @@ return [
 ];
 ```
 
-## Dépendances et prérequis
+## Dependencies and requirements
 
 ### PHP
 
 - PHP `>= 8.5`
 
-### Extensions PHP requises
+### Required PHP extensions
 
 - `ext-pdo`
 - `ext-zip`
@@ -2346,7 +2346,7 @@ return [
 - `ext-simplexml`
 - `ext-fileinfo`
 
-### Dépendances principales
+### Main dependencies
 
 - `twig/twig`
 - `twig/intl-extra`
@@ -2356,36 +2356,36 @@ return [
 - `phpmailer/phpmailer`
 - `predis/predis`
 
-### Dépendances de développement
+### Development dependencies
 
 - `phpunit/phpunit`
 - `phpstan/phpstan`
 
-## Résume
+## Summary
 
-NeoPHP couvre aujourd'hui :
+NeoPHP currently covers:
 
-- noyau applicatif multi-projets
-- conteneur DI avec autowiring
-- configuration par fichiers PHP
-- couche HTTP, responses, sessions, cookies et flash
-- routing par attributs
-- contrôleurs et vues Twig
-- pipeline d'assets CSS, JS et Less
-- traduction par chaînes, un fichier par locale, synchronisation via CLI
-- ORM Data Mapper : entités POPO annotées (`#[Entity]`, `#[Column]`, relations), `EntityManager`, `EntityRepository`
-- migrations pilotées depuis les entités via `database:orm:diff`
-- migrations de base de données et suivi des snapshots de schéma
-- formulaires via `FormFactory` / `FormBuilder`, validation, upload et CSRF
-- auth session / token, mot de passe, middlewares et `#[IsGranted]`
-- events et crons
-- cache, logs, mailer, profiler et gestion des erreurs
-- CLI de génération et d'administration (`project:create`, `make:entity`, `database:orm:diff`, etc.)
-- testing manuel et génération automatique via `#[Test]`
-- déploiement FTP intégré
+- multi-project application core
+- DI container with autowiring
+- configuration via PHP files
+- HTTP layer, responses, sessions, cookies, and flash
+- attribute-based routing
+- controllers and Twig views
+- CSS, JS, and Less asset pipeline
+- string-based translation, one file per locale, CLI sync
+- Data Mapper ORM: annotated POPO entities (`#[Entity]`, `#[Column]`, relations), `EntityManager`, `EntityRepository`
+- entity-driven migrations via `database:orm:diff`
+- database migrations and schema snapshot tracking
+- forms via `FormFactory` / `FormBuilder`, validation, upload, and CSRF
+- session / token auth, password, middlewares, and `#[IsGranted]`
+- events and crons
+- cache, logs, mailer, profiler, and error handling
+- generation and admin CLI (`project:create`, `make:entity`, `database:orm:diff`, etc.)
+- manual testing and automatic generation via `#[Test]`
+- built-in FTP deployment
 
-Le point clé du dépôt reste le même :
+The key point of the repository stays the same:
 
-- `neo/` contient le moteur
-- `src/` contient les applications
-- `php bin/neo ...` pilote l'essentiel du workflow
+- `neo/` holds the engine
+- `src/` holds the applications
+- `php bin/neo ...` drives most of the workflow

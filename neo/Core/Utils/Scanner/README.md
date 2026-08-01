@@ -1,16 +1,16 @@
 # Scanner
 
-Le sous-module `Scanner` fournit un outil de réflexion pour découvrir et lire les attributs PHP 8 sur une classe, ses méthodes, ses propriétés et les paramètres de ses méthodes.
+The `Scanner` submodule provides a reflection tool for discovering and reading PHP 8 attributes on a class, its methods, its properties, and its methods' parameters.
 
 ---
 
-## Sommaire
+## Table of Contents
 
 1. [Structure](#structure)
 2. [ScannerAttributeManager](#scannerattributemanager)
-3. [Configuration du scan](#configuration-du-scan)
+3. [Scan Configuration](#scan-configuration)
 4. [AttributeScanResult](#attributescanresult)
-5. [Cas d'usage](#cas-dusage)
+5. [Use Cases](#use-cases)
 
 ---
 
@@ -18,18 +18,18 @@ Le sous-module `Scanner` fournit un outil de réflexion pour découvrir et lire 
 
 ```
 Scanner/
-├── ScannerAttributeManager.php         # Outil de réflexion sur les attributs PHP
-├── AttributeScanResult.php             # DTO représentant une entrée de résultat de scan
-├── ScannerModule.php                   # Enregistrement DI
+├── ScannerAttributeManager.php         # Reflection tool for PHP attributes
+├── AttributeScanResult.php             # DTO representing a scan result entry
+├── ScannerModule.php                   # DI registration
 └── Extension/
-    └── ScannerControllerExtension.php  # Injecte getScanner() dans les contrôleurs
+    └── ScannerControllerExtension.php  # Injects getScanner() into controllers
 ```
 
 ---
 
 ## ScannerAttributeManager
 
-**Fichier :** `ScannerAttributeManager.php`
+**File:** `ScannerAttributeManager.php`
 
 ```php
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
@@ -37,56 +37,56 @@ use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 $scanner = new ScannerAttributeManager(MyController::class);
 
 $results = $scanner
-    ->onClass()           // Scanner la classe elle-même
-    ->onMethods()         // Scanner les méthodes
-    ->onProperties()      // Scanner les propriétés
-    ->onParameters()      // Scanner les paramètres de méthodes
-    ->withAttribute(Route::class) // Filtrer par attribut spécifique
+    ->onClass()           // Scan the class itself
+    ->onMethods()         // Scan the methods
+    ->onProperties()      // Scan the properties
+    ->onParameters()      // Scan the methods' parameters
+    ->withAttribute(Route::class) // Filter by a specific attribute
     ->scan();
 ```
 
-`scan()` retourne une `list<AttributeScanResult>`.
+`scan()` returns a `list<AttributeScanResult>`.
 
 ---
 
-## Configuration du scan
+## Scan Configuration
 
-### Portée
+### Scope
 
-| Méthode | Cible |
+| Method | Target |
 |---------|-------|
-| `onClass()` | La classe elle-même |
-| `onMethods(?int $filter)` | Méthodes (filtre `ReflectionMethod::IS_PUBLIC`, etc.) |
-| `onProperties(?int $filter)` | Propriétés |
-| `onParameters()` | Paramètres de méthodes |
-| `onAll()` | Tout (classe + méthodes + propriétés + paramètres) |
+| `onClass()` | The class itself |
+| `onMethods(?int $filter)` | Methods (filter `ReflectionMethod::IS_PUBLIC`, etc.) |
+| `onProperties(?int $filter)` | Properties |
+| `onParameters()` | Methods' parameters |
+| `onAll()` | Everything (class + methods + properties + parameters) |
 
-### Filtre d'attribut
+### Attribute Filter
 
 ```php
-// Filtrer par un attribut spécifique
+// Filter by a specific attribute
 ->withAttribute(Route::class)
 
-// Scanner tous les attributs sans filtre
+// Scan all attributes with no filter
 ->withAllAttributes()
 ```
 
-### Exemples
+### Examples
 
 ```php
-// Méthodes publiques uniquement
+// Public methods only
 $results = (new ScannerAttributeManager(MyController::class))
     ->onMethods(ReflectionMethod::IS_PUBLIC)
     ->withAttribute(Route::class)
     ->scan();
 
-// Propriétés privées et protégées
+// Private and protected properties
 $results = (new ScannerAttributeManager(MyService::class))
     ->onProperties(ReflectionProperty::IS_PRIVATE | ReflectionProperty::IS_PROTECTED)
     ->withAttribute(Inject::class)
     ->scan();
 
-// Tout sans filtre d'attribut
+// Everything with no attribute filter
 $results = (new ScannerAttributeManager(MyClass::class))
     ->onAll()
     ->withAllAttributes()
@@ -97,28 +97,28 @@ $results = (new ScannerAttributeManager(MyClass::class))
 
 ## AttributeScanResult
 
-**Fichier :** `AttributeScanResult.php`
+**File:** `AttributeScanResult.php`
 
-DTO qui remplace le tableau associatif `array{target, attribute, arguments, type, reflection}` autrefois retourné par `scan()`. Chaque entrée de résultat est désormais une instance de cette classe, exposée via des getters :
+DTO that replaces the associative array `array{target, attribute, arguments, type, reflection}` formerly returned by `scan()`. Each result entry is now an instance of this class, exposed via getters:
 
 ```php
 class AttributeScanResult
 {
     public function __construct(
-        private string $target,       // Étiquette lisible, ex. 'MyController::index()'
-        private object $attribute,    // Instance de l'attribut
-        private array $arguments,     // Arguments bruts du constructeur de l'attribut
+        private string $target,       // Human-readable label, e.g. 'MyController::index()'
+        private object $attribute,    // Instance of the attribute
+        private array $arguments,     // Raw arguments of the attribute's constructor
         private string $type,         // 'class'|'method'|'property'|'parameter'
         private ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionParameter $reflection,
     ) {}
 }
 ```
 
-Accès via `getTarget()`, `getAttribute()`, `getArguments()`, `getType()`, `getReflection()`. Le type retourné par `getReflection()` dépend de `getType()` : un consommateur qui a besoin d'un `ReflectionMethod` doit vérifier `instanceof ReflectionMethod` avant de l'utiliser (le nom de la classe étant `class`, `method`, `property` ou `parameter`, le type de réflexion associé varie en conséquence).
+Access via `getTarget()`, `getAttribute()`, `getArguments()`, `getType()`, `getReflection()`. The type returned by `getReflection()` depends on `getType()`: a consumer that needs a `ReflectionMethod` must check `instanceof ReflectionMethod` before using it (since the class name is `class`, `method`, `property`, or `parameter`, the associated reflection type varies accordingly).
 
 ```php
 foreach ($results as $entry) {
-    $route = $entry->getAttribute();       // instance de l'attribut, ex. Route
+    $route = $entry->getAttribute();       // instance of the attribute, e.g. Route
     $reflection = $entry->getReflection(); // ReflectionMethod, ReflectionClass, ...
 
     if ($reflection instanceof ReflectionMethod) {
@@ -129,9 +129,9 @@ foreach ($results as $entry) {
 
 ---
 
-## Cas d'usage
+## Use Cases
 
-### Découverte de routes
+### Route Discovery
 
 ```php
 $scanner = new ScannerAttributeManager(HomeController::class);
@@ -158,7 +158,7 @@ foreach ($routes as $entry) {
 }
 ```
 
-### Injection de dépendances via attribut
+### Dependency Injection via Attribute
 
 ```php
 $scanner = new ScannerAttributeManager(MyService::class);
@@ -183,4 +183,4 @@ foreach ($injects as $entry) {
 
 ### Performance
 
-Pour les scans fréquents (ex. : découverte de routes au démarrage), il est recommandé de mettre les résultats en cache via `CacheManager` (driver `array` ou `files`) afin d'éviter le coût de la réflexion à chaque requête.
+For frequent scans (e.g. route discovery at startup), it is recommended to cache the results via `CacheManager` (`array` or `files` driver) in order to avoid the cost of reflection on every request.

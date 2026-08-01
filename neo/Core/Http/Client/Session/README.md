@@ -1,16 +1,16 @@
 # Session
 
-`Neo\Core\Http\Client\Session\Session` encapsule la session PHP native avec une configuration centralisée et un comportement no-op silencieux en CLI.
+`Neo\Core\Http\Client\Session\Session` encapsulates the native PHP session with centralized configuration and a silent no-op behavior in CLI.
 
 ---
 
-## Sommaire
+## Summary
 
 1. [Structure](#structure)
 2. [Configuration](#configuration)
-3. [Utilisation](#utilisation)
-4. [Extension contrôleur](#extension-contrôleur)
-5. [Comportement CLI](#comportement-cli)
+3. [Usage](#usage)
+4. [Controller Extension](#controller-extension)
+5. [CLI Behavior](#cli-behavior)
 
 ---
 
@@ -18,76 +18,76 @@
 
 ```
 Client/Session/
-├── Session.php                          # Gestion de la session PHP
+├── Session.php                          # PHP session management
 └── Extension/
-    └── SessionControllerExtension.php   # Injecte getSession() dans les contrôleurs
+    └── SessionControllerExtension.php   # Injects getSession() into controllers
 ```
 
 ---
 
 ## Configuration
 
-La session est configurée depuis `session.config.php`, clé `session` :
+The session is configured from `session.config.php`, under the `session` key:
 
 ```php
 return [
     'session' => [
         'enabled'   => true,
         'name'      => 'neo_session',
-        'lifetime'  => 7200,       // Durée en secondes
-        'secure'    => true,       // Cookie HTTPS uniquement
-        'http_only' => true,       // Cookie inaccessible en JavaScript
-        'same_site' => 'Lax',     // Politique SameSite
+        'lifetime'  => 7200,       // Duration in seconds
+        'secure'    => true,       // HTTPS-only cookie
+        'http_only' => true,       // Cookie inaccessible from JavaScript
+        'same_site' => 'Lax',     // SameSite policy
         'storage'   => [
             'enabled' => true,
-            'handler' => 'files',  // Stockage fichier
+            'handler' => 'files',  // File-based storage
         ],
     ],
 ];
 ```
 
-Les fichiers de session sont stockés dans `src/<Projet>/Storage/var/cache/session/`.
+Session files are stored in `src/<Project>/Storage/var/cache/session/`.
 
 ---
 
-## Utilisation
+## Usage
 
 ```php
 $session = $container->get(Session::class);
 
-// Écrire
+// Write
 $session->set('user_id', 42);
 
-// Lire
+// Read
 $session->get('user_id');           // 42
-$session->get('missing', 'défaut'); // 'défaut'
+$session->get('missing', 'default'); // 'default'
 
-// Vérifier l'existence
+// Check existence
 $session->has('user_id');           // true
 
-// Supprimer une clé
+// Remove a key
 $session->remove('user_id');
 
-// Accéder à toute la session
-$session->all();   // array complet de $_SESSION
+// Access the whole session
+$session->all();   // full $_SESSION array
 
-// Vider la session
-$session->clear(); // vide $_SESSION sans la détruire
+// Clear the session
+$session->clear(); // clears $_SESSION without destroying it
 
-// Regénérer l'ID (à appeler après un login)
+// Regenerate the ID (call after a login)
 $session->regenerate();
 
-// Détruire la session
+// Destroy the session
 $session->destroy();
 ```
 
 ---
 
-## Extension contrôleur
+## Controller Extension
 
-**Fichier :** `Extension/SessionControllerExtension.php`
+**File:** `Extension/SessionControllerExtension.php`
 
-Injecte automatiquement `getSession()` dans tous les contrôleurs.
+Automatically injects `getSession()` into every controller.
 
 ```php
 class AuthController extends AbstractController
@@ -95,7 +95,7 @@ class AuthController extends AbstractController
     #[Route('/login', 'POST')]
     public function login(): Response
     {
-        // ... vérification des credentials
+        // ... credentials verification
 
         $this->getSession()->set('user_id', $user->getId());
         $this->getSession()->regenerate();
@@ -114,6 +114,6 @@ class AuthController extends AbstractController
 
 ---
 
-## Comportement CLI
+## CLI Behavior
 
-En contexte CLI (`PHP_SAPI === 'cli'`), le constructeur détecte l'environnement et toutes les méthodes (`set`, `get`, `has`, `remove`, `all`, `clear`, `regenerate`, `destroy`) deviennent des no-ops silencieux. Aucune session PHP n'est démarrée.
+In a CLI context (`PHP_SAPI === 'cli'`), the constructor detects the environment and every method (`set`, `get`, `has`, `remove`, `all`, `clear`, `regenerate`, `destroy`) becomes a silent no-op. No PHP session is started.

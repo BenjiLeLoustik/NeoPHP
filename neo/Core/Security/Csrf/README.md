@@ -1,16 +1,16 @@
 # CSRF
 
-Le sous-module `Csrf` protège les formulaires et les requêtes HTTP contre les attaques Cross-Site Request Forgery via des tokens de session.
+The `Csrf` submodule protects forms and HTTP requests against Cross-Site Request Forgery attacks via session tokens.
 
 ---
 
-## Sommaire
+## Summary
 
 1. [Structure](#structure)
 2. [CsrfManager](#csrfmanager)
 3. [CsrfTokenManager](#csrftokenmanager)
 4. [CsrfToken](#csrftoken)
-5. [Extension Twig](#extension-twig)
+5. [Twig Extension](#twig-extension)
 6. [CsrfMiddleware](#csrfmiddleware)
 
 ---
@@ -19,58 +19,58 @@ Le sous-module `Csrf` protège les formulaires et les requêtes HTTP contre les 
 
 ```
 Csrf/
-├── CsrfManager.php                     # Token unique par session
-├── CsrfTokenManager.php                # Tokens nommés avec expiration
-├── CsrfModule.php                      # Enregistrement DI
+├── CsrfManager.php                     # Single token per session
+├── CsrfTokenManager.php                # Named tokens with expiration
+├── CsrfModule.php                      # DI registration
 ├── Exception/
 │   └── CsrfException.php
 ├── Extension/
-│   └── CsrfViewExtension.php           # Fonction Twig csrf_token()
+│   └── CsrfViewExtension.php           # csrf_token() Twig function
 └── Token/
-    └── CsrfToken.php                   # Value object token
+    └── CsrfToken.php                   # Token value object
 ```
 
 ---
 
 ## CsrfManager
 
-**Fichier :** `CsrfManager.php`
+**File:** `CsrfManager.php`
 
-Gère un **token unique par session**, stocké sous la clé `_csrf_token`. C'est le composant utilisé par `CsrfMiddleware`.
+Manages a **single token per session**, stored under the `_csrf_token` key. This is the component used by `CsrfMiddleware`.
 
 ```php
 $csrf = $container->get(CsrfManager::class);
 
-// Générer ou récupérer le token de la session courante
+// Generate or retrieve the current session's token
 $token = $csrf->generate();
 
-// Lire le token sans le créer
+// Read the token without creating it
 $token = $csrf->token();
 
-// Valider le token envoyé dans la requête
+// Validate the token sent in the request
 $isValid = $csrf->validate();
 
-// Forcer la régénération du token
+// Force the token to regenerate
 $csrf->refresh();
 ```
 
-**Sources du token dans la requête (dans l'ordre) :**
+**Token sources in the request (in order):**
 
-1. `body('_csrf_token')` — champ caché dans un formulaire HTML.
-2. `header('X-CSRF-Token')` — header HTTP (pour les requêtes AJAX).
+1. `body('_csrf_token')` — hidden field in an HTML form.
+2. `header('X-CSRF-Token')` — HTTP header (for AJAX requests).
 
-**Comparaison sécurisée :** `hash_equals()` est utilisé pour prévenir les attaques temporelles.
+**Secure comparison:** `hash_equals()` is used to prevent timing attacks.
 
-**Exemple dans un contrôleur :**
+**Example in a controller:**
 
 ```php
 #[Route('/profile/edit', 'POST')]
 public function edit(): Response
 {
-    // Le CsrfMiddleware valide automatiquement si configuré.
-    // Sinon, validation manuelle :
+    // CsrfMiddleware validates automatically if configured.
+    // Otherwise, manual validation:
     if (!$this->csrfManager->validate()) {
-        throw new \RuntimeException('Token CSRF invalide.');
+        throw new \RuntimeException('Invalid CSRF token.');
     }
     // ...
 }
@@ -80,62 +80,62 @@ public function edit(): Response
 
 ## CsrfTokenManager
 
-**Fichier :** `CsrfTokenManager.php`
+**File:** `CsrfTokenManager.php`
 
-Alternative avancée au `CsrfManager`. Gère des **tokens nommés avec expiration individuelle**, un par formulaire, en parallèle.
+Advanced alternative to `CsrfManager`. Manages **named tokens with individual expiration**, one per form, in parallel.
 
 ```php
 $manager = $container->get(CsrfTokenManager::class);
 
-// Générer un token pour un formulaire spécifique (expire dans 3600s)
+// Generate a token for a specific form (expires in 3600s)
 $token = $manager->generateToken('contact_form', expiry: 3600);
-$tokenValue = $token->getValue(); // Chaîne hex de 64 caractères
+$tokenValue = $token->getValue(); // 64-character hex string
 
-// Récupérer un token existant
+// Retrieve an existing token
 $token = $manager->getToken('contact_form'); // CsrfToken|null
 
-// Valider et consommer le token (invalidate: true = suppression après validation)
+// Validate and consume the token (invalidate: true = removed after validation)
 $isValid = $manager->validateToken('contact_form', $submittedValue, invalidate: true);
 ```
 
-**Stockage :** `$_SESSION['_csrf_tokens']['<id>']`
+**Storage:** `$_SESSION['_csrf_tokens']['<id>']`
 
-**Token expiré :** si expiré lors de la validation, il est supprimé de la session et la méthode retourne `false`.
+**Expired token:** if expired at validation time, it is removed from the session and the method returns `false`.
 
-**Comportement CLI :** en contexte CLI (`PHP_SAPI === 'cli'`), toutes les opérations sont des no-ops silencieux.
+**CLI behavior:** in a CLI context (`PHP_SAPI === 'cli'`), every operation is a silent no-op.
 
 ---
 
 ## CsrfToken
 
-**Fichier :** `Token/CsrfToken.php`
+**File:** `Token/CsrfToken.php`
 
-Value object représentant un token nommé.
+Value object representing a named token.
 
 ```php
 $token->getId();       // 'contact_form'
-$token->getValue();    // Chaîne hexadécimale de 64 caractères (32 octets)
-$token->getExpiry();   // Timestamp Unix d'expiration
-$token->isExpired();   // true si time() > expiry
+$token->getValue();    // 64-character hexadecimal string (32 bytes)
+$token->getExpiry();   // Unix expiration timestamp
+$token->isExpired();   // true if time() > expiry
 ```
 
 ---
 
-## Extension Twig
+## Twig Extension
 
-**Fichier :** `Extension/CsrfViewExtension.php`
+**File:** `Extension/CsrfViewExtension.php`
 
-Expose la fonction `csrf_token()` dans tous les templates Twig. Si le token n'existe pas encore en session, il est créé automatiquement.
+Exposes the `csrf_token()` function in every Twig template. If the token does not yet exist in the session, it is created automatically.
 
 ```twig
-{# Token par défaut (identifiant 'default') #}
+{# Default token (id 'default') #}
 <form method="POST" action="{{ path('profile.edit') }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-    {# ... champs du formulaire ... #}
-    <button type="submit">Enregistrer</button>
+    {# ... form fields ... #}
+    <button type="submit">Save</button>
 </form>
 
-{# Token nommé pour un formulaire spécifique #}
+{# Named token for a specific form #}
 <input type="hidden" name="_csrf_token" value="{{ csrf_token('contact_form') }}">
 ```
 
@@ -143,22 +143,22 @@ Expose la fonction `csrf_token()` dans tous les templates Twig. Si le token n'ex
 
 ## CsrfMiddleware
 
-**Fichier :** `../Middleware/Default/CsrfMiddleware.php`
+**File:** `../Middleware/Default/CsrfMiddleware.php`
 
-Valide automatiquement le token CSRF pour toutes les requêtes non-sûres. Les méthodes `GET`, `HEAD` et `OPTIONS` sont ignorées.
+Automatically validates the CSRF token for every non-safe request. `GET`, `HEAD`, and `OPTIONS` methods are ignored.
 
 ```php
 use Neo\Core\Security\Middleware\Attribute\Middleware;
 use Neo\Core\Security\Middleware\Default\CsrfMiddleware;
 
-// Sur un contrôleur entier
-#[Middleware(use: CsrfMiddleware::class, message: 'Token CSRF manquant ou invalide.')]
-class MonController extends AbstractController { ... }
+// On an entire controller
+#[Middleware(use: CsrfMiddleware::class, message: 'Missing or invalid CSRF token.')]
+class MyController extends AbstractController { ... }
 
-// Sur une méthode spécifique
+// On a specific method
 #[Middleware(use: CsrfMiddleware::class)]
 #[Route('/settings', 'POST')]
 public function update(): Response { ... }
 ```
 
-Voir [Middleware/README.md](../Middleware/README.md) pour la configuration complète du pipeline.
+See [Middleware/README.md](../Middleware/README.md) for the full pipeline configuration.

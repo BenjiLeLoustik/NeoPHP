@@ -1,38 +1,38 @@
 # Start Up
 
-Ce guide vous permet de créer votre première application NeoPHP de A à Z. Il suppose une connaissance basique de PHP et de la ligne de commande.
+This guide walks you through building your first NeoPHP application from scratch. It assumes basic knowledge of PHP and the command line.
 
 ---
 
-## Sommaire
+## Table of contents
 
-1. [Prérequis](#1-prérequis)
-2. [Installation du framework](#2-installation-du-framework)
-3. [Créer un nouveau projet](#3-créer-un-nouveau-projet)
-4. [Lancer le serveur de développement](#4-lancer-le-serveur-de-développement)
-5. [Fichiers de configuration](#5-fichiers-de-configuration)
-6. [Routes et contrôleurs](#6-routes-et-contrôleurs)
-7. [Vues avec Twig](#7-vues-avec-twig)
-8. [Base de données et ORM](#8-base-de-données-et-orm)
-9. [Formulaires](#9-formulaires)
-10. [Authentification](#10-authentification)
+1. [Prerequisites](#1-prerequisites)
+2. [Installing the framework](#2-installing-the-framework)
+3. [Creating a new project](#3-creating-a-new-project)
+4. [Starting the development server](#4-starting-the-development-server)
+5. [Configuration files](#5-configuration-files)
+6. [Routes and controllers](#6-routes-and-controllers)
+7. [Views with Twig](#7-views-with-twig)
+8. [Database and ORM](#8-database-and-orm)
+9. [Forms](#9-forms)
+10. [Authentication](#10-authentication)
 11. [Middlewares](#11-middlewares)
-12. [Référence des commandes CLI](#12-référence-des-commandes-cli)
+12. [CLI command reference](#12-cli-command-reference)
 
 ---
 
-## 1. Prérequis
+## 1. Prerequisites
 
-| Outil | Version minimale |
+| Tool | Minimum version |
 |-------|-----------------|
 | PHP | 8.5 |
 | Composer | 2.x |
 | Git | — |
-| MySQL / MariaDB | — (optionnel) |
+| MySQL / MariaDB | — (optional) |
 
-Extensions PHP requises : `pdo`, `zip`, `curl`, `fileinfo`, `dom`, `iconv`.
+Required PHP extensions: `pdo`, `zip`, `curl`, `fileinfo`, `dom`, `iconv`.
 
-Vérification rapide :
+Quick check:
 
 ```bash
 php -v
@@ -42,9 +42,9 @@ composer -V
 
 ---
 
-## 2. Installation du framework
+## 2. Installing the framework
 
-Clonez le dépôt NeoPHP, puis installez les dépendances PHP via Composer :
+Clone the NeoPHP repository, then install the PHP dependencies via Composer:
 
 ```bash
 # HTTPS
@@ -62,24 +62,24 @@ composer install
 
 ---
 
-## 3. Créer un nouveau projet
+## 3. Creating a new project
 
-NeoPHP peut héberger un ou plusieurs projets indépendants dans le dossier `src/`. La commande suivante génère automatiquement toute l'arborescence nécessaire pour un nouveau site :
+NeoPHP can host one or more independent projects in the `src/` folder. The following command automatically generates the entire folder structure needed for a new site:
 
 ```bash
-php bin/neo project:create MonSite
+php bin/neo project:create MySite
 ```
 
-### Structure générée
+### Generated structure
 
-Chaque projet est autonome et regroupe son code, ses templates, sa configuration et ses assets :
+Each project is self-contained, gathering its code, templates, configuration, and assets:
 
 ```
-src/MonSite/
+src/MySite/
 ├── App/
-│   ├── Controllers/        vos contrôleurs
-│   ├── Middlewares/        vos middlewares
-│   └── Services/           vos services métier
+│   ├── Controllers/        your controllers
+│   ├── Middlewares/        your middlewares
+│   └── Services/           your business services
 ├── Assets/
 │   ├── css/
 │   └── js/
@@ -92,54 +92,54 @@ src/MonSite/
 │   ├── session.config.php
 │   └── twig.config.php
 ├── Database/
-│   ├── Entity/             vos entités (modèles)
-│   ├── Migrations/         fichiers de migration SQL
-│   └── Repository/         accès aux données
+│   ├── Entity/             your entities (models)
+│   ├── Migrations/         SQL migration files
+│   └── Repository/         data access
 ├── Storage/                logs, cache, sessions
-├── Templates/              vos templates Twig
-└── Translations/           fichiers de traduction
+├── Templates/              your Twig templates
+└── Translations/           translation files
 ```
 
 ---
 
-## 4. Lancer le serveur de développement
+## 4. Starting the development server
 
-NeoPHP embarque le serveur PHP intégré, pratique pour développer sans configurer Apache ou Nginx en local :
+NeoPHP ships with PHP's built-in server, handy for developing locally without configuring Apache or Nginx:
 
 ```bash
-php bin/neo app:serve MonSite
+php bin/neo app:serve MySite
 ```
 
-Le site est accessible sur **http://localhost:8000**.
+The site is available at **http://localhost:8000**.
 
-> Le point d'entrée HTTP est `public/index.php`. En production, configurez Apache ou Nginx pour pointer la racine web sur ce dossier `public/`.
+> The HTTP entry point is `public/index.php`. In production, configure Apache or Nginx to point the web root at this `public/` folder.
 
 ---
 
-## 5. Fichiers de configuration
+## 5. Configuration files
 
-Chaque projet possède son propre dossier `Config/`, avec un fichier dédié par domaine (application, base de données, moteur de templates, etc.). Voici les trois fichiers à connaître pour démarrer.
+Each project has its own `Config/` folder, with a dedicated file per domain (application, database, template engine, etc.). Here are the three files to know to get started.
 
 ### app.config.php
 
-Fichier de configuration principal du projet. La clé `access` détermine quel projet est servi selon le domaine HTTP appelé, ce qui permet d'héberger plusieurs sites côte à côte.
+The project's main configuration file. The `access` key determines which project is served based on the HTTP domain called, which lets you host several sites side by side.
 
 ```php
-// src/MonSite/Config/app.config.php
+// src/MySite/Config/app.config.php
 return [
     'general' => [
-        'name'    => 'MonSite',
+        'name'    => 'MySite',
         'version' => '1.0.0',
     ],
-    'environment' => 'dev',         // 'dev' ou 'prod'
-    'access'      => 'localhost:8000', // doit correspondre à l'URL d'accès
+    'environment' => 'dev',         // 'dev' or 'prod'
+    'access'      => 'localhost:8000', // must match the access URL
     'date' => [
         'timezone' => 'Europe/Paris',
     ],
 ];
 ```
 
-La section `general` est disponible dans tous les templates via la variable globale `app` :
+The `general` section is available in every template via the `app` global variable:
 
 ```twig
 <title>{{ app.name }}</title>
@@ -147,10 +147,10 @@ La section `general` est disponible dans tous les templates via la variable glob
 
 ### database.config.php
 
-Définit la ou les connexions disponibles pour le projet. Plusieurs connexions peuvent être déclarées sous `connections`, la clé `use` indiquant celle utilisée par défaut.
+Defines the connection(s) available to the project. Several connections can be declared under `connections`, with the `use` key indicating the default one.
 
 ```php
-// src/MonSite/Config/database.config.php
+// src/MySite/Config/database.config.php
 return [
     'enabled' => true,
     'use'     => 'default',
@@ -159,7 +159,7 @@ return [
             'driver'  => 'mysql',
             'host'    => 'localhost',
             'port'    => 3306,
-            'dbname'  => 'monsite',
+            'dbname'  => 'mysite',
             'user'    => 'root',
             'pass'    => '',
             'charset' => 'utf8mb4',
@@ -170,12 +170,12 @@ return [
 
 ### twig.config.php
 
-Réglages du rendu Twig. Pensez à activer `cache` et désactiver `debug` avant une mise en production.
+Twig rendering settings. Remember to enable `cache` and disable `debug` before going to production.
 
 ```php
-// src/MonSite/Config/twig.config.php
+// src/MySite/Config/twig.config.php
 return [
-    'cache'            => false,  // true en production
+    'cache'            => false,  // true in production
     'debug'            => true,
     'auto_reload'      => true,
     'auto_escape'      => 'html',
@@ -186,31 +186,31 @@ return [
 
 ---
 
-## 6. Routes et contrôleurs
+## 6. Routes and controllers
 
-### Générer un contrôleur
+### Generating a controller
 
 ```bash
-php bin/neo make:controller TaskController --project=MonSite
+php bin/neo make:controller TaskController --project=MySite
 ```
 
-Cela crée `src/MonSite/App/Controllers/TaskController.php`.
+This creates `src/MySite/App/Controllers/TaskController.php`.
 
-### Déclarer des routes par attributs
+### Declaring routes via attributes
 
-Les routes sont déclarées par attributs PHP directement sur les classes et méthodes, sans fichier de routage séparé. `#[MainRoute]` définit un préfixe de chemin et de nom pour tout le contrôleur ; `#[Route]` déclare chaque route individuelle.
+Routes are declared via PHP attributes directly on classes and methods, with no separate routing file. `#[MainRoute]` defines a path and name prefix for the whole controller; `#[Route]` declares each individual route.
 
 ```php
 <?php
 declare(strict_types=1);
 
-namespace Neo\Src\MonSite\App\Controllers;
+namespace Neo\Src\MySite\App\Controllers;
 
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Routing\Attribute\MainRoute;
 use Neo\Core\Routing\Attribute\Route;
-use Neo\Src\MonSite\Database\Repository\TaskRepository;
+use Neo\Src\MySite\Database\Repository\TaskRepository;
 
 #[MainRoute(path: '/tasks', name: 'tasks')]
 final class TaskController extends AbstractController
@@ -219,7 +219,7 @@ final class TaskController extends AbstractController
         private TaskRepository $taskRepository
     ) {}
 
-    // GET /tasks/  → nom : tasks.index
+    // GET /tasks/  → name: tasks.index
     #[Route(path: '/', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
@@ -228,23 +228,23 @@ final class TaskController extends AbstractController
         ]);
     }
 
-    // GET /tasks/new  → nom : tasks.new
+    // GET /tasks/new  → name: tasks.new
     #[Route(path: '/new', name: 'new', methods: ['GET'])]
     public function new(): Response
     {
         return $this->render('pages/tasks/form.html.twig');
     }
 
-    // POST /tasks/new  → nom : tasks.create
+    // POST /tasks/new  → name: tasks.create
     #[Route(path: '/new', name: 'create', methods: ['POST'])]
     public function create(): Response
     {
-        // persistance via FormFactory — voir section Formulaires
-        $this->getFlash()->add('success', 'Tâche créée.');
+        // persistence via FormFactory — see the Forms section
+        $this->getFlash()->add('success', 'Task created.');
         return $this->redirect('/tasks');
     }
 
-    // GET /tasks/{id}  → paramètre dynamique
+    // GET /tasks/{id}  → dynamic parameter
     #[Route(path: '/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(int $id): Response
     {
@@ -256,61 +256,61 @@ final class TaskController extends AbstractController
     #[Route(path: '/{id}/delete', name: 'delete', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function delete(int $id): Response
     {
-        // suppression — voir section Base de données
-        $this->getFlash()->add('success', 'Tâche supprimée.');
+        // deletion — see the Database section
+        $this->getFlash()->add('success', 'Task deleted.');
         return $this->redirect('/tasks');
     }
 }
 ```
 
-### Lire les données de la requête
+### Reading request data
 
 ```php
-// Paramètres GET
+// GET parameters
 $page = $this->getRequest()->query('page', 1);
 
-// Corps POST ou JSON
+// POST or JSON body
 $title = $this->getRequest()->body('title');
 
-// En-têtes
+// Headers
 $token = $this->getRequest()->header('Authorization');
 ```
 
-### Construire une réponse
+### Building a response
 
-Un contrôleur peut retourner une vue Twig, une redirection ou une réponse JSON :
+A controller can return a Twig view, a redirect, or a JSON response:
 
 ```php
-// Rendu d'un template Twig
+// Rendering a Twig template
 return $this->render('pages/index.html.twig', ['data' => $data]);
 
-// Redirection
+// Redirect
 return $this->redirect('/tasks');
 
 // JSON
 return $this->json(['status' => 'ok']);
 return $this->jsonSuccess(['id' => 42]);
-return $this->jsonError('Non trouvé', 404);
+return $this->jsonError('Not found', 404);
 ```
 
-### Vérifier les routes enregistrées
+### Checking registered routes
 
-Pratique pour vérifier qu'une route est bien enregistrée et connaître son nom exact :
+Handy for checking that a route is properly registered and knowing its exact name:
 
 ```bash
-php bin/neo debug:router --project=MonSite
+php bin/neo debug:router --project=MySite
 ```
 
 ---
 
-## 7. Vues avec Twig
+## 7. Views with Twig
 
-### Emplacement des templates
+### Template location
 
-Les templates se trouvent dans `src/<Projet>/Templates/`. Le chemin passé à `render()` est **relatif à ce dossier**.
+Templates live in `src/<Project>/Templates/`. The path passed to `render()` is **relative to this folder**.
 
 ```
-src/MonSite/Templates/
+src/MySite/Templates/
 ├── layouts/
 │   └── base.html.twig
 ├── pages/
@@ -322,19 +322,19 @@ src/MonSite/Templates/
 ```
 
 ```php
-// Dans un contrôleur
+// In a controller
 return $this->render('pages/tasks/index.html.twig', ['tasks' => $tasks]);
-//                   ^--- relatif à src/MonSite/Templates/
+//                   ^--- relative to src/MySite/Templates/
 ```
 
-### Créer le layout de base
+### Creating the base layout
 
-Un layout commun définit la structure HTML partagée (head, navigation, footer) que chaque page vient compléter :
+A common layout defines the shared HTML structure (head, navigation, footer) that each page then fills in:
 
 ```twig
-{# src/MonSite/Templates/layouts/base.html.twig #}
+{# src/MySite/Templates/layouts/base.html.twig #}
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}{{ app.name }}{% endblock %}</title>
@@ -342,12 +342,12 @@ Un layout commun définit la structure HTML partagée (head, navigation, footer)
 </head>
 <body>
     <nav>
-        <a href="{{ path('tasks.index') }}">Tâches</a>
+        <a href="{{ path('tasks.index') }}">Tasks</a>
         {% if auth_check() %}
             {{ auth_user().getEmail() }}
-            <a href="/logout">Déconnexion</a>
+            <a href="/logout">Log out</a>
         {% else %}
-            <a href="/login">Connexion</a>
+            <a href="/login">Log in</a>
         {% endif %}
     </nav>
 
@@ -359,112 +359,112 @@ Un layout commun définit la structure HTML partagée (head, navigation, footer)
 </html>
 ```
 
-### Étendre le layout dans une page
+### Extending the layout in a page
 
-Chaque page étend le layout avec `extends` et vient remplir les blocs définis (`title`, `content`, etc.) :
+Each page extends the layout with `extends` and fills in the defined blocks (`title`, `content`, etc.):
 
 ```twig
-{# src/MonSite/Templates/pages/tasks/index.html.twig #}
+{# src/MySite/Templates/pages/tasks/index.html.twig #}
 {% extends 'layouts/base.html.twig' %}
 
-{% block title %}Mes tâches{% endblock %}
+{% block title %}My tasks{% endblock %}
 
 {% block content %}
-    <h1>Mes tâches</h1>
+    <h1>My tasks</h1>
 
-    <a href="{{ path('tasks.new') }}">Nouvelle tâche</a>
+    <a href="{{ path('tasks.new') }}">New task</a>
 
     <ul>
         {% for task in tasks %}
             <li>{{ task.getTitle() }}</li>
         {% else %}
-            <li>Aucune tâche.</li>
+            <li>No tasks.</li>
         {% endfor %}
     </ul>
 {% endblock %}
 ```
 
-### Afficher un formulaire dans une vue
+### Displaying a form in a view
 
-Le système de formulaires expose des fonctions Twig natives, avec plusieurs niveaux de granularité selon le contrôle souhaité sur le rendu. Le token CSRF est inclus automatiquement.
+The form system exposes native Twig functions, with several levels of granularity depending on how much control you want over the rendering. The CSRF token is included automatically.
 
 ```twig
-{# src/MonSite/Templates/pages/tasks/form.html.twig #}
+{# src/MySite/Templates/pages/tasks/form.html.twig #}
 {% extends 'layouts/base.html.twig' %}
 
 {% block content %}
-    <h1>Nouvelle tâche</h1>
+    <h1>New task</h1>
 
-    {# Rendu complet automatique #}
+    {# Full automatic rendering #}
     {{ form(form, path('tasks.create')) }}
 
-    {# Ou rendu champ par champ #}
+    {# Or field-by-field rendering #}
     {{ form_start(form, path('tasks.create')) }}
         {{ form_row(form, 'title') }}
-        <button type="submit">Créer</button>
+        <button type="submit">Create</button>
     {{ form_end() }}
 
-    {# Ou rendu granulaire #}
+    {# Or granular rendering #}
     {{ form_start(form, path('tasks.create')) }}
         <div class="field">
             {{ form_label(form, 'title') }}
             {{ form_widget(form, 'title') }}
             {{ form_errors(form, 'title') }}
         </div>
-        <button type="submit">Créer</button>
+        <button type="submit">Create</button>
     {{ form_end() }}
 {% endblock %}
 ```
 
-### Fonctions et variables globales
+### Functions and global variables
 
-| Élément | Description |
+| Element | Description |
 |---------|-------------|
-| `app.name`, `app.version` | Valeurs de la section `general` dans `app.config.php` |
-| `app.session.get('clé')` | Lecture d'une valeur de session |
-| `app.cookie.get('clé')` | Lecture d'un cookie |
-| `path('nom.route')` | Génère l'URL d'une route nommée |
-| `path('nom.route', {id: 1})` | Génère l'URL avec paramètres |
-| `asset('css/app.css')` | URL versionnée d'un asset compilé |
-| `csrf_token()` | Token CSRF (à inclure dans chaque formulaire POST) |
-| `flashes()` | Rendu HTML des messages flash en attente |
-| `auth_check()` | `true` si l'utilisateur est connecté |
-| `auth_user()` | Objet utilisateur courant |
-| `auth_has_role('admin')` | `true` si l'utilisateur possède le rôle |
-| `translate('clé')` | Traduction d'une clé |
+| `app.name`, `app.version` | Values from the `general` section of `app.config.php` |
+| `app.session.get('key')` | Reads a session value |
+| `app.cookie.get('key')` | Reads a cookie |
+| `path('route.name')` | Generates the URL of a named route |
+| `path('route.name', {id: 1})` | Generates the URL with parameters |
+| `asset('css/app.css')` | Versioned URL of a compiled asset |
+| `csrf_token()` | CSRF token (to include in every POST form) |
+| `flashes()` | HTML rendering of pending flash messages |
+| `auth_check()` | `true` if the user is logged in |
+| `auth_user()` | Current user object |
+| `auth_has_role('admin')` | `true` if the user has the role |
+| `translate('key')` | Translation of a key |
 
-### Compiler les assets CSS/JS
+### Compiling CSS/JS assets
 
-Placez vos fichiers CSS et JS dans `src/MonSite/Assets/` puis recompilez-les à chaque modification :
+Put your CSS and JS files in `src/MySite/Assets/`, then recompile them after every change:
 
 ```bash
-php bin/neo asset:reload --project=MonSite
+php bin/neo asset:reload --project=MySite
 ```
 
 ---
 
-## 8. Base de données et ORM
+## 8. Database and ORM
 
-### Créer la base de données
-
-```bash
-php bin/neo database:create --project=MonSite
-```
-
-### Générer une entité
-
-Une entité représente une table en base sous forme de classe PHP. La commande est interactive : elle vous demande les propriétés et leurs types.
+### Creating the database
 
 ```bash
-php bin/neo make:entity Task --project=MonSite
+php bin/neo database:create --project=MySite
 ```
 
-Exemple de propriétés à saisir : `title` (string), `done` (boolean).
+### Generating an entity
 
-Deux fichiers sont générés :
+An entity represents a database table as a PHP class. The command is interactive: it asks you for the properties and their types.
+
+```bash
+php bin/neo make:entity Task --project=MySite
+```
+
+Example properties to enter: `title` (string), `done` (boolean).
+
+Two files are generated:
 
 ```php
-// src/MonSite/Database/Entity/Task.php
+// src/MySite/Database/Entity/Task.php
 use Neo\Core\Database\ORM\Mapping\Attribute\Entity;
 use Neo\Core\Database\ORM\Mapping\Attribute\Table;
 use Neo\Core\Database\ORM\Mapping\Attribute\Id;
@@ -495,33 +495,33 @@ class Task
 ```
 
 ```php
-// src/MonSite/Database/Repository/TaskRepository.php
+// src/MySite/Database/Repository/TaskRepository.php
 use Neo\Core\Database\ORM\Persistence\EntityRepository;
 
 class TaskRepository extends EntityRepository
 {
-    // findAll(), find(), findBy(), findOneBy() disponibles par défaut
+    // findAll(), find(), findBy(), findOneBy() available by default
 }
 ```
 
 ### Migrations
 
-Une migration traduit les changements d'une entité en instructions SQL. Le flux habituel : générer, vérifier, puis appliquer.
+A migration translates an entity's changes into SQL instructions. The usual flow: generate, check, then apply.
 
 ```bash
-# Aperçu sans écrire de fichier
-php bin/neo database:orm:diff --project=MonSite --name=create_tasks_table --dry-run
+# Preview without writing a file
+php bin/neo database:orm:diff --project=MySite --name=create_tasks_table --dry-run
 
-# Génère le fichier de migration
-php bin/neo database:orm:diff --project=MonSite --name=create_tasks_table
+# Generate the migration file
+php bin/neo database:orm:diff --project=MySite --name=create_tasks_table
 
-# Applique toutes les migrations en attente
-php bin/neo database:migration:migrate --project=MonSite
+# Apply all pending migrations
+php bin/neo database:migration:migrate --project=MySite
 ```
 
-### L'EntityManager
+### The EntityManager
 
-L'`EntityManager` centralise la persistance (création, modification, suppression) et est injecté automatiquement via le constructeur ou récupéré depuis le conteneur :
+The `EntityManager` centralizes persistence (create, update, delete) and is automatically injected via the constructor or retrieved from the container:
 
 ```php
 use Neo\Core\Database\ORM\Persistence\EntityManager;
@@ -543,7 +543,7 @@ final class TaskController extends AbstractController
         $this->em->persist($task);
         $this->em->flush();
 
-        $this->getFlash()->add('success', 'Tâche créée.');
+        $this->getFlash()->add('success', 'Task created.');
         return $this->redirect('/tasks');
     }
 
@@ -554,26 +554,26 @@ final class TaskController extends AbstractController
         $this->em->remove($task);
         $this->em->flush();
 
-        $this->getFlash()->add('success', 'Tâche supprimée.');
+        $this->getFlash()->add('success', 'Task deleted.');
         return $this->redirect('/tasks');
     }
 }
 ```
 
-### Méthodes de l'EntityManager
+### EntityManager methods
 
-| Méthode | Description |
+| Method | Description |
 |---------|-------------|
-| `persist($entity)` | Enregistre une entité pour insertion |
-| `remove($entity)` | Marque une entité pour suppression |
-| `flush()` | Exécute toutes les opérations en base |
-| `find(Task::class, $id)` | Recherche par identifiant |
-| `getRepository(Task::class)` | Retourne le repository associé |
-| `wrapInTransaction(fn)` | Exécute un callback dans une transaction |
+| `persist($entity)` | Registers an entity for insertion |
+| `remove($entity)` | Marks an entity for deletion |
+| `flush()` | Runs all pending database operations |
+| `find(Task::class, $id)` | Lookup by identifier |
+| `getRepository(Task::class)` | Returns the associated repository |
+| `wrapInTransaction(fn)` | Runs a callback within a transaction |
 
-### Requêtes personnalisées du repository
+### Custom repository queries
 
-Chaque entité possède un repository dédié, où l'on peut ajouter des méthodes de requête métier via le query builder :
+Each entity has a dedicated repository, where you can add business query methods via the query builder:
 
 ```php
 class TaskRepository extends EntityRepository
@@ -590,11 +590,11 @@ class TaskRepository extends EntityRepository
 
 ---
 
-## 9. Formulaires
+## 9. Forms
 
-Le framework dispose d'un système de formulaires complet via `FormFactory`, `FormBuilder` et `FormRenderer`. Il gère la création des champs, la validation, le mapping vers une entité et l'inclusion automatique du token CSRF.
+The framework has a full form system via `FormFactory`, `FormBuilder`, and `FormRenderer`. It handles field creation, validation, mapping to an entity, and automatically includes the CSRF token.
 
-### Traiter le formulaire dans le contrôleur
+### Handling the form in the controller
 
 ```php
 use Neo\Core\Database\Form\FormFactory;
@@ -609,7 +609,7 @@ final class TaskController extends AbstractController
         private EntityManager $em
     ) {}
 
-    // Formulaire de création (GET + POST sur la même route)
+    // Creation form (GET + POST on the same route)
     #[Route(path: '/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(): Response
     {
@@ -629,20 +629,20 @@ final class TaskController extends AbstractController
             $this->em->persist($task);
             $this->em->flush();
 
-            $this->getFlash()->add('success', 'Tâche créée.');
+            $this->getFlash()->add('success', 'Task created.');
             return $this->redirect('/tasks');
         }
 
         return $this->render('pages/tasks/form.html.twig', ['form' => $form]);
     }
 
-    // Formulaire d'édition lié à une entité existante
+    // Edit form bound to an existing entity
     #[Route(path: '/{id}/edit', name: 'edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
     public function edit(int $id): Response
     {
         $task = $this->taskRepository->find($id);
 
-        // createFor() pré-remplit le formulaire depuis les getters de l'entité
+        // createFor() pre-fills the form from the entity's getters
         $builder = $this->formFactory->createFor($task, 'edit_task');
         $builder->add('title', 'text', ['required' => true]);
 
@@ -650,10 +650,10 @@ final class TaskController extends AbstractController
         $form->handleRequest($_POST);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Les données sont mappées automatiquement vers $task via les setters
+            // Data is automatically mapped to $task via the setters
             $this->em->flush();
 
-            $this->getFlash()->add('success', 'Tâche mise à jour.');
+            $this->getFlash()->add('success', 'Task updated.');
             return $this->redirect('/tasks');
         }
 
@@ -662,39 +662,39 @@ final class TaskController extends AbstractController
 }
 ```
 
-### Afficher le formulaire dans le template
+### Displaying the form in the template
 
-Trois niveaux de rendu sont possibles, du plus automatique au plus granulaire :
+Three levels of rendering are possible, from most automatic to most granular:
 
 ```twig
 {% extends 'layouts/base.html.twig' %}
 
 {% block content %}
-    {# Rendu complet automatique (inclut le CSRF, les labels, les erreurs) #}
+    {# Full automatic rendering (includes CSRF, labels, errors) #}
     {{ form(form, path('tasks.new')) }}
 
-    {# Rendu champ par champ #}
+    {# Field-by-field rendering #}
     {{ form_start(form, path('tasks.new')) }}
         {{ form_row(form, 'title') }}
         {{ form_row(form, 'done') }}
-        <button type="submit">Enregistrer</button>
+        <button type="submit">Save</button>
     {{ form_end() }}
 
-    {# Rendu granulaire : label, widget et erreurs séparés #}
+    {# Granular rendering: label, widget, and errors separated #}
     {{ form_start(form, path('tasks.new')) }}
         <div class="field">
             {{ form_label(form, 'title') }}
             {{ form_widget(form, 'title') }}
             {{ form_errors(form, 'title') }}
         </div>
-        <button type="submit">Enregistrer</button>
+        <button type="submit">Save</button>
     {{ form_end() }}
 {% endblock %}
 ```
 
-### Types de champs disponibles
+### Available field types
 
-| Type | HTML généré |
+| Type | Generated HTML |
 |------|-------------|
 | `text` | `<input type="text">` |
 | `email` | `<input type="email">` |
@@ -706,58 +706,58 @@ Trois niveaux de rendu sont possibles, du plus automatique au plus granulaire :
 | `date` | `<input type="date">` |
 | `hidden` | `<input type="hidden">` |
 
-### Fonctions Twig des formulaires
+### Form Twig functions
 
-| Fonction | Description |
+| Function | Description |
 |----------|-------------|
-| `form(form, action)` | Rendu complet du formulaire |
-| `form_start(form, action)` | Balise ouvrante `<form>` + CSRF |
-| `form_end()` | Balise fermante `</form>` |
-| `form_row(form, 'champ')` | Label + widget + erreurs |
-| `form_label(form, 'champ')` | Label uniquement |
-| `form_widget(form, 'champ')` | Input uniquement |
-| `form_errors(form, 'champ')` | Erreurs de validation uniquement |
+| `form(form, action)` | Full form rendering |
+| `form_start(form, action)` | Opening `<form>` tag + CSRF |
+| `form_end()` | Closing `</form>` tag |
+| `form_row(form, 'field')` | Label + widget + errors |
+| `form_label(form, 'field')` | Label only |
+| `form_widget(form, 'field')` | Input only |
+| `form_errors(form, 'field')` | Validation errors only |
 
 ---
 
-## 10. Authentification
+## 10. Authentication
 
 ### Configuration
 
-Le mode `session` convient aux applications web classiques ; le mode `token` (JWT) est adapté aux API sans état.
+`session` mode is suited to classic web applications; `token` mode (JWT) is suited to stateless APIs.
 
 ```php
-// src/MonSite/Config/auth.config.php
+// src/MySite/Config/auth.config.php
 return [
     'enabled'    => true,
-    'guard'      => 'session',   // 'session' ou 'token' (JWT)
-    'model'      => \Neo\Src\MonSite\Database\Entity\User::class,
+    'guard'      => 'session',   // 'session' or 'token' (JWT)
+    'model'      => \Neo\Src\MySite\Database\Entity\User::class,
     'identifier' => 'email',
     'password'   => 'password',
     'options' => [
-        'timeout' => 3600,       // déconnexion après inactivité (secondes)
+        'timeout' => 3600,       // logout after inactivity (seconds)
     ],
 ];
 ```
 
-Pour JWT, remplacez `guard` par `'token'` et ajoutez :
+For JWT, replace `guard` with `'token'` and add:
 
 ```php
 'options' => [
-    'secret'     => 'votre-cle-secrete',
+    'secret'     => 'your-secret-key',
     'expiration' => 3600,
     'algorithm'  => 'HS256',
 ],
 ```
 
-### Générer l'entité User
+### Generating the User entity
 
 ```bash
-php bin/neo make:entity User --project=MonSite
-# Propriétés : email (string), password (string), role (string)
+php bin/neo make:entity User --project=MySite
+# Properties: email (string), password (string), role (string)
 ```
 
-### Connexion et inscription
+### Login and registration
 
 ```php
 use Neo\Core\Security\Middleware\Attribute\Middleware;
@@ -784,7 +784,7 @@ final class AuthController extends AbstractController
         ]);
 
         if (!$success) {
-            $this->getFlash()->add('error', 'Identifiants invalides.');
+            $this->getFlash()->add('error', 'Invalid credentials.');
             return $this->redirect('/login');
         }
 
@@ -818,38 +818,38 @@ final class AuthController extends AbstractController
 }
 ```
 
-### Méthodes d'authentification
+### Authentication methods
 
-| Méthode | Description |
+| Method | Description |
 |---------|-------------|
-| `$this->auth()->attempt([...])` | Tentative de connexion par identifiants |
-| `$this->auth()->login($user)` | Connexion directe d'un objet utilisateur |
-| `$this->auth()->logout()` | Déconnexion |
-| `$this->auth()->check()` | `true` si connecté |
-| `$this->auth()->user()` | Objet utilisateur courant |
-| `$this->auth()->hasRole('admin')` | Vérification de rôle |
-| `$this->getPasswordManager()->hash($plain)` | Hachage bcrypt |
-| `$this->getPasswordManager()->verify($plain, $hash)` | Vérification |
+| `$this->auth()->attempt([...])` | Attempts login with credentials |
+| `$this->auth()->login($user)` | Directly logs in a user object |
+| `$this->auth()->logout()` | Logs out |
+| `$this->auth()->check()` | `true` if logged in |
+| `$this->auth()->user()` | Current user object |
+| `$this->auth()->hasRole('admin')` | Role check |
+| `$this->getPasswordManager()->hash($plain)` | Bcrypt hashing |
+| `$this->getPasswordManager()->verify($plain, $hash)` | Verification |
 
 ---
 
 ## 11. Middlewares
 
-Un middleware est une vérification exécutée avant le contrôleur. Il retourne `true` pour laisser passer la requête, `false` pour la bloquer.
+A middleware is a check run before the controller. It returns `true` to let the request through, `false` to block it.
 
-### Générer un middleware
+### Generating a middleware
 
 ```bash
-php bin/neo make:middleware AdminOnly --project=MonSite
+php bin/neo make:middleware AdminOnly --project=MySite
 ```
 
-Cela crée `src/MonSite/App/Middlewares/AdminOnlyMiddleware.php` :
+This creates `src/MySite/App/Middlewares/AdminOnlyMiddleware.php`:
 
 ```php
 <?php
 declare(strict_types=1);
 
-namespace Neo\Src\MonSite\App\Middlewares;
+namespace Neo\Src\MySite\App\Middlewares;
 
 use Neo\Core\Security\Auth\AuthManager;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
@@ -865,11 +865,11 @@ class AdminOnlyMiddleware implements MiddlewareInterface
 }
 ```
 
-Les dépendances du constructeur sont injectées automatiquement par le conteneur DI.
+Constructor dependencies are automatically injected by the DI container.
 
-### Appliquer un middleware
+### Applying a middleware
 
-L'attribut `#[Middleware]` est répétable et peut se placer sur la classe (toutes les routes du contrôleur) ou sur une méthode (une seule route).
+The `#[Middleware]` attribute is repeatable and can be placed on the class (all of the controller's routes) or on a method (a single route).
 
 ```php
 use Neo\Core\Security\Middleware\Attribute\Middleware;
@@ -877,87 +877,86 @@ use Neo\Core\Security\Middleware\Attribute\IsGranted;
 use Neo\Core\Security\Middleware\Default\AuthMiddleware;
 use Neo\Core\Security\Middleware\Default\CsrfMiddleware;
 
-// Protège toutes les routes du contrôleur
+// Protects all of the controller's routes
 #[Middleware(use: AuthMiddleware::class, redirect: 'auth.login')]
 #[MainRoute(path: '/tasks', name: 'tasks')]
 final class TaskController extends AbstractController { ... }
 
-// Protège une seule méthode
+// Protects a single method
 #[Middleware(use: CsrfMiddleware::class)]
 #[Route(path: '/new', name: 'create', methods: ['POST'])]
 public function create(): Response { ... }
 
-// Restriction par rôle (raccourci)
+// Role restriction (shortcut)
 #[IsGranted(roles: ['admin'], redirect: 'auth.login')]
 #[Route(path: '/admin', name: 'admin')]
 public function admin(): Response { ... }
 ```
 
-### Options de l'attribut `#[Middleware]`
+### `#[Middleware]` attribute options
 
-| Paramètre | Défaut | Description |
+| Parameter | Default | Description |
 |-----------|--------|-------------|
-| `use` | — | Classe du middleware |
-| `message` | `''` | Message en cas d'échec |
-| `onError` | `'block'` | `'block'` (403) ou `'soft'` (avertissement, laisse passer) |
-| `redirect` | `null` | Nom de route de redirection si échec |
-| `params` | `[]` | Paramètres supplémentaires pour le constructeur |
-| `priority` | `0` | Ordre d'exécution (décroissant) |
+| `use` | — | Middleware class |
+| `message` | `''` | Message on failure |
+| `onError` | `'block'` | `'block'` (403) or `'soft'` (warning, lets it through) |
+| `redirect` | `null` | Redirect route name on failure |
+| `params` | `[]` | Extra parameters for the constructor |
+| `priority` | `0` | Execution order (descending) |
 
-### Middlewares intégrés
+### Built-in middlewares
 
-| Classe | Description |
+| Class | Description |
 |--------|-------------|
-| `AuthMiddleware` | Vérifie que l'utilisateur est connecté |
-| `GuestMiddleware` | Vérifie que l'utilisateur n'est pas connecté |
-| `CsrfMiddleware` | Valide le token CSRF (POST/PUT/PATCH/DELETE) |
-| `IsGrantedMiddleware` | Vérifie un ou plusieurs rôles (logique OU) |
-| `RoleMiddleware` | Vérifie un rôle unique via `params` |
-| `RateLimitMiddleware` | Limite les requêtes par IP et chemin |
-| `AuthRateLimitMiddleware` | Limite les tentatives de connexion par IP + email |
+| `AuthMiddleware` | Checks that the user is logged in |
+| `GuestMiddleware` | Checks that the user is not logged in |
+| `CsrfMiddleware` | Validates the CSRF token (POST/PUT/PATCH/DELETE) |
+| `IsGrantedMiddleware` | Checks one or more roles (OR logic) |
+| `RoleMiddleware` | Checks a single role via `params` |
+| `RateLimitMiddleware` | Limits requests per IP and path |
+| `AuthRateLimitMiddleware` | Limits login attempts per IP + email |
 
 ---
 
-## 12. Référence des commandes CLI
+## 12. CLI command reference
 
-Récapitulatif de toutes les commandes `php bin/neo` disponibles, regroupées par usage.
+Summary of all available `php bin/neo` commands, grouped by use case.
 
-### Gestion de projet
+### Project management
 
-| Commande | Description |
+| Command | Description |
 |----------|-------------|
-| `project:create <Nom>` | Créer un nouveau projet |
-| `project:create <Nom> --skeleton` | Créer avec structure minimale |
-| `app:serve <Nom>` | Démarrer le serveur PHP intégré |
+| `project:create <Name>` | Create a new project |
+| `project:create <Name> --skeleton` | Create with a minimal structure |
+| `app:serve <Name>` | Start the built-in PHP server |
 
-### Génération de code
+### Code generation
 
-| Commande | Description |
+| Command | Description |
 |----------|-------------|
-| `make:controller <Nom> --project=X` | Générer un contrôleur |
-| `make:controller <Nom> --api --project=X` | Contrôleur API (JSON uniquement) |
-| `make:entity <Nom> --project=X` | Générer une entité et son repository |
-| `make:middleware <Nom> --project=X` | Générer un middleware |
-| `make:event <Nom> --project=X` | Générer un événement |
-| `make:cron <Nom> --project=X` | Générer une tâche planifiée |
-| `app:make:command <Nom> --project=X` | Générer une commande CLI |
+| `make:controller <Name> --project=X` | Generate a controller |
+| `make:controller <Name> --api --project=X` | API controller (JSON only) |
+| `make:entity <Name> --project=X` | Generate an entity and its repository |
+| `make:middleware <Name> --project=X` | Generate a middleware |
+| `make:event <Name> --project=X` | Generate an event |
+| `make:cron <Name> --project=X` | Generate a scheduled task |
+| `app:make:command <Name> --project=X` | Generate a CLI command |
 
-### Base de données et migrations
+### Database and migrations
 
-| Commande | Description |
+| Command | Description |
 |----------|-------------|
-| `database:create --project=X` | Créer la base de données |
-| `database:orm:diff --project=X --name=<nom>` | Générer une migration |
-| `database:orm:diff --project=X --name=<nom> --dry-run` | Aperçu sans écriture |
-| `database:migration:migrate --project=X` | Appliquer les migrations |
-| `database:migration:rollback --project=X` | Annuler la dernière migration |
-| `database:migration:status --project=X` | Statut des migrations |
+| `database:create --project=X` | Create the database |
+| `database:orm:diff --project=X --name=<name>` | Generate a migration |
+| `database:orm:diff --project=X --name=<name> --dry-run` | Preview without writing |
+| `database:migration:migrate --project=X` | Apply migrations |
+| `database:migration:rollback --project=X` | Roll back the last migration |
+| `database:migration:status --project=X` | Migration status |
 
-### Utilitaires
+### Utilities
 
-| Commande | Description |
+| Command | Description |
 |----------|-------------|
-| `debug:router --project=X` | Lister toutes les routes enregistrées |
-| `cache:clear --project=X` | Vider le cache |
-| `asset:reload --project=X` | Recompiler les assets CSS/JS |
-| `translation:sync --project=X` | Synchroniser les clés de traduction |
+| `debug:router --project=X` | List all registered routes |
+| `cache:clear --project=X` | Clear the cache |
+| `asset:reload --project=X` | Recompile CSS/JS assets |

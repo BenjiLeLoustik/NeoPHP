@@ -1,42 +1,42 @@
 # Cron
 
-Le module `Cron` permet de planifier et d'exécuter des tâches récurrentes dans NeoPHP. Les jobs sont déclarés par attribut PHP directement sur des méthodes de classes, découverts par scan automatique, et exécutés en fonction d'une expression cron standard à 5 champs. Le module supporte le verrouillage de jobs, la gestion des fuseaux horaires, et s'intègre avec le système de logs du framework.
+The `Cron` module allows scheduling and running recurring tasks in NeoPHP. Jobs are declared via a PHP attribute directly on class methods, discovered through automatic scanning, and run based on a standard 5-field cron expression. The module supports job locking, timezone handling, and integrates with the framework's logging system.
 
 ---
 
-## Sommaire
+## Summary
 
-- [Attribut Cron](#attribut-cron)
+- [Cron Attribute](#cron-attribute)
 - [CronScanner](#cronscanner)
 - [CronRunner](#cronrunner)
-- [Commandes](#commandes)
+- [Commands](#commands)
   - [cron:run](#cronrun)
   - [cron:list](#cronlist)
   - [make:cron](#makecron)
-- [Intégration système](#intégration-système)
+- [System Integration](#system-integration)
 
 ---
 
-## Attribut Cron
+## Cron Attribute
 
-**Fichier :** `Attribute/Cron.php`
+**File:** `Attribute/Cron.php`
 
-Attribut PHP natif appliqué au niveau des **méthodes** pour déclarer un job planifié.
+Native PHP attribute applied at the **method** level to declare a scheduled job.
 
 ```php
 #[Attribute(Attribute::TARGET_METHOD)]
 final class Cron
 {
     public function __construct(
-        public readonly string $expression,   // Expression cron 5 champs
-        public readonly string $description,  // Description lisible du job
-        public readonly string $timezone = 'UTC', // Fuseau horaire
-        public readonly bool   $lock = false, // Verrouillage d'exécution
+        public readonly string $expression,   // 5-field cron expression
+        public readonly string $description,  // Human-readable job description
+        public readonly string $timezone = 'UTC', // Timezone
+        public readonly bool   $lock = false, // Execution locking
     ) {}
 }
 ```
 
-### Déclaration d'un job
+### Declaring a job
 
 ```php
 namespace Neo\Src\MyProject\App\Crons;
@@ -47,80 +47,80 @@ final class MaintenanceCron
 {
     #[Cron(
         expression: '0 2 * * *',
-        description: 'Nettoyage des logs toutes les nuits à 2h',
+        description: 'Clears the logs every night at 2am',
         timezone: 'Europe/Paris',
         lock: true,
     )]
     public function cleanLogs(): void
     {
-        // Logique de nettoyage...
+        // Cleanup logic...
     }
 
     #[Cron(
         expression: '*/15 * * * *',
-        description: 'Synchronisation des données toutes les 15 minutes',
+        description: 'Syncs data every 15 minutes',
     )]
     public function syncData(): void
     {
-        // Logique de synchronisation...
+        // Sync logic...
     }
 }
 ```
 
-### Format des expressions cron
+### Cron expression format
 
-Les expressions suivent le format standard POSIX à 5 champs :
+Expressions follow the standard 5-field POSIX format:
 
 ```
 ┌───── minute       (0-59)
-│  ┌──── heure        (0-23)
-│  │  ┌─── jour du mois (1-31)
-│  │  │  ┌── mois        (1-12)
-│  │  │  │  ┌─ jour de semaine (0-6, 0=dimanche)
+│  ┌──── hour         (0-23)
+│  │  ┌─── day of month (1-31)
+│  │  │  ┌── month        (1-12)
+│  │  │  │  ┌─ day of week (0-6, 0=Sunday)
 │  │  │  │  │
 *  *  *  *  *
 ```
 
-| Expression      | Signification                             |
-|-----------------|-------------------------------------------|
-| `* * * * *`     | Chaque minute                             |
-| `0 * * * *`     | Au début de chaque heure                  |
-| `0 0 * * *`     | Tous les jours à minuit                   |
-| `0 0 * * 0`     | Tous les dimanches à minuit               |
-| `0 0 1 * *`     | Le premier de chaque mois à minuit        |
-| `*/15 * * * *`  | Toutes les 15 minutes                     |
-| `0 9-17 * * 1-5`| Toutes les heures de 9h à 17h les jours ouvrés |
-| `0,30 * * * *`  | Toutes les 30 minutes                     |
+| Expression       | Meaning                                    |
+|-------------------|---------------------------------------------|
+| `* * * * *`       | Every minute                                 |
+| `0 * * * *`       | At the start of every hour                   |
+| `0 0 * * *`       | Every day at midnight                        |
+| `0 0 * * 0`       | Every Sunday at midnight                     |
+| `0 0 1 * *`       | On the first of every month at midnight      |
+| `*/15 * * * *`    | Every 15 minutes                             |
+| `0 9-17 * * 1-5`  | Every hour from 9am to 5pm on weekdays        |
+| `0,30 * * * *`    | Every 30 minutes                             |
 
-**Syntaxes supportées par le parser :**
-- `*` — toujours vrai
-- `*/n` — tous les n intervalles (modulo)
-- `n-m` — plage inclusive
-- `n,m,p` — liste de valeurs
-- `n` — valeur exacte
+**Syntax supported by the parser:**
+- `*` — always true
+- `*/n` — every n intervals (modulo)
+- `n-m` — inclusive range
+- `n,m,p` — list of values
+- `n` — exact value
 
 ---
 
 ## CronScanner
 
-**Fichier :** `Scanner/CronScanner.php`
+**File:** `Scanner/CronScanner.php`
 
-Analyse récursivement un dossier de crons pour découvrir tous les jobs déclarés via `#[Cron]`.
+Recursively scans a crons folder to discover every job declared via `#[Cron]`.
 
-### Fonctionnement
+### How it works
 
 ```php
 $scanner = new CronScanner();
 $jobs = $scanner->scan('/path/to/src/MyProject/App/Crons');
 ```
 
-Le scanner :
-1. Parcourt récursivement le dossier via `RecursiveDirectoryIterator`.
-2. Pour chaque fichier `.php`, extrait le namespace et le nom de classe par analyse de contenu (regex).
-3. Charge le fichier (`require_once`) et instancie une `ScannerAttributeManager` sur la classe.
-4. Collecte toutes les méthodes publiques décorées avec `#[Cron]`.
+The scanner:
+1. Recursively walks the folder via `RecursiveDirectoryIterator`.
+2. For each `.php` file, extracts the namespace and class name by analyzing its content (regex).
+3. Loads the file (`require_once`) and instantiates a `ScannerAttributeManager` on the class.
+4. Collects every public method decorated with `#[Cron]`.
 
-### Structure retournée
+### Returned structure
 
 ```php
 /** @return list<array{
@@ -133,7 +133,7 @@ Le scanner :
  * }> */
 ```
 
-Exemple de résultat :
+Example result:
 
 ```php
 [
@@ -141,7 +141,7 @@ Exemple de résultat :
         'class'       => 'Neo\Src\MyProject\App\Crons\MaintenanceCron',
         'method'      => 'cleanLogs',
         'expression'  => '0 2 * * *',
-        'description' => 'Nettoyage des logs toutes les nuits à 2h',
+        'description' => 'Clears the logs every night at 2am',
         'timezone'    => 'Europe/Paris',
         'lock'        => true,
     ],
@@ -149,7 +149,7 @@ Exemple de résultat :
         'class'       => 'Neo\Src\MyProject\App\Crons\MaintenanceCron',
         'method'      => 'syncData',
         'expression'  => '*/15 * * * *',
-        'description' => 'Synchronisation des données toutes les 15 minutes',
+        'description' => 'Syncs data every 15 minutes',
         'timezone'    => 'UTC',
         'lock'        => false,
     ],
@@ -160,13 +160,13 @@ Exemple de résultat :
 
 ## CronRunner
 
-**Fichier :** `Runner/CronRunner.php`
+**File:** `Runner/CronRunner.php`
 
-Exécute la liste des jobs scannés en ne lançant que ceux dont l'expression cron correspond à l'instant d'exécution.
+Runs the list of scanned jobs, only triggering those whose cron expression matches the current moment.
 
-### Vérification de l'échéance (`isDue`)
+### Due check (`isDue`)
 
-Pour chaque job, `CronRunner` crée un objet `DateTime` dans le fuseau horaire du job, puis compare les cinq champs de l'expression (minute, heure, jour, mois, jour de semaine) avec les valeurs actuelles.
+For each job, `CronRunner` creates a `DateTime` object in the job's timezone, then compares the five fields of the expression (minute, hour, day, month, weekday) against the current values.
 
 ```php
 private function isDue(string $expression, string $timezone): bool
@@ -183,19 +183,19 @@ private function isDue(string $expression, string $timezone): bool
 }
 ```
 
-### Mécanisme de verrouillage (lock)
+### Locking mechanism
 
-Quand `lock: true` est déclaré sur un job, `CronRunner` crée un fichier verrou dans le répertoire temporaire du système avant d'exécuter le job, et le supprime dans le bloc `finally`.
+When `lock: true` is declared on a job, `CronRunner` creates a lock file in the system's temp directory before running the job, and removes it in the `finally` block.
 
 ```
 /tmp/neo_cron_<md5(class::method)>.lock
 ```
 
-Si le fichier verrou existe déjà au moment de l'exécution, le job est ignoré avec un avertissement de log. Cela prévient les exécutions concurrentes d'un même job (par exemple si un job dure plus d'une minute et que le cron est appelé à la minute suivante).
+If the lock file already exists at execution time, the job is skipped with a log warning. This prevents concurrent runs of the same job (for example if a job takes longer than a minute and cron fires again on the next minute).
 
-### Résolution de l'instance du job
+### Resolving the job instance
 
-Le runner tente d'abord de résoudre la classe depuis le conteneur de dépendances (pour bénéficier de l'injection automatique). En cas d'échec, il instancie la classe directement.
+The runner first tries to resolve the class from the dependency container (to benefit from automatic injection). If that fails, it instantiates the class directly.
 
 ```php
 try {
@@ -209,23 +209,23 @@ $instance->{$job['method']}();
 
 ### Logs
 
-Chaque exécution (succès ou échec) est journalisée. Le runner tente d'utiliser le module de logs du framework (`cron.loggerModule`), et affiche également le message en console via `Output`.
+Every run (success or failure) is logged. The runner attempts to use the framework's logging module (`cron.loggerModule`), and also prints the message to the console via `Output`.
 
-| Événement                | Niveau de log | Sortie console             |
-|--------------------------|---------------|----------------------------|
-| Job exécuté avec succès  | `info`        | `Output::info()`           |
-| Job ignoré (verrou actif)| `warning`     | `Output::warning()`        |
-| Job en erreur            | `error`       | `Output::error()`          |
+| Event                      | Log level | Console output              |
+|-------------------------------|-------------|----------------------------------|
+| Job ran successfully         | `info`      | `Output::info()`                 |
+| Job skipped (lock active)    | `warning`   | `Output::warning()`              |
+| Job failed                    | `error`     | `Output::error()`                |
 
 ---
 
-## Commandes
+## Commands
 
 ### `cron:run`
 
-**Fichier :** `Commands/CronRunCommand.php`
+**File:** `Commands/CronRunCommand.php`
 
-Scanne et exécute tous les cron jobs échus pour un projet donné. Cette commande est conçue pour être appelée par le planificateur système (crontab) chaque minute.
+Scans and runs every due cron job for a given project. This command is meant to be called by the system scheduler (crontab) every minute.
 
 #### Synopsis
 
@@ -233,23 +233,23 @@ Scanne et exécute tous les cron jobs échus pour un projet donné. Cette comman
 php bin/neo cron:run --project=<Project>
 ```
 
-#### Configuration crontab recommandée
+#### Recommended crontab configuration
 
 ```cron
-* * * * * /usr/bin/php /var/www/monsite/bin/neo cron:run --project=MyProject >> /var/log/neo-cron.log 2>&1
+* * * * * /usr/bin/php /var/www/mysite/bin/neo cron:run --project=MyProject >> /var/log/neo-cron.log 2>&1
 ```
 
-#### Comportement
+#### Behavior
 
-1. Vérifie que le projet existe dans `./src/`.
-2. Enregistre les chemins du projet dans le conteneur (`ApplicationPaths::register()`).
-3. Scanne le dossier `App/Crons/` du projet via `CronScanner`.
-4. Passe la liste des jobs à `CronRunner::run()`.
-5. Seuls les jobs dont l'expression correspond à l'instant courant sont exécutés.
+1. Checks that the project exists inside `./src/`.
+2. Registers the project's paths in the container (`ApplicationPaths::register()`).
+3. Scans the project's `App/Crons/` folder via `CronScanner`.
+4. Passes the list of jobs to `CronRunner::run()`.
+5. Only jobs whose expression matches the current moment are run.
 
 ```bash
 php bin/neo cron:run --project=MyProject
-# → (silence si aucun job n'est dû à cet instant)
+# → (silent if no job is due at this moment)
 # → "→ Cron 'MaintenanceCron::cleanLogs' executed successfully."
 ```
 
@@ -257,9 +257,9 @@ php bin/neo cron:run --project=MyProject
 
 ### `cron:list`
 
-**Fichier :** `Commands/CronListCommand.php`
+**File:** `Commands/CronListCommand.php`
 
-Affiche la liste de tous les cron jobs enregistrés pour un projet, avec leur expression, leur classe et leur description.
+Displays the list of every cron job registered for a project, with its expression, class, and description.
 
 #### Synopsis
 
@@ -267,23 +267,23 @@ Affiche la liste de tous les cron jobs enregistrés pour un projet, avec leur ex
 php bin/neo cron:list --project=<Project>
 ```
 
-#### Exemple de sortie
+#### Example output
 
 ```
 Registered Cron Jobs
 ────────────────────────────────────────────────────────────
 
-  0 2 * * *           Neo\Src\MyProject\App\Crons\MaintenanceCron::cleanLogs   Nettoyage des logs toutes les nuits à 2h
-  */15 * * * *        Neo\Src\MyProject\App\Crons\MaintenanceCron::syncData    Synchronisation des données toutes les 15 minutes
+  0 2 * * *           Neo\Src\MyProject\App\Crons\MaintenanceCron::cleanLogs   Clears the logs every night at 2am
+  */15 * * * *        Neo\Src\MyProject\App\Crons\MaintenanceCron::syncData    Syncs data every 15 minutes
 ```
 
 ---
 
 ### `make:cron`
 
-**Fichier :** `Commands/MakeCronCommand.php`
+**File:** `Commands/MakeCronCommand.php`
 
-Génère un squelette de classe Cron pour un projet NeoPHP.
+Generates a Cron class skeleton for a NeoPHP project.
 
 #### Synopsis
 
@@ -293,37 +293,37 @@ php bin/neo make:cron [cron] --project=<Project> [--expression=<expr>] [--force]
 
 #### Options
 
-| Nom            | Description                                                         |
-|----------------|---------------------------------------------------------------------|
-| `cron`         | Nom de la classe (optionnel, demandé interactivement)               |
-| `--project`    | Projet cible                                                        |
-| `--expression` | Expression cron (avec autocomplétion sur les expressions communes)  |
-| `--force`      | Écrase le fichier si il existe déjà                                |
+| Name             | Description                                                          |
+|--------------------|---------------------------------------------------------------------------|
+| `cron`            | Class name (optional, asked interactively)                                |
+| `--project`       | Target project                                                             |
+| `--expression`    | Cron expression (with autocompletion on common expressions)               |
+| `--force`         | Overwrites the file if it already exists                                   |
 
-#### Expressions communes proposées à l'autocomplétion
+#### Common expressions offered for autocompletion
 
-| Expression    | Fréquence          |
-|---------------|--------------------|
-| `* * * * *`   | Chaque minute      |
-| `0 * * * *`   | Chaque heure       |
-| `0 0 * * *`   | Chaque jour        |
-| `0 0 * * 0`   | Chaque semaine     |
-| `0 0 1 * *`   | Chaque mois        |
+| Expression      | Frequency            |
+|-------------------|--------------------------|
+| `* * * * *`      | Every minute              |
+| `0 * * * *`      | Every hour                 |
+| `0 0 * * *`      | Every day                  |
+| `0 0 * * 0`      | Every week                 |
+| `0 0 1 * *`      | Every month                |
 
-#### Normalisation du nom
+#### Name normalization
 
-Le nom est normalisé automatiquement en PascalCase avec le suffixe `Cron` :
+The name is automatically normalized to PascalCase with the `Cron` suffix:
 - `clean-logs` → `CleanLogsCron`
 - `sync data` → `SyncDataCron`
-- `ReportCron` → `ReportCron` (inchangé)
+- `ReportCron` → `ReportCron` (unchanged)
 
-#### Exemple d'utilisation
+#### Usage example
 
 ```bash
 php bin/neo make:cron CleanLogs --project=MyProject --expression="0 3 * * *"
 ```
 
-#### Fichier généré
+#### Generated file
 
 `src/MyProject/App/Crons/CleanLogsCron.php`
 
@@ -347,12 +347,12 @@ final class CleanLogsCron
 
 ---
 
-## Intégration système
+## System Integration
 
-### Architecture complète
+### Full architecture
 
 ```
-crontab (chaque minute)
+crontab (every minute)
         │
         ▼
 php bin/neo cron:run --project=MyProject
@@ -361,21 +361,21 @@ php bin/neo cron:run --project=MyProject
 CronRunCommand::do()
         │
         ├── ApplicationPaths::register('MyProject')
-        │       └── enregistre 'cronsPath' dans le conteneur
+        │       └── registers 'cronsPath' in the container
         │
         ├── CronScanner::scan(cronsPath)
-        │       └── lit src/MyProject/App/Crons/**/*.php
-        │       └── retourne la liste des jobs avec attributs
+        │       └── reads src/MyProject/App/Crons/**/*.php
+        │       └── returns the list of jobs with their attributes
         │
         └── CronRunner::run(jobs)
-                ├── Pour chaque job : isDue(expression, timezone) ?
-                │       └── Oui → vérifie lock → instancie → exécute → log
-                └── Non → skip silencieux
+                ├── For each job: isDue(expression, timezone) ?
+                │       └── Yes → check lock → instantiate → run → log
+                └── No → silent skip
 ```
 
-### Dossier des crons
+### Crons folder
 
-Les classes de crons doivent être placées dans :
+Cron classes must be placed inside:
 
 ```
 src/{Project}/App/Crons/
@@ -384,7 +384,7 @@ src/{Project}/App/Crons/
 └── SyncCron.php
 ```
 
-Le scanner parcourt récursivement ce dossier, donc les sous-dossiers sont supportés :
+The scanner walks this folder recursively, so subfolders are supported:
 
 ```
 src/{Project}/App/Crons/
@@ -395,34 +395,34 @@ src/{Project}/App/Crons/
     └── DailyReportCron.php
 ```
 
-### Une classe peut contenir plusieurs jobs
+### A single class can contain multiple jobs
 
 ```php
 final class DatabaseCron
 {
-    #[Cron(expression: '0 1 * * *', description: 'Backup quotidien', lock: true)]
+    #[Cron(expression: '0 1 * * *', description: 'Daily backup', lock: true)]
     public function backup(): void { /* ... */ }
 
-    #[Cron(expression: '0 4 * * 0', description: 'Optimisation hebdomadaire', lock: true)]
+    #[Cron(expression: '0 4 * * 0', description: 'Weekly optimization', lock: true)]
     public function optimize(): void { /* ... */ }
 
-    #[Cron(expression: '*/5 * * * *', description: 'Vérification des connexions')]
+    #[Cron(expression: '*/5 * * * *', description: 'Connection health check')]
     public function healthCheck(): void { /* ... */ }
 }
 ```
 
 ---
 
-## Structure des fichiers
+## File structure
 
 ```
 neo/Core/Cron/
 ├── Attribute/
-│   └── Cron.php                    # Attribut #[Cron] pour les méthodes
+│   └── Cron.php                    # #[Cron] attribute for methods
 ├── Scanner/
-│   └── CronScanner.php             # Découverte par scan de fichiers
+│   └── CronScanner.php             # Discovery through file scanning
 ├── Runner/
-│   └── CronRunner.php              # Exécution avec gestion lock/timezone/log
+│   └── CronRunner.php              # Execution with lock/timezone/log handling
 ├── Exception/
 │   └── CronException.php
 └── Commands/

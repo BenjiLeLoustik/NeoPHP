@@ -1,26 +1,26 @@
-# Requête HTTP
+# HTTP Request
 
-Le module `Http` couvre l'intégralité du cycle requête/réponse de NeoPHP : abstraction de la requête entrante, types de réponses HTTP, gestion de la session, messages flash, cookies et upload de fichiers.
+The `Http` module covers the entire request/response cycle of NeoPHP: incoming request abstraction, HTTP response types, session management, flash messages, cookies, and file uploads.
 
 ---
 
-## Structure du module
+## Module Structure
 
 ```
 Http/
 ├── Request/
-│   ├── Request.php                          Requête HTTP entrante (immuable)
-│   └── Collector/RequestCollector.php       Collecteur Profiler
+│   ├── Request.php                          Incoming HTTP request (immutable)
+│   └── Collector/RequestCollector.php       Profiler collector
 ├── Response/
-│   ├── ResponseManager.php                  Fabrique de réponses
+│   ├── ResponseManager.php                  Response factory
 │   ├── ResponseModule.php
 │   ├── Types/
-│   │   ├── Response.php                     Réponse HTTP (getters + toArray())
-│   │   ├── JsonResponse.php                 Réponse JSON
-│   │   └── RedirectResponse.php             Réponse de redirection
+│   │   ├── Response.php                     HTTP response (getters + toArray())
+│   │   ├── JsonResponse.php                 JSON response
+│   │   └── RedirectResponse.php             Redirect response
 │   └── Extension/ResponseControllerExtension.php
 ├── HttpClient/
-│   ├── HttpClientManager.php                Client HTTP cURL sortant
+│   ├── HttpClientManager.php                Outgoing cURL HTTP client
 │   ├── HttpClientModule.php
 │   ├── Interface/HttpClientInterface.php
 │   └── Exception/HttpClientException.php
@@ -28,17 +28,17 @@ Http/
 │   ├── ClientManager.php
 │   ├── ClientModule.php
 │   ├── Session/
-│   │   ├── Session.php                      Session PHP native
+│   │   ├── Session.php                      Native PHP session
 │   │   └── Extension/SessionControllerExtension.php
 │   ├── Flash/
-│   │   ├── Flash.php                        Messages flash éphémères
+│   │   ├── Flash.php                        Ephemeral flash messages
 │   │   ├── Extension/FlashControllerExtension.php
 │   │   └── Extension/FlashViewExtension.php
 │   └── Cookie/
-│       ├── Cookie.php                       Cookies avec préfixage automatique
+│       ├── Cookie.php                       Cookies with automatic prefixing
 │       └── Extension/CookieControllerExtension.php
 └── File/
-    ├── UploaderManager.php                  Upload sécurisé de fichiers
+    ├── UploaderManager.php                  Secure file uploads
     ├── UploaderModule.php
     ├── Model/UploadedFile.php
     ├── Exception/
@@ -47,25 +47,25 @@ Http/
 
 ---
 
-## Documentation par composant
+## Documentation by Component
 
-| Composant | Description | README |
+| Component | Description | README |
 |-----------|-------------|--------|
-| `Request` | Requête HTTP entrante, lecture des données, fichiers, IP | [Request/README.md](Request/README.md) |
-| `Response` | Réponses HTTP, JSON, redirection, getters, `toArray()` | [Response/README.md](Response/README.md) |
-| `HttpClient` | Client HTTP cURL sortant, options, auth, `toArray()` | [HttpClient/README.md](HttpClient/README.md) |
-| `Session` | Session PHP native, configuration, méthodes, no-op CLI | [Client/Session/README.md](Client/Session/README.md) |
-| `Flash` | Messages flash session, rendu HTML, Twig | [Client/Flash/README.md](Client/Flash/README.md) |
-| `Cookie` | Cookies avec préfixage, configuration, lecture/écriture | [Client/Cookie/README.md](Client/Cookie/README.md) |
-| `File` | Upload sécurisé, validation, liste noire d'extensions | [File/README.md](File/README.md) |
+| `Request` | Incoming HTTP request, reading data, files, IP | [Request/README.md](Request/README.md) |
+| `Response` | HTTP responses, JSON, redirect, getters, `toArray()` | [Response/README.md](Response/README.md) |
+| `HttpClient` | Outgoing cURL HTTP client, options, auth, `toArray()` | [HttpClient/README.md](HttpClient/README.md) |
+| `Session` | Native PHP session, configuration, methods, CLI no-op | [Client/Session/README.md](Client/Session/README.md) |
+| `Flash` | Session flash messages, HTML rendering, Twig | [Client/Flash/README.md](Client/Flash/README.md) |
+| `Cookie` | Prefixed cookies, configuration, read/write | [Client/Cookie/README.md](Client/Cookie/README.md) |
+| `File` | Secure upload, validation, extension blacklist | [File/README.md](File/README.md) |
 
 ---
 
-## Extensions contrôleur
+## Controller Extensions
 
-Chaque composant injecte automatiquement ses méthodes dans `AbstractController` :
+Each component automatically injects its methods into `AbstractController`:
 
-| Méthode | Composant |
+| Method | Component |
 |---------|-----------|
 | `getSession()` | Session |
 | `getFlash()` | Flash |
@@ -73,8 +73,8 @@ Chaque composant injecte automatiquement ses méthodes dans `AbstractController`
 | `json()` / `jsonSuccess()` / `jsonError()` | Response |
 | `upload()` | File |
 
-## Fonction Twig
+## Twig Function
 
-| Fonction | Composant | Description |
+| Function | Component | Description |
 |----------|-----------|-------------|
-| `flashes()` | Flash | Rendu HTML de tous les messages flash en attente |
+| `flashes()` | Flash | HTML rendering of every pending flash message |

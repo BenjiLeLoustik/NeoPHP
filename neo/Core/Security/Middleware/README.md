@@ -1,20 +1,20 @@
 # Middleware
 
-Le sous-module `Middleware` fournit un pipeline d'autorisation déclaratif par attributs PHP 8, avec des middlewares intégrés et le support de middlewares personnalisés.
+The `Middleware` submodule provides a declarative, attribute-based authorization pipeline for PHP 8, with built-in middlewares and support for custom middlewares.
 
 ---
 
-## Sommaire
+## Table of Contents
 
 1. [Structure](#structure)
 2. [MiddlewareInterface](#middlewareinterface)
 3. [MiddlewareMeta](#middlewaremeta)
 4. [MiddlewareManager](#middlewaremanager)
-5. [Attribut `#[Middleware]`](#attribut-middleware)
-6. [Attribut `#[IsGranted]`](#attribut-isgranted)
-7. [Middlewares intégrés](#middlewares-intégrés)
-8. [Créer un middleware personnalisé](#créer-un-middleware-personnalisé)
-9. [Commande CLI](#commande-cli)
+5. [The `#[Middleware]` Attribute](#the-middleware-attribute)
+6. [The `#[IsGranted]` Attribute](#the-isgranted-attribute)
+7. [Built-in Middlewares](#built-in-middlewares)
+8. [Creating a Custom Middleware](#creating-a-custom-middleware)
+9. [CLI Command](#cli-command)
 
 ---
 
@@ -22,45 +22,45 @@ Le sous-module `Middleware` fournit un pipeline d'autorisation déclaratif par a
 
 ```
 Middleware/
-├── MiddlewareManager.php               # Orchestrateur du pipeline
-├── MiddlewareModule.php                # Enregistrement DI
+├── MiddlewareManager.php               # Pipeline orchestrator
+├── MiddlewareModule.php                # DI registration
 ├── Interface/
-│   └── MiddlewareInterface.php         # Contrat : handle(): bool
+│   └── MiddlewareInterface.php         # Contract: handle(): bool
 ├── Meta/
-│   └── MiddlewareMeta.php              # DTO des métadonnées d'un middleware résolu
+│   └── MiddlewareMeta.php              # DTO for a resolved middleware's metadata
 ├── Attribute/
-│   ├── Middleware.php                  # Attribut déclaratif (répétable)
-│   └── IsGranted.php                   # Raccourci pour les rôles
+│   ├── Middleware.php                  # Declarative attribute (repeatable)
+│   └── IsGranted.php                   # Shortcut for roles
 ├── Default/
-│   ├── AuthMiddleware.php              # Vérification de connexion
-│   ├── GuestMiddleware.php             # Inverse de Auth
-│   ├── IsGrantedMiddleware.php         # Vérification de rôle (logique OU)
-│   ├── RoleMiddleware.php              # Rôle unique
-│   ├── CsrfMiddleware.php              # Validation du token CSRF
-│   ├── RateLimitMiddleware.php         # Limite par IP + chemin
-│   ├── AuthRateLimitMiddleware.php     # Limite pour les formulaires de login
-│   └── ExampleMiddleware.php           # Template de départ
+│   ├── AuthMiddleware.php              # Login check
+│   ├── GuestMiddleware.php             # Inverse of Auth
+│   ├── IsGrantedMiddleware.php         # Role check (OR logic)
+│   ├── RoleMiddleware.php              # Single role
+│   ├── CsrfMiddleware.php              # CSRF token validation
+│   ├── RateLimitMiddleware.php         # Limit by IP + path
+│   ├── AuthRateLimitMiddleware.php     # Limit for login forms
+│   └── ExampleMiddleware.php           # Starter template
 ├── Exception/
 │   └── MiddlewareException.php         # 403 Forbidden
 ├── Extension/
-│   └── MiddlewareControllerExtension.php # Injecte getMiddleware()
+│   └── MiddlewareControllerExtension.php # Injects getMiddleware()
 └── Commands/
-    └── MakeMiddlewareCommand.php       # CLI : make:middleware
+    └── MakeMiddlewareCommand.php       # CLI: make:middleware
 ```
 
 ---
 
 ## MiddlewareInterface
 
-**Fichier :** `Interface/MiddlewareInterface.php`
+**File:** `Interface/MiddlewareInterface.php`
 
-Tout middleware doit implémenter cette interface :
+Every middleware must implement this interface:
 
 ```php
 interface MiddlewareInterface
 {
     /**
-     * Retourne true si la requête peut continuer, false sinon.
+     * Returns true if the request can continue, false otherwise.
      */
     public function handle(): bool;
 }
@@ -70,148 +70,148 @@ interface MiddlewareInterface
 
 ## MiddlewareMeta
 
-**Fichier :** `Meta/MiddlewareMeta.php`
+**File:** `Meta/MiddlewareMeta.php`
 
-DTO qui représente un middleware résolu pour une classe/méthode donnée, qu'il provienne d'un attribut `#[Middleware]`, `#[IsGranted]` ou `#[RateLimit]`. Utilisé en interne par `MiddlewareManager::getMiddlewares()` : c'est cette forme typée qui remplace l'ancien tableau associatif et qui est parcourue par `run()` et `isAccessible()`.
+DTO representing a middleware resolved for a given class/method, whether it comes from a `#[Middleware]`, `#[IsGranted]`, or `#[RateLimit]` attribute. Used internally by `MiddlewareManager::getMiddlewares()`: this is the typed form that replaces the old associative array and is iterated over by `run()` and `isAccessible()`.
 
 ```php
 final class MiddlewareMeta
 {
     public function __construct(
-        public string $class,      // Classe du middleware à exécuter
-        public string $message,    // Message en cas d'échec
-        public string $onError,    // 'block' ou 'soft'
-        public ?string $redirect,  // Nom de route de redirection, ou null
-        public bool $isClass,      // true si déclaré sur la classe, false si sur la méthode
-        public array $params,      // Paramètres injectés au constructeur du middleware
-        public int $priority,      // Ordre d'exécution (décroissant)
+        public string $class,      // Middleware class to execute
+        public string $message,    // Message on failure
+        public string $onError,    // 'block' or 'soft'
+        public ?string $redirect,  // Redirect route name, or null
+        public bool $isClass,      // true if declared on the class, false if on the method
+        public array $params,      // Parameters injected into the middleware's constructor
+        public int $priority,      // Execution order (descending)
     ) {}
 }
 ```
 
-Chaque propriété est accessible via un getter dédié (`getClass()`, `getMessage()`, `getOnError()`, `getRedirect()`, `isClass()`, `getParams()`, `getPriority()`). Le DTO est purement descriptif : il n'a pas de setter, ses instances sont construites une seule fois lors de la découverte des middlewares puis mises en cache.
+Each property is accessible via a dedicated getter (`getClass()`, `getMessage()`, `getOnError()`, `getRedirect()`, `isClass()`, `getParams()`, `getPriority()`). The DTO is purely descriptive: it has no setter, its instances are built once during middleware discovery and then cached.
 
 ---
 
 ## MiddlewareManager
 
-**Fichier :** `MiddlewareManager.php`
+**File:** `MiddlewareManager.php`
 
-Chef d'orchestre du pipeline. Appelé automatiquement par le `RouterManager` avant chaque invocation de contrôleur.
+Orchestrator of the pipeline. Automatically called by the `RouterManager` before every controller invocation.
 
-### Découverte des middlewares
+### Middleware Discovery
 
-Le manager lit les attributs `#[Middleware]`, `#[IsGranted]` et `#[RateLimit]` sur la **classe** du contrôleur ET sur la **méthode** ciblée, et les transforme en instances de `MiddlewareMeta`. Les middlewares de classe sont appliqués en premier, puis ceux de la méthode. L'ordre final est déterminé par `getPriority()` (valeur plus haute = exécutée en premier).
+The manager reads the `#[Middleware]`, `#[IsGranted]`, and `#[RateLimit]` attributes on the controller's **class** AND on the targeted **method**, and turns them into `MiddlewareMeta` instances. Class-level middlewares are applied first, then method-level ones. The final order is determined by `getPriority()` (higher value = executed first).
 
-### Exécution
+### Execution
 
 ```php
 $response = $middlewareManager->run($controllerClass, $methodName);
 
 if ($response !== null) {
-    // Un middleware a bloqué la requête
+    // A middleware blocked the request
     $response->send();
     return;
 }
-// La requête peut continuer normalement
+// The request can continue normally
 ```
 
-### Comportements en cas d'échec
+### Behavior on Failure
 
-| `onError` | Comportement |
+| `onError` | Behavior |
 |-----------|--------------|
-| `'block'` (défaut) | Lève une `MiddlewareException` (403) |
-| `'soft'` | Ajoute un message flash de warning, laisse passer |
-| Avec `redirect` défini | Redirige vers la route nommée (302) avec message flash optionnel |
+| `'block'` (default) | Throws a `MiddlewareException` (403) |
+| `'soft'` | Adds a warning flash message, lets the request through |
+| With `redirect` set | Redirects to the named route (302) with an optional flash message |
 
-### Vérification sans exécution
+### Checking Without Executing
 
 ```php
-// Vérifie si une route est accessible sans déclencher les effets de bord
-$canAccess = $middlewareManager->isAccessible(MonController::class, 'edit');
+// Checks whether a route is accessible without triggering side effects
+$canAccess = $middlewareManager->isAccessible(MyController::class, 'edit');
 ```
 
-### Inspection des erreurs
+### Error Inspection
 
 ```php
-// Récupérer tous les messages d'erreur après un run()
+// Retrieve all error messages after a run()
 $errors = $middlewareManager->getErrors();
 
-// Par middleware spécifique
+// By specific middleware
 $errors = $middlewareManager->getErrors(AuthMiddleware::class);
 
-// Vérifier s'il y a eu des échecs
+// Check whether there were any failures
 if ($middlewareManager->hasError()) { /* ... */ }
 
-// Résultats d'exécution d'un middleware (tableau de bool)
+// Execution results of a middleware (array of bool)
 $results = $middlewareManager->getMiddleware(AuthMiddleware::class); // [true, false, ...]
 ```
 
-### Mode maintenance
+### Maintenance Mode
 
-Avant d'exécuter les middlewares, le `MiddlewareManager` vérifie l'attribut `#[Maintenance]`. Si présent (sur la méthode ou la classe), il retourne immédiatement une réponse **503** avec la vue `maintenance.html.twig` (si elle existe).
+Before executing the middlewares, `MiddlewareManager` checks for the `#[Maintenance]` attribute. If present (on the method or the class), it immediately returns a **503** response with the `maintenance.html.twig` view (if it exists).
 
 ---
 
-## Attribut `#[Middleware]`
+## The `#[Middleware]` Attribute
 
-**Fichier :** `Attribute/Middleware.php`
+**File:** `Attribute/Middleware.php`
 
-Répétable (`IS_REPEATABLE`), applicable sur une classe ou une méthode.
+Repeatable (`IS_REPEATABLE`), applicable to a class or a method.
 
 ```php
 use Neo\Core\Security\Middleware\Attribute\Middleware;
 
-// Sur une classe : appliqué à toutes les routes du contrôleur
+// On a class: applied to all routes of the controller
 #[Middleware(
     use: AuthMiddleware::class,
-    message: 'Vous devez être connecté.',
+    message: 'You must be logged in.',
     onError: 'block',
-    redirect: 'login',   // Nom de route pour la redirection
+    redirect: 'login',   // Route name for the redirect
     params: [],
-    priority: 10         // Plus haute priorité = exécuté en premier
+    priority: 10         // Higher priority = executed first
 )]
 class DashboardController extends AbstractController { ... }
 
-// Sur une méthode uniquement
+// On a method only
 #[Middleware(use: CsrfMiddleware::class)]
 #[Route('/settings', 'POST')]
 public function update(): Response { ... }
 
-// Plusieurs middlewares empilés
+// Multiple stacked middlewares
 #[Middleware(use: AuthMiddleware::class, priority: 10)]
 #[Middleware(use: CsrfMiddleware::class, priority: 5)]
 class SecureController extends AbstractController { ... }
 ```
 
-| Paramètre | Type | Défaut | Description |
+| Parameter | Type | Default | Description |
 |-----------|------|--------|-------------|
-| `use` | `class-string` | — | Classe du middleware à exécuter |
-| `message` | `string` | `''` | Message en cas d'échec |
-| `onError` | `string` | `'block'` | `'block'` ou `'soft'` |
-| `redirect` | `string\|null` | `null` | Nom de route pour la redirection |
-| `params` | `array` | `[]` | Paramètres passés au constructeur du middleware |
-| `priority` | `int` | `0` | Ordre d'exécution (décroissant) |
+| `use` | `class-string` | — | Middleware class to execute |
+| `message` | `string` | `''` | Message on failure |
+| `onError` | `string` | `'block'` | `'block'` or `'soft'` |
+| `redirect` | `string\|null` | `null` | Route name for the redirect |
+| `params` | `array` | `[]` | Parameters passed to the middleware's constructor |
+| `priority` | `int` | `0` | Execution order (descending) |
 
 ---
 
-## Attribut `#[IsGranted]`
+## The `#[IsGranted]` Attribute
 
-**Fichier :** `Attribute/IsGranted.php`
+**File:** `Attribute/IsGranted.php`
 
-Raccourci déclaratif pour restreindre l'accès à certains rôles. Instancie automatiquement un `IsGrantedMiddleware`.
+Declarative shortcut for restricting access to certain roles. Automatically instantiates an `IsGrantedMiddleware`.
 
 ```php
 use Neo\Core\Security\Middleware\Attribute\IsGranted;
 
-// Accès réservé aux administrateurs
+// Access restricted to administrators
 #[IsGranted(roles: ['admin'])]
 class AdminController extends AbstractController { ... }
 
-// Plusieurs rôles autorisés (logique OU)
+// Multiple allowed roles (OR logic)
 #[IsGranted(
     roles: ['admin', 'moderator'],
-    message: 'Accès réservé aux modérateurs.',
+    message: 'Access restricted to moderators.',
     onError: 'block',
     redirect: 'home'
 )]
@@ -219,22 +219,22 @@ class AdminController extends AbstractController { ... }
 public function moderation(): Response { ... }
 ```
 
-| Paramètre | Type | Défaut | Description |
+| Parameter | Type | Default | Description |
 |-----------|------|--------|-------------|
-| `roles` | `array` | — | Liste des rôles autorisés (logique OU) |
-| `message` | `string` | `''` | Message en cas d'échec |
-| `onError` | `string` | `'block'` | Comportement en cas d'échec |
-| `redirect` | `string\|null` | `null` | Route de redirection |
+| `roles` | `array` | — | List of allowed roles (OR logic) |
+| `message` | `string` | `''` | Message on failure |
+| `onError` | `string` | `'block'` | Behavior on failure |
+| `redirect` | `string\|null` | `null` | Redirect route |
 
 ---
 
-## Middlewares intégrés
+## Built-in Middlewares
 
 ### AuthMiddleware
 
-**Fichier :** `Default/AuthMiddleware.php`
+**File:** `Default/AuthMiddleware.php`
 
-Vérifie que l'utilisateur est connecté via l'`AuthManager`.
+Checks that the user is logged in via the `AuthManager`.
 
 ```php
 #[Middleware(use: AuthMiddleware::class, redirect: 'login')]
@@ -243,9 +243,9 @@ class DashboardController extends AbstractController { ... }
 
 ### GuestMiddleware
 
-**Fichier :** `Default/GuestMiddleware.php`
+**File:** `Default/GuestMiddleware.php`
 
-Inverse de `AuthMiddleware` — n'autorise que les utilisateurs **non** connectés.
+Inverse of `AuthMiddleware` — only allows users who are **not** logged in.
 
 ```php
 #[Middleware(use: GuestMiddleware::class, redirect: 'dashboard')]
@@ -254,32 +254,32 @@ class LoginController extends AbstractController { ... }
 
 ### IsGrantedMiddleware
 
-**Fichier :** `Default/IsGrantedMiddleware.php`
+**File:** `Default/IsGrantedMiddleware.php`
 
-Vérifie que l'utilisateur possède **au moins un** des rôles requis (logique OU). Si aucun rôle n'est requis, l'accès est accordé.
+Checks that the user has **at least one** of the required roles (OR logic). If no role is required, access is granted.
 
-Préférer l'attribut `#[IsGranted]` pour une utilisation déclarative.
+Prefer the `#[IsGranted]` attribute for declarative usage.
 
 ### RoleMiddleware
 
-**Fichier :** `Default/RoleMiddleware.php`
+**File:** `Default/RoleMiddleware.php`
 
-Vérifie un **rôle unique**. Utilisé avec `params` dans l'attribut `#[Middleware]`.
+Checks a **single role**. Used with `params` in the `#[Middleware]` attribute.
 
 ```php
 #[Middleware(
     use: RoleMiddleware::class,
     params: ['role' => 'editor'],
-    message: 'Accès réservé aux éditeurs.'
+    message: 'Access restricted to editors.'
 )]
 public function edit(): Response { ... }
 ```
 
 ### CsrfMiddleware
 
-**Fichier :** `Default/CsrfMiddleware.php`
+**File:** `Default/CsrfMiddleware.php`
 
-Valide le token CSRF pour toutes les requêtes non-sûres (`POST`, `PUT`, `PATCH`, `DELETE`). Les méthodes `GET`, `HEAD`, `OPTIONS` sont ignorées.
+Validates the CSRF token for all unsafe requests (`POST`, `PUT`, `PATCH`, `DELETE`). `GET`, `HEAD`, `OPTIONS` methods are ignored.
 
 ```php
 #[Middleware(use: CsrfMiddleware::class)]
@@ -289,38 +289,38 @@ public function update(): Response { ... }
 
 ### RateLimitMiddleware
 
-**Fichier :** `Default/RateLimitMiddleware.php`
+**File:** `Default/RateLimitMiddleware.php`
 
-Limite le nombre de requêtes par IP et par chemin. Utilise le `CacheManager`. Lève une `FrameworkException` (429) quand la limite est atteinte.
+Limits the number of requests per IP and per path. Uses the `CacheManager`. Throws a `FrameworkException` (429) when the limit is reached.
 
-**Clé de cache :** `rate_limit:<md5(ip:path)>`, TTL égal à `decaySeconds`.
+**Cache key:** `rate_limit:<md5(ip:path)>`, TTL equal to `decaySeconds`.
 
 ```php
-// Via l'attribut RateLimit (raccourci)
+// Via the RateLimit attribute (shortcut)
 #[RateLimit(maxAttempts: 5, decaySeconds: 60)]
 #[Route('/login', 'POST')]
 public function login(): Response { ... }
 
-// Via l'attribut Middleware
+// Via the Middleware attribute
 #[Middleware(
     use: RateLimitMiddleware::class,
     params: ['maxAttempts' => 100, 'decaySeconds' => 3600],
-    message: 'Quota API dépassé.'
+    message: 'API quota exceeded.'
 )]
 class ApiController extends AbstractController { ... }
 ```
 
 ### AuthRateLimitMiddleware
 
-**Fichier :** `Default/AuthRateLimitMiddleware.php`
+**File:** `Default/AuthRateLimitMiddleware.php`
 
-Variante spécialisée pour les formulaires de login. Limite par **IP + valeur du champ identifiant** (ex. email) plutôt que par chemin.
+Specialized variant for login forms. Limits by **IP + identifier field value** (e.g. email) rather than by path.
 
 ```php
 #[Middleware(
     use: AuthRateLimitMiddleware::class,
     params: ['maxAttempts' => 5, 'decaySeconds' => 300],
-    message: 'Trop de tentatives. Réessayez dans 5 minutes.'
+    message: 'Too many attempts. Try again in 5 minutes.'
 )]
 #[Route('/login', 'POST')]
 public function login(): Response { ... }
@@ -328,7 +328,7 @@ public function login(): Response { ... }
 
 ---
 
-## Créer un middleware personnalisé
+## Creating a Custom Middleware
 
 ```php
 <?php
@@ -353,7 +353,7 @@ class BusinessHoursMiddleware implements MiddlewareInterface
 }
 ```
 
-**Utilisation dans un contrôleur :**
+**Usage in a controller:**
 
 ```php
 use Neo\Core\Security\Middleware\Attribute\Middleware;
@@ -361,29 +361,29 @@ use App\Middlewares\BusinessHoursMiddleware;
 
 #[Middleware(
     use: BusinessHoursMiddleware::class,
-    message: 'Ce service n\'est disponible qu\'entre 8h et 18h.',
+    message: 'This service is only available between 8am and 6pm.',
     onError: 'block'
 )]
 #[Route('/support', 'GET')]
 public function support(): Response { ... }
 ```
 
-Le `MiddlewareManager` instancie le middleware via le conteneur DI — toutes les dépendances déclarées dans le constructeur sont injectées automatiquement.
+The `MiddlewareManager` instantiates the middleware via the DI container — all dependencies declared in the constructor are automatically injected.
 
 ---
 
-## Commande CLI
+## CLI Command
 
-| Commande | Description |
+| Command | Description |
 |----------|-------------|
-| `make:middleware` | Génère un squelette de middleware dans le projet |
+| `make:middleware` | Generates a middleware skeleton in the project |
 
 ```bash
-php bin/neo make:middleware MonMiddleware --project=Blog
-# Génère : src/Blog/App/Middlewares/MonMiddleware.php
+php bin/neo make:middleware MyMiddleware --project=Blog
+# Generates: src/Blog/App/Middlewares/MyMiddleware.php
 
 php bin/neo make:middleware AdminOnly --project=Blog --dir=Admin
-# Génère : src/Blog/App/Middlewares/Admin/AdminOnlyMiddleware.php
+# Generates: src/Blog/App/Middlewares/Admin/AdminOnlyMiddleware.php
 ```
 
-Le suffixe `Middleware` est ajouté automatiquement si absent. L'option `--force` écrase un fichier existant.
+The `Middleware` suffix is added automatically if absent. The `--force` option overwrites an existing file.

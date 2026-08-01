@@ -1,18 +1,18 @@
 # Config
 
-Le sous-module `Config` charge, expose et permet de modifier les fichiers de configuration PHP d'un projet.
+The `Config` submodule loads, exposes, and allows modification of a project's PHP configuration files.
 
 ---
 
-## Sommaire
+## Table of Contents
 
 1. [Structure](#structure)
 2. [ConfigManager](#configmanager)
-3. [Accès aux valeurs](#accès-aux-valeurs)
-4. [Surcharge pour les tests](#surcharge-pour-les-tests)
+3. [Accessing Values](#accessing-values)
+4. [Test Override](#test-override)
 5. [ConfigTemplateWriter](#configtemplatewriter)
-6. [Extension contrôleur](#extension-contrôleur)
-7. [Commandes CLI](#commandes-cli)
+6. [Controller Extension](#controller-extension)
+7. [CLI Commands](#cli-commands)
 
 ---
 
@@ -20,8 +20,8 @@ Le sous-module `Config` charge, expose et permet de modifier les fichiers de con
 
 ```
 Config/
-├── ConfigManager.php                   # Chargement et accès aux configs
-├── ConfigModule.php                    # Enregistrement DI
+├── ConfigManager.php                   # Loading and access to configs
+├── ConfigModule.php                    # DI registration
 ├── Templates/
 │   ├── Interface/
 │   │   └── ConfigTemplateInterface.php
@@ -34,63 +34,63 @@ Config/
 │   ├── SessionConfigTemplate.php
 │   └── TwigConfigTemplate.php
 ├── Writer/
-│   └── ConfigTemplateWriter.php        # Écriture de fichiers config depuis templates
+│   └── ConfigTemplateWriter.php        # Writing config files from templates
 ├── Commands/
 │   ├── GenerateDefaultConfigCommand.php
 │   └── MakeConfigCommand.php
 ├── Exception/
 │   └── ConfigException.php
 └── Extension/
-    └── ConfigControllerExtension.php   # Injecte getConfig() dans les contrôleurs
+    └── ConfigControllerExtension.php   # Injects getConfig() into controllers
 ```
 
 ---
 
 ## ConfigManager
 
-**Fichier :** `ConfigManager.php`
+**File:** `ConfigManager.php`
 
-Charge tous les fichiers `*.config.php` du répertoire `configsPath` du projet. L'accès se fait via un patron fluide `from(key)->get(path)`.
+Loads all `*.config.php` files from the project's `configsPath` directory. Access is done via a fluent `from(key)->get(path)` pattern.
 
-**Fonctionnement au démarrage :**
+**Startup Behavior:**
 
-1. Charge tous les fichiers `*.config.php` du répertoire `configsPath`.
-2. Si un répertoire de test est configuré (`testConfigsPath`), charge les fichiers `*.config.test.php` et les fusionne profondément (`deepMerge`) sur les configs existantes.
+1. Loads all `*.config.php` files from the `configsPath` directory.
+2. If a test directory is configured (`testConfigsPath`), loads the `*.config.test.php` files and deeply merges them (`deepMerge`) onto the existing configs.
 
 ---
 
-## Accès aux valeurs
+## Accessing Values
 
 ```php
 $config = $container->get(ConfigManager::class);
 
-// Lire une valeur simple
+// Read a simple value
 $dbName = $config->from('database')->get('connections.default.dbname');
 
-// Valeur par défaut si absente
+// Default value if missing
 $debug = $config->from('app')->get('debug', false);
 
-// Lire toute la configuration d'un fichier
+// Read a whole file's configuration
 $allDbConfig = $config->from('database')->all();
 
-// Modifier une valeur à l'exécution
+// Modify a value at runtime
 $config->from('app')->set('locale', 'fr');
 ```
 
-**Accès imbriqué par point :**
+**Dot-Notation Nested Access:**
 
 ```php
-// app.config.php retourne ['features' => ['registration' => true, 'api' => false]]
+// app.config.php returns ['features' => ['registration' => true, 'api' => false]]
 $config->from('app')->get('features.registration'); // true
 $config->from('app')->get('features.unknown', 'default'); // 'default'
 ```
 
-**Structure d'un fichier de config :**
+**Structure of a Config File:**
 
 ```php
 // src/MyProject/Config/app.config.php
 return [
-    'name'   => 'Mon Application',
+    'name'   => 'My Application',
     'debug'  => false,
     'locale' => 'fr',
     'features' => [
@@ -102,11 +102,11 @@ return [
 
 ---
 
-## Surcharge pour les tests
+## Test Override
 
 ```php
 // src/MyProject/Config/app.config.test.php
-// Valeurs qui écrasent celles de app.config.php dans les tests
+// Values that override those in app.config.php during tests
 return [
     'debug'  => true,
     'features' => [
@@ -115,15 +115,15 @@ return [
 ];
 ```
 
-La fusion est profonde (`deepMerge`) : seules les clés déclarées dans le fichier `.test.php` sont écrasées.
+The merge is deep (`deepMerge`): only the keys declared in the `.test.php` file are overridden.
 
 ---
 
 ## ConfigTemplateWriter
 
-**Fichier :** `Writer/ConfigTemplateWriter.php`
+**File:** `Writer/ConfigTemplateWriter.php`
 
-Utilisé par les commandes de scaffolding pour écrire des fichiers de configuration depuis des templates.
+Used by scaffolding commands to write configuration files from templates.
 
 ```php
 ConfigTemplateWriter::write(
@@ -135,15 +135,15 @@ ConfigTemplateWriter::write(
 );
 ```
 
-Chaque template implémente `ConfigTemplateInterface` avec les méthodes `filename()` et `render(string $project, array $context): string`.
+Each template implements `ConfigTemplateInterface` with the `filename()` and `render(string $project, array $context): string` methods.
 
 ---
 
-## Extension contrôleur
+## Controller Extension
 
-**Fichier :** `Extension/ConfigControllerExtension.php`
+**File:** `Extension/ConfigControllerExtension.php`
 
-Injecte automatiquement `getConfig()` dans tous les contrôleurs.
+Automatically injects `getConfig()` into all controllers.
 
 ```php
 class AppController extends AbstractController
@@ -163,9 +163,9 @@ class AppController extends AbstractController
 
 ---
 
-## Commandes CLI
+## CLI Commands
 
-| Commande | Description |
+| Command | Description |
 |----------|-------------|
-| `config:generate` | Génère les fichiers de configuration par défaut pour un projet |
-| `make:config` | Crée un nouveau fichier de configuration personnalisé |
+| `config:generate` | Generates the default configuration files for a project |
+| `make:config` | Creates a new custom configuration file |

@@ -1,27 +1,27 @@
 # Controller
 
-Le module `Controller` fournit la classe de base pour tous les contrôleurs web et API d'un projet NeoPHP. Il s'appuie sur un système d'extensions dynamiques pour injecter des méthodes et propriétés (comme `render()`, `redirectToRoute()`, `json()`, etc.) sans héritage rigide, via le mécanisme d'`ExtensionManager`.
+The `Controller` module provides the base class for every web and API controller in a NeoPHP project. It relies on a dynamic extension system to inject methods and properties (such as `render()`, `redirectToRoute()`, `json()`, etc.) without rigid inheritance, through the `ExtensionManager` mechanism.
 
 ---
 
-## Sommaire
+## Summary
 
 - [AbstractController](#abstractcontroller)
 - [ControllerExtensionInterface](#controllerextensioninterface)
-- [Commandes](#commandes)
+- [Commands](#commands)
   - [make:controller](#makecontroller)
 
 ---
 
 ## AbstractController
 
-**Fichier :** `AbstractController.php`
+**File:** `AbstractController.php`
 
-Classe de base abstraite que tout contrôleur du projet doit étendre. Elle expose un mécanisme de délégation dynamique via `__call()` et `__get()` pour les méthodes et propriétés injectées par les extensions.
+Abstract base class that every controller in the project must extend. It exposes a dynamic delegation mechanism via `__call()` and `__get()` for methods and properties injected by extensions.
 
-### Principe de fonctionnement
+### How it works
 
-Au moment de l'instanciation, le `Container` est injecté dans le contrôleur et `ExtensionManager::applyToController()` est appelé. Chaque extension enregistrée peut alors appeler `registerMethod()` et `registerProperty()` pour injecter des capacités dans le contrôleur.
+At instantiation time, the `Container` is injected into the controller and `ExtensionManager::applyToController()` is called. Each registered extension can then call `registerMethod()` and `registerProperty()` to inject capabilities into the controller.
 
 ```php
 public function __construct(?Container $container = null)
@@ -34,10 +34,10 @@ public function __construct(?Container $container = null)
 }
 ```
 
-### Enregistrement de méthodes dynamiques
+### Registering dynamic methods
 
 ```php
-// Dans une ControllerExtension :
+// Inside a ControllerExtension:
 $controller->registerMethod('render', function(string $template, array $data = []) use ($twig) {
     return new Response($twig->render($template, $data));
 });
@@ -47,16 +47,16 @@ $controller->registerMethod('redirectToRoute', function(string $name, array $par
 });
 ```
 
-### Enregistrement de propriétés dynamiques avec cache
+### Registering dynamic properties with caching
 
 ```php
-// La propriété est résolue une seule fois puis mise en cache
+// The property is resolved only once, then cached
 $controller->registerProperty('session', fn() => $container->get(SessionManager::class));
 ```
 
-### Accès dans les contrôleurs
+### Access from controllers
 
-Grâce à `__call()` et `__get()`, les méthodes et propriétés injectées sont appelables directement dans les contrôleurs enfants :
+Thanks to `__call()` and `__get()`, injected methods and properties can be called directly in child controllers:
 
 ```php
 final class BlogController extends AbstractController
@@ -64,7 +64,7 @@ final class BlogController extends AbstractController
     #[Route(path: '/', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
-        // 'render' est une méthode injectée par une extension
+        // 'render' is a method injected by an extension
         return $this->render('pages/blog/index.html.twig', [
             'posts' => $this->postRepository->findAll(),
         ]);
@@ -76,7 +76,7 @@ final class BlogController extends AbstractController
         $post = $this->postRepository->find($id);
 
         if (!$post) {
-            // 'redirectToRoute' est aussi injectée par extension
+            // 'redirectToRoute' is also injected by an extension
             return $this->redirectToRoute('blog.index');
         }
 
@@ -85,7 +85,7 @@ final class BlogController extends AbstractController
 }
 ```
 
-Pour un contrôleur API, les méthodes injectées incluent généralement `jsonSuccess()`, `jsonError()`, etc. :
+For an API controller, injected methods typically include `jsonSuccess()`, `jsonError()`, etc.:
 
 ```php
 final class UserApiController extends AbstractController
@@ -98,19 +98,19 @@ final class UserApiController extends AbstractController
 }
 ```
 
-### Gestion des erreurs
+### Error handling
 
-Si une méthode ou propriété non enregistrée est appelée, des exceptions explicites sont levées :
+If an unregistered method or property is called, explicit exceptions are thrown:
 
 ```php
-// __call() lève AbstractControllerException si la méthode est inconnue :
+// __call() throws AbstractControllerException if the method is unknown:
 // "Method 'unknownMethod' is not registered on this controller."
 
-// __get() lève AbstractControllerException si la propriété est inconnue :
+// __get() throws AbstractControllerException if the property is unknown:
 // "Property 'unknownProp' is not registered on this controller."
 ```
 
-### Structure interne
+### Internal structure
 
 ```php
 abstract class AbstractController
@@ -118,25 +118,25 @@ abstract class AbstractController
     protected Container $container;
 
     /** @var array<string, Closure> */
-    private array $methods = [];          // Méthodes injectées par les extensions
+    private array $methods = [];          // Methods injected by extensions
 
     /** @var array<string, Closure> */
-    private array $propertyResolvers = []; // Résolveurs de propriétés
+    private array $propertyResolvers = []; // Property resolvers
 
     /** @var array<string, mixed> */
-    private array $propertyCache = [];     // Cache des propriétés résolues
+    private array $propertyCache = [];     // Cache of resolved properties
 }
 ```
 
-Le cache des propriétés (`propertyCache`) garantit que chaque propriété n'est résolue qu'une seule fois par cycle de vie du contrôleur.
+The property cache (`propertyCache`) guarantees that each property is resolved only once per controller lifecycle.
 
 ---
 
 ## ControllerExtensionInterface
 
-**Fichier :** `Interface/ControllerExtensionInterface.php`
+**File:** `Interface/ControllerExtensionInterface.php`
 
-Interface que doit implémenter toute extension de contrôleur.
+Interface that every controller extension must implement.
 
 ```php
 interface ControllerExtensionInterface
@@ -145,9 +145,9 @@ interface ControllerExtensionInterface
 }
 ```
 
-### Créer une extension de contrôleur
+### Creating a controller extension
 
-Une extension reçoit l'instance du contrôleur et le conteneur de dépendances. Elle utilise `registerMethod()` et `registerProperty()` pour enrichir le contrôleur.
+An extension receives the controller instance and the dependency container. It uses `registerMethod()` and `registerProperty()` to enrich the controller.
 
 ```php
 final class ViewControllerExtension implements ControllerExtensionInterface
@@ -171,7 +171,7 @@ final class SessionControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        // Propriété lazy : résolue seulement si accédée
+        // Lazy property: resolved only if accessed
         $controller->registerProperty(
             'session',
             fn() => $container->get(SessionManager::class)
@@ -190,17 +190,17 @@ final class SessionControllerExtension implements ControllerExtensionInterface
 }
 ```
 
-Les extensions sont découvertes automatiquement via l'`ExtensionManager` lors de la construction du contrôleur.
+Extensions are automatically discovered by the `ExtensionManager` when the controller is constructed.
 
 ---
 
-## Commandes
+## Commands
 
 ### `make:controller`
 
-**Fichier :** `Commands/MakeControllerCommand.php`
+**File:** `Commands/MakeControllerCommand.php`
 
-Génère un contrôleur (web ou API) pour un projet NeoPHP, avec les attributs de routage pré-configurés.
+Generates a controller (web or API) for a NeoPHP project, with pre-configured routing attributes.
 
 #### Synopsis
 
@@ -208,31 +208,31 @@ Génère un contrôleur (web ou API) pour un projet NeoPHP, avec les attributs d
 php bin/neo make:controller [controller] --project=<Project> [--dir=<SubFolder>] [--api] [--force]
 ```
 
-#### Arguments et options
+#### Arguments and options
 
-| Nom           | Type      | Description                                                        |
-|---------------|-----------|--------------------------------------------------------------------|
-| `controller`  | Argument  | Nom de la classe du contrôleur (optionnel, demandé interactivement)|
-| `--project`   | Option    | Projet cible dans `./src/`                                         |
-| `--dir` / `-d`| Option    | Sous-dossier dans `App/Controllers/`                               |
-| `--api`       | Flag      | Génère un contrôleur API (retourne `JsonResponse`)                 |
-| `--force`     | Flag      | Écrase le fichier si il existe déjà                               |
+| Name            | Type      | Description                                                          |
+|-------------------|-----------|--------------------------------------------------------------------------|
+| `controller`      | Argument  | Controller class name (optional, asked interactively)                    |
+| `--project`       | Option    | Target project inside `./src/`                                            |
+| `--dir` / `-d`    | Option    | Subfolder inside `App/Controllers/`                                       |
+| `--api`           | Flag      | Generates an API controller (returns `JsonResponse`)                      |
+| `--force`         | Flag      | Overwrites the file if it already exists                                   |
 
-#### Normalisation du nom
+#### Name normalization
 
-Le nom du contrôleur est normalisé automatiquement :
-- Conversion en PascalCase
-- Ajout du suffixe `Controller` si absent
+The controller name is automatically normalized:
+- Converted to PascalCase
+- The `Controller` suffix is appended if missing
 
-Exemples : `user` → `UserController`, `blog-post` → `BlogPostController`.
+Examples: `user` → `UserController`, `blog-post` → `BlogPostController`.
 
-#### Contrôleur web généré
+#### Generated web controller
 
 ```bash
 php bin/neo make:controller Article --project=MyProject --dir=Blog
 ```
 
-Fichier généré : `src/MyProject/App/Controllers/Blog/ArticleController.php`
+Generated file: `src/MyProject/App/Controllers/Blog/ArticleController.php`
 
 ```php
 namespace Neo\Src\MyProject\App\Controllers\Blog;
@@ -253,13 +253,13 @@ final class ArticleController extends AbstractController
 }
 ```
 
-#### Contrôleur API généré
+#### Generated API controller
 
 ```bash
 php bin/neo make:controller User --project=MyProject --api
 ```
 
-Fichier généré : `src/MyProject/App/Controllers/UserController.php`
+Generated file: `src/MyProject/App/Controllers/UserController.php`
 
 ```php
 namespace Neo\Src\MyProject\App\Controllers;
@@ -280,19 +280,19 @@ final class UserController extends AbstractController
 }
 ```
 
-#### Construction automatique des routes
+#### Automatic route building
 
-La route principale (`MainRoute`) est construite à partir du sous-dossier et du nom du contrôleur :
+The main route (`MainRoute`) is built from the subfolder and the controller name:
 
-| Contrôleur          | Dossier  | `MainRoute` path    | `name`              |
-|---------------------|----------|---------------------|---------------------|
-| `ArticleController` | `Blog`   | `/blog/article`     | `blog.article`      |
-| `UserController`    | aucun    | `/user`             | `user`              |
-| `AdminController`   | `Panel`  | `/panel/admin`      | `panel.admin`       |
+| Controller           | Folder   | `MainRoute` path    | `name`              |
+|------------------------|----------|-----------------------|------------------------|
+| `ArticleController`   | `Blog`   | `/blog/article`        | `blog.article`         |
+| `UserController`      | none     | `/user`                 | `user`                  |
+| `AdminController`     | `Panel`  | `/panel/admin`          | `panel.admin`           |
 
 ---
 
-## Exemple complet : contrôleur avec accès aux helpers
+## Complete example: controller with access to helpers
 
 ```php
 #[MainRoute(path: '/dashboard', name: 'dashboard')]
@@ -301,7 +301,7 @@ final class DashboardController extends AbstractController
     #[Route(path: '/', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
-        // 'render' injecté par ViewControllerExtension
+        // 'render' injected by ViewControllerExtension
         return $this->render('pages/dashboard/index.html.twig', [
             'user' => $this->getSession('user'),
         ]);
@@ -310,17 +310,17 @@ final class DashboardController extends AbstractController
     #[Route(path: '/logout', name: 'logout', methods: ['POST'])]
     public function logout(): RedirectResponse
     {
-        // 'session' propriété injectée par SessionControllerExtension
+        // 'session' property injected by SessionControllerExtension
         $this->session->destroy();
 
-        // 'redirectToRoute' injecté par ViewControllerExtension
+        // 'redirectToRoute' injected by ViewControllerExtension
         return $this->redirectToRoute('default.index');
     }
 
     #[Route(path: '/data', name: 'data', methods: ['GET'])]
     public function data(): JsonResponse
     {
-        // 'jsonSuccess' injecté par ApiControllerExtension
+        // 'jsonSuccess' injected by ApiControllerExtension
         return $this->jsonSuccess([
             'message' => 'ok',
             'flash'   => $this->getFlash('success'),
@@ -331,15 +331,15 @@ final class DashboardController extends AbstractController
 
 ---
 
-## Structure des fichiers
+## File structure
 
 ```
 neo/Core/Controller/
-├── AbstractController.php              # Classe de base avec délégation dynamique
+├── AbstractController.php              # Base class with dynamic delegation
 ├── Exception/
 │   └── AbstractControllerException.php
 ├── Interface/
-│   └── ControllerExtensionInterface.php  # Contrat pour les extensions
+│   └── ControllerExtensionInterface.php  # Contract for extensions
 └── Commands/
     └── MakeControllerCommand.php          # make:controller
 ```

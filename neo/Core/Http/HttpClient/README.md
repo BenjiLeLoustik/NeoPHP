@@ -1,18 +1,18 @@
 # HttpClient
 
-`Neo\Core\Http\HttpClient\HttpClientManager` est un client HTTP basé sur cURL pour effectuer des requêtes sortantes. Il retourne un objet `Response` standard, ce qui permet d'utiliser `toArray()` pour décoder directement les réponses JSON.
+`Neo\Core\Http\HttpClient\HttpClientManager` is a cURL-based HTTP client for making outbound requests. It returns a standard `Response` object, which allows using `toArray()` to directly decode JSON responses.
 
 ---
 
-## Sommaire
+## Summary
 
 1. [Structure](#structure)
-2. [Utilisation de base](#utilisation-de-base)
-3. [Options disponibles](#options-disponibles)
-4. [Corps de la requête](#corps-de-la-requête)
-5. [Authentification](#authentification)
-6. [Lecture de la réponse](#lecture-de-la-réponse)
-7. [Options par défaut](#options-par-défaut)
+2. [Basic Usage](#basic-usage)
+3. [Available Options](#available-options)
+4. [Request Body](#request-body)
+5. [Authentication](#authentication)
+6. [Reading the Response](#reading-the-response)
+7. [Default Options](#default-options)
 8. [HttpClientInterface](#httpclientinterface)
 9. [HttpClientException](#httpclientexception)
 
@@ -22,87 +22,87 @@
 
 ```
 HttpClient/
-├── HttpClientManager.php               # Client HTTP cURL
-├── HttpClientModule.php                # Enregistrement DI
+├── HttpClientManager.php               # cURL-based HTTP client
+├── HttpClientModule.php                # DI registration
 ├── Interface/
-│   └── HttpClientInterface.php         # Contrat du client HTTP
+│   └── HttpClientInterface.php         # Contract for the HTTP client
 └── Exception/
-    └── HttpClientException.php         # Erreur réseau ou réponse invalide
+    └── HttpClientException.php         # Network error or invalid response
 ```
 
 ---
 
-## Utilisation de base
+## Basic Usage
 
 ```php
 $client = $container->get(HttpClientManager::class);
 
-// Requête GET
+// GET request
 $response = $client->request('GET', 'https://api.example.com/users');
 
-// Requête POST avec corps JSON
+// POST request with a JSON body
 $response = $client->request('POST', 'https://api.example.com/users', [
     'json' => ['name' => 'Alice', 'email' => 'alice@example.com'],
 ]);
 
-// Accéder à la réponse
+// Access the response
 $response->getStatusCode();  // 201
 $data = $response->toArray(); // ['id' => 42, 'name' => 'Alice', ...]
 ```
 
 ---
 
-## Options disponibles
+## Available Options
 
-| Clé | Type | Défaut | Description |
+| Key | Type | Default | Description |
 |-----|------|--------|-------------|
-| `base_uri` | `string` | — | Préfixé aux URLs relatives |
-| `query` | `array` | — | Paramètres ajoutés à la query string |
-| `headers` | `array` | `[]` | En-têtes de la requête |
-| `bearer` | `string` | — | Token Bearer (ajoute `Authorization: Bearer ...`) |
-| `json` | `array\|object` | — | Corps encodé en JSON (`Content-Type: application/json`) |
-| `body` | `string\|array` | — | Corps brut (array = form-encodé) |
-| `auth_basic` | `string\|array` | — | Authentification Basic (`"user:pass"` ou `['user', 'pass']`) |
-| `timeout` | `float` | `30.0` | Timeout en secondes |
-| `max_redirects` | `int` | `20` | Nombre max de redirections (0 = désactivé) |
+| `base_uri` | `string` | — | Prefixed to relative URLs |
+| `query` | `array` | — | Parameters added to the query string |
+| `headers` | `array` | `[]` | Request headers |
+| `bearer` | `string` | — | Bearer token (adds `Authorization: Bearer ...`) |
+| `json` | `array\|object` | — | JSON-encoded body (`Content-Type: application/json`) |
+| `body` | `string\|array` | — | Raw body (array = form-encoded) |
+| `auth_basic` | `string\|array` | — | Basic authentication (`"user:pass"` or `['user', 'pass']`) |
+| `timeout` | `float` | `30.0` | Timeout in seconds |
+| `max_redirects` | `int` | `20` | Max number of redirects (0 = disabled) |
 
 ---
 
-## Corps de la requête
+## Request Body
 
 ### JSON
 
 ```php
 $response = $client->request('POST', '/api/articles', [
     'json' => [
-        'title'   => 'Mon article',
-        'content' => 'Contenu...',
+        'title'   => 'My article',
+        'content' => 'Content...',
     ],
 ]);
-// Content-Type: application/json ajouté automatiquement
+// Content-Type: application/json added automatically
 ```
 
-### Formulaire (form-urlencoded)
+### Form (form-urlencoded)
 
 ```php
 $response = $client->request('POST', '/login', [
     'body' => ['username' => 'alice', 'password' => 'secret'],
 ]);
-// Content-Type: application/x-www-form-urlencoded ajouté automatiquement
+// Content-Type: application/x-www-form-urlencoded added automatically
 ```
 
-### Corps brut
+### Raw body
 
 ```php
 $response = $client->request('PUT', '/upload', [
     'headers' => ['Content-Type' => 'text/plain'],
-    'body'    => 'Contenu brut',
+    'body'    => 'Raw content',
 ]);
 ```
 
 ---
 
-## Authentification
+## Authentication
 
 ### Bearer Token
 
@@ -110,18 +110,18 @@ $response = $client->request('PUT', '/upload', [
 $response = $client->request('GET', '/api/me', [
     'bearer' => $jwtToken,
 ]);
-// Ajoute : Authorization: Bearer <token>
+// Adds: Authorization: Bearer <token>
 ```
 
 ### Basic Auth
 
 ```php
-// Sous forme de chaîne
+// As a string
 $response = $client->request('GET', '/protected', [
     'auth_basic' => 'user:password',
 ]);
 
-// Sous forme de tableau
+// As an array
 $response = $client->request('GET', '/protected', [
     'auth_basic' => ['user', 'password'],
 ]);
@@ -129,31 +129,31 @@ $response = $client->request('GET', '/protected', [
 
 ---
 
-## Lecture de la réponse
+## Reading the Response
 
-`request()` retourne un objet `Response` standard enrichi de méthodes de lecture :
+`request()` returns a standard `Response` object enriched with reading methods:
 
 ```php
 $response = $client->request('GET', 'https://api.example.com/status');
 
-// Code HTTP
+// HTTP status code
 $response->getStatusCode();   // 200
 
-// En-têtes de la réponse (noms en minuscules)
+// Response headers (lowercase names)
 $response->getHeaders();      // ['content-type' => 'application/json', ...]
 
-// Corps brut
+// Raw body
 $response->getContent();      // '{"status":"ok"}'
 
-// Décodage JSON (lève HttpClientException si invalide)
+// JSON decoding (throws HttpClientException if invalid)
 $data = $response->toArray(); // ['status' => 'ok']
 ```
 
 ---
 
-## Options par défaut
+## Default Options
 
-Pour un client qui effectue plusieurs requêtes vers la même API, définissez des options partagées dans le constructeur :
+For a client that makes multiple requests to the same API, define shared options in the constructor:
 
 ```php
 $client = new HttpClientManager([
@@ -165,7 +165,7 @@ $client = new HttpClientManager([
     ],
 ]);
 
-// Les options passées à request() écrasent les defaults (array_replace)
+// Options passed to request() override the defaults (array_replace)
 $users    = $client->request('GET', '/users')->toArray();
 $articles = $client->request('GET', '/articles', ['timeout' => 5.0])->toArray();
 ```
@@ -174,7 +174,7 @@ $articles = $client->request('GET', '/articles', ['timeout' => 5.0])->toArray();
 
 ## HttpClientInterface
 
-**Fichier :** `Interface/HttpClientInterface.php`
+**File:** `Interface/HttpClientInterface.php`
 
 ```php
 interface HttpClientInterface
@@ -187,7 +187,7 @@ interface HttpClientInterface
 }
 ```
 
-`HttpClientModule` enregistre `HttpClientManager` comme implémentation de `HttpClientInterface` dans le conteneur :
+`HttpClientModule` registers `HttpClientManager` as the implementation of `HttpClientInterface` in the container:
 
 ```php
 $client = $container->get(HttpClientInterface::class);
@@ -197,12 +197,12 @@ $client = $container->get(HttpClientInterface::class);
 
 ## HttpClientException
 
-**Fichier :** `Exception/HttpClientException.php`
+**File:** `Exception/HttpClientException.php`
 
-Étend `FrameworkException`. Levée dans trois cas :
+Extends `FrameworkException`. Thrown in three cases:
 
 | Code | Cause |
 |------|-------|
-| `500` | Erreur cURL (réseau, DNS, timeout) |
-| `500` | Corps de la requête JSON non encodable |
-| `500` | `toArray()` sur une réponse non-JSON ou non-tableau |
+| `500` | cURL error (network, DNS, timeout) |
+| `500` | Request body cannot be JSON-encoded |
+| `500` | `toArray()` called on a non-JSON or non-array response |

@@ -1,17 +1,17 @@
 # Upload
 
-Le sous-module `File` gère l'upload sécurisé de fichiers. Il s'appuie sur `UploaderManager` pour valider, déplacer et nommer les fichiers uploadés.
+The `File` submodule handles secure file uploads. It relies on `UploaderManager` to validate, move, and name uploaded files.
 
 ---
 
-## Sommaire
+## Summary
 
 1. [Structure](#structure)
 2. [UploaderManager](#uploadermanager)
 3. [UploadedFile](#uploadedfile)
-4. [Sécurité](#sécurité)
+4. [Security](#security)
 5. [Exceptions](#exceptions)
-6. [Extension contrôleur](#extension-contrôleur)
+6. [Controller Extension](#controller-extension)
 
 ---
 
@@ -19,22 +19,22 @@ Le sous-module `File` gère l'upload sécurisé de fichiers. Il s'appuie sur `Up
 
 ```
 File/
-├── UploaderManager.php                  # Gestion des uploads
-├── UploaderModule.php                   # Enregistrement DI
+├── UploaderManager.php                  # Upload handling
+├── UploaderModule.php                   # DI registration
 ├── Model/
-│   └── UploadedFile.php                 # Représentation d'un fichier uploadé
+│   └── UploadedFile.php                 # Representation of an uploaded file
 ├── Exception/
-│   ├── UploadException.php              # Erreur sur le fichier
-│   └── UploaderException.php            # Erreur sur le processus d'upload
+│   ├── UploadException.php              # File-related error
+│   └── UploaderException.php            # Upload process error
 └── Extension/
-    └── UploaderControllerExtension.php  # Injecte upload() dans les contrôleurs
+    └── UploaderControllerExtension.php  # Injects upload() into controllers
 ```
 
 ---
 
 ## UploaderManager
 
-**Fichier :** `UploaderManager.php`
+**File:** `UploaderManager.php`
 
 ```php
 $uploader = $container->get(UploaderManager::class);
@@ -43,72 +43,72 @@ $file = $request->file('avatar'); // UploadedFile
 
 $finalName = $uploader->upload(
     file: $file,
-    name: 'avatar_' . $userId,            // Nom souhaité (sans extension)
+    name: 'avatar_' . $userId,            // Desired name (without extension)
     allowedExtensions: ['jpg', 'png', 'webp'],
-    directory: 'uploads/avatars'           // Relatif à assetsPath
+    directory: 'uploads/avatars'           // Relative to assetsPath
 );
-// Retourne : 'avatar_42.jpg'
-// Ou en cas de collision : 'avatar_42_1722172800.jpg'
+// Returns: 'avatar_42.jpg'
+// Or, in case of a collision: 'avatar_42_1722172800.jpg'
 ```
 
-Les fichiers sont déplacés dans `src/<Projet>/Assets/{directory}/`.
+Files are moved to `src/<Project>/Assets/{directory}/`.
 
 ---
 
 ## UploadedFile
 
-**Fichier :** `Model/UploadedFile.php`
+**File:** `Model/UploadedFile.php`
 
-Encapsule les données de `$_FILES` pour un champ donné.
+Encapsulates the `$_FILES` data for a given field.
 
 ```php
 $file = $request->file('document'); // ?UploadedFile
 
 if ($file) {
-    $file->getName();         // Nom original du fichier
-    $file->getExtension();    // Extension en minuscules ('pdf', 'jpg', ...)
-    $file->getMimeType();     // MIME type déclaré
-    $file->getSize();         // Taille en octets
-    $file->getTmpPath();      // Chemin temporaire ($_FILES['tmp_name'])
-    $file->isValid();         // true si UPLOAD_ERR_OK
+    $file->getName();         // Original file name
+    $file->getExtension();    // Lowercase extension ('pdf', 'jpg', ...)
+    $file->getMimeType();     // Declared MIME type
+    $file->getSize();         // Size in bytes
+    $file->getTmpPath();      // Temporary path ($_FILES['tmp_name'])
+    $file->isValid();         // true if UPLOAD_ERR_OK
 }
 ```
 
 ---
 
-## Sécurité
+## Security
 
-Les extensions suivantes sont **toujours interdites**, quelle que soit la liste `allowedExtensions` passée à `upload()` :
+The following extensions are **always forbidden**, regardless of the `allowedExtensions` list passed to `upload()`:
 
 ```
 php, phtml, exe, sh, js
 ```
 
-Ordre de vérification :
-1. Le fichier est valide (`$file->isValid()` → `UPLOAD_ERR_OK`)
-2. L'extension n'est pas dans la liste noire
-3. L'extension est dans la liste blanche (si non vide)
+Verification order:
+1. The file is valid (`$file->isValid()` → `UPLOAD_ERR_OK`)
+2. The extension is not in the blacklist
+3. The extension is in the whitelist (if not empty)
 
-En cas de collision de nom dans le dossier de destination, un suffixe `_<timestamp>` est ajouté automatiquement.
+In case of a name collision in the destination folder, a `_<timestamp>` suffix is automatically added.
 
 ---
 
 ## Exceptions
 
-| Classe | Titre | Cause |
+| Class | Title | Cause |
 |--------|-------|-------|
-| `UploadException` | `Invalid File` | `isValid()` retourne `false` |
-| `UploadException` | `Forbidden File Type` | Extension dans la liste noire |
-| `UploadException` | `Extension Not Allowed` | Extension absente de la liste blanche |
-| `UploaderException` | `Upload Failed` | `move_uploaded_file()` a échoué |
+| `UploadException` | `Invalid File` | `isValid()` returns `false` |
+| `UploadException` | `Forbidden File Type` | Extension is in the blacklist |
+| `UploadException` | `Extension Not Allowed` | Extension is absent from the whitelist |
+| `UploaderException` | `Upload Failed` | `move_uploaded_file()` failed |
 
 ---
 
-## Extension contrôleur
+## Controller Extension
 
-**Fichier :** `Extension/UploaderControllerExtension.php`
+**File:** `Extension/UploaderControllerExtension.php`
 
-Injecte automatiquement `upload()` dans tous les contrôleurs. Accède au fichier directement depuis la `Request` courante.
+Automatically injects `upload()` into every controller. Accesses the file directly from the current `Request`.
 
 ```php
 class ProfileController extends AbstractController
@@ -132,4 +132,4 @@ class ProfileController extends AbstractController
 }
 ```
 
-Si le champ de fichier est absent de la requête, une `AbstractControllerException` (code 400) est levée.
+If the file field is missing from the request, an `AbstractControllerException` (code 400) is thrown.

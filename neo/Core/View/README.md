@@ -1,132 +1,132 @@
 # View
 
-Le module View intègre le moteur de template **Twig** dans NeoPHP. Il expose le `ViewManager` pour le rendu de templates, un système d'extensions permettant d'ajouter des fonctions et filtres Twig depuis n'importe quel module, et une extension de contrôleur qui injecte les méthodes `render()` et `template()` directement dans les contrôleurs.
+The View module integrates the **Twig** template engine into NeoPHP. It exposes the `ViewManager` for rendering templates, an extension system allowing Twig functions and filters to be added from any module, and a controller extension that injects the `render()` and `template()` methods directly into controllers.
 
 ---
 
-## Sommaire
+## Table of Contents
 
-1. [Structure du module](#structure-du-module)
-2. [Configuration Twig](#configuration-twig)
+1. [Module Structure](#module-structure)
+2. [Twig Configuration](#twig-configuration)
 3. [ViewManager](#viewmanager)
-4. [Extension de contrôleur : render() et template()](#extension-de-contrôleur--render-et-template)
+4. [Controller Extension: render() and template()](#controller-extension-render-and-template)
 5. [TwigExtensionInterface](#twigextensioninterface)
-6. [Créer une extension Twig](#créer-une-extension-twig)
-7. [Globals Twig](#globals-twig)
-8. [Gestion des erreurs](#gestion-des-erreurs)
+6. [Creating a Twig Extension](#creating-a-twig-extension)
+7. [Twig Globals](#twig-globals)
+8. [Error Handling](#error-handling)
 9. [ViewModule](#viewmodule)
 
 ---
 
-## Structure du module
+## Module Structure
 
 ```
 View/
-├── ViewManager.php                     # Gestionnaire Twig principal
-├── ViewModule.php                      # Enregistrement dans le conteneur DI
+├── ViewManager.php                     # Main Twig manager
+├── ViewModule.php                      # Registration in the DI container
 ├── Interface/
-│   └── TwigExtensionInterface.php      # Contrat pour les extensions Twig
+│   └── TwigExtensionInterface.php      # Contract for Twig extensions
 ├── Extension/
-│   └── ViewControllerExtension.php     # Injecte render() et template() dans les contrôleurs
+│   └── ViewControllerExtension.php     # Injects render() and template() into controllers
 └── Exception/
-    └── ViewException.php               # Exception spécifique aux erreurs de rendu
+    └── ViewException.php               # Exception specific to rendering errors
 ```
 
 ---
 
-## Configuration Twig
+## Twig Configuration
 
-La configuration est lue depuis deux fichiers : `twig.config.php` et `app.config.php`.
+Configuration is read from two files: `twig.config.php` and `app.config.php`.
 
-**`src/MonProjet/Config/twig.config.php` :**
+**`src/MyProject/Config/twig.config.php`:**
 
 ```php
 return [
-    'cache'            => false,        // true en production
-    'debug'            => true,         // Ajoute l'extension DebugExtension et {{ dump() }}
-    'auto_reload'      => true,         // Recompile les templates modifiés
-    'auto_escape'      => 'html',       // Échappement automatique HTML
+    'cache'            => false,        // true in production
+    'debug'            => true,         // Adds the DebugExtension and {{ dump() }}
+    'auto_reload'      => true,         // Recompiles modified templates
+    'auto_escape'      => 'html',       // Automatic HTML escaping
     'charset'          => 'UTF-8',
-    'strict_variables' => false,        // true = exception si variable inconnue
-    'options'          => [],           // Options supplémentaires passées à Twig\Environment
+    'strict_variables' => false,        // true = exception if variable unknown
+    'options'          => [],           // Additional options passed to Twig\Environment
 ];
 ```
 
-**`src/MonProjet/Config/app.config.php` :**
+**`src/MyProject/Config/app.config.php`:**
 
 ```php
 return [
     'date' => [
-        'timezone' => 'Europe/Paris',   // Fuseau horaire Twig et PHP
+        'timezone' => 'Europe/Paris',   // Twig and PHP timezone
     ],
     'general' => [
-        'name'    => 'Mon Application',
+        'name'    => 'My Application',
         'version' => '1.0.0',
     ],
 ];
 ```
 
-Le fuseau horaire est appliqué à la fois à PHP (`date_default_timezone_set`) et à Twig (`CoreExtension::setTimezone`).
+The timezone is applied both to PHP (`date_default_timezone_set`) and to Twig (`CoreExtension::setTimezone`).
 
-Quand `cache` est `true`, les templates compilés sont stockés dans `Storage/var/cache/Twig/`.
+When `cache` is `true`, compiled templates are stored in `Storage/var/cache/Twig/`.
 
 ---
 
 ## ViewManager
 
-`Neo\Core\View\ViewManager` encapsule l'instance `Twig\Environment` et fournit les méthodes de rendu.
+`Neo\Core\View\ViewManager` wraps the `Twig\Environment` instance and provides the rendering methods.
 
-### Méthodes de rendu
+### Rendering Methods
 
 ```php
 use Neo\Core\View\ViewManager;
 
 $view = $container->get(ViewManager::class);
 
-// Rendu avec exception si le template n'existe pas
-$html = $view->render('articles/liste.twig', [
+// Render with an exception if the template does not exist
+$html = $view->render('articles/list.twig', [
     'articles' => $articles,
-    'titre'    => 'Tous les articles',
+    'title'    => 'All articles',
 ]);
 
-// Rendu silencieux : retourne null si le template est introuvable
+// Silent render: returns null if the template cannot be found
 $html = $view->renderIfExists('partials/sidebar.twig', ['user' => $user]);
 if ($html !== null) {
-    // afficher la sidebar
+    // display the sidebar
 }
 
-// Accès direct à l'instance Twig\Environment
+// Direct access to the Twig\Environment instance
 $twig = $view->getTwig();
 ```
 
-### Ajout d'une extension Twig
+### Adding a Twig Extension
 
 ```php
-$view->addExtension(new MonExtension());
+$view->addExtension(new MyExtension());
 ```
 
-`addExtension()` parcourt les fonctions et filtres retournés par l'extension et les enregistre dans Twig via `TwigFunction` et `TwigFilter`. Chaque entrée peut être soit un callable direct, soit un tableau `['callable' => ..., 'options' => [...]]`.
+`addExtension()` iterates over the functions and filters returned by the extension and registers them in Twig via `TwigFunction` and `TwigFilter`. Each entry can be either a direct callable, or an array `['callable' => ..., 'options' => [...]]`.
 
 ---
 
-## Extension de contrôleur : render() et template()
+## Controller Extension: render() and template()
 
-`Neo\Core\View\Extension\ViewControllerExtension` est une extension de contrôleur (annotée `#[Extension(type: ExtensionTypeEnum::CONTROLLER)]`) qui injecte automatiquement deux méthodes dans tous les contrôleurs.
+`Neo\Core\View\Extension\ViewControllerExtension` is a controller extension (annotated `#[Extension(type: ExtensionTypeEnum::CONTROLLER)]`) that automatically injects two methods into all controllers.
 
 ### render()
 
-Rend un template Twig et retourne directement un objet `Response` avec le header `Content-Type: text/html; charset=UTF-8`.
+Renders a Twig template and directly returns a `Response` object with the `Content-Type: text/html; charset=UTF-8` header.
 
 ```php
 use Neo\Core\Controller\AbstractController;
 
 class ArticleController extends AbstractController
 {
-    public function liste(): Response
+    public function list(): Response
     {
         $articles = $this->get(ArticleRepository::class)->findAll();
 
-        return $this->render('articles/liste.twig', [
+        return $this->render('articles/list.twig', [
             'articles' => $articles,
         ]);
     }
@@ -137,7 +137,7 @@ class ArticleController extends AbstractController
 
         return $this->render('articles/detail.twig', [
             'article' => $article,
-            'titre'   => $article->titre,
+            'title'   => $article->title,
         ]);
     }
 }
@@ -145,44 +145,44 @@ class ArticleController extends AbstractController
 
 ### template()
 
-Rend un template Twig et retourne le **contenu HTML sous forme de chaîne** (sans créer de `Response`). Utile pour inclure un fragment dans une réponse plus complexe ou pour le rendu de composants partiels.
+Renders a Twig template and returns the **HTML content as a string** (without creating a `Response`). Useful for including a fragment in a more complex response or for rendering partial components.
 
 ```php
 class EmailController extends AbstractController
 {
-    public function envoyer(): Response
+    public function send(): Response
     {
-        $contenuEmail = $this->template('emails/bienvenue.twig', [
-            'nom' => 'Alice',
+        $emailContent = $this->template('emails/welcome.twig', [
+            'name' => 'Alice',
         ]);
 
         $this->get(Mailer::class)->send(
             to: 'alice@example.com',
-            subject: 'Bienvenue',
-            body: $contenuEmail
+            subject: 'Welcome',
+            body: $emailContent
         );
 
-        return $this->json(['message' => 'E-mail envoyé.']);
+        return $this->json(['message' => 'Email sent.']);
     }
 }
 ```
 
-### Variable globale `app` dans les templates
+### The `app` Global Variable in Templates
 
-`ViewControllerExtension` enrichit la variable globale `app` disponible dans tous les templates en y ajoutant automatiquement la `Session` et le `Cookie` courants :
+`ViewControllerExtension` enriches the `app` global variable available in all templates by automatically adding the current `Session` and `Cookie`:
 
 ```twig
-{# Accès aux données de session dans Twig #}
+{# Access session data in Twig #}
 {% if app.session.get('user_id') %}
-    Connecté en tant que : {{ app.session.get('user_name') }}
+    Logged in as: {{ app.session.get('user_name') }}
 {% endif %}
 
-{# Accès au nom de l'application (depuis general config) #}
+{# Access the application name (from general config) #}
 <title>{{ app.name }}</title>
 
-{# Accès aux cookies #}
+{# Access cookies #}
 {% if app.cookie.has('lang') %}
-    Langue : {{ app.cookie.get('lang') }}
+    Language: {{ app.cookie.get('lang') }}
 {% endif %}
 ```
 
@@ -190,7 +190,7 @@ class EmailController extends AbstractController
 
 ## TwigExtensionInterface
 
-`Neo\Core\View\Interface\TwigExtensionInterface` est le contrat que toute extension Twig doit implémenter.
+`Neo\Core\View\Interface\TwigExtensionInterface` is the contract that every Twig extension must implement.
 
 ```php
 interface TwigExtensionInterface
@@ -207,74 +207,74 @@ interface TwigExtensionInterface
 }
 ```
 
-Chaque méthode retourne un tableau indexé par le **nom de la fonction/filtre** dans Twig. La valeur peut être :
+Each method returns an array indexed by the **function/filter name** in Twig. The value can be:
 
-**Format simple (callable direct) :**
+**Simple format (direct callable):**
 
 ```php
-'maFonction' => fn(string $param): string => strtoupper($param),
+'myFunction' => fn(string $param): string => strtoupper($param),
 ```
 
-**Format étendu (avec options Twig) :**
+**Extended format (with Twig options):**
 
 ```php
-'maFonction' => [
+'myFunction' => [
     'callable' => fn(string $param): string => strtoupper($param),
-    'options'  => ['is_safe' => ['html']],  // options TwigFunction/TwigFilter
+    'options'  => ['is_safe' => ['html']],  // TwigFunction/TwigFilter options
 ],
 ```
 
 ---
 
-## Créer une extension Twig
+## Creating a Twig Extension
 
-Pour exposer des fonctions ou filtres personnalisés dans les templates, il suffit de créer une classe implémentant `TwigExtensionInterface` et de l'annoter avec `#[Extension(type: ExtensionTypeEnum::VIEW)]` pour qu'elle soit détectée et enregistrée automatiquement.
+To expose custom functions or filters in templates, simply create a class implementing `TwigExtensionInterface` and annotate it with `#[Extension(type: ExtensionTypeEnum::VIEW)]` so it is automatically detected and registered.
 
 ```php
 <?php
 declare(strict_types=1);
 
-namespace Neo\Src\MonProjet\Extension;
+namespace Neo\Src\MyProject\Extension;
 
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
 #[Extension(type: ExtensionTypeEnum::VIEW)]
-class MonExtensionTwig implements TwigExtensionInterface
+class MyTwigExtension implements TwigExtensionInterface
 {
     public function getFunctions(): array
     {
         return [
-            // Fonction simple
-            'prix_formate' => fn(float $montant, string $devise = 'EUR'): string
-                => number_format($montant, 2, ',', ' ') . ' ' . $devise,
+            // Simple function
+            'format_price' => fn(float $amount, string $currency = 'EUR'): string
+                => number_format($amount, 2, ',', ' ') . ' ' . $currency,
 
-            // Fonction avec options Twig (is_safe: html pour ne pas ré-échapper)
+            // Function with Twig options (is_safe: html to avoid re-escaping)
             'badge' => [
-                'callable' => fn(string $label, string $couleur = 'blue'): string
-                    => "<span class=\"badge badge-{$couleur}\">{$label}</span>",
+                'callable' => fn(string $label, string $color = 'blue'): string
+                    => "<span class=\"badge badge-{$color}\">{$label}</span>",
                 'options' => ['is_safe' => ['html']],
             ],
 
-            // Accès à un service injecté
-            'nb_articles' => fn(): int => $this->articleRepository->count(),
+            // Access to an injected service
+            'article_count' => fn(): int => $this->articleRepository->count(),
         ];
     }
 
     public function getFilters(): array
     {
         return [
-            'initiales' => fn(string $nom): string => implode('', array_map(
-                fn(string $mot): string => strtoupper($mot[0]),
-                explode(' ', $nom)
+            'initials' => fn(string $name): string => implode('', array_map(
+                fn(string $word): string => strtoupper($word[0]),
+                explode(' ', $name)
             )),
 
             'truncate' => [
-                'callable' => fn(string $texte, int $longueur = 100): string
-                    => mb_strlen($texte) > $longueur
-                        ? mb_substr($texte, 0, $longueur) . '...'
-                        : $texte,
+                'callable' => fn(string $text, int $length = 100): string
+                    => mb_strlen($text) > $length
+                        ? mb_substr($text, 0, $length) . '...'
+                        : $text,
                 'options' => [],
             ],
         ];
@@ -282,74 +282,74 @@ class MonExtensionTwig implements TwigExtensionInterface
 }
 ```
 
-**Usage dans les templates :**
+**Usage in Templates:**
 
 ```twig
-{# Fonctions #}
-{{ prix_formate(article.prix) }}
-{{ prix_formate(article.prix, 'USD') }}
-{{ badge('Nouveau', 'green') }}
-{{ nb_articles() }} articles disponibles
+{# Functions #}
+{{ format_price(article.price) }}
+{{ format_price(article.price, 'USD') }}
+{{ badge('New', 'green') }}
+{{ article_count() }} articles available
 
-{# Filtres #}
-{{ user.nom|initiales }}
+{# Filters #}
+{{ user.name|initials }}
 {{ article.description|truncate(150) }}
 ```
 
 ---
 
-## Globals Twig
+## Twig Globals
 
-La variable `app` est disponible globalement dans tous les templates. Elle est construite depuis la section `general` de `app.config.php`.
+The `app` variable is available globally in all templates. It is built from the `general` section of `app.config.php`.
 
 ```php
 // app.config.php
 return [
     'general' => [
-        'name'        => 'MonSite',
+        'name'        => 'MySite',
         'version'     => '2.1.0',
         'maintenance' => false,
-        'support'     => 'support@monsite.fr',
+        'support'     => 'support@mysite.com',
     ],
 ];
 ```
 
 ```twig
-{# Dans n'importe quel template #}
+{# In any template #}
 <title>{{ app.name }}</title>
 <meta name="version" content="{{ app.version }}">
 
 {% if app.maintenance %}
-    <div class="alert">Site en maintenance.</div>
+    <div class="alert">Site under maintenance.</div>
 {% endif %}
 
-{# Enrichi par ViewControllerExtension lors d'un render() de contrôleur #}
-Bonjour {{ app.session.get('user_name') ?? 'visiteur' }}
+{# Enriched by ViewControllerExtension during a controller's render() #}
+Hello {{ app.session.get('user_name') ?? 'visitor' }}
 ```
 
 ---
 
-## Gestion des erreurs
+## Error Handling
 
-Le `ViewManager` convertit les exceptions Twig en `ViewException` avec des codes HTTP appropriés :
+`ViewManager` converts Twig exceptions into `ViewException` with appropriate HTTP codes:
 
-| Exception Twig | Code | Titre |
+| Twig Exception | Code | Title |
 |---|---|---|
 | `Twig\Error\LoaderError` | 404 | Template Not Found |
 | `Twig\Error\SyntaxError` | 500 | Template Syntax Error |
 | `Twig\Error\RuntimeError` | 500 | Template Runtime Error |
 
-`renderIfExists()` intercepte silencieusement les `LoaderError` et retourne `null`, sans lever d'exception.
+`renderIfExists()` silently intercepts `LoaderError` and returns `null`, without throwing an exception.
 
 ```php
-// Dans un service, traiter les erreurs de template
+// In a service, handle template errors
 try {
-    $html = $view->render('mon-template.twig', $data);
+    $html = $view->render('my-template.twig', $data);
 } catch (ViewException $e) {
-    // $e->getCode() retourne 404 si le template est introuvable
-    // $e->getMessage() contient le détail de l'erreur Twig
+    // $e->getCode() returns 404 if the template cannot be found
+    // $e->getMessage() contains the detail of the Twig error
     logger()->error($e->getMessage());
-    $html = '<p>Erreur de rendu.</p>';
+    $html = '<p>Rendering error.</p>';
 }
 ```
 
@@ -357,11 +357,11 @@ try {
 
 ## ViewModule
 
-`Neo\Core\View\ViewModule` enregistre le `ViewManager` dans le conteneur DI avec `ConfigModule` comme dépendance.
+`Neo\Core\View\ViewModule` registers `ViewManager` in the DI container with `ConfigModule` as a dependency.
 
 ```php
-// Enregistrement automatique par le framework
-// Le module déclare sa dépendance sur ConfigModule
+// Automatic registration by the framework
+// The module declares its dependency on ConfigModule
 class ViewModule implements ModuleInterface
 {
     public function dependencies(): array
@@ -381,4 +381,4 @@ class ViewModule implements ModuleInterface
 }
 ```
 
-Le `ViewManager` est instancié une seule fois (singleton dans le conteneur) et partagé entre tous les contrôleurs et services qui en ont besoin.
+`ViewManager` is instantiated only once (singleton in the container) and shared across all controllers and services that need it.

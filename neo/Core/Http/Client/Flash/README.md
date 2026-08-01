@@ -1,18 +1,18 @@
-# Messages Flash
+# Flash Messages
 
-`Neo\Core\Http\Client\Flash\Flash` gère les messages éphémères stockés en session et consommés à la prochaine lecture (pattern flash message).
+`Neo\Core\Http\Client\Flash\Flash` handles ephemeral messages stored in the session and consumed on the next read (flash message pattern).
 
 ---
 
-## Sommaire
+## Summary
 
 1. [Structure](#structure)
 2. [Configuration](#configuration)
-3. [Ajouter un message](#ajouter-un-message)
-4. [Lire les messages](#lire-les-messages)
-5. [Rendu HTML](#rendu-html)
-6. [Extension contrôleur](#extension-contrôleur)
-7. [Fonction Twig](#fonction-twig)
+3. [Adding a Message](#adding-a-message)
+4. [Reading Messages](#reading-messages)
+5. [HTML Rendering](#html-rendering)
+6. [Controller Extension](#controller-extension)
+7. [Twig Function](#twig-function)
 
 ---
 
@@ -20,23 +20,23 @@
 
 ```
 Client/Flash/
-├── Flash.php                           # Messages flash
+├── Flash.php                           # Flash messages
 └── Extension/
-    ├── FlashControllerExtension.php    # Injecte getFlash() dans les contrôleurs
-    └── FlashViewExtension.php          # Expose flashes() dans Twig
+    ├── FlashControllerExtension.php    # Injects getFlash() into controllers
+    └── FlashViewExtension.php          # Exposes flashes() in Twig
 ```
 
 ---
 
 ## Configuration
 
-Configuré depuis `session.config.php`, clé `flash` :
+Configured from `session.config.php`, under the `flash` key:
 
 ```php
 return [
     'flash' => [
         'session_key' => '_flash',
-        'auto_expire' => true,       // Vide les messages après lecture
+        'auto_expire' => true,       // Clears messages after reading
         'types'       => ['success', 'error', 'warning', 'info'],
     ],
 ];
@@ -44,33 +44,33 @@ return [
 
 ---
 
-## Ajouter un message
+## Adding a Message
 
 ```php
 $flash = $container->get(Flash::class);
 
-$flash->add('success', 'Votre profil a été mis à jour.');
-$flash->add('error', 'Une erreur est survenue.');
-$flash->add('warning', 'Votre session expire bientôt.');
-$flash->add('info', 'Mise à jour disponible.');
+$flash->add('success', 'Your profile has been updated.');
+$flash->add('error', 'An error occurred.');
+$flash->add('warning', 'Your session is about to expire.');
+$flash->add('info', 'An update is available.');
 ```
 
-Le type doit être déclaré dans la configuration (`types`). Sinon, une `FrameworkException` est levée.
+The type must be declared in the configuration (`types`). Otherwise, a `FrameworkException` is thrown.
 
 ---
 
-## Lire les messages
+## Reading Messages
 
 ```php
-// Récupère tous les messages sous forme de tableau
-// Si auto_expire = true, les messages sont supprimés après cette lecture
+// Retrieves every message as an array
+// If auto_expire = true, messages are cleared after this read
 $messages = $flash->getAll();
 // [
-//   ['type' => 'success', 'message' => 'Votre profil a été mis à jour.'],
-//   ['type' => 'error',   'message' => 'Une erreur est survenue.'],
+//   ['type' => 'success', 'message' => 'Your profile has been updated.'],
+//   ['type' => 'error',   'message' => 'An error occurred.'],
 // ]
 
-// Vérifier s'il y a des messages en attente
+// Check whether any messages are pending
 if ($flash->has()) {
     // ...
 }
@@ -78,23 +78,23 @@ if ($flash->has()) {
 
 ---
 
-## Rendu HTML
+## HTML Rendering
 
 ```php
 echo $flash->render();
-// <span class='flash-message success'>Votre profil a été mis à jour.</span>
-// <span class='flash-message error'>Une erreur est survenue.</span>
+// <span class='flash-message success'>Your profile has been updated.</span>
+// <span class='flash-message error'>An error occurred.</span>
 ```
 
-Les valeurs sont passées par `htmlspecialchars()` pour prévenir les XSS.
+Values are passed through `htmlspecialchars()` to prevent XSS.
 
 ---
 
-## Extension contrôleur
+## Controller Extension
 
-**Fichier :** `Extension/FlashControllerExtension.php`
+**File:** `Extension/FlashControllerExtension.php`
 
-Injecte automatiquement `getFlash()` dans tous les contrôleurs.
+Automatically injects `getFlash()` into every controller.
 
 ```php
 class UserController extends AbstractController
@@ -102,9 +102,9 @@ class UserController extends AbstractController
     #[Route('/profile', 'POST')]
     public function update(): Response
     {
-        // ... traitement
+        // ... processing
 
-        $this->getFlash()->add('success', 'Profil mis à jour.');
+        $this->getFlash()->add('success', 'Profile updated.');
         return $this->redirect('/profile');
     }
 }
@@ -112,15 +112,15 @@ class UserController extends AbstractController
 
 ---
 
-## Fonction Twig
+## Twig Function
 
-**Fichier :** `Extension/FlashViewExtension.php`
+**File:** `Extension/FlashViewExtension.php`
 
-Expose la fonction `flashes()` dans tous les templates Twig. Le résultat est marqué `is_safe: html`.
+Exposes the `flashes()` function in every Twig template. The result is marked `is_safe: html`.
 
 ```twig
-{# Dans un layout ou un partial #}
+{# In a layout or a partial #}
 {{ flashes() }}
 ```
 
-Génère le rendu HTML de tous les messages flash en attente (équivalent à `Flash::render()`).
+Generates the HTML rendering of every pending flash message (equivalent to `Flash::render()`).

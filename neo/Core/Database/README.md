@@ -1,12 +1,12 @@
 # Database & ORM
 
-Ce module fournit l'ensemble de la couche d'accès aux données du framework NeoPHP : un ORM complet de type Data Mapper, un système de migrations, un gestionnaire de formulaires et l'accès bas niveau à la base de données.
+This module provides the entire data access layer of the NeoPHP framework: a complete Data Mapper ORM, a migration system, a form manager, and low-level database access.
 
 ---
 
-## Sommaire
+## Summary
 
-1. [Architecture générale](#architecture-générale)
+1. [General Architecture](#general-architecture)
 2. [ORM — Object-Relational Mapper](#orm--object-relational-mapper)
    - [EntityManager](#entitymanager)
    - [UnitOfWork](#unitofwork)
@@ -17,10 +17,10 @@ Ce module fournit l'ensemble de la couche d'accès aux données du framework Neo
    - [QueryBuilder](#querybuilder)
    - [Pagination](#pagination)
    - [Collections](#collections)
-3. [Mapping — Attributs PHP](#mapping--attributs-php)
-   - [ClassMetaData et MetadataFactory](#classmetadata-et-metadatafactory)
-   - [Attributs disponibles](#attributs-disponibles)
-   - [Types ORM](#types-orm)
+3. [Mapping — PHP Attributes](#mapping--php-attributes)
+   - [ClassMetaData and MetadataFactory](#classmetadata-and-metadatafactory)
+   - [Available Attributes](#available-attributes)
+   - [ORM Types](#orm-types)
    - [Platform](#platform)
 4. [Migrations](#migrations)
    - [DatabaseIntrospector](#databaseintrospector)
@@ -28,23 +28,23 @@ Ce module fournit l'ensemble de la couche d'accès aux données du framework Neo
    - [MigrationGenerator](#migrationgenerator)
    - [SchemaDiffer](#schemadiffer)
    - [SchemaTool](#schematool)
-5. [Formulaires](#formulaires)
-   - [FormFactory et FormBuilder](#formfactory-et-formbuilder)
-   - [Form et FormField](#form-et-formfield)
+5. [Forms](#forms)
+   - [FormFactory and FormBuilder](#formfactory-and-formbuilder)
+   - [Form and FormField](#form-and-formfield)
    - [FormRenderer](#formrenderer)
-6. [Accès base de données](#accès-base-de-données)
+6. [Database Access](#database-access)
    - [DatabaseManager](#databasemanager)
    - [DatabaseConnection](#databaseconnection)
 7. [Seeding](#seeding)
    - [SeedInterface](#seedinterface)
-   - [Attribut #[Seeder]](#attribut-seeder)
+   - [The #[Seeder] Attribute](#attribut-seeder)
    - [SeedManager](#seedmanager)
-8. [Commandes CLI](#commandes-cli)
-9. [Points techniques importants](#points-techniques-importants)
+8. [CLI Commands](#cli-commands)
+9. [Important Technical Notes](#important-technical-notes)
 
 ---
 
-## Architecture générale
+## General Architecture
 
 ```
 Database/
@@ -76,8 +76,8 @@ Database/
 │       └── Metadata/       # ColumnMetadata, ForeignKeyMetadata, IndexMetadata
 ├── Pagination/
 │   ├── Paginator.php
-│   └── Extension/          # PaginationViewExtension (fonction Twig paginator_links)
-├── Commands/               # Commandes CLI
+│   └── Extension/          # PaginationViewExtension (paginator_links Twig function)
+├── Commands/               # CLI commands
 └── DatabaseManager.php
 ```
 
@@ -85,51 +85,51 @@ Database/
 
 ## ORM — Object-Relational Mapper
 
-L'ORM de NeoPHP suit le patron **Data Mapper** : les entités sont de simples objets PHP (POPO) sans héritage obligatoire. La persistance est gérée entièrement en dehors de l'entité.
+NeoPHP's ORM follows the **Data Mapper** pattern: entities are plain PHP objects (POPO) with no mandatory inheritance. Persistence is handled entirely outside of the entity.
 
 ### EntityManager
 
-**Fichier :** `ORM/Persistence/EntityManager.php`
+**File:** `ORM/Persistence/EntityManager.php`
 
-Point d'entrée principal de l'ORM. Il orchestre toutes les opérations de persistance.
+Main entry point of the ORM. It orchestrates every persistence operation.
 
-| Méthode | Description |
+| Method | Description |
 |---------|-------------|
-| `persist(object $entity)` | Enregistre une entité pour insertion ou suivi |
-| `remove(object $entity)` | Marque une entité pour suppression |
-| `flush()` | Exécute toutes les opérations en attente en base |
-| `find(string $class, mixed $id)` | Recherche une entité par son identifiant |
-| `getReference(string $class, mixed $id)` | Retourne un proxy sans charger les données |
-| `getRepository(string $class)` | Retourne le dépôt associé à une entité |
-| `contains(object $entity)` | Vérifie si une entité est gérée |
-| `clear()` | Vide l'identity map et l'unit of work |
-| `wrapInTransaction(callable $cb)` | Exécute un callback dans une transaction |
+| `persist(object $entity)` | Registers an entity for insertion or tracking |
+| `remove(object $entity)` | Marks an entity for deletion |
+| `flush()` | Executes every pending operation against the database |
+| `find(string $class, mixed $id)` | Finds an entity by its identifier |
+| `getReference(string $class, mixed $id)` | Returns a proxy without loading the data |
+| `getRepository(string $class)` | Returns the repository associated with an entity |
+| `contains(object $entity)` | Checks whether an entity is managed |
+| `clear()` | Clears the identity map and the unit of work |
+| `wrapInTransaction(callable $cb)` | Runs a callback inside a transaction |
 
 ```php
-// Injection dans un contrôleur ou service
+// Injection into a controller or service
 use Neo\Core\Database\ORM\Persistence\EntityManager;
 
 $em = $container->get(EntityManager::class);
 
-// Créer et persister une entité
+// Create and persist an entity
 $user = new User();
 $user->setName('Alice')->setEmail('alice@example.com');
 
 $em->persist($user);
 $em->flush(); // INSERT INTO users ...
 
-// Retrouver une entité par son ID
+// Retrieve an entity by its ID
 $user = $em->find(User::class, 1);
 
-// Modifier et sauvegarder
+// Modify and save
 $user->setName('Alice Updated');
 $em->flush(); // UPDATE users SET name = ? WHERE id = ?
 
-// Supprimer
+// Delete
 $em->remove($user);
 $em->flush(); // DELETE FROM users WHERE id = ?
 
-// Transaction explicite
+// Explicit transaction
 $result = $em->wrapInTransaction(function (EntityManager $em) {
     $order = new Order();
     $em->persist($order);
@@ -139,53 +139,53 @@ $result = $em->wrapInTransaction(function (EntityManager $em) {
 
 ### UnitOfWork
 
-**Fichier :** `ORM/Persistence/UnitOfWork.php`
+**File:** `ORM/Persistence/UnitOfWork.php`
 
-Implémente le patron **Unit of Work**. Il maintient une **identity map** et gère les états des entités.
+Implements the **Unit of Work** pattern. It maintains an **identity map** and manages entity states.
 
-**États d'une entité :**
+**Entity states:**
 
-| Constante | Valeur | Description |
+| Constant | Value | Description |
 |-----------|--------|-------------|
-| `STATE_MANAGED` | 1 | Entité suivie, sera synchronisée au flush |
-| `STATE_NEW` | 2 | Nouvelle entité, non encore persistée |
-| `STATE_DETACHED` | 3 | Entité déconnectée de l'UoW |
-| `STATE_REMOVED` | 4 | Entité marquée pour suppression |
+| `STATE_MANAGED` | 1 | Tracked entity, will be synchronized on flush |
+| `STATE_NEW` | 2 | New entity, not yet persisted |
+| `STATE_DETACHED` | 3 | Entity detached from the UoW |
+| `STATE_REMOVED` | 4 | Entity marked for deletion |
 
-**Fonctionnement interne :**
+**Internal behavior:**
 
-- L'identity map `$identityMap[className][idHash] = entity` garantit l'unicité des instances.
-- Au moment du `flush()`, `computeChangeSets()` détecte les champs modifiés par comparaison avec `$originalEntityData`.
-- L'ordre d'insertion est déterminé par un tri topologique (`getCommitOrder()`) basé sur les dépendances entre entités (clés étrangères).
-- Les transactions PDO sont automatiquement gérées : si aucune transaction n'est active, l'UoW en ouvre une.
+- The identity map `$identityMap[className][idHash] = entity` guarantees instance uniqueness.
+- At `flush()` time, `computeChangeSets()` detects modified fields by comparing against `$originalEntityData`.
+- Insertion order is determined by a topological sort (`getCommitOrder()`) based on dependencies between entities (foreign keys).
+- PDO transactions are handled automatically: if no transaction is active, the UoW opens one.
 
 ```php
-// Accès à l'UoW via l'EntityManager
+// Access the UoW through the EntityManager
 $uow = $em->getUnitOfWork();
 
-// Vérifier si une entité est gérée
+// Check whether an entity is managed
 $uow->isManaged($entity); // bool
 
-// Forcer l'enregistrement d'une entité comme gérée
+// Force-register an entity as managed
 $uow->registerManaged($entity, $id, $originalData);
 ```
 
 ### EntityRepository
 
-**Fichier :** `ORM/Persistence/EntityRepository.php`
+**File:** `ORM/Persistence/EntityRepository.php`
 
-Classe générique de dépôt, extensible par entité.
+Generic repository class, extensible per entity.
 
 ```php
 $repo = $em->getRepository(User::class);
 
-// Trouver par ID
+// Find by ID
 $user = $repo->find(1);
 
-// Trouver tous
+// Find all
 $users = $repo->findAll();
 
-// Trouver par critères
+// Find by criteria
 $users = $repo->findBy(
     criteria: ['role' => 'admin'],
     orderBy: ['name' => 'ASC'],
@@ -193,19 +193,19 @@ $users = $repo->findBy(
     offset: 0
 );
 
-// Trouver un seul
+// Find a single one
 $user = $repo->findOneBy(['email' => 'alice@example.com']);
 
-// Compter
+// Count
 $count = $repo->count(['active' => true]);
 
 // Pagination
 $paginator = $repo->paginate(page: 1, perPage: 20, criteria: ['role' => 'admin'], orderBy: ['name' => 'ASC']);
 ```
 
-Voir la section [Pagination](#pagination) pour l'API complète de l'objet retourné.
+See the [Pagination](#pagination) section for the full API of the returned object.
 
-**Dépôt personnalisé :**
+**Custom repository:**
 
 ```php
 // src/MyProject/Database/Repository/UserRepository.php
@@ -226,7 +226,7 @@ final class UserRepository extends EntityRepository
 
     public function findByEmailDomain(string $domain): array
     {
-        // Accès au persister pour des requêtes personnalisées
+        // Access to the persister for custom queries
         return $this->persister()->loadAll(['email_domain' => $domain]);
     }
 }
@@ -234,56 +234,56 @@ final class UserRepository extends EntityRepository
 
 ### EntityPersister
 
-**Fichier :** `ORM/Persistence/EntityPersister.php`
+**File:** `ORM/Persistence/EntityPersister.php`
 
-Exécute les opérations SQL réelles (INSERT, UPDATE, DELETE, SELECT) pour une classe d'entité donnée.
+Executes the actual SQL operations (INSERT, UPDATE, DELETE, SELECT) for a given entity class.
 
-- **`insert(object $entity)`** — construit et exécute un INSERT, retourne le dernier ID inséré.
-- **`update(object $entity, array $changeSet)`** — génère un UPDATE uniquement pour les champs modifiés.
-- **`delete(object $entity)`** — exécute un DELETE par clé primaire.
-- **`loadById(array $criteria)`** — SELECT avec hydratation.
-- **`loadAll(array $criteria, array $orderBy, ?int $limit, ?int $offset)`** — SELECT avec filtres, tri et pagination.
-- **`loadCollection(array $assoc, mixed $ownerId)`** — chargement des associations OneToMany et ManyToMany.
+- **`insert(object $entity)`** — builds and executes an INSERT, returns the last inserted ID.
+- **`update(object $entity, array $changeSet)`** — generates an UPDATE for the modified fields only.
+- **`delete(object $entity)`** — executes a DELETE by primary key.
+- **`loadById(array $criteria)`** — SELECT with hydration.
+- **`loadAll(array $criteria, array $orderBy, ?int $limit, ?int $offset)`** — SELECT with filters, sorting and pagination.
+- **`loadCollection(array $assoc, mixed $ownerId)`** — loading of OneToMany and ManyToMany associations.
 
 ### ObjectHydrator
 
-**Fichier :** `ORM/Persistence/ObjectHydrator.php`
+**File:** `ORM/Persistence/ObjectHydrator.php`
 
-Convertit une ligne SQL (tableau associatif) en objet PHP. Pour chaque ligne :
+Converts an SQL row (associative array) into a PHP object. For each row:
 
-1. Convertit chaque valeur de colonne via le `TypeRegistry`.
-2. Pour les associations `ToOne` (owning side), crée un proxy lazy.
-3. Pour les associations `ToMany`, crée une `LazyCollection`.
-4. Enregistre l'entité dans l'UoW via `registerManaged()`.
+1. Converts each column value via the `TypeRegistry`.
+2. For `ToOne` associations (owning side), creates a lazy proxy.
+3. For `ToMany` associations, creates a `LazyCollection`.
+4. Registers the entity in the UoW via `registerManaged()`.
 
 ### ProxyFactory
 
-**Fichier :** `ORM/Persistence/ProxyFactory.php`
+**File:** `ORM/Persistence/ProxyFactory.php`
 
-Utilise la fonctionnalité PHP 8.4 **Lazy Ghosts** (`ReflectionClass::newLazyGhost`) pour créer des proxies transparents.
+Uses the PHP 8.4 **Lazy Ghosts** feature (`ReflectionClass::newLazyGhost`) to create transparent proxies.
 
 ```php
-// Un proxy est un objet "fantôme" : ses données ne sont chargées
-// qu'au premier accès à une propriété non-ID.
+// A proxy is a "ghost" object: its data is loaded
+// only on the first access to a non-ID property.
 $proxy = $em->getReference(User::class, 42);
-// Aucune requête SQL ici
+// No SQL query here
 
-echo $proxy->getName(); // Déclenche le chargement lazy
+echo $proxy->getName(); // Triggers lazy loading
 // SELECT * FROM users WHERE id = 42
 ```
 
 ### QueryBuilder
 
-**Fichier :** `ORM/Query/QueryBuilder.php`
+**File:** `ORM/Query/QueryBuilder.php`
 
-Constructeur de requêtes SQL fluide, indépendant de l'ORM, opérant directement sur le `DatabaseManager`.
+Fluent SQL query builder, independent of the ORM, operating directly on `DatabaseManager`.
 
 ```php
 use Neo\Core\Database\Query\QueryBuilder;
 
 $qb = QueryBuilder::for($db, 'users');
 
-// SELECT avec jointure et pagination
+// SELECT with join and pagination
 $rows = $qb
     ->select('u.id', 'u.name', 'p.title')
     ->join('posts p', 'p.user_id', '=', 'u.id')
@@ -295,36 +295,36 @@ $rows = $qb
     ->offset(0)
     ->get();
 
-// Compter
+// Count
 $count = QueryBuilder::for($db, 'users')
     ->where('role', '=', 'admin')
     ->count();
 
-// Insérer et récupérer l'ID
+// Insert and retrieve the ID
 $id = QueryBuilder::for($db, 'users')
     ->insertGetId(['name' => 'Bob', 'email' => 'bob@example.com']);
 
-// Mettre à jour
+// Update
 QueryBuilder::for($db, 'users')
     ->where('id', '=', 5)
     ->update(['name' => 'Robert']);
 
-// Supprimer
+// Delete
 QueryBuilder::for($db, 'users')
     ->where('active', '=', false)
     ->delete();
 
-// Inspecter le SQL généré
+// Inspect the generated SQL
 echo $qb->toSql();
 ```
 
 ### Pagination
 
-**Fichiers :** `Database/Pagination/Paginator.php`, `Database/Pagination/Extension/PaginationViewExtension.php`
+**Files:** `Database/Pagination/Paginator.php`, `Database/Pagination/Extension/PaginationViewExtension.php`
 
-`Paginator` est un conteneur standalone qui porte les éléments d'une page et les métadonnées associées (page courante, nombre total, etc.). Il est produit soit par `QueryBuilder::paginate()`, soit par `EntityRepository::paginate()`.
+`Paginator` is a standalone container that holds a page's items and its associated metadata (current page, total count, etc.). It is produced either by `QueryBuilder::paginate()` or by `EntityRepository::paginate()`.
 
-**Depuis le QueryBuilder :**
+**From the QueryBuilder:**
 
 ```php
 $paginator = QueryBuilder::for($db, 'posts')
@@ -333,41 +333,41 @@ $paginator = QueryBuilder::for($db, 'posts')
     ->paginate(page: 2, perPage: 10);
 ```
 
-`paginate()` clone le builder pour exécuter le `COUNT()` séparément — le builder d'origine (colonnes, `LIMIT`/`OFFSET`) n'est pas altéré et peut continuer à être utilisé après.
+`paginate()` clones the builder to run the `COUNT()` separately — the original builder (columns, `LIMIT`/`OFFSET`) is not altered and can still be used afterward.
 
-**Depuis un EntityRepository :**
+**From an EntityRepository:**
 
 ```php
 $paginator = $repo->paginate(page: 1, perPage: 20, criteria: ['role' => 'admin'], orderBy: ['name' => 'ASC']);
 ```
 
-**API de `Paginator` :**
+**`Paginator` API:**
 
-| Méthode | Description |
+| Method | Description |
 |---------|-------------|
-| `getItems()` | Éléments de la page courante (`list<T>`) |
-| `getCurrentPage()` | Numéro de la page courante |
-| `getPerPage()` | Nombre d'éléments par page |
-| `getTotalItems()` | Nombre total d'éléments (toutes pages confondues) |
-| `getTotalPages()` | Nombre total de pages |
+| `getItems()` | Items of the current page (`list<T>`) |
+| `getCurrentPage()` | Current page number |
+| `getPerPage()` | Number of items per page |
+| `getTotalItems()` | Total number of items (across all pages) |
+| `getTotalPages()` | Total number of pages |
 | `hasNextPage()` / `hasPreviousPage()` | `bool` |
-| `getNextPage()` / `getPreviousPage()` | Numéro de page suivante/précédente, ou `null` |
-| `getLinks(int $onEachSide = 2)` | Fenêtre glissante de numéros de page pour la navigation, ex. `[1, null, 4, 5, 6, null, 12]` (`null` = `...`) |
+| `getNextPage()` / `getPreviousPage()` | Next/previous page number, or `null` |
+| `getLinks(int $onEachSide = 2)` | Sliding window of page numbers for navigation, e.g. `[1, null, 4, 5, 6, null, 12]` (`null` = `...`) |
 
-`Paginator` implémente aussi `\IteratorAggregate` et `\Countable` : on peut itérer directement dessus (`foreach ($paginator as $item)`) ou faire `count($paginator)`.
+`Paginator` also implements `\IteratorAggregate` and `\Countable`: you can iterate over it directly (`foreach ($paginator as $item)`) or call `count($paginator)`.
 
-**Rendu dans un template Twig :**
+**Rendering in a Twig template:**
 
-La fonction `paginator_links()` génère la navigation HTML. Aucun texte n'est codé en dur dans l'extension : les libellés sont des paramètres, avec des symboles neutres par défaut.
+The `paginator_links()` function generates the HTML navigation. No text is hardcoded in the extension: labels are parameters, with neutral symbols by default.
 
 ```twig
-{# Navigation basique, symboles par défaut (« / » / …) #}
+{# Basic navigation, default symbols (« / » / …) #}
 {{ paginator_links(paginator) }}
 
-{# Base URL explicite (sinon le chemin de la requête courante est utilisé) #}
+{# Explicit base URL (otherwise the current request path is used) #}
 {{ paginator_links(paginator, '/posts') }}
 
-{# Libellés personnalisés / traduits via le module i18n #}
+{# Custom / translated labels via the i18n module #}
 {{ paginator_links(
     paginator,
     prevLabel: translate('pagination.prev'),
@@ -376,43 +376,43 @@ La fonction `paginator_links()` génère la navigation HTML. Aucun texte n'est c
 ) }}
 ```
 
-La navigation ajoute un paramètre `?page=N` (ou `&page=N` si l'URL de base contient déjà une query string) à chaque lien, et ne s'affiche pas si le paginator ne contient qu'une seule page.
+The navigation adds a `?page=N` parameter (or `&page=N` if the base URL already has a query string) to each link, and is not rendered if the paginator only has a single page.
 
 ### Collections
 
-**Fichier :** `ORM/Collection/Collection.php`, `ORM/Collection/LazyCollection.php`
+**Files:** `ORM/Collection/Collection.php`, `ORM/Collection/LazyCollection.php`
 
-La `Collection` est un conteneur typé avec des méthodes standard (`add`, `remove`, `contains`, `count`, `toArray`, etc.).
+`Collection` is a typed container with standard methods (`add`, `remove`, `contains`, `count`, `toArray`, etc.).
 
-La `LazyCollection` étend `Collection` : elle reçoit un `Closure` au lieu de données et ne charge les éléments qu'à la première utilisation.
+`LazyCollection` extends `Collection`: it receives a `Closure` instead of data and only loads its items on first use.
 
 ```php
-// Dans une entité, après hydratation
+// Inside an entity, after hydration
 $user = $em->find(User::class, 1);
-$posts = $user->getPosts(); // LazyCollection non initialisée
+$posts = $user->getPosts(); // Uninitialized LazyCollection
 
 foreach ($posts as $post) {
-    // Premier accès : SELECT * FROM posts WHERE user_id = 1
+    // First access: SELECT * FROM posts WHERE user_id = 1
     echo $post->getTitle();
 }
 ```
 
 ---
 
-## Mapping — Attributs PHP
+## Mapping — PHP Attributes
 
-### ClassMetaData et MetadataFactory
+### ClassMetaData and MetadataFactory
 
-**Fichier :** `ORM/Mapping/ClassMetaData.php`, `ORM/Mapping/MetadataFactory.php`
+**Files:** `ORM/Mapping/ClassMetaData.php`, `ORM/Mapping/MetadataFactory.php`
 
-La `MetadataFactory` lit les attributs PHP d'une classe d'entité et construit un objet `ClassMetaData` mis en cache.
+`MetadataFactory` reads the PHP attributes of an entity class and builds a cached `ClassMetaData` object.
 
-**Règles automatiques :**
-- Si aucun `#[Table]` n'est spécifié, le nom de table est déduit : `UserProfile` → `user_profiles`.
-- Les types de colonnes sont inférés depuis les types PHP (`int` → `integer`, `bool` → `boolean`, `array` → `json`, etc.).
-- Les colonnes de jointure par défaut pour `ManyToOne` sont `{field}_id`.
+**Automatic rules:**
+- If no `#[Table]` is specified, the table name is inferred: `UserProfile` → `user_profiles`.
+- Column types are inferred from PHP types (`int` → `integer`, `bool` → `boolean`, `array` → `json`, etc.).
+- Default join columns for `ManyToOne` are `{field}_id`.
 
-### Attributs disponibles
+### Available Attributes
 
 #### `#[Entity]`
 
@@ -423,10 +423,10 @@ use Neo\Core\Database\ORM\Mapping\Attribute\Entity;
 final class User { }
 ```
 
-| Paramètre | Type | Description |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| `repositoryClass` | `?string` | FQCN du dépôt personnalisé |
-| `readOnly` | `bool` | Entité en lecture seule |
+| `repositoryClass` | `?string` | FQCN of the custom repository |
+| `readOnly` | `bool` | Read-only entity |
 
 #### `#[Table]`
 
@@ -446,27 +446,27 @@ use Neo\Core\Database\ORM\Mapping\Attribute\Column;
 private string $name;
 ```
 
-| Paramètre | Type | Défaut | Description |
+| Parameter | Type | Default | Description |
 |-----------|------|--------|-------------|
-| `type` | `string` | `'string'` | Type ORM (voir TypeRegistry) |
-| `name` | `?string` | nom de la propriété | Nom de la colonne SQL |
-| `length` | `?int` | null | Longueur (VARCHAR) |
-| `nullable` | `bool` | `false` | Colonne nullable |
-| `unique` | `bool` | `false` | Contrainte UNIQUE |
-| `unsigned` | `bool` | `false` | Entier non signé |
-| `default` | `mixed` | null | Valeur par défaut |
-| `precision` | `?int` | null | Précision (DECIMAL) |
-| `scale` | `?int` | null | Échelle (DECIMAL) |
-| `columnDefinition` | `?string` | null | SQL brut de définition |
+| `type` | `string` | `'string'` | ORM type (see TypeRegistry) |
+| `name` | `?string` | property name | SQL column name |
+| `length` | `?int` | null | Length (VARCHAR) |
+| `nullable` | `bool` | `false` | Nullable column |
+| `unique` | `bool` | `false` | UNIQUE constraint |
+| `unsigned` | `bool` | `false` | Unsigned integer |
+| `default` | `mixed` | null | Default value |
+| `precision` | `?int` | null | Precision (DECIMAL) |
+| `scale` | `?int` | null | Scale (DECIMAL) |
+| `columnDefinition` | `?string` | null | Raw SQL column definition |
 
-#### `#[Id]` et `#[GeneratedValue]`
+#### `#[Id]` and `#[GeneratedValue]`
 
 ```php
 use Neo\Core\Database\ORM\Mapping\Attribute\Id;
 use Neo\Core\Database\ORM\Mapping\Attribute\GeneratedValue;
 
 #[Id]
-#[GeneratedValue]  // strategy: 'AUTO' par défaut
+#[GeneratedValue]  // strategy: 'AUTO' by default
 #[Column(type: 'integer', unsigned: true)]
 private ?int $id = null;
 ```
@@ -482,11 +482,11 @@ use Neo\Core\Database\ORM\Mapping\Attribute\JoinColumn;
 private ?Category $category = null;
 ```
 
-| Paramètre | Description |
+| Parameter | Description |
 |-----------|-------------|
-| `targetEntity` | FQCN de l'entité cible |
-| `inversedBy` | Nom du champ inverse sur la cible |
-| `fetch` | `'LAZY'` (défaut) |
+| `targetEntity` | FQCN of the target entity |
+| `inversedBy` | Name of the inverse field on the target |
+| `fetch` | `'LAZY'` (default) |
 | `cascade` | `['persist', 'remove', 'all']` |
 
 #### `#[OneToMany]`
@@ -503,12 +503,12 @@ private Collection $posts;
 #### `#[OneToOne]`
 
 ```php
-// Côté propriétaire (détient la FK)
+// Owning side (holds the FK)
 #[OneToOne(targetEntity: Profile::class, inversedBy: 'user')]
 #[JoinColumn(name: 'profile_id', unique: true, nullable: true)]
 private ?Profile $profile = null;
 
-// Côté inverse
+// Inverse side
 #[OneToOne(targetEntity: User::class, mappedBy: 'profile')]
 private ?User $user = null;
 ```
@@ -520,7 +520,7 @@ use Neo\Core\Database\ORM\Mapping\Attribute\ManyToMany;
 use Neo\Core\Database\ORM\Mapping\Attribute\JoinTable;
 use Neo\Core\Database\ORM\Mapping\Attribute\JoinColumn;
 
-// Côté propriétaire
+// Owning side
 /** @var Collection<Tag> */
 #[ManyToMany(targetEntity: Tag::class, inversedBy: 'articles')]
 #[JoinTable(
@@ -530,13 +530,13 @@ use Neo\Core\Database\ORM\Mapping\Attribute\JoinColumn;
 )]
 private Collection $tags;
 
-// Côté inverse
+// Inverse side
 /** @var Collection<Article> */
 #[ManyToMany(targetEntity: Article::class, mappedBy: 'tags')]
 private Collection $articles;
 ```
 
-### Exemple complet d'entité
+### Complete entity example
 
 ```php
 <?php
@@ -592,9 +592,9 @@ final class Post
 }
 ```
 
-### Types ORM
+### ORM Types
 
-| Nom ORM | Type PHP | SQL MySQL |
+| ORM name | PHP type | MySQL SQL |
 |---------|----------|-----------|
 | `string` | `string` | `VARCHAR(255)` |
 | `text` | `string` | `TEXT` |
@@ -609,7 +609,7 @@ final class Post
 | `time` | `\DateTime` | `TIME` |
 | `json` | `array` | `JSON` / `TEXT` |
 
-**Enregistrer un type personnalisé :**
+**Registering a custom type:**
 
 ```php
 use Neo\Core\Database\ORM\Type\TypeRegistry;
@@ -619,7 +619,7 @@ TypeRegistry::register(new MyCustomType());
 
 ### Platform
 
-`AbstractPlatform` définit le contrat pour la génération SQL spécifique à un SGBD. `MySQLPlatform` est l'implémentation par défaut.
+`AbstractPlatform` defines the contract for SQL generation specific to a DBMS. `MySQLPlatform` is the default implementation.
 
 ```php
 $platform = $em->getPlatform();
@@ -633,13 +633,13 @@ $platform->getName();                   // 'mysql'
 
 ### DatabaseIntrospector
 
-**Fichier :** `Access/Introspector/DatabaseIntrospector.php`
+**File:** `Access/Introspector/DatabaseIntrospector.php`
 
-Lit la structure réelle de la base de données (tables, colonnes, clés étrangères, index) via `information_schema` et `SHOW`/`DESCRIBE`. C'est la source de vérité utilisée par le pipeline de migration pour comparer l'état actuel de la base à l'état souhaité (entités ORM).
+Reads the actual structure of the database (tables, columns, foreign keys, indexes) via `information_schema` and `SHOW`/`DESCRIBE`. This is the source of truth used by the migration pipeline to compare the current state of the database against the desired state (ORM entities).
 
-Les résultats sont retournés sous forme de DTOs typés, dans `Access/Introspector/Metadata/` :
+Results are returned as typed DTOs, in `Access/Introspector/Metadata/`:
 
-| Méthode | Retour |
+| Method | Returns |
 |---------|--------|
 | `getTables()` | `list<string>` |
 | `getColumns(string $table)` | `list<ColumnMetadata>` |
@@ -648,7 +648,7 @@ Les résultats sont retournés sous forme de DTOs typés, dans `Access/Introspec
 
 ```php
 $introspector = new DatabaseIntrospector($container);
-// Ou sur une connexion spécifique :
+// Or on a specific connection:
 $introspector = DatabaseIntrospector::on($container, 'secondary');
 
 foreach ($introspector->getColumns('users') as $column) {
@@ -668,42 +668,42 @@ foreach ($introspector->getIndexes('posts') as $index) {
 }
 ```
 
-Chaque DTO expose aussi une méthode `toArray()` qui reconstruit la forme `array{...}` d'origine. Elle est utilisée à la frontière avec les composants qui manipulent encore des tableaux génériques — notamment `MigrationSchemaSnapshot`, qui sérialise le schéma en JSON pour le stocker en base (`neo_schema_snapshots`), et `MigrationGenerator::generate()`, qui réutilise la même logique de construction de SQL que `generateDiff()`. `SchemaDiffer` continue de travailler exclusivement sur des tableaux, puisqu'il compare aussi bien le schéma courant (introspecté) que le schéma désiré (issu de `SchemaTool`, côté ORM) ou un ancien schéma relu depuis un snapshot JSON.
+Each DTO also exposes a `toArray()` method that rebuilds the original `array{...}` shape. It is used at the boundary with components that still work with generic arrays — notably `MigrationSchemaSnapshot`, which serializes the schema to JSON to store it in the database (`neo_schema_snapshots`), and `MigrationGenerator::generate()`, which reuses the same SQL-building logic as `generateDiff()`. `SchemaDiffer` continues to work exclusively with arrays, since it compares both the current schema (introspected) and the desired schema (from `SchemaTool`, on the ORM side) or an old schema read back from a JSON snapshot.
 
 ### MigrationRunner
 
-**Fichier :** `Migration/Runner/MigrationRunner.php`
+**File:** `Migration/Runner/MigrationRunner.php`
 
-Gère l'exécution et le rollback des migrations. Maintient la table `neo_migrations` en base.
+Handles running and rolling back migrations. Maintains the `neo_migrations` table in the database.
 
 ```php
 $runner = new MigrationRunner($db, 'default');
 
-// Lister les migrations en attente
+// List pending migrations
 $pending = $runner->getPending('/path/to/migrations');
 
-// Exécuter toutes les migrations en attente
+// Run every pending migration
 $runner->run('/path/to/migrations');
 
-// Dry run (liste sans exécuter)
+// Dry run (list without running)
 $runner->run('/path/to/migrations', dryRun: true);
 
-// Rollback du dernier batch
+// Rollback the last batch
 $runner->rollback('/path/to/migrations');
 ```
 
 ### MigrationGenerator
 
-**Fichier :** `Migration/Generator/MigrationGenerator.php`
+**File:** `Migration/Generator/MigrationGenerator.php`
 
-Génère des fichiers de migration PHP à partir d'un diff de schéma.
+Generates PHP migration files from a schema diff.
 
-Chaque migration générée suit le format `MigrationVersion_YYYYMMDD_HHmmss.php` et contient :
-- `up(DatabaseManager $db)` — applique les changements.
-- `down(DatabaseManager $db)` — annule les changements.
-- Des helpers `tableExists()` et `columnExists()` pour des opérations idempotentes.
+Each generated migration follows the `MigrationVersion_YYYYMMDD_HHmmss.php` format and contains:
+- `up(DatabaseManager $db)` — applies the changes.
+- `down(DatabaseManager $db)` — reverts the changes.
+- `tableExists()` and `columnExists()` helpers for idempotent operations.
 
-**Exemple de migration générée :**
+**Example of a generated migration:**
 
 ```php
 <?php
@@ -758,123 +758,123 @@ final class MigrationVersion_20260728_100000
 
 ### SchemaDiffer
 
-**Fichier :** `Migration/SchemaDiffer.php`
+**File:** `Migration/SchemaDiffer.php`
 
-Compare deux schémas et produit un diff structuré :
+Compares two schemas and produces a structured diff:
 
 ```php
 $differ = new SchemaDiffer();
 $diff = $differ->diff($previousSchema, $currentSchema);
 
-// $diff contient :
-// - tablesToCreate : nouvelles tables
-// - tablesToDrop   : tables supprimées
-// - tableChanges   : modifications par table (added, removed, modified)
+// $diff contains:
+// - tablesToCreate: new tables
+// - tablesToDrop:   removed tables
+// - tableChanges:   changes per table (added, removed, modified)
 
-// Détecter si le diff est vide
+// Detect whether the diff is empty
 $differ->isEmpty($diff); // bool
 
-// Candidats au renommage de table (par signature de colonnes)
+// Table rename candidates (by column signature)
 $candidates = $differ->findTableRenameCandidates($tablesToCreate, $tablesToDrop);
 
-// Candidats au renommage de colonne
+// Column rename candidates
 $candidates = $differ->findColumnRenameCandidates($removed, $added);
 
-// Changements risqués NOT NULL
+// Risky NOT NULL changes
 $risks = $differ->findRiskyNotNullChanges($tablesToCreate, $tableChanges);
 ```
 
 ### SchemaTool
 
-**Fichier :** `ORM/Schema/SchemaTool.php`
+**File:** `ORM/Schema/SchemaTool.php`
 
-Traduit les métadonnées ORM en schéma de base de données.
+Translates ORM metadata into a database schema.
 
 ```php
 $schemaTool = new SchemaTool($em);
 
-// Obtenir le schéma souhaité depuis les entités
+// Get the desired schema from entities
 $schema = $schemaTool->getSchema([User::class, Post::class, Comment::class]);
 
-// Obtenir les clés étrangères
+// Get foreign keys
 $fks = $schemaTool->getForeignKeys([User::class, Post::class]);
 
-// Obtenir les index
+// Get indexes
 $indexes = $schemaTool->getIndexes([User::class]);
 ```
 
 ---
 
-## Formulaires
+## Forms
 
-### FormFactory et FormBuilder
+### FormFactory and FormBuilder
 
-**Fichiers :** `Form/FormFactory.php`, `Form/FormBuilder.php`
+**Files:** `Form/FormFactory.php`, `Form/FormBuilder.php`
 
 ```php
 $factory = $container->get(FormFactory::class);
 
-// Formulaire simple
+// Simple form
 $builder = $factory->create('register');
 $builder
     ->add('username', 'text', ['required' => true, 'maxLength' => 50])
     ->add('email', 'email', ['required' => true])
     ->add('password', 'password', ['required' => true, 'minLength' => 8])
-    ->add('role', 'select', ['choices' => ['user' => 'Utilisateur', 'admin' => 'Administrateur']])
-    ->add('newsletter', 'checkbox', ['label' => 'Recevoir la newsletter']);
+    ->add('role', 'select', ['choices' => ['user' => 'User', 'admin' => 'Administrator']])
+    ->add('newsletter', 'checkbox', ['label' => 'Subscribe to the newsletter']);
 
 $form = $builder->getForm();
 
-// Formulaire lié à une entité
+// Form bound to an entity
 $user = $em->find(User::class, 1);
 $builder = $factory->createFor($user, 'edit_user');
 $builder->add('name', 'text', ['required' => true]);
 
-$form = $builder->getForm(); // Les valeurs sont pré-remplies depuis $user
+$form = $builder->getForm(); // Values are pre-filled from $user
 ```
 
-**Options disponibles pour `add()` :**
+**Options available for `add()`:**
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `label` | `string` | Label du champ (auto-généré si absent) |
-| `required` | `bool` | Ajoute la contrainte `NotBlank` |
-| `requiredMessage` | `string` | Message de validation |
-| `minLength` | `int` | Longueur minimale |
-| `maxLength` | `int` | Longueur maximale |
-| `constraints` | `array` | Contraintes de validation supplémentaires |
-| `mapped` | `bool` | Lier au champ d'entité (défaut: `true`) |
-| `choices` | `array` | Options pour `select` |
-| `attr` | `array` | Attributs HTML supplémentaires |
-| `placeholder` | `string` | Placeholder HTML |
+| `label` | `string` | Field label (auto-generated if absent) |
+| `required` | `bool` | Adds the `NotBlank` constraint |
+| `requiredMessage` | `string` | Validation message |
+| `minLength` | `int` | Minimum length |
+| `maxLength` | `int` | Maximum length |
+| `constraints` | `array` | Additional validation constraints |
+| `mapped` | `bool` | Bind to the entity field (default: `true`) |
+| `choices` | `array` | Options for `select` |
+| `attr` | `array` | Additional HTML attributes |
+| `placeholder` | `string` | HTML placeholder |
 
-### Form et FormField
+### Form and FormField
 
-**Fichiers :** `Form/Form.php`, `Form/Field/FormField.php`
+**Files:** `Form/Form.php`, `Form/Field/FormField.php`
 
 ```php
-// Gérer une soumission
+// Handle a submission
 $form->handleRequest($_POST);
 
 if ($form->isSubmitted() && $form->isValid()) {
-    // Les données sont automatiquement mappées vers l'entité liée
+    // Data is automatically mapped onto the bound entity
     $user = $form->getEntity();
     $em->persist($user);
     $em->flush();
 } else {
-    // Accéder aux erreurs
+    // Access errors
     $errors = $form->getErrors();
-    // ['email' => ['Ce champ est requis.'], ...]
+    // ['email' => ['This field is required.'], ...]
 }
 
-// Accéder aux données brutes
+// Access raw data
 $data = $form->getData();
 // ['username' => 'Alice', 'email' => 'alice@example.com', ...]
 ```
 
-**Types de champs (`FieldType`) :**
+**Field types (`FieldType`):**
 
-| Valeur | Type HTML |
+| Value | HTML type |
 |--------|-----------|
 | `Text` | `text` |
 | `Textarea` | `textarea` |
@@ -889,22 +889,22 @@ $data = $form->getData();
 
 ### FormRenderer
 
-**Fichier :** `Form/FormRenderer.php`
+**File:** `Form/FormRenderer.php`
 
 ```php
 $renderer = new FormRenderer();
 
-// Rendu complet du formulaire
+// Full form rendering
 $html = $renderer->render($form, action: '/register', method: 'POST', attributes: ['class' => 'form-card']);
 
-// Rendu partiel
+// Partial rendering
 $html  = $renderer->start($form, '/register');
 $html .= $renderer->field($form->getField('email'));
 $html .= $renderer->field($form->getField('password'));
 $html .= $renderer->end();
 ```
 
-Le rendu produit de l'HTML structuré :
+The rendering produces structured HTML:
 
 ```html
 <form action="/register" method="POST">
@@ -914,7 +914,7 @@ Le rendu produit de l'HTML structuré :
       <label for="email">Email</label>
       <input type="email" id="email" name="email" value="" required="required">
       <ul class="form-errors">
-         <li>Ce champ est requis.</li>
+         <li>This field is required.</li>
       </ul>
    </div>
 </form>
@@ -922,58 +922,58 @@ Le rendu produit de l'HTML structuré :
 
 ---
 
-## Accès base de données
+## Database Access
 
 ### DatabaseManager
 
-**Fichier :** `DatabaseManager.php`
+**File:** `DatabaseManager.php`
 
-Interface bas niveau pour les requêtes PDO.
+Low-level interface for PDO queries.
 
 ```php
 $db = $container->get(DatabaseManager::class);
 
-// Requête retournant une ligne
+// Query returning a single row
 $row = $db->fetch('SELECT * FROM users WHERE id = :id', ['id' => 1]);
 
-// Requête retournant plusieurs lignes
+// Query returning multiple rows
 $rows = $db->fetchAll('SELECT * FROM users WHERE role = ?', ['admin']);
 
-// Exécuter sans résultat (INSERT, UPDATE, DELETE)
+// Execute with no result (INSERT, UPDATE, DELETE)
 $db->execute('UPDATE users SET active = 1 WHERE id = ?', [42]);
 
-// Requête avec objet PDOStatement
+// Query returning a PDOStatement object
 $stmt = $db->query('SELECT COUNT(*) FROM users');
 
-// Dernier ID inséré
+// Last inserted ID
 $id = $db->lastInsertId();
 
-// Connexion spécifique (multi-connexion)
+// Specific connection (multi-connection)
 $dbSecondary = DatabaseManager::on('secondary');
 ```
 
 ### DatabaseConnection
 
-**Fichier :** `Access/Connection/DatabaseConnection.php`
+**File:** `Access/Connection/DatabaseConnection.php`
 
-Gestionnaire de connexions PDO. Supporte plusieurs connexions nommées.
+PDO connection manager. Supports multiple named connections.
 
 ```php
-// Connexion par défaut (gérée automatiquement par le framework)
+// Default connection (managed automatically by the framework)
 $pdo = DatabaseConnection::getPdo();
 
-// Connexion nommée
+// Named connection
 $pdo = DatabaseConnection::connectTo('reporting');
 
-// Vérifier l'état de connexion
-DatabaseConnection::isConnected();          // connexion par défaut
-DatabaseConnection::isConnected('reporting'); // connexion nommée
+// Check connection status
+DatabaseConnection::isConnected();          // default connection
+DatabaseConnection::isConnected('reporting'); // named connection
 
-// Noms des connexions actives
+// Names of active connections
 $names = DatabaseConnection::getConnectionNames();
 ```
 
-**Configuration `database.config.php` :**
+**`database.config.php` configuration:**
 
 ```php
 return [
@@ -1002,9 +1002,9 @@ return [
 ];
 ```
 
-**Connexions persistantes**
+**Persistent connections**
 
-Chaque connexion peut activer `PDO::ATTR_PERSISTENT` via l'option `persistent` :
+Each connection can enable `PDO::ATTR_PERSISTENT` via the `persistent` option:
 
 ```php
 'connections' => [
@@ -1015,31 +1015,31 @@ Chaque connexion peut activer `PDO::ATTR_PERSISTENT` via l'option `persistent` :
 ],
 ```
 
-Sur un serveur PHP-FPM avec beaucoup de requêtes courtes, cela évite de rouvrir une connexion TCP/authentification à chaque requête : le worker FPM réutilise la même connexion PDO d'une requête à l'autre.
+On a PHP-FPM server with many short-lived requests, this avoids reopening a TCP connection/authentication on every request: the FPM worker reuses the same PDO connection from one request to the next.
 
-> ⚠️ **Attention** : une connexion persistante survit à la requête qui l'a ouverte. Si une transaction est démarrée (`beginTransaction()`) et n'est jamais explicitement terminée par un `commit()` ou un `rollback()` — notamment en cas d'exception non gérée — l'état peut fuiter vers la requête suivante traitée par le même worker, avec un comportement indéterminé selon le driver. N'activez `persistent` que si le code applicatif garantit la fermeture systématique de toutes les transactions (y compris sur les chemins d'erreur).
+> ⚠️ **Warning**: a persistent connection outlives the request that opened it. If a transaction is started (`beginTransaction()`) and is never explicitly ended with a `commit()` or a `rollback()` — particularly in the case of an unhandled exception — the state can leak into the next request handled by the same worker, with undefined behavior depending on the driver. Only enable `persistent` if the application code guarantees that every transaction is systematically closed (including on error paths).
 
 ---
 
 ## Seeding
 
-Le module Seeder permet de peupler la base de données avec des données de référence ou de démonstration. Il est structuré autour d'une interface, d'un attribut de configuration et d'un `SeedManager`.
+The Seeder module allows populating the database with reference or demo data. It is structured around an interface, a configuration attribute, and a `SeedManager`.
 
 ```
 Database/Seeder/
-├── SeedManager.php                         # Découverte, filtrage et exécution des seeders
+├── SeedManager.php                         # Discovery, filtering and execution of seeders
 ├── Interface/
-│   └── SeedInterface.php                  # Contrat d'un seeder
+│   └── SeedInterface.php                  # Contract for a seeder
 ├── Attribute/
-│   └── Seeder.php                         # Attribut de configuration
+│   └── Seeder.php                         # Configuration attribute
 └── Commands/
-    ├── DatabaseMakeSeedCommand.php         # Générateur de seeder
-    └── DatabaseRunSeedCommand.php          # Exécution des seeders
+    ├── DatabaseMakeSeedCommand.php         # Seeder generator
+    └── DatabaseRunSeedCommand.php          # Running seeders
 ```
 
 ### SeedInterface
 
-Tout seeder doit implémenter `SeedInterface` :
+Every seeder must implement `SeedInterface`:
 
 ```php
 namespace Neo\Core\Database\Seeder\Interface;
@@ -1052,11 +1052,11 @@ interface SeedInterface
 }
 ```
 
-La méthode `run()` reçoit directement l'`EntityManager`, ce qui permet de persister des entités sans instancier manuellement l'ORM.
+The `run()` method directly receives the `EntityManager`, which allows persisting entities without manually instantiating the ORM.
 
-### Attribut `#[Seeder]`
+### The `#[Seeder]` Attribute
 
-L'attribut `#[Seeder]` se pose sur la classe et configure deux paramètres :
+The `#[Seeder]` attribute is placed on the class and configures two parameters:
 
 ```php
 use Neo\Core\Database\Seeder\Attribute\Seeder;
@@ -1065,20 +1065,20 @@ use Neo\Core\Database\Seeder\Attribute\Seeder;
 final class CountrySeeder implements SeedInterface { ... }
 ```
 
-| Paramètre | Type | Défaut | Description |
+| Parameter | Type | Default | Description |
 |-----------|------|--------|-------------|
-| `order` | `int` | `0` | Ordre d'exécution (croissant). Les seeders sans dépendances peuvent garder `0`. |
-| `group` | `string` | `'reference'` | Groupe du seeder. Valeurs conventionnelles : `'reference'` (données stables, toujours exécutées) et `'demo'` (données de développement/test). |
+| `order` | `int` | `0` | Execution order (ascending). Seeders with no dependencies can keep `0`. |
+| `group` | `string` | `'reference'` | Seeder group. Conventional values: `'reference'` (stable data, always run) and `'demo'` (development/test data). |
 
-Un seeder sans l'attribut `#[Seeder]` est ignoré par le `SeedManager`.
+A seeder without the `#[Seeder]` attribute is ignored by the `SeedManager`.
 
 ### SeedManager
 
-`SeedManager` orchestre la découverte, le filtrage et l'exécution des seeders.
+`SeedManager` orchestrates discovery, filtering, and execution of seeders.
 
-**Découverte** — `discover(string $directory, string $namespace): array`
+**Discovery** — `discover(string $directory, string $namespace): array`
 
-Scanne un répertoire récursivement, charge les classes PHP trouvées, vérifie la présence de l'attribut `#[Seeder]` et de l'interface `SeedInterface`, puis retourne la liste triée par `order` croissant :
+Recursively scans a directory, loads the PHP classes found, checks for the presence of the `#[Seeder]` attribute and the `SeedInterface` interface, then returns the list sorted by ascending `order`:
 
 ```php
 $manager = new SeedManager($container);
@@ -1090,72 +1090,72 @@ $seeders = $manager->discover(
 // [['class' => 'Neo\Src\Blog\Database\Seeder\CountrySeeder', 'order' => 10, 'group' => 'reference'], ...]
 ```
 
-**Filtrage** — `filterByGroup(array $seeders, ?string $group, bool $includeDev): array`
+**Filtering** — `filterByGroup(array $seeders, ?string $group, bool $includeDev): array`
 
-| Appel | Résultat |
+| Call | Result |
 |-------|----------|
-| `filterByGroup($seeders, null, false)` | Uniquement le groupe `'reference'` |
-| `filterByGroup($seeders, null, true)` | Tous les groupes |
-| `filterByGroup($seeders, 'demo', false)` | Uniquement le groupe `'demo'` |
+| `filterByGroup($seeders, null, false)` | Only the `'reference'` group |
+| `filterByGroup($seeders, null, true)` | All groups |
+| `filterByGroup($seeders, 'demo', false)` | Only the `'demo'` group |
 
-**Exécution** — `run(array $seeders): list<string>`
+**Execution** — `run(array $seeders): list<string>`
 
-Résout chaque seeder via le conteneur DI, appelle `run($em)` et retourne la liste des FQCN exécutés.
+Resolves each seeder through the DI container, calls `run($em)`, and returns the list of executed FQCNs.
 
-### Commandes CLI
+### CLI Commands
 
 #### `database:make:seed`
 
-Génère un fichier de seeder dans `src/<Projet>/Database/Seeder/`.
+Generates a seeder file inside `src/<Project>/Database/Seeder/`.
 
 ```bash
 php bin/neo database:make:seed CountrySeeder --project=Blog
 php bin/neo database:make:seed CountrySeeder --project=Blog --order=10 --group=reference
 php bin/neo database:make:seed DemoPostSeeder --project=Blog --order=50 --group=demo
-php bin/neo database:make:seed CountrySeeder --project=Blog --force   # Écrase si existant
+php bin/neo database:make:seed CountrySeeder --project=Blog --force   # Overwrites if it exists
 ```
 
-Options :
+Options:
 
 | Option | Description |
 |--------|-------------|
-| `--project` | Projet cible (obligatoire) |
-| `--order` | Ordre d'exécution (défaut : `0`) |
-| `--group` | Groupe (défaut : `'reference'`) |
-| `--force` | Écrase le fichier sans confirmation |
+| `--project` | Target project (required) |
+| `--order` | Execution order (default: `0`) |
+| `--group` | Group (default: `'reference'`) |
+| `--force` | Overwrites the file without confirmation |
 
-Le nom est automatiquement converti en PascalCase et suffixé par `Seeder` s'il ne l'est pas déjà.
+The name is automatically converted to PascalCase and suffixed with `Seeder` if it isn't already.
 
 #### `database:run:seed`
 
-Exécute les seeders d'un projet.
+Runs a project's seeders.
 
 ```bash
-# Exécuter les seeders 'reference' uniquement (comportement par défaut)
+# Run only the 'reference' seeders (default behavior)
 php bin/neo database:run:seed --project=Blog
 
-# Inclure les seeders de développement (tous les groupes)
+# Include development seeders (all groups)
 php bin/neo database:run:seed --project=Blog --dev
 
-# Exécuter uniquement un groupe spécifique
+# Run only a specific group
 php bin/neo database:run:seed --project=Blog --group=demo
 
-# Prévisualiser sans exécuter
+# Preview without running
 php bin/neo database:run:seed --project=Blog --dry-run
 ```
 
-Options :
+Options:
 
 | Option | Description |
 |--------|-------------|
-| `--project` | Projet cible (obligatoire) |
-| `--group` | Filtre sur un groupe précis |
-| `--dev` | Inclut tous les groupes (dont `demo`) |
-| `--dry-run` | Liste les seeders qui seraient exécutés sans les lancer |
+| `--project` | Target project (required) |
+| `--group` | Filter on a specific group |
+| `--dev` | Includes every group (including `demo`) |
+| `--dry-run` | Lists the seeders that would run, without running them |
 
-La commande affiche la liste ordonnée des seeders avant exécution et demande une confirmation interactive.
+The command displays the ordered list of seeders before execution and asks for interactive confirmation.
 
-### Exemple complet
+### Complete example
 
 ```php
 <?php
@@ -1175,8 +1175,8 @@ final class CountrySeeder implements SeedInterface
     {
         $countries = [
             ['code' => 'FR', 'name' => 'France'],
-            ['code' => 'DE', 'name' => 'Allemagne'],
-            ['code' => 'ES', 'name' => 'Espagne'],
+            ['code' => 'DE', 'name' => 'Germany'],
+            ['code' => 'ES', 'name' => 'Spain'],
         ];
 
         foreach ($countries as $data) {
@@ -1191,75 +1191,75 @@ final class CountrySeeder implements SeedInterface
 }
 ```
 
-Workflow type :
+Typical workflow:
 
 ```bash
-# Générer un seeder
+# Generate a seeder
 php bin/neo database:make:seed CountrySeeder --project=Blog --order=10
 
-# Prévisualiser
+# Preview
 php bin/neo database:run:seed --project=Blog --dry-run
 
-# Exécuter
+# Run
 php bin/neo database:run:seed --project=Blog
 
-# Données de demo uniquement
+# Demo data only
 php bin/neo database:run:seed --project=Blog --group=demo
 ```
 
 ---
 
-## Commandes CLI
+## CLI Commands
 
-| Commande | Description |
+| Command | Description |
 |----------|-------------|
-| `make:entity` | Génère une entité et son dépôt de manière interactive |
-| `database:create` | Crée la base de données définie dans la configuration |
-| `database:orm:diff` | Compare les entités et la base, génère une migration |
-| `database:migration:migrate` | Applique toutes les migrations en attente |
-| `database:migration:rollback` | Annule le dernier batch de migrations |
-| `database:migration:status` | Affiche l'état des migrations |
-| `database:make:seed` | Génère un seeder dans le projet cible |
-| `database:run:seed` | Exécute les seeders d'un projet |
+| `make:entity` | Interactively generates an entity and its repository |
+| `database:create` | Creates the database defined in the configuration |
+| `database:orm:diff` | Compares entities against the database, generates a migration |
+| `database:migration:migrate` | Runs every pending migration |
+| `database:migration:rollback` | Rolls back the last migration batch |
+| `database:migration:status` | Shows the status of migrations |
+| `database:make:seed` | Generates a seeder in the target project |
+| `database:run:seed` | Runs a project's seeders |
 
 ### `make:entity`
 
 ```bash
 php neo make:entity --project=Blog
-# L'outil pose des questions interactives :
-# - Nom de l'entité
-# - Champs (type, nullable, longueur)
+# The tool asks interactive questions:
+# - Entity name
+# - Fields (type, nullable, length)
 # - Relations (ManyToOne, OneToMany, ManyToMany, OneToOne)
-# - Génère l'entité et son repository
+# - Generates the entity and its repository
 ```
 
 ### `database:create`
 
 ```bash
 php neo database:create --project=Blog
-# Lit database.config.php et crée la base de données
+# Reads database.config.php and creates the database
 ```
 
 ### `database:orm:diff`
 
 ```bash
-# Comparer les entités avec la base et générer une migration
+# Compare entities against the database and generate a migration
 php neo database:orm:diff --project=Blog --name=add_posts_table
 
-# Dry run (prévisualiser sans écrire)
+# Dry run (preview without writing)
 php neo database:orm:diff --project=Blog --name=test --dry-run
 
-# Utiliser une connexion spécifique
+# Use a specific connection
 php neo database:orm:diff --project=Blog --name=secondary_update --connection=secondary
 ```
 
 ### `database:migration:migrate`
 
 ```bash
-# Appliquer les migrations en attente
+# Run pending migrations
 php neo database:migration:migrate --project=Blog
 
-# Lister sans appliquer
+# List without running
 php neo database:migration:migrate --project=Blog --dry-run
 ```
 
@@ -1277,45 +1277,45 @@ php neo database:migration:status --project=Blog
 
 ---
 
-## Points techniques importants
+## Important Technical Notes
 
-### Lazy Loading avec PHP 8.4
+### Lazy Loading with PHP 8.4
 
-Le `ProxyFactory` utilise `ReflectionClass::newLazyGhost()`, disponible depuis PHP 8.4. Les associations `ToOne` retournent des proxies transparents :
+`ProxyFactory` uses `ReflectionClass::newLazyGhost()`, available since PHP 8.4. `ToOne` associations return transparent proxies:
 
 ```php
 $post = $em->find(Post::class, 1);
-$author = $post->getAuthor(); // Proxy, pas de SQL encore
-echo $author->getId();        // Accès à l'ID sans déclencher le chargement
-echo $author->getName();      // SQL déclenché ici : SELECT * FROM users WHERE id = ?
+$author = $post->getAuthor(); // Proxy, no SQL yet
+echo $author->getId();        // Access to the ID without triggering the load
+echo $author->getName();      // SQL triggered here: SELECT * FROM users WHERE id = ?
 ```
 
-### Détection de changements (Change Tracking)
+### Change Detection (Change Tracking)
 
-L'UoW utilise une **comparaison par valeur** (`$originalEntityData` vs valeur actuelle). Il n'est pas nécessaire de marquer explicitement les champs modifiés. Le `flush()` calcule automatiquement le diff.
+The UoW uses **value-based comparison** (`$originalEntityData` vs current value). There is no need to explicitly mark modified fields. `flush()` automatically computes the diff.
 
 ```php
 $user = $em->find(User::class, 1);
-$user->setName('Alice Nouveau'); // Modification détectée au prochain flush()
-$em->flush();                    // UPDATE users SET name = ? WHERE id = 1
+$user->setName('New Alice'); // Change detected on the next flush()
+$em->flush();                // UPDATE users SET name = ? WHERE id = 1
 ```
 
-### Ordre d'insertion (topological sort)
+### Insertion Order (topological sort)
 
-L'UoW calcule l'ordre des insertions via un tri topologique (algorithme de Kahn) sur les dépendances `ManyToOne` et `OneToOne`. Cela garantit que les entités parentes sont insérées avant leurs enfants.
+The UoW computes insertion order via a topological sort (Kahn's algorithm) on `ManyToOne` and `OneToOne` dependencies. This guarantees that parent entities are inserted before their children.
 
-### Migrations idempotentes
+### Idempotent Migrations
 
-Toutes les opérations générées sont idempotentes : `IF NOT EXISTS`, `IF EXISTS`, contrôle de l'existence de colonnes via `information_schema`. Cela permet de rejouer une migration sans erreur.
+Every generated operation is idempotent: `IF NOT EXISTS`, `IF EXISTS`, checking column existence via `information_schema`. This allows replaying a migration without error.
 
 ### Cascade
 
-La cascade est gérée au niveau de l'UoW (`cascadePersist`, `cascadeRemove`) à partir des métadonnées de l'attribut. L'option `orphanRemoval: true` sur `OneToMany` supprime automatiquement les enfants déréférencés.
+Cascading is handled at the UoW level (`cascadePersist`, `cascadeRemove`) based on the attribute's metadata. The `orphanRemoval: true` option on `OneToMany` automatically removes dereferenced children.
 
-### Protection CSRF dans les formulaires
+### CSRF Protection in Forms
 
-Si un `CsrfManager` est fourni à la `FormFactory`, un champ `_csrf_token` est automatiquement ajouté et validé lors du `handleRequest()`.
+If a `CsrfManager` is provided to `FormFactory`, a `_csrf_token` field is automatically added and validated during `handleRequest()`.
 
-### Séparation stricte des responsabilités (Data Mapper)
+### Strict Separation of Concerns (Data Mapper)
 
-Les entités ne connaissent pas l'ORM. Elles sont de simples POPO. C'est l'`EntityManager` et ses collaborateurs qui gèrent la persistance. On peut instancier et tester les entités sans base de données.
+Entities know nothing about the ORM. They are plain POPOs. It is the `EntityManager` and its collaborators that handle persistence. Entities can be instantiated and tested without a database.

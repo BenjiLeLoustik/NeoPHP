@@ -1,76 +1,76 @@
 # Asset
 
-Le module `Asset` gère le pipeline de traitement des fichiers statiques (CSS, JS, LESS) dans NeoPHP. Il compile, minifie et versionne automatiquement les assets selon l'environnement, expose une fonction Twig `asset()` pour les vues, et fournit une commande CLI pour forcer la recompilation.
+The `Asset` module manages the static file processing pipeline (CSS, JS, LESS) in NeoPHP. It automatically compiles, minifies and versions assets depending on the environment, exposes an `asset()` Twig function for views, and provides a CLI command to force recompilation.
 
 ---
 
-## Sommaire
+## Summary
 
 - [AssetManager](#assetmanager)
-- [Compilateurs](#compilateurs)
+- [Compilers](#compilers)
   - [CssCompiler](#csscompiler)
   - [JsCompiler](#jscompiler)
   - [LessCompiler](#lesscompiler)
-- [Extension Twig](#extension-twig--assetviewextension)
-- [Commandes](#commandes)
+- [Twig Extension](#twig-extension--assetviewextension)
+- [Commands](#commands)
   - [asset:reload](#assetreload)
 
 ---
 
 ## AssetManager
 
-**Fichier :** `AssetManager.php`
+**File:** `AssetManager.php`
 
-`AssetManager` est le composant central du module. Il résout le chemin public d'un asset à partir de son chemin logique relatif au dossier `Assets/` du projet.
+`AssetManager` is the central component of the module. It resolves the public path of an asset from its logical path relative to the project's `Assets/` folder.
 
-### Initialisation
+### Initialization
 
-Au démarrage, il lit la configuration de l'application pour déterminer l'environnement (`prod` ou tout autre valeur), charge les chemins du conteneur et tente de lire le fichier `manifest.json` du projet courant.
+On startup, it reads the application configuration to determine the environment (`prod` or any other value), loads the container's paths and attempts to read the current project's `manifest.json` file.
 
 ```php
-// Injecté automatiquement via le conteneur de dépendances
+// Automatically injected via the dependency container
 $assetManager = $container->get(AssetManager::class);
 ```
 
-### Résolution d'un asset : `getAssetPath(string $path)`
+### Resolving an asset: `getAssetPath(string $path)`
 
-Le comportement diffère selon l'environnement.
+Behavior differs depending on the environment.
 
-#### En mode `prod`
+#### In `prod` mode
 
-Le manifest est la source de vérité. Si le chemin est présent dans le manifest, l'URL versionnée est retournée directement sans aucun accès au système de fichiers. Si le chemin est absent du manifest, un chemin de fallback est construit.
+The manifest is the source of truth. If the path is present in the manifest, the versioned URL is returned directly with no filesystem access at all. If the path is absent from the manifest, a fallback path is built.
 
 ```
 /builds/MyProject/assets/css/app.css
 ```
 
-#### En mode `dev` (ou tout environnement autre que `prod`)
+#### In `dev` mode (or any environment other than `prod`)
 
-L'asset source est inspecté à chaque requête :
+The source asset is inspected on every request:
 
-1. Le fichier source est vérifié dans `src/MyProject/Assets/`.
-2. Un hash MD5 (8 caractères) est calculé sur le contenu du fichier.
-3. Si le manifest contient déjà un chemin avec ce hash, il est retourné directement (pas de recompilation).
-4. Sinon, l'asset est compilé, l'ancienne version compilée est supprimée, et le manifest est mis à jour.
+1. The source file is checked in `src/MyProject/Assets/`.
+2. An MD5 hash (8 characters) is computed from the file's content.
+3. If the manifest already contains a path with this hash, it is returned directly (no recompilation).
+4. Otherwise, the asset is compiled, the previously compiled version is deleted, and the manifest is updated.
 
 ```
 /builds/MyProject/assets/css/app-a1b2c3d4.min.css
 ```
 
-### Convention de nommage des fichiers compilés
+### Compiled file naming convention
 
-| Type   | Fichier source     | Fichier compilé                          |
-|--------|--------------------|------------------------------------------|
-| CSS    | `css/app.css`      | `css/app-{hash}.min.css`                 |
-| JS     | `js/app.js`        | `js/app-{hash}.min.js`                   |
-| LESS   | `css/theme.less`   | `css/theme-{hash}.css`                   |
-| Autre  | `fonts/icon.woff`  | `fonts/icon-{hash}.woff` (copie simple)  |
+| Type   | Source file         | Compiled file                            |
+|--------|----------------------|--------------------------------------------|
+| CSS    | `css/app.css`        | `css/app-{hash}.min.css`                    |
+| JS     | `js/app.js`           | `js/app-{hash}.min.js`                      |
+| LESS   | `css/theme.less`      | `css/theme-{hash}.css`                      |
+| Other  | `fonts/icon.woff`      | `fonts/icon-{hash}.woff` (plain copy)       |
 
-Le suffixe `.min` est ajouté automatiquement pour les types `css` et `js`.
+The `.min` suffix is automatically added for the `css` and `js` types.
 
 ### Manifest
 
-Le manifest est un fichier JSON situé dans `public/builds/{Project}/manifest.json`. Il associe le chemin logique de chaque asset à son chemin public versionné.
+The manifest is a JSON file located at `public/builds/{Project}/manifest.json`. It maps each asset's logical path to its versioned public path.
 
 ```json
 {
@@ -81,9 +81,9 @@ Le manifest est un fichier JSON situé dans `public/builds/{Project}/manifest.js
 
 ---
 
-## Compilateurs
+## Compilers
 
-Tous les compilateurs implémentent `CompilerInterface` :
+All compilers implement `CompilerInterface`:
 
 ```php
 interface CompilerInterface
@@ -92,22 +92,22 @@ interface CompilerInterface
 }
 ```
 
-`AssetManager` sélectionne automatiquement le bon compilateur selon l'extension du fichier source via un `match` :
+`AssetManager` automatically selects the right compiler based on the source file's extension via a `match`:
 
 ```php
 $compiler = match($ext) {
     'css'  => new CssCompiler(),
     'js'   => new JsCompiler(),
     'less' => new LessCompiler(),
-    default => null  // Copie simple pour les autres types
+    default => null  // Plain copy for other types
 };
 ```
 
 ### CssCompiler
 
-**Fichier :** `Compiler/CssCompiler.php`
+**File:** `Compiler/CssCompiler.php`
 
-Utilise la bibliothèque `matthiasmullie/minify` pour minifier les fichiers CSS.
+Uses the `matthiasmullie/minify` library to minify CSS files.
 
 ```php
 class CssCompiler implements CompilerInterface
@@ -120,13 +120,13 @@ class CssCompiler implements CompilerInterface
 }
 ```
 
-**Dépendance Composer :** `matthiasmullie/minify`
+**Composer dependency:** `matthiasmullie/minify`
 
 ### JsCompiler
 
-**Fichier :** `Compiler/JsCompiler.php`
+**File:** `Compiler/JsCompiler.php`
 
-Utilise la même bibliothèque `matthiasmullie/minify` pour minifier les fichiers JavaScript.
+Uses the same `matthiasmullie/minify` library to minify JavaScript files.
 
 ```php
 class JsCompiler implements CompilerInterface
@@ -139,13 +139,13 @@ class JsCompiler implements CompilerInterface
 }
 ```
 
-**Dépendance Composer :** `matthiasmullie/minify`
+**Composer dependency:** `matthiasmullie/minify`
 
 ### LessCompiler
 
-**Fichier :** `Compiler/LessCompiler.php`
+**File:** `Compiler/LessCompiler.php`
 
-Compile les fichiers LESS en CSS via `less.php`. Le CSS produit est normalisé (espaces multiples réduits à un seul) avant d'être écrit sur le disque.
+Compiles LESS files into CSS via `less.php`. The resulting CSS is normalized (multiple spaces collapsed to one) before being written to disk.
 
 ```php
 class LessCompiler implements CompilerInterface
@@ -161,34 +161,34 @@ class LessCompiler implements CompilerInterface
 }
 ```
 
-**Dépendance Composer :** `wikimedia/less.php`
+**Composer dependency:** `wikimedia/less.php`
 
-Le dossier parent du fichier source est passé comme base URL au parser, ce qui permet les imports relatifs (`@import 'variables.less'`).
+The source file's parent folder is passed as the base URL to the parser, which enables relative imports (`@import 'variables.less'`).
 
 ---
 
-## Extension Twig : `AssetViewExtension`
+## Twig Extension: `AssetViewExtension`
 
-**Fichier :** `Extension/AssetViewExtension.php`
+**File:** `Extension/AssetViewExtension.php`
 
-Cette extension enregistre la fonction Twig `asset()` qui résout le chemin public versionné d'un asset depuis les templates. Elle est détectée et chargée automatiquement via l'attribut `#[Extension(type: ExtensionTypeEnum::VIEW)]`.
+This extension registers the `asset()` Twig function, which resolves the versioned public path of an asset from within templates. It is automatically detected and loaded via the `#[Extension(type: ExtensionTypeEnum::VIEW)]` attribute.
 
-### Utilisation dans les templates Twig
+### Usage in Twig templates
 
 ```twig
-{# Feuille de style #}
+{# Stylesheet #}
 <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 
-{# Script JS #}
+{# JS script #}
 <script src="{{ asset('js/app.js') }}"></script>
 
-{# Autre fichier (image, police...) #}
+{# Other file (image, font...) #}
 <img src="{{ asset('images/logo.png') }}" alt="Logo">
 ```
 
-Le chemin passé à `asset()` est relatif au dossier `Assets/` du projet courant. En production, l'URL versionnée est lue depuis le manifest. En développement, la compilation est déclenchée si le fichier a changé.
+The path passed to `asset()` is relative to the current project's `Assets/` folder. In production, the versioned URL is read from the manifest. In development, compilation is triggered if the file has changed.
 
-### Implémentation
+### Implementation
 
 ```php
 #[Extension(type: ExtensionTypeEnum::VIEW)]
@@ -212,13 +212,13 @@ final readonly class AssetViewExtension implements TwigExtensionInterface
 
 ---
 
-## Commandes
+## Commands
 
 ### `asset:reload`
 
-**Fichier :** `Commands/AssetReloadCommand.php`
+**File:** `Commands/AssetReloadCommand.php`
 
-Supprime le dossier de builds d'un projet, forçant ainsi la recompilation de tous les assets à la prochaine requête.
+Deletes a project's build folder, forcing recompilation of all assets on the next request.
 
 #### Synopsis
 
@@ -228,15 +228,15 @@ php bin/neo asset:reload --project=<ProjectName>
 
 #### Options
 
-| Nom         | Type   | Description                              |
-|-------------|--------|------------------------------------------|
-| `--project` | Option | Nom du projet dont les builds sont supprimés |
+| Name        | Type   | Description                                    |
+|--------------|--------|--------------------------------------------------|
+| `--project` | Option | Name of the project whose builds are deleted     |
 
-#### Comportement
+#### Behavior
 
-1. Vérifie l'existence du dossier `public/builds/{Project}`.
-2. Demande une confirmation interactive.
-3. Supprime récursivement le dossier de builds.
+1. Checks that the `public/builds/{Project}` folder exists.
+2. Asks for interactive confirmation.
+3. Recursively deletes the build folder.
 
 ```bash
 php bin/neo asset:reload --project=MyProject
@@ -244,47 +244,47 @@ php bin/neo asset:reload --project=MyProject
 # → Build folder deleted for project 'MyProject'.
 ```
 
-Après cette commande, le premier accès à chaque page recompilera et versionnera automatiquement tous les assets du projet.
+After this command, the first access to each page will automatically recompile and version all of the project's assets.
 
 ---
 
-## Flux de traitement complet
+## Complete processing flow
 
 ```
-Template Twig                    AssetManager               Système de fichiers
+Twig Template                    AssetManager               File System
      │                               │                            │
      │  {{ asset('css/app.css') }}   │                            │
      │──────────────────────────────►│                            │
-     │                               │── Lire manifest.json ─────►│
-     │                               │◄── manifest chargé ────────│
+     │                               │── Read manifest.json ─────►│
+     │                               │◄── manifest loaded ────────│
      │                               │                            │
-     │                    [ENV=dev]  │── Lire hash MD5 source ───►│
-     │                               │◄── hash calculé ───────────│
+     │                    [ENV=dev]  │── Read source MD5 hash ───►│
+     │                               │◄── hash computed ──────────│
      │                               │                            │
-     │             [hash différent]  │── CssCompiler.compile() ──►│
-     │                               │◄── fichier .min.css créé ──│
-     │                               │── Sauvegarder manifest ───►│
+     │             [different hash]  │── CssCompiler.compile() ──►│
+     │                               │◄── .min.css file created ──│
+     │                               │── Save manifest ──────────►│
      │                               │                            │
      │◄──  /builds/MyProject/assets/css/app-a1b2c3d4.min.css  ───│
 ```
 
 ---
 
-## Structure des fichiers
+## File structure
 
 ```
 neo/Core/Asset/
-├── AssetManager.php                    # Gestionnaire principal
+├── AssetManager.php                    # Main manager
 ├── Exception/
 │   └── AssetException.php
 ├── Compiler/
 │   ├── Interface/
 │   │   └── CompilerInterface.php
-│   ├── CssCompiler.php                 # Minification CSS
-│   ├── JsCompiler.php                  # Minification JS
-│   └── LessCompiler.php               # Compilation LESS → CSS
+│   ├── CssCompiler.php                 # CSS minification
+│   ├── JsCompiler.php                  # JS minification
+│   └── LessCompiler.php               # LESS → CSS compilation
 ├── Extension/
-│   └── AssetViewExtension.php          # Fonction Twig asset()
+│   └── AssetViewExtension.php          # asset() Twig function
 └── Commands/
     └── AssetReloadCommand.php          # asset:reload
 ```

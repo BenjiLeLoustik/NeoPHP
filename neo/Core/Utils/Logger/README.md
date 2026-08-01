@@ -1,19 +1,19 @@
 # Logger
 
-Le sous-module `Logger` fournit un système de journalisation structuré avec support des niveaux RFC 5424, des canaux nommés, de la rotation des fichiers et de l'archivage automatique.
+The `Logger` submodule provides a structured logging system with support for RFC 5424 levels, named channels, file rotation, and automatic archiving.
 
 ---
 
-## Sommaire
+## Table of Contents
 
 1. [Structure](#structure)
 2. [Configuration](#configuration)
-3. [Niveaux de log](#niveaux-de-log)
-4. [Utilisation](#utilisation)
-5. [Canaux](#canaux)
-6. [Rotation et archivage](#rotation-et-archivage)
-7. [Extension contrôleur](#extension-contrôleur)
-8. [Intégration Profiler](#intégration-profiler)
+3. [Log Levels](#log-levels)
+4. [Usage](#usage)
+5. [Channels](#channels)
+6. [Rotation and Archiving](#rotation-and-archiving)
+7. [Controller Extension](#controller-extension)
+8. [Profiler Integration](#profiler-integration)
 
 ---
 
@@ -21,19 +21,19 @@ Le sous-module `Logger` fournit un système de journalisation structuré avec su
 
 ```
 Logger/
-├── LoggerManager.php                   # Gestionnaire principal
-├── LoggerModule.php                    # Enregistrement DI
+├── LoggerManager.php                   # Main manager
+├── LoggerModule.php                    # DI registration
 ├── Collector/
-│   └── LogCollector.php               # Collecteur Profiler
+│   └── LogCollector.php               # Profiler collector
 └── Extension/
-    └── LoggerControllerExtension.php  # Injecte getLogger() dans les contrôleurs
+    └── LoggerControllerExtension.php  # Injects getLogger() into controllers
 ```
 
 ---
 
 ## Configuration
 
-**Fichier :** `src/<Projet>/Config/logger.config.php`
+**File:** `src/<Project>/Config/logger.config.php`
 
 ```php
 return [
@@ -56,8 +56,8 @@ return [
 
     'rotation' => [
         'enabled'       => true,
-        'type'          => 'daily',   // 'daily' ou 'size'
-        'max_file_size' => 10485760,  // 10 Mo (pour type 'size')
+        'type'          => 'daily',   // 'daily' or 'size'
+        'max_file_size' => 10485760,  // 10 MB (for type 'size')
     ],
 
     'archive' => [
@@ -67,84 +67,84 @@ return [
 ];
 ```
 
-**Placeholders du format :**
+**Format Placeholders:**
 
 | Placeholder | Description |
 |-------------|-------------|
-| `{%datetime%}` | Date et heure (`Y-m-d H:i:s`) |
-| `{%level_name%}` | Niveau en majuscules |
-| `{%level_code%}` | Code numérique du niveau |
-| `{%origin%}` | Paramètre `$origin` passé à la méthode |
-| `{%message%}` | Message de log |
-| `{%context%}` | Contexte JSON encodé |
+| `{%datetime%}` | Date and time (`Y-m-d H:i:s`) |
+| `{%level_name%}` | Level in uppercase |
+| `{%level_code%}` | Numeric level code |
+| `{%origin%}` | `$origin` parameter passed to the method |
+| `{%message%}` | Log message |
+| `{%context%}` | JSON-encoded context |
 
 ---
 
-## Niveaux de log
+## Log Levels
 
-| Niveau | Code | Description |
+| Level | Code | Description |
 |--------|------|-------------|
-| `DEBUG` | 100 | Informations de débogage détaillées |
-| `INFO` | 200 | Événements normaux du système |
-| `NOTICE` | 250 | Événements normaux mais significatifs |
-| `WARNING` | 300 | Situations anormales non critiques |
-| `ERROR` | 400 | Erreurs applicatives |
-| `CRITICAL` | 500 | Erreurs critiques |
-| `ALERT` | 550 | Action immédiate requise |
-| `EMERGENCY` | 600 | Système inutilisable |
+| `DEBUG` | 100 | Detailed debugging information |
+| `INFO` | 200 | Normal system events |
+| `NOTICE` | 250 | Normal but significant events |
+| `WARNING` | 300 | Non-critical abnormal situations |
+| `ERROR` | 400 | Application errors |
+| `CRITICAL` | 500 | Critical errors |
+| `ALERT` | 550 | Immediate action required |
+| `EMERGENCY` | 600 | System unusable |
 
 ---
 
-## Utilisation
+## Usage
 
 ```php
 $logger = $container->get(LoggerManager::class);
 
-// Méthodes de convenance par niveau
-$logger->debug('Requête SQL exécutée', ['sql' => $sql, 'time' => $ms]);
-$logger->info('Utilisateur connecté', ['user_id' => 42], 'auth');
-$logger->notice('Tentative de connexion', ['ip' => $_SERVER['REMOTE_ADDR']]);
-$logger->warning('Token proche de l\'expiration', ['user_id' => 42]);
-$logger->error('Paiement refusé', ['order_id' => 123, 'reason' => $msg], 'payment');
-$logger->critical('Base de données inaccessible');
-$logger->alert('Disque presque plein', ['usage' => '95%']);
-$logger->emergency('Système en panne');
+// Convenience methods by level
+$logger->debug('SQL query executed', ['sql' => $sql, 'time' => $ms]);
+$logger->info('User logged in', ['user_id' => 42], 'auth');
+$logger->notice('Login attempt', ['ip' => $_SERVER['REMOTE_ADDR']]);
+$logger->warning('Token nearing expiration', ['user_id' => 42]);
+$logger->error('Payment declined', ['order_id' => 123, 'reason' => $msg], 'payment');
+$logger->critical('Database unreachable');
+$logger->alert('Disk almost full', ['usage' => '95%']);
+$logger->emergency('System down');
 
-// Méthode générique
-$logger->log('WARNING', 'Message personnalisé', ['key' => 'value'], 'origin');
+// Generic method
+$logger->log('WARNING', 'Custom message', ['key' => 'value'], 'origin');
 ```
 
 ---
 
-## Canaux
+## Channels
 
 ```php
-// Canal spécifique via méthode chaînée
-$logger->channel('security')->error('Accès non autorisé', ['path' => '/admin']);
+// Specific channel via chained method
+$logger->channel('security')->error('Unauthorized access', ['path' => '/admin']);
 
-// Canal via paramètre optionnel (4e argument)
-$logger->info('Événement de sécurité', [], 'system', 'security');
+// Channel via optional parameter (4th argument)
+$logger->info('Security event', [], 'system', 'security');
 ```
 
-Les fichiers de log sont stockés dans `src/<Projet>/Storage/logs/`.
+Log files are stored in `src/<Project>/Storage/logs/`.
 
 ---
 
-## Rotation et archivage
+## Rotation and Archiving
 
-**Rotation quotidienne** (`type: 'daily'`) : les fichiers sont nommés `app-2026-07-30.log`. À chaque appel de `log()`, les anciens fichiers (non actifs) sont automatiquement archivés.
+**Daily rotation** (`type: 'daily'`): files are named `app-2026-07-30.log`. On each call to `log()`, older (non-active) files are automatically archived.
 
-**Rotation par taille** (`type: 'size'`) : le fichier courant est renommé `app.log.{timestamp}` dès qu'il dépasse `max_file_size`.
+**Size-based rotation** (`type: 'size'`): the current file is renamed `app.log.{timestamp}` as soon as it exceeds `max_file_size`.
 
-**Archivage** : les anciens fichiers sont compressés en ZIP dans `{storagePath}/logs/archives/{année}/{mois}/{date}.zip`.
+**Archiving**: older files are compressed into ZIP archives under `{storagePath}/logs/archives/{year}/{month}/{date}.zip`.
 
 ---
 
-## Extension contrôleur
+## Controller Extension
 
-**Fichier :** `Extension/LoggerControllerExtension.php`
+**File:** `Extension/LoggerControllerExtension.php`
 
-Injecte automatiquement `getLogger()` dans tous les contrôleurs.
+Automatically injects `getLogger()` into all controllers.
 
 ```php
 class OrderController extends AbstractController
@@ -153,10 +153,10 @@ class OrderController extends AbstractController
     public function checkout(int $id): Response
     {
         try {
-            // ... traitement du paiement
-            $this->getLogger()->info('Commande validée', ['order_id' => $id], 'payment');
+            // ... payment processing
+            $this->getLogger()->info('Order validated', ['order_id' => $id], 'payment');
         } catch (\Throwable $e) {
-            $this->getLogger()->error('Échec paiement', [
+            $this->getLogger()->error('Payment failed', [
                 'order_id' => $id,
                 'error'    => $e->getMessage(),
             ], 'payment');
@@ -170,6 +170,6 @@ class OrderController extends AbstractController
 
 ---
 
-## Intégration Profiler
+## Profiler Integration
 
-`LoggerManager` s'intègre au profiler de NeoPHP lorsque `NEO_PROFILER_ENABLED` est défini. Les logs sont automatiquement collectés via `LogCollector` et affichables dans le panneau de débogage.
+`LoggerManager` integrates with the NeoPHP profiler when `NEO_PROFILER_ENABLED` is set. Logs are automatically collected via `LogCollector` and displayable in the debug panel.

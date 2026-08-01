@@ -1,48 +1,48 @@
 # Profiler
 
-Le module `Profiler` est un outil de débogage visuel intégré à NeoPHP. Il collecte des métriques de requête (durée, mémoire, requêtes SQL, événements, routes, logs, utilisateur authentifié...) et les affiche dans une barre de débogage flottante injectée automatiquement dans le HTML des réponses, uniquement en environnement `dev`.
+The `Profiler` module is a visual debugging tool built into NeoPHP. It collects request metrics (duration, memory, SQL queries, events, routes, logs, authenticated user...) and displays them in a floating debug bar automatically injected into the HTML of responses, only in the `dev` environment.
 
 ---
 
-## Sommaire
+## Summary
 
-1. [Vue d'ensemble](#vue-densemble)
+1. [Overview](#overview)
 2. [ProfilerModule](#profilermodule)
 3. [ProfilerManager](#profilermanager)
 4. [CollectorInterface](#collectorinterface)
-5. [La barre de débogage (Toolbar)](#la-barre-de-débogage-toolbar)
+5. [The Debug Bar (Toolbar)](#the-debug-bar-toolbar)
 6. [ProfilerResponseListener](#profilerresponselistener)
-7. [Créer un collecteur personnalisé](#créer-un-collecteur-personnalisé)
-8. [Activation et conditions](#activation-et-conditions)
+7. [Creating a Custom Collector](#creating-a-custom-collector)
+8. [Activation and Conditions](#activation-and-conditions)
 
 ---
 
-## Vue d'ensemble
+## Overview
 
 ```
-Requête HTTP
+HTTP Request
      │
      ▼
 ProfilerModule.init()
      ├── ProfilerManager::getInstance()
-     ├── registerCollectors()   ← scan auto tous les *Collector.php
+     ├── registerCollectors()   ← auto-scan of every *Collector.php
      ├── new Toolbar($profiler)
      └── EventDispatcher → ProfilerResponseListener
 
-Réponse HTML
+HTML Response
      │
      ▼
 ProfilerResponseListener.onResponse()
-     └── Toolbar.render()  →  injection avant </body>
+     └── Toolbar.render()  →  injected before </body>
 ```
 
 ---
 
 ## ProfilerModule
 
-Fichier : `ProfilerModule.php`
+File: `ProfilerModule.php`
 
-### Dépendances déclarées
+### Declared Dependencies
 
 ```php
 public function dependencies(): array
@@ -58,45 +58,45 @@ public function dependencies(): array
 }
 ```
 
-### Conditions d'activation
+### Activation Conditions
 
-Le profiler ne s'active que si **toutes** ces conditions sont remplies :
+The profiler only activates if **every** one of these conditions is met:
 
-1. L'exécution n'est pas en CLI (`php_sapi_name() !== 'cli'`).
-2. La clé `environment` dans `config/app.php` vaut `'dev'`.
+1. Execution is not in CLI (`php_sapi_name() !== 'cli'`).
+2. The `environment` key in `config/app.php` equals `'dev'`.
 
 ```php
-// Dans ProfilerModule::init()
+// Inside ProfilerModule::init()
 $env = $container->get('profiler.configModule')->from('app')->get('environment') ?? 'prod';
 if ($env !== 'dev') {
-    return $profiler; // retour immédiat sans barre de débogage
+    return $profiler; // immediate return, no debug bar
 }
 ```
 
-Quand activé, la constante `NEO_PROFILER_ENABLED` est définie à `true`.
+When activated, the `NEO_PROFILER_ENABLED` constant is set to `true`.
 
-### Découverte automatique des collecteurs
+### Automatic Collector Discovery
 
-Le module scanne récursivement tout le répertoire `neo/Core/` à la recherche des fichiers dont le nom se termine par `Collector.php`. Chaque classe trouvée qui implémente `CollectorInterface` est instanciée via le conteneur DI et ajoutée au `ProfilerManager`.
+The module recursively scans the entire `neo/Core/` directory looking for files whose name ends with `Collector.php`. Every class found that implements `CollectorInterface` is instantiated through the DI container and added to the `ProfilerManager`.
 
 ```php
-// Pattern de recherche
+// Search pattern
 '/^.+Collector\.php$/i'
 ```
 
-Si le collecteur implémente également `CollectorAwareInterface`, sa méthode `boot(Container $container)` est appelée pour permettre une initialisation avancée (ex. attacher des listeners d'événements).
+If the collector also implements `CollectorAwareInterface`, its `boot(Container $container)` method is called to allow advanced initialization (e.g. attaching event listeners).
 
 ---
 
 ## ProfilerManager
 
-Fichier : `ProfilerManager.php`
+File: `ProfilerManager.php`
 
-Le `ProfilerManager` est un **singleton** qui centralise la collecte des métriques. Il est accessible globalement via `ProfilerManager::getInstance()`.
+`ProfilerManager` is a **singleton** that centralizes metric collection. It is globally accessible via `ProfilerManager::getInstance()`.
 
-### Initialisation du temps et de la mémoire
+### Time and Memory Initialization
 
-À la construction, le manager utilise les constantes globales du framework si elles sont définies, sinon il prend les valeurs courantes :
+At construction time, the manager uses the framework's global constants if they are defined, otherwise it falls back to the current values:
 
 ```php
 $this->startTime = defined('NEO_START_TIME')
@@ -108,37 +108,37 @@ $this->startMemory = defined('NEO_START_MEMORY')
     : memory_get_usage(true);
 ```
 
-### API publique
+### Public API
 
 ```php
 // Singleton
 $profiler = ProfilerManager::getInstance();
-ProfilerManager::reset(); // réinitialise pour les tests
+ProfilerManager::reset(); // resets for tests
 
-// Collecteurs
+// Collectors
 $profiler->addCollector(CollectorInterface $collector): void;
 $profiler->getCollector('sql'): ?CollectorInterface;
 $profiler->getCollectors(): array; // ['sql' => ..., 'router' => ...]
 
-// Métriques globales
-$profiler->getTotalDuration(): float;  // en millisecondes
-$profiler->getPeakMemory(): int;       // en octets (peak)
+// Global metrics
+$profiler->getTotalDuration(): float;  // in milliseconds
+$profiler->getPeakMemory(): int;       // in bytes (peak)
 $profiler->getStartTime(): float;
 $profiler->getStartMemory(): int;
 
-// Collecte complète
+// Full collection
 $data = $profiler->collect();
-// Retourne : ['duration' => 42.3, 'memory' => 2097152, 'sql' => [...], 'router' => [...], ...]
+// Returns: ['duration' => 42.3, 'memory' => 2097152, 'sql' => [...], 'router' => [...], ...]
 ```
 
-### Collecte des données
+### Data Collection
 
 ```php
 public function collect(): array
 {
     $data = [
         'duration' => round($this->getTotalDuration(), 2), // ms
-        'memory'   => $this->getPeakMemory(),              // octets
+        'memory'   => $this->getPeakMemory(),              // bytes
     ];
 
     foreach ($this->collectors as $name => $collector) {
@@ -153,9 +153,9 @@ public function collect(): array
 
 ## CollectorInterface
 
-Fichier : `Interface/CollectorInterface.php`
+File: `Interface/CollectorInterface.php`
 
-Tout collecteur de métriques doit implémenter cette interface :
+Every metric collector must implement this interface:
 
 ```php
 namespace Neo\Core\Profiler\Interface;
@@ -163,33 +163,33 @@ namespace Neo\Core\Profiler\Interface;
 interface CollectorInterface
 {
     /**
-     * Identifiant unique du collecteur (utilisé comme clé dans les données).
+     * Unique identifier of the collector (used as the key in the data).
      */
     public function getName(): string;
 
     /**
-     * Collecte et retourne les données brutes.
+     * Collects and returns the raw data.
      * @return array<string, mixed>
      */
     public function collect(): array;
 
     /**
-     * Rendu HTML de l'onglet dans la barre de débogage.
+     * HTML rendering of the tab in the debug bar.
      * @param array<string, mixed> $data
      */
     public function renderTab(array $data): string;
 
     /**
-     * Rendu HTML du panneau déroulant (détails).
+     * HTML rendering of the expandable panel (details).
      * @param array<string, mixed> $data
      */
     public function renderPanel(array $data): string;
 }
 ```
 
-### Interface optionnelle : CollectorAwareInterface
+### Optional Interface: CollectorAwareInterface
 
-Si un collecteur a besoin d'accéder au conteneur DI à l'initialisation (pour attacher des listeners, etc.), il peut implémenter `CollectorAwareInterface` :
+If a collector needs access to the DI container at initialization time (to attach listeners, etc.), it can implement `CollectorAwareInterface`:
 
 ```php
 interface CollectorAwareInterface
@@ -200,77 +200,77 @@ interface CollectorAwareInterface
 
 ---
 
-## La barre de débogage (Toolbar)
+## The Debug Bar (Toolbar)
 
-Fichier : `Toolbar/Toolbar.php`
+File: `Toolbar/Toolbar.php`
 
-La `Toolbar` est une classe `readonly` qui génère le HTML complet de la barre de débogage à partir des données collectées par le `ProfilerManager`.
+`Toolbar` is a `readonly` class that generates the complete HTML of the debug bar from the data collected by `ProfilerManager`.
 
-### Structure visuelle
+### Visual Structure
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │ [Neo] │ Response: 42ms │ Memory: 8.2 MB │ [SQL: 3] │ [Router] │ ... │
 └─────────────────────────────────────────────────────────────────────┘
-                      ↕ clic sur un onglet
+                      ↕ click on a tab
 ┌─────────────────────────────────────────────────────────────────────┐
 │ [SQL] [Router] [Auth] [Events] [Logs]                         [✕]  │
 │                                                                     │
-│  (contenu du panneau sélectionné)                                   │
+│  (content of the selected panel)                                    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Couleur de durée
+### Duration Color
 
-La durée d'exécution est colorisée selon des seuils :
+Execution duration is colorized based on thresholds:
 
-| Durée | Couleur |
+| Duration | Color |
 |---|---|
-| < 200 ms | Vert (`#4ade80`) |
+| < 200 ms | Green (`#4ade80`) |
 | 200 - 499 ms | Orange (`#fb923c`) |
-| >= 500 ms | Rouge (`#f87171`) |
+| >= 500 ms | Red (`#f87171`) |
 
-### Persistance de l'état
+### State Persistence
 
-La barre mémorise son état ouvert/fermé dans le `localStorage` du navigateur sous la clé `neo_bar_visible`. L'état est restauré à chaque chargement de page.
+The bar remembers its open/closed state in the browser's `localStorage` under the `neo_bar_visible` key. The state is restored on every page load.
 
-### Rendu
+### Rendering
 
 ```php
 $toolbar = new Toolbar($profiler);
-$html = $toolbar->render(); // retourne tout le HTML + CSS + JS inline
+$html = $toolbar->render(); // returns the full HTML + CSS + inline JS
 ```
 
 ---
 
 ## ProfilerResponseListener
 
-Fichier : `Listener/ProfilerResponseListener.php`
+File: `Listener/ProfilerResponseListener.php`
 
-Ce listener écoute l'événement `ResponseEvent` et injecte la barre de débogage dans la réponse HTML.
+This listener listens for the `ResponseEvent` and injects the debug bar into the HTML response.
 
-### Conditions d'injection
+### Injection Conditions
 
-Le listener **ne modifie pas** la réponse si :
+The listener **does not modify** the response if:
 
-- La réponse est un `RedirectResponse`.
-- La réponse est un `JsonResponse`.
-- Le `Content-Type` ne contient pas `text/html`.
+- The response is a `RedirectResponse`.
+- The response is a `JsonResponse`.
+- The `Content-Type` does not contain `text/html`.
 
-### Stratégie d'injection
+### Injection Strategy
 
 ```php
 public function onResponse(ResponseEvent $event): void
 {
-    // ...vérifications...
+    // ...checks...
 
     $toolbar = $this->toolbar->render();
 
     if (str_contains($content, '</body>')) {
-        // Injection propre avant la fermeture du body
+        // Clean injection before the closing body tag
         $content = str_replace('</body>', $toolbar . '</body>', $content);
     } else {
-        // Fallback : ajout en fin de contenu
+        // Fallback: appended at the end of the content
         $content .= $toolbar;
     }
 
@@ -281,9 +281,9 @@ public function onResponse(ResponseEvent $event): void
 
 ---
 
-## Créer un collecteur personnalisé
+## Creating a Custom Collector
 
-Pour ajouter un collecteur au profiler, il suffit de créer une classe dont le nom se termine par `Collector.php` dans n'importe quel sous-dossier de `neo/Core/`. Elle sera découverte et enregistrée automatiquement.
+To add a collector to the profiler, simply create a class whose name ends with `Collector.php` inside any subfolder of `neo/Core/`. It will be automatically discovered and registered.
 
 ```php
 <?php
@@ -304,7 +304,7 @@ class MyFeatureCollector implements CollectorInterface
 
     public function getName(): string
     {
-        return 'myfeature'; // clé dans les données collectées
+        return 'myfeature'; // key in the collected data
     }
 
     public function collect(): array
@@ -330,7 +330,7 @@ class MyFeatureCollector implements CollectorInterface
     public function renderPanel(array $data): string
     {
         if (empty($data['events'])) {
-            return '<div class="n-empty">Aucun événement.</div>';
+            return '<div class="n-empty">No events.</div>';
         }
 
         $rows = '';
@@ -343,25 +343,25 @@ class MyFeatureCollector implements CollectorInterface
 }
 ```
 
-### Utiliser le collecteur depuis un autre service
+### Using the Collector from Another Service
 
-Puisque le `ProfilerManager` est un singleton, n'importe quel service peut y accéder pour enregistrer des données :
+Since `ProfilerManager` is a singleton, any service can access it to record data:
 
 ```php
 if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
     $collector = ProfilerManager::getInstance()->getCollector('myfeature');
-    $collector?->record('Quelque chose est arrivé');
+    $collector?->record('Something happened');
 }
 ```
 
 ---
 
-## Activation et conditions
+## Activation and Conditions
 
-| Condition | Comportement |
+| Condition | Behavior |
 |---|---|
-| `environment = prod` | Profiler désactivé, `ProfilerManager` retourné sans collecteurs |
-| `environment = dev` | Profiler activé, barre injectée |
-| Exécution CLI | Profiler désactivé inconditionnellement |
-| Réponse JSON ou redirect | Barre non injectée même en `dev` |
-| Classe dans `\Tests\` ou `\Fixture\` | Ignorée par le scan de collecteurs |
+| `environment = prod` | Profiler disabled, `ProfilerManager` returned with no collectors |
+| `environment = dev` | Profiler enabled, bar injected |
+| CLI execution | Profiler unconditionally disabled |
+| JSON response or redirect | Bar not injected even in `dev` |
+| Class in `\Tests\` or `\Fixture\` | Ignored by the collector scan |

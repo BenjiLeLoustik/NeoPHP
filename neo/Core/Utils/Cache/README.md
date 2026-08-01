@@ -1,18 +1,18 @@
 # Cache
 
-Le sous-module `Cache` fournit un système de cache avec plusieurs drivers interchangeables via une interface commune.
+The `Cache` submodule provides a caching system with several interchangeable drivers via a common interface.
 
 ---
 
-## Sommaire
+## Table of Contents
 
 1. [Structure](#structure)
 2. [Configuration](#configuration)
 3. [CacheManager](#cachemanager)
-4. [Drivers disponibles](#drivers-disponibles)
+4. [Available Drivers](#available-drivers)
 5. [CacheDriverInterface](#cachedriverinterface)
-6. [Extension contrôleur](#extension-contrôleur)
-7. [Commande CLI](#commande-cli)
+6. [Controller Extension](#controller-extension)
+7. [CLI Command](#cli-command)
 
 ---
 
@@ -20,36 +20,36 @@ Le sous-module `Cache` fournit un système de cache avec plusieurs drivers inter
 
 ```
 Cache/
-├── CacheManager.php                    # Point d'entrée du cache
-├── CacheModule.php                     # Enregistrement DI
+├── CacheManager.php                    # Cache entry point
+├── CacheModule.php                     # DI registration
 ├── Driver/
 │   ├── Interface/
-│   │   └── CacheDriverInterface.php    # Contrat des drivers
-│   ├── FileDriver.php                  # Cache fichiers
-│   ├── RedisDriver.php                 # Cache Redis (Predis)
-│   └── ArrayDriver.php                 # Cache en mémoire (tests)
+│   │   └── CacheDriverInterface.php    # Driver contract
+│   ├── FileDriver.php                  # File-based cache
+│   ├── RedisDriver.php                 # Redis cache (Predis)
+│   └── ArrayDriver.php                 # In-memory cache (tests)
 ├── Commands/
 │   └── CacheClearCommand.php
 ├── Exception/
 │   └── CacheException.php
 └── Extension/
-    └── CacheControllerExtension.php    # Injecte getCache() dans les contrôleurs
+    └── CacheControllerExtension.php    # Injects getCache() into controllers
 ```
 
 ---
 
 ## Configuration
 
-**Fichier :** `src/<Projet>/Config/cache.config.php`
+**File:** `src/<Project>/Config/cache.config.php`
 
 ```php
 return [
-    'driver' => 'files',   // 'files', 'redis' ou 'array'
-    'ttl'    => 3600,      // TTL par défaut en secondes
+    'driver' => 'files',   // 'files', 'redis', or 'array'
+    'ttl'    => 3600,      // Default TTL in seconds
 
     'drivers' => [
         'files' => [
-            'path' => 'cache',   // Relatif au storagePath
+            'path' => 'cache',   // Relative to storagePath
         ],
         'redis' => [
             'host'     => '127.0.0.1',
@@ -66,38 +66,38 @@ return [
 
 ## CacheManager
 
-**Fichier :** `CacheManager.php`
+**File:** `CacheManager.php`
 
-Point d'entrée unique pour le cache. Instancie le driver selon la configuration et délègue toutes les opérations.
+Single entry point for the cache. Instantiates the driver according to the configuration and delegates all operations.
 
 ```php
 $cache = $container->get(CacheManager::class);
 
-// Stocker une valeur (TTL en secondes, optionnel)
+// Store a value (TTL in seconds, optional)
 $cache->set('user:1', $userData, 3600);
 
-// Lire une valeur (retourne $default si absente ou expirée)
+// Read a value (returns $default if missing or expired)
 $user = $cache->get('user:1', null);
 
-// Vérifier l'existence
+// Check existence
 if ($cache->has('user:1')) { /* ... */ }
 
-// Supprimer une entrée
+// Delete an entry
 $cache->delete('user:1');
 
-// Vider tout le cache
+// Clear the entire cache
 $cache->clear();
 
-// Cache-aside en une ligne
+// One-line cache-aside pattern
 $users = $cache->remember('all_users', 600, function () use ($em) {
     return $em->getRepository(User::class)->findAll();
 });
 ```
 
-### Pattern `remember`
+### `remember` Pattern
 
 ```php
-// Équivalent verbeux
+// Verbose equivalent
 $key = 'stats:daily';
 if (!$cache->has($key)) {
     $value = computeExpensiveStats();
@@ -106,43 +106,43 @@ if (!$cache->has($key)) {
     $value = $cache->get($key);
 }
 
-// Avec remember
+// With remember
 $value = $cache->remember('stats:daily', 900, fn() => computeExpensiveStats());
 ```
 
 ---
 
-## Drivers disponibles
+## Available Drivers
 
 ### FileDriver
 
-**Fichier :** `Driver/FileDriver.php`
+**File:** `Driver/FileDriver.php`
 
-Stocke les données dans des fichiers sérialisés. Chaque clé est hachée en SHA-256 pour le nom de fichier.
+Stores data in serialized files. Each key is hashed with SHA-256 for the filename.
 
-- Chemin : `{storagePath}/cache/`
-- Format : `serialize(['key' => ..., 'expires_at' => ..., 'content' => ...])`
-- Expiration vérifiée à chaque lecture (`time() > $data['expires_at']`)
-- `unserialize` avec `['allowed_classes' => false]`
+- Path: `{storagePath}/cache/`
+- Format: `serialize(['key' => ..., 'expires_at' => ..., 'content' => ...])`
+- Expiration checked on every read (`time() > $data['expires_at']`)
+- `unserialize` with `['allowed_classes' => false]`
 
 ### RedisDriver
 
-**Fichier :** `Driver/RedisDriver.php`
+**File:** `Driver/RedisDriver.php`
 
-Utilise **Predis** pour la connexion Redis.
+Uses **Predis** for the Redis connection.
 
-- TTL géré nativement par Redis via `SETEX`
-- Les clés sont préfixées si `prefix` est défini
-- `clear()` avec un préfixe supprime uniquement les clés correspondantes ; sans préfixe, exécute `FLUSHDB`
-- `unserialize` avec `['allowed_classes' => true]`
+- TTL natively handled by Redis via `SETEX`
+- Keys are prefixed if `prefix` is defined
+- `clear()` with a prefix only removes matching keys; without a prefix, it runs `FLUSHDB`
+- `unserialize` with `['allowed_classes' => true]`
 
-> **Sécurité :** En environnement Redis partagé, toujours définir un `prefix` unique par application pour éviter les collisions de clés.
+> **Security:** In a shared Redis environment, always set a unique `prefix` per application to avoid key collisions.
 
 ### ArrayDriver
 
-**Fichier :** `Driver/ArrayDriver.php`
+**File:** `Driver/ArrayDriver.php`
 
-Cache en mémoire (processus courant uniquement). Les données sont perdues à la fin de la requête. Idéal pour les tests.
+In-memory cache (current process only). Data is lost at the end of the request. Ideal for tests.
 
 ```php
 return ['driver' => 'array', 'ttl' => 3600];
@@ -152,9 +152,9 @@ return ['driver' => 'array', 'ttl' => 3600];
 
 ## CacheDriverInterface
 
-**Fichier :** `Driver/Interface/CacheDriverInterface.php`
+**File:** `Driver/Interface/CacheDriverInterface.php`
 
-Contrat que tout driver doit implémenter :
+Contract that every driver must implement:
 
 ```php
 interface CacheDriverInterface
@@ -167,7 +167,7 @@ interface CacheDriverInterface
 }
 ```
 
-**Créer un driver personnalisé :**
+**Creating a Custom Driver:**
 
 ```php
 use Neo\Core\Utils\Cache\Driver\Interface\CacheDriverInterface;
@@ -200,11 +200,11 @@ final class MemcachedDriver implements CacheDriverInterface
 
 ---
 
-## Extension contrôleur
+## Controller Extension
 
-**Fichier :** `Extension/CacheControllerExtension.php`
+**File:** `Extension/CacheControllerExtension.php`
 
-Injecte automatiquement `getCache()` dans tous les contrôleurs.
+Automatically injects `getCache()` into all controllers.
 
 ```php
 class ProductController extends AbstractController
@@ -223,13 +223,13 @@ class ProductController extends AbstractController
 
 ---
 
-## Commande CLI
+## CLI Command
 
-| Commande | Description |
+| Command | Description |
 |----------|-------------|
-| `cache:clear` | Vide le répertoire de cache d'un projet |
+| `cache:clear` | Clears a project's cache directory |
 
 ```bash
 php bin/neo cache:clear --project=Blog
-# Supprime tous les fichiers dans src/Blog/Storage/var/cache/
+# Removes all files under src/Blog/Storage/var/cache/
 ```

@@ -1,14 +1,14 @@
 # Application
 
-Le module `Application` est le point d'entrée de tout projet NeoPHP. Il est responsable de la détection de l'application active (selon le contexte HTTP ou CLI), de l'enregistrement des chemins standards dans le conteneur de dépendances, et de la gestion du cycle de vie des projets via des commandes dédiées.
+The `Application` module is the entry point for every NeoPHP project. It is responsible for detecting the active application (based on the HTTP or CLI context), registering standard paths in the dependency container, and managing the project lifecycle through dedicated commands.
 
 ---
 
-## Sommaire
+## Summary
 
 - [ApplicationDetector](#applicationdetector)
 - [ApplicationPaths](#applicationpaths)
-- [Commandes](#commandes)
+- [Commands](#commands)
   - [project:create](#projectcreate)
   - [project:delete](#projectdelete)
   - [project:sync](#projectsync)
@@ -17,100 +17,100 @@ Le module `Application` est le point d'entrée de tout projet NeoPHP. Il est res
 
 ## ApplicationDetector
 
-**Fichier :** `ApplicationDetector.php`
+**File:** `ApplicationDetector.php`
 
-Cette classe détermine quel projet NeoPHP doit être chargé pour la requête en cours. Elle adapte sa logique selon que l'application s'exécute en mode HTTP ou CLI.
+This class determines which NeoPHP project should be loaded for the current request. It adapts its logic depending on whether the application is running in HTTP or CLI mode.
 
-### Détection HTTP
+### HTTP Detection
 
-En mode HTTP, `ApplicationDetector` lit le nom d'hôte depuis `$_SERVER['HTTP_HOST']` (ou `SERVER_NAME`), puis le compare aux valeurs `access` définies dans les fichiers `app.config.php` de chaque projet. Un fichier de cache (`/storage/app-detect-cache.json`) est maintenu afin d'éviter de relire tous les fichiers de config à chaque requête. Ce cache est invalidé automatiquement dès qu'un fichier de configuration est modifié (comparaison par signature MD5).
+In HTTP mode, `ApplicationDetector` reads the hostname from `$_SERVER['HTTP_HOST']` (or `SERVER_NAME`), then compares it against the `access` values defined in each project's `app.config.php` file. A cache file (`/storage/app-detect-cache.json`) is maintained to avoid re-reading all config files on every request. This cache is automatically invalidated as soon as a config file is modified (MD5 signature comparison).
 
 ```php
-// Exemple : src/MyProject/Config/app.config.php
+// Example: src/MyProject/Config/app.config.php
 return [
     'access' => 'myproject.localhost:8001',
     // ...
 ];
 ```
 
-Lorsqu'une requête arrive sur `myproject.localhost:8001`, le détecteur résout automatiquement le projet `MyProject` et l'enregistre dans le conteneur sous la clé `'application'`.
+When a request arrives on `myproject.localhost:8001`, the detector automatically resolves the `MyProject` project and registers it in the container under the `'application'` key.
 
-### Détection CLI
+### CLI Detection
 
-En mode CLI, la détection suit l'ordre de priorité suivant :
+In CLI mode, detection follows this priority order:
 
-1. Variable globale `$GLOBALS['_NEO_TEST_PROJECT']` (utilisée dans les tests automatisés).
-2. Variable globale `$GLOBALS['_NEO_CLI_PROJECT']` (positionnée par le `ConsoleManager` lorsqu'un projet est sélectionné interactivement).
-3. Argument `--project=<NomDuProjet>` passé dans la ligne de commande.
+1. Global variable `$GLOBALS['_NEO_TEST_PROJECT']` (used in automated tests).
+2. Global variable `$GLOBALS['_NEO_CLI_PROJECT']` (set by `ConsoleManager` when a project is selected interactively).
+3. `--project=<ProjectName>` argument passed on the command line.
 
 ```bash
-php bin/neo make:controller MonController --project=MyProject
-# équivalent à --project=MyProject dans $argv
+php bin/neo make:controller MyController --project=MyProject
+# equivalent to --project=MyProject in $argv
 ```
 
-Si aucun projet ne peut être résolu, une `ApplicationException` est levée avec un message explicite.
+If no project can be resolved, an `ApplicationException` is thrown with an explicit message.
 
-### Méthode principale
+### Main method
 
 ```php
-$detector->detect(); // Lance la détection selon le contexte (HTTP ou CLI)
+$detector->detect(); // Triggers detection based on context (HTTP or CLI)
 ```
 
 ---
 
 ## ApplicationPaths
 
-**Fichier :** `ApplicationPaths.php`
+**File:** `ApplicationPaths.php`
 
-Une fois le projet résolu, `ApplicationPaths` enregistre l'ensemble des chemins standards du projet dans le conteneur de dépendances. Ces chemins sont utilisés par tous les autres modules du framework (assets, vues, ORM, crons, etc.).
+Once the project has been resolved, `ApplicationPaths` registers all of the project's standard paths in the dependency container. These paths are used by every other module of the framework (assets, views, ORM, crons, etc.).
 
-### Utilisation
+### Usage
 
 ```php
 $appPaths = new ApplicationPaths($container);
-$appPaths->register(); // Utilise le projet déjà enregistré dans le conteneur
-// ou
-$appPaths->register('MyProject'); // Force un projet spécifique
+$appPaths->register(); // Uses the project already registered in the container
+// or
+$appPaths->register('MyProject'); // Forces a specific project
 ```
 
-### Chemins enregistrés dans le conteneur
+### Paths registered in the container
 
-| Clé du conteneur        | Valeur résolue                                      |
-|-------------------------|-----------------------------------------------------|
-| `application`           | Nom du projet (ex. `MyProject`)                     |
-| `basePath`              | Racine du monorepo                                  |
-| `appPath`               | `{basePath}/src/MyProject`                          |
-| `publicPath`            | `{basePath}/public_html` ou `{basePath}/public`     |
-| `buildsPath`            | `{publicPath}/builds/`                              |
-| `srcPath`               | `{basePath}/src`                                    |
-| `storagePath`           | `{appPath}/Storage`                                 |
-| `configsPath`           | `{appPath}/Config`                                  |
-| `viewsPath`             | `{appPath}/Templates`                               |
-| `controllersPath`       | `{appPath}/App/Controllers`                         |
-| `assetsPath`            | `{appPath}/Assets/`                                 |
-| `repositoryPath`        | `{appPath}/Database/Repository`                     |
-| `listenersPath`         | `{appPath}/App/Event/Listener`                      |
-| `cronsPath`             | `{appPath}/App/Crons`                               |
-| `controllerNamespace`   | `Neo\Src\MyProject\App\Controllers\`                |
-| `repositoryNamespace`   | `Neo\Src\MyProject\Database\Repository`             |
-| `manifestFilename`      | `manifest.json`                                     |
+| Container key        | Resolved value                                    |
+|-----------------------|-----------------------------------------------------|
+| `application`         | Project name (e.g. `MyProject`)                     |
+| `basePath`             | Monorepo root                                        |
+| `appPath`              | `{basePath}/src/MyProject`                           |
+| `publicPath`           | `{basePath}/public_html` or `{basePath}/public`      |
+| `buildsPath`           | `{publicPath}/builds/`                                |
+| `srcPath`              | `{basePath}/src`                                      |
+| `storagePath`          | `{appPath}/Storage`                                   |
+| `configsPath`          | `{appPath}/Config`                                    |
+| `viewsPath`            | `{appPath}/Templates`                                 |
+| `controllersPath`      | `{appPath}/App/Controllers`                           |
+| `assetsPath`           | `{appPath}/Assets/`                                   |
+| `repositoryPath`       | `{appPath}/Database/Repository`                       |
+| `listenersPath`        | `{appPath}/App/Event/Listener`                        |
+| `cronsPath`            | `{appPath}/App/Crons`                                 |
+| `controllerNamespace`  | `Neo\Src\MyProject\App\Controllers\`                  |
+| `repositoryNamespace`  | `Neo\Src\MyProject\Database\Repository`               |
+| `manifestFilename`     | `manifest.json`                                       |
 
-### Résolution du dossier public
+### Public folder resolution
 
-La méthode `resolvePublicPath()` cherche dans l'ordre :
-1. `public_html/` (hébergements mutualisés)
+The `resolvePublicPath()` method looks for, in order:
+1. `public_html/` (shared hosting)
 2. `public/` (standard)
-3. Retourne `{basePath}/public` si aucun des deux n'existe
+3. Falls back to `{basePath}/public` if neither exists
 
 ---
 
-## Commandes
+## Commands
 
 ### `project:create`
 
-**Fichier :** `Commands/ProjectCreateCommand.php`
+**File:** `Commands/ProjectCreateCommand.php`
 
-Crée un nouveau projet NeoPHP complet à l'intérieur du dossier `./src/`. Cette commande est l'outil de scaffolding principal du framework.
+Creates a complete new NeoPHP project inside the `./src/` folder. This command is the framework's main scaffolding tool.
 
 #### Synopsis
 
@@ -118,16 +118,16 @@ Crée un nouveau projet NeoPHP complet à l'intérieur du dossier `./src/`. Cett
 php bin/neo project:create <projectName> [--skeleton]
 ```
 
-#### Arguments et options
+#### Arguments and options
 
-| Nom          | Type      | Description                                              |
-|--------------|-----------|----------------------------------------------------------|
-| `projectName`| Argument  | Nom du projet (converti automatiquement en PascalCase)   |
-| `--skeleton` | Option    | Crée uniquement la structure de dossiers, sans les fichiers d'exemple |
+| Name           | Type      | Description                                                  |
+|-----------------|-----------|------------------------------------------------------------------|
+| `projectName`  | Argument  | Project name (automatically converted to PascalCase)             |
+| `--skeleton`   | Option    | Creates only the folder structure, without the example files     |
 
-#### Ce que la commande génère
+#### What the command generates
 
-**Structure de dossiers (toujours créés) :**
+**Folder structure (always created):**
 ```
 src/MyProject/
 ├── App/
@@ -148,44 +148,44 @@ src/MyProject/
 └── .gitignore
 ```
 
-**Fichiers de configuration générés automatiquement :**
-- `app.config.php` — configuration principale (accès HTTP avec port automatiquement assigné)
-- `database.config.php` — connexion base de données
-- `logger.config.php` — journalisation
-- `cache.config.php` — gestion du cache
-- `twig.config.php` — moteur de template
+**Configuration files automatically generated:**
+- `app.config.php` — main configuration (HTTP access with automatically assigned port)
+- `database.config.php` — database connection
+- `logger.config.php` — logging
+- `cache.config.php` — cache management
+- `twig.config.php` — template engine
 - `session.config.php` — sessions
-- `api.config.php` — configuration API
-- `auth.config.php` — authentification
+- `api.config.php` — API configuration
+- `auth.config.php` — authentication
 
-**Sans `--skeleton` : fichiers d'exemple supplémentaires :**
-- `App/Controllers/DefaultController.php` — contrôleur de bienvenue
-- `Templates/layouts/base_layout.html.twig` — layout Twig de base
-- `Templates/pages/default/index.html.twig` — page d'accueil
-- `Assets/css/app.css` — styles de base
-- `Assets/js/app.js` — JS de base
-- `Translations/fr/` et `Translations/en/` — traductions initiales
+**Without `--skeleton`: additional example files:**
+- `App/Controllers/DefaultController.php` — welcome controller
+- `Templates/layouts/base_layout.html.twig` — base Twig layout
+- `Templates/pages/default/index.html.twig` — home page
+- `Assets/css/app.css` — base styles
+- `Assets/js/app.js` — base JS
+- `Translations/fr/` and `Translations/en/` — initial translations
 
-**Gestion automatique de Composer :**
+**Automatic Composer management:**
 
-La commande alloue automatiquement un port disponible (à partir de 8000) en scannant les projets existants, enregistre le projet dans le `composer.json` racine comme dépendance `path`, puis lance `composer update` automatiquement.
+The command automatically allocates an available port (starting from 8000) by scanning existing projects, registers the project in the root `composer.json` as a `path` dependency, then automatically runs `composer update`.
 
 ```bash
 php bin/neo project:create MonSite
-# → Crée src/MonSite/ avec tous les fichiers
-# → Port 8001 assigné si 8000 est déjà utilisé
-# → composer.json racine mis à jour
-# → composer update exécuté
+# → Creates src/MonSite/ with all files
+# → Port 8001 assigned if 8000 is already in use
+# → Root composer.json updated
+# → composer update executed
 ```
 
 ```bash
 php bin/neo project:create MonSite --skeleton
-# → Crée uniquement la structure de dossiers et les configs
+# → Creates only the folder structure and the config files
 ```
 
-#### Module généré
+#### Generated module
 
-Chaque projet reçoit un module principal (`{Name}Module.php`) implémentant `ModuleInterface` :
+Each project receives a main module (`{Name}Module.php`) implementing `ModuleInterface`:
 
 ```php
 final class MyProjectModule implements ModuleInterface
@@ -200,9 +200,9 @@ final class MyProjectModule implements ModuleInterface
 
 ### `project:delete`
 
-**Fichier :** `Commands/ProjectDeleteCommand.php`
+**File:** `Commands/ProjectDeleteCommand.php`
 
-Supprime entièrement un projet NeoPHP : ses sources, ses builds et son enregistrement dans `composer.json`.
+Completely removes a NeoPHP project: its sources, its builds, and its registration in `composer.json`.
 
 #### Synopsis
 
@@ -210,27 +210,27 @@ Supprime entièrement un projet NeoPHP : ses sources, ses builds et son enregist
 php bin/neo project:delete <projectName>
 ```
 
-#### Comportement
+#### Behavior
 
-1. Demande une confirmation interactive avant toute suppression (action irréversible).
-2. Supprime le dossier `public/builds/{Project}` si il existe.
-3. Retire le projet du `composer.json` racine (entrée `repositories` et `require`).
-4. Supprime le dossier `src/{Project}`.
-5. Lance `composer update --optimize-autoloader` pour nettoyer l'autoloader.
+1. Asks for interactive confirmation before any deletion (irreversible action).
+2. Removes the `public/builds/{Project}` folder if it exists.
+3. Removes the project from the root `composer.json` (`repositories` and `require` entries).
+4. Removes the `src/{Project}` folder.
+5. Runs `composer update --optimize-autoloader` to clean up the autoloader.
 
 ```bash
 php bin/neo project:delete MonSite
-# Affiche : "You are about to delete project 'MonSite'. This action is irreversible."
-# Demande confirmation, puis supprime tout
+# Displays: "You are about to delete project 'MonSite'. This action is irreversible."
+# Asks for confirmation, then deletes everything
 ```
 
 ---
 
 ### `project:sync`
 
-**Fichier :** `Commands/ProjectSyncCommand.php`
+**File:** `Commands/ProjectSyncCommand.php`
 
-Synchronise le `composer.json` racine avec tous les projets présents dans `./src/`. Utile après un clone du dépôt ou un ajout manuel de projet.
+Synchronizes the root `composer.json` with every project present in `./src/`. Useful after cloning the repository or manually adding a project.
 
 #### Synopsis
 
@@ -240,13 +240,13 @@ php bin/neo project:sync [--run-composer]
 
 #### Options
 
-| Nom              | Description                                            |
-|------------------|--------------------------------------------------------|
-| `--run-composer` | Lance `composer update` automatiquement après la sync  |
+| Name               | Description                                             |
+|----------------------|-------------------------------------------------------------|
+| `--run-composer`   | Automatically runs `composer update` after the sync         |
 
-#### Comportement
+#### Behavior
 
-La commande parcourt tous les sous-dossiers de `./src/` possédant un `composer.json`, et pour chacun vérifie si le projet est déjà référencé dans le `composer.json` racine. Si ce n'est pas le cas, il est ajouté automatiquement.
+The command scans every subfolder of `./src/` that has a `composer.json`, and for each one checks whether the project is already referenced in the root `composer.json`. If not, it is added automatically.
 
 ```bash
 php bin/neo project:sync
@@ -258,12 +258,12 @@ php bin/neo project:sync --run-composer
 
 ---
 
-## Structure des fichiers
+## File structure
 
 ```
 neo/Core/Application/
-├── ApplicationDetector.php         # Détection HTTP et CLI du projet actif
-├── ApplicationPaths.php            # Enregistrement des chemins dans le conteneur
+├── ApplicationDetector.php         # HTTP and CLI detection of the active project
+├── ApplicationPaths.php            # Registration of paths in the container
 ├── Exception/
 │   └── ApplicationException.php
 └── Commands/

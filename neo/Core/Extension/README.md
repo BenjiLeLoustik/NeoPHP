@@ -1,33 +1,33 @@
-# Extensions de Contrôleurs et de Vues
+# Controller and View Extensions
 
-Le module `Extension` fournit un mécanisme de découverte automatique et d'application d'extensions pour deux cibles : les **contrôleurs** (`AbstractController`) et les **vues Twig**. Il repose sur l'attribut PHP 8 `#[Extension]` et un scan récursif du code source.
+The `Extension` module provides an automatic discovery and application mechanism for extensions targeting two contexts: **controllers** (`AbstractController`) and **Twig views**. It relies on the PHP 8 `#[Extension]` attribute and a recursive scan of the source code.
 
 ---
 
-## Fichiers du module
+## Module Files
 
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `ExtensionManager.php` | Gestionnaire principal : découverte et application des extensions |
-| `Attribute/Extension.php` | Attribut PHP 8 pour marquer une classe comme extension |
-| `Enum/ExtensionTypeEnum.php` | Enumération des types d'extension (`CONTROLLER`, `VIEW`) |
+| `ExtensionManager.php` | Main manager: discovery and application of extensions |
+| `Attribute/Extension.php` | PHP 8 attribute for marking a class as an extension |
+| `Enum/ExtensionTypeEnum.php` | Enumeration of extension types (`CONTROLLER`, `VIEW`) |
 
 ---
 
-## Types d'extension
+## Extension Types
 
-`ExtensionTypeEnum` est une enum string avec deux cas :
+`ExtensionTypeEnum` is a string enum with two cases:
 
-| Cas | Valeur | Cible |
+| Case | Value | Target |
 |---|---|---|
-| `CONTROLLER` | `'controller'` | Extensions de `AbstractController` |
-| `VIEW` | `'twig'` | Extensions Twig (fonctions, filtres, globals) |
+| `CONTROLLER` | `'controller'` | `AbstractController` extensions |
+| `VIEW` | `'twig'` | Twig extensions (functions, filters, globals) |
 
 ---
 
-## L'attribut `#[Extension]`
+## The `#[Extension]` Attribute
 
-L'attribut `#[Extension]` doit être placé sur la classe extension pour être découvert automatiquement.
+The `#[Extension]` attribute must be placed on the extension class to be automatically discovered.
 
 ```php
 use Neo\Core\Extension\Attribute\Extension;
@@ -50,9 +50,9 @@ class MyTwigExtension implements TwigExtensionInterface
 
 ---
 
-## Créer une extension de contrôleur
+## Creating a Controller Extension
 
-Une extension de contrôleur doit implémenter `ControllerExtensionInterface` et définir la méthode `extend()`. Elle est appelée automatiquement à chaque fois qu'un contrôleur est instancié.
+A controller extension must implement `ControllerExtensionInterface` and define the `extend()` method. It is automatically called every time a controller is instantiated.
 
 ```php
 namespace App\Extension;
@@ -70,7 +70,7 @@ class AuthExtension implements ControllerExtensionInterface
     {
         $auth = $container->get(AuthService::class);
 
-        // Injecter un objet ou des données dans le contrôleur
+        // Inject an object or data into the controller
         if (method_exists($controller, 'setAuth')) {
             $controller->setAuth($auth);
         }
@@ -80,9 +80,9 @@ class AuthExtension implements ControllerExtensionInterface
 
 ---
 
-## Créer une extension Twig
+## Creating a Twig Extension
 
-Une extension Twig doit implémenter `TwigExtensionInterface`. Elle est récupérée et passée au moteur Twig lors de son initialisation par le `ViewModule`.
+A Twig extension must implement `TwigExtensionInterface`. It is retrieved and passed to the Twig engine when it is initialized by the `ViewModule`.
 
 ```php
 namespace App\Extension;
@@ -114,11 +114,11 @@ class UrlExtension implements TwigExtensionInterface
 
 ## ExtensionManager
 
-`ExtensionManager` est instancié avec le conteneur et expose trois méthodes publiques :
+`ExtensionManager` is instantiated with the container and exposes three public methods:
 
 ### `getControllerExtensions(): array`
 
-Retourne la liste des instances de `ControllerExtensionInterface` découvertes. Le résultat est mis en cache en propriété (lazy load).
+Returns the list of discovered `ControllerExtensionInterface` instances. The result is cached as a property (lazy load).
 
 ```php
 $extensions = $extensionManager->getControllerExtensions();
@@ -126,7 +126,7 @@ $extensions = $extensionManager->getControllerExtensions();
 
 ### `getViewExtensions(): array`
 
-Retourne la liste des instances de `TwigExtensionInterface` découvertes.
+Returns the list of discovered `TwigExtensionInterface` instances.
 
 ```php
 $extensions = $extensionManager->getViewExtensions();
@@ -134,50 +134,50 @@ $extensions = $extensionManager->getViewExtensions();
 
 ### `applyToController(AbstractController $controller): void`
 
-Applique toutes les extensions de contrôleur à un contrôleur donné. Appelé automatiquement par le framework à l'instanciation de chaque contrôleur.
+Applies every controller extension to a given controller. Automatically called by the framework when each controller is instantiated.
 
 ```php
 $extensionManager->applyToController($myController);
-// Appelle $extension->extend($controller, $container) pour chaque extension
+// Calls $extension->extend($controller, $container) for each extension
 ```
 
 ---
 
-## Découverte automatique
+## Automatic Discovery
 
-`ExtensionManager` scanne récursivement deux répertoires à la racine du projet :
+`ExtensionManager` recursively scans two directories at the project root:
 
 ```
-/neo    ← extensions du framework
-/src    ← extensions applicatives
+/neo    ← framework extensions
+/src    ← application extensions
 ```
 
-Pour chaque fichier PHP dont le nom se termine par `Extension.php`, il :
+For every PHP file whose name ends with `Extension.php`, it:
 
-1. Extrait le FQCN (namespace + classe) par analyse du source
-2. Vérifie que la classe n'est ni abstraite ni une interface
-3. Cherche l'attribut `#[Extension]` via `ScannerAttributeManager`
-4. Filtre selon le type demandé (`CONTROLLER` ou `VIEW`)
-5. Résout l'instance via le conteneur (auto-wiring inclus)
+1. Extracts the FQCN (namespace + class) by analyzing the source
+2. Checks that the class is neither abstract nor an interface
+3. Looks for the `#[Extension]` attribute via `ScannerAttributeManager`
+4. Filters based on the requested type (`CONTROLLER` or `VIEW`)
+5. Resolves the instance through the container (including auto-wiring)
 
-Le scan est exécuté **une seule fois par type** grâce au lazy-loading (`??=`).
+The scan is run **only once per type** thanks to lazy-loading (`??=`).
 
 ---
 
-## Conventions de nommage
+## Naming Conventions
 
-Pour être détectée, une classe extension doit :
+To be detected, an extension class must:
 
-- Avoir un nom de fichier se terminant par `Extension.php` (ex. : `AuthExtension.php`)
-- Porter l'attribut `#[Extension(type: ExtensionTypeEnum::CONTROLLER)]` ou `#[Extension(type: ExtensionTypeEnum::VIEW)]`
-- Ne pas être abstraite ni une interface
-- Se trouver dans `/neo` ou `/src` (récursivement)
+- Have a filename ending with `Extension.php` (e.g. `AuthExtension.php`)
+- Carry the `#[Extension(type: ExtensionTypeEnum::CONTROLLER)]` or `#[Extension(type: ExtensionTypeEnum::VIEW)]` attribute
+- Not be abstract nor an interface
+- Be located inside `/neo` or `/src` (recursively)
 
 ```
 src/
   Extension/
-    AuthExtension.php          ← découvert
-    UrlExtension.php           ← découvert
+    AuthExtension.php          ← discovered
+    UrlExtension.php           ← discovered
     Abstract/
-      BaseExtension.php        ← ignoré (abstraite si marquée abstract)
+      BaseExtension.php        ← ignored (abstract if marked abstract)
 ```

@@ -1,10 +1,10 @@
 # Auth
 
-Le sous-module `Auth` gère l'authentification des utilisateurs par session PHP ou token JWT, la vérification des rôles et le hachage des mots de passe.
+The `Auth` submodule handles user authentication via PHP session or JWT token, role verification, and password hashing.
 
 ---
 
-## Sommaire
+## Summary
 
 1. [Structure](#structure)
 2. [Configuration](#configuration)
@@ -14,8 +14,8 @@ Le sous-module `Auth` gère l'authentification des utilisateurs par session PHP 
 6. [TokenGuard](#tokenguard)
 7. [JwtManager](#jwtmanager)
 8. [PasswordManager](#passwordmanager)
-9. [Extension contrôleur](#extension-contrôleur)
-10. [Extension Twig](#extension-twig)
+9. [Controller Extension](#controller-extension)
+10. [Twig Extension](#twig-extension)
 
 ---
 
@@ -23,106 +23,106 @@ Le sous-module `Auth` gère l'authentification des utilisateurs par session PHP 
 
 ```
 Auth/
-├── AuthManager.php                     # Point d'entrée de l'authentification
-├── AuthModule.php                      # Enregistrement DI
-├── JwtManager.php                      # Génération/validation JWT (HMAC-SHA256)
-├── PasswordManager.php                 # Hachage bcrypt
-├── RoleConfig.php                      # DTO de configuration des rôles, partagé entre les guards
+├── AuthManager.php                     # Authentication entry point
+├── AuthModule.php                      # DI registration
+├── JwtManager.php                      # JWT generation/validation (HMAC-SHA256)
+├── PasswordManager.php                 # Bcrypt hashing
+├── RoleConfig.php                      # Role configuration DTO, shared between guards
 ├── Collector/
-│   └── AuthCollector.php              # Collecteur Profiler
+│   └── AuthCollector.php              # Profiler collector
 ├── Exception/
-│   ├── AuthException.php              # Erreur d'authentification
-│   └── JwtException.php               # Erreur de validation JWT
+│   ├── AuthException.php              # Authentication error
+│   └── JwtException.php               # JWT validation error
 ├── Extension/
-│   ├── AuthControllerExtension.php    # Injecte auth() et getPasswordManager()
-│   └── AuthViewExtension.php          # Fonctions Twig auth_*
+│   ├── AuthControllerExtension.php    # Injects auth() and getPasswordManager()
+│   └── AuthViewExtension.php          # auth_* Twig functions
 └── Guard/
     ├── Interface/
     │   └── GuardInterface.php
-    ├── SessionGuard.php               # Authentification par session
-    └── TokenGuard.php                 # Authentification par JWT
+    ├── SessionGuard.php               # Session-based authentication
+    └── TokenGuard.php                 # JWT-based authentication
 ```
 
 ---
 
 ## Configuration
 
-**Fichier :** `src/<Projet>/Config/auth.config.php`
+**File:** `src/<Project>/Config/auth.config.php`
 
 ```php
 return [
     'enabled'    => true,
 
-    // Guard utilisé : 'session' ou 'token'
+    // Guard used: 'session' or 'token'
     'guard'      => 'session',
 
-    // Classe du modèle utilisateur (FQCN)
+    // User model class (FQCN)
     'model'      => App\Entity\User::class,
 
-    // Champ utilisé comme identifiant de connexion
+    // Field used as the login identifier
     'identifier' => 'email',
 
-    // Champ du mot de passe
+    // Password field
     'password'   => 'password',
 
-    // Configuration des rôles (optionnel)
+    // Role configuration (optional)
     'role' => [
-        'relation' => 'role',        // Propriété de l'entité User
+        'relation' => 'role',        // Property of the User entity
         'model'    => App\Entity\Role::class,
-        'field'    => 'name',        // Champ du rôle à comparer
+        'field'    => 'name',        // Role field to compare
     ],
 
-    // Options spécifiques au guard
+    // Guard-specific options
     'options' => [
-        // Pour le guard 'session'
-        'timeout' => 1800,           // Durée d'inactivité avant déconnexion (secondes)
+        // For the 'session' guard
+        'timeout' => 1800,           // Inactivity duration before logout (seconds)
 
-        // Pour le guard 'token'
-        'secret'     => 'votre-cle-jwt-secrete',
+        // For the 'token' guard
+        'secret'     => 'your-jwt-secret-key',
         'expiration' => 3600,
         'algorithm'  => 'HS256',
     ],
 ];
 ```
 
-Si `enabled` vaut `false`, l'`AuthManager` est instancié sans guard. Toute méthode nécessitant un guard lèvera une `AuthException`.
+If `enabled` is `false`, `AuthManager` is instantiated without a guard. Any method requiring a guard will throw an `AuthException`.
 
-La clé `role` est transformée par `AuthManager` en instance de `RoleConfig` (ou `null` si absente/incomplète) avant d'être transmise au guard.
+The `role` key is transformed by `AuthManager` into a `RoleConfig` instance (or `null` if absent/incomplete) before being passed to the guard.
 
 ---
 
 ## AuthManager
 
-**Fichier :** `AuthManager.php`
+**File:** `AuthManager.php`
 
-Point d'entrée unique pour l'authentification. Lit la configuration depuis `auth.config.php` et délègue au guard approprié.
+Single entry point for authentication. Reads the configuration from `auth.config.php` and delegates to the appropriate guard.
 
 ```php
 $auth = $container->get(AuthManager::class);
 
-// Tentative de connexion avec des identifiants
+// Login attempt with credentials
 $success = $auth->attempt(['email' => 'user@example.com', 'password' => 'secret']);
 
-// Connexion directe d'un objet utilisateur
+// Direct login of a user object
 $auth->login($userObject);
 
-// Déconnexion
+// Logout
 $auth->logout();
 
-// Vérifier si l'utilisateur est connecté
+// Check whether the user is logged in
 if ($auth->check()) { /* ... */ }
 
-// Obtenir l'utilisateur courant (null si non connecté)
+// Get the current user (null if not logged in)
 $user = $auth->user();
 
-// Vérifier un rôle
+// Check a role
 if ($auth->hasRole('admin')) { /* ... */ }
 
-// Générer un token JWT (guard 'token' uniquement)
+// Generate a JWT token ('token' guard only)
 $token = $auth->generateToken($userObject);
 ```
 
-**Résolution du guard :**
+**Guard resolution:**
 
 ```php
 return match($guardType) {
@@ -135,108 +135,108 @@ return match($guardType) {
 
 ## RoleConfig
 
-**Fichier :** `RoleConfig.php`
+**File:** `RoleConfig.php`
 
-DTO qui remplace le tableau associatif `['relation', 'model', 'field']` autrefois dupliqué entre `SessionGuard` et `TokenGuard`. Il représente la configuration des rôles telle que déclarée sous la clé `role` de `auth.config.php`.
+DTO that replaces the associative array `['relation', 'model', 'field']` formerly duplicated between `SessionGuard` and `TokenGuard`. It represents the role configuration as declared under the `role` key of `auth.config.php`.
 
 ```php
 class RoleConfig
 {
     public function __construct(
-        private string $relation, // Propriété de l'entité User pointant vers le rôle
-        private string $model,    // Classe (FQCN) de l'entité Role
-        private string $field,    // Champ du rôle à comparer avec hasRole()
+        private string $relation, // Property of the User entity pointing to the role
+        private string $model,    // Class (FQCN) of the Role entity
+        private string $field,    // Role field to compare with hasRole()
     ) {}
 }
 ```
 
-Accès via `getRelation()`, `getModel()`, `getField()`. `RoleConfig::fromArray($data)` construit l'instance à partir du tableau de configuration et retourne `null` si l'une des trois clés est absente ou n'est pas une chaîne — c'est ce `null` que les guards interprètent comme « pas de gestion de rôle configurée » dans `hasRole()`.
+Accessed via `getRelation()`, `getModel()`, `getField()`. `RoleConfig::fromArray($data)` builds the instance from the configuration array and returns `null` if any of the three keys is absent or not a string — this `null` is what guards interpret as "no role management configured" in `hasRole()`.
 
 ---
 
 ## SessionGuard
 
-**Fichier :** `Guard/SessionGuard.php`
+**File:** `Guard/SessionGuard.php`
 
-Persiste l'authentification en session PHP.
+Persists authentication in the PHP session.
 
-**Clés de session utilisées :**
+**Session keys used:**
 
-| Clé | Contenu |
+| Key | Content |
 |-----|---------|
-| `_auth_user_id` | Identifiant primaire de l'utilisateur |
-| `_auth_last_activity` | Timestamp Unix de la dernière activité |
+| `_auth_user_id` | Primary identifier of the user |
+| `_auth_last_activity` | Unix timestamp of the last activity |
 
-**Fonctionnement de `attempt()` :**
+**How `attempt()` works:**
 
-1. Vérifie que les identifiants contiennent les champs `identifier` et `password`.
-2. Récupère l'utilisateur par son identifiant via le repository ORM.
-3. Vérifie le mot de passe avec `PasswordManager::verify()`.
-4. En cas de succès : régénère la session, stocke l'ID et le timestamp.
+1. Checks that the credentials contain the `identifier` and `password` fields.
+2. Retrieves the user by their identifier via the ORM repository.
+3. Verifies the password with `PasswordManager::verify()`.
+4. On success: regenerates the session, stores the ID and the timestamp.
 
-**Expiration de session :**
+**Session expiration:**
 
 ```php
-// Dans check()
+// Inside check()
 if ((time() - $lastActivity) > $this->timeout) {
-    $this->logout(); // Supprime les clés de session
+    $this->logout(); // Removes the session keys
     return false;
 }
-// Renouvellement automatique de la dernière activité
+// Automatic renewal of the last activity
 $this->session->set('_auth_last_activity', time());
 ```
 
-Le timeout par défaut est **1800 secondes** (30 minutes), configurable via `options.timeout`.
+The default timeout is **1800 seconds** (30 minutes), configurable via `options.timeout`.
 
-**Vérification des rôles :** `hasRole()` reçoit un `?RoleConfig` en dépendance et retourne directement `false` s'il vaut `null`.
+**Role verification:** `hasRole()` receives a `?RoleConfig` dependency and returns `false` directly if it is `null`.
 
 ---
 
 ## TokenGuard
 
-**Fichier :** `Guard/TokenGuard.php`
+**File:** `Guard/TokenGuard.php`
 
-Authentifie les requêtes via un **token JWT** transmis dans le header `Authorization: Bearer <token>`. Stateless — aucune donnée n'est stockée côté serveur.
+Authenticates requests via a **JWT token** sent in the `Authorization: Bearer <token>` header. Stateless — no data is stored server-side.
 
-**Extraction du token :**
+**Token extraction:**
 
 ```php
 $header = $this->request->header('Authorization');
-// Doit commencer par 'Bearer '
+// Must start with 'Bearer '
 $token = substr($header, 7);
 ```
 
-**Génération d'un token :**
+**Generating a token:**
 
 ```php
-// Le payload contient uniquement 'sub' => id de l'utilisateur
+// The payload only contains 'sub' => the user's id
 $token = $auth->generateToken($userObject);
 ```
 
-**Différences avec `SessionGuard` :**
+**Differences from `SessionGuard`:**
 
-- `login()` est une méthode vide (stateless).
-- `logout()` efface uniquement le payload mis en cache mémoire.
-- Pas de stockage côté serveur.
+- `login()` is an empty method (stateless).
+- `logout()` only clears the in-memory cached payload.
+- No server-side storage.
 
-**Récupération de l'utilisateur :** décode le token, extrait le claim `sub`, charge l'entité depuis la base de données via l'`EntityManager`.
+**Retrieving the user:** decodes the token, extracts the `sub` claim, loads the entity from the database via the `EntityManager`.
 
-**Vérification des rôles :** même logique que `SessionGuard`, basée sur le même `?RoleConfig`.
+**Role verification:** same logic as `SessionGuard`, based on the same `?RoleConfig`.
 
 ---
 
 ## JwtManager
 
-**Fichier :** `JwtManager.php`
+**File:** `JwtManager.php`
 
-Gère la génération, le décodage et la validation des tokens JWT **sans dépendance externe** (HMAC-SHA256 natif PHP).
+Handles the generation, decoding, and validation of JWT tokens **with no external dependency** (native PHP HMAC-SHA256).
 
-### Génération
+### Generation
 
 ```php
 $jwt = new JwtManager(
-    secret: 'ma-cle-secrete-tres-longue',
-    expiration: 3600,  // 1 heure
+    secret: 'my-very-long-secret-key',
+    expiration: 3600,  // 1 hour
     algorithm: 'HS256'
 );
 
@@ -244,67 +244,67 @@ $token = $jwt->generate(['sub' => 42, 'role' => 'admin']);
 // → header.payload.signature (base64url)
 ```
 
-Le payload généré contient automatiquement les claims `iat` (issued at) et `exp` (expiration).
+The generated payload automatically contains the `iat` (issued at) and `exp` (expiration) claims.
 
-### Décodage et validation
+### Decoding and Validation
 
 ```php
-// Décode et vérifie la signature + l'expiration
+// Decodes and verifies the signature + expiration
 $payload = $jwt->decode($token);
 // ['sub' => 42, 'role' => 'admin', 'iat' => ..., 'exp' => ...]
 
-// Vérification silencieuse (pas d'exception)
+// Silent verification (no exception)
 $isValid = $jwt->isValid($token); // true | false
 ```
 
-**Exceptions levées par `decode()` :**
+**Exceptions thrown by `decode()`:**
 
 | Situation | Message |
 |-----------|---------|
-| Format invalide (pas 3 parties) | `Invalid token format.` |
-| Signature incorrecte | `Invalid token signature.` |
-| Payload non décodable | `Invalid token payload.` |
-| Token expiré | `The token has expired.` |
+| Invalid format (not 3 parts) | `Invalid token format.` |
+| Incorrect signature | `Invalid token signature.` |
+| Undecodable payload | `Invalid token payload.` |
+| Expired token | `The token has expired.` |
 
-**Sécurité :** La comparaison de signature utilise `hash_equals()` pour prévenir les attaques temporelles.
+**Security:** signature comparison uses `hash_equals()` to prevent timing attacks.
 
 ---
 
 ## PasswordManager
 
-**Fichier :** `PasswordManager.php`
+**File:** `PasswordManager.php`
 
-Encapsule les fonctions natives PHP de gestion des mots de passe. Algorithme `PASSWORD_DEFAULT` (bcrypt), cost 12.
+Encapsulates PHP's native password management functions. `PASSWORD_DEFAULT` algorithm (bcrypt), cost 12.
 
 ```php
 $pm = $container->get(PasswordManager::class);
 
-// Hachage (bcrypt, cost 12)
-$hash = $pm->hash('mon-mot-de-passe');
+// Hashing (bcrypt, cost 12)
+$hash = $pm->hash('my-password');
 
-// Vérification
-$isValid = $pm->verify('mon-mot-de-passe', $hash); // true
+// Verification
+$isValid = $pm->verify('my-password', $hash); // true
 
-// Vérifier si le hash doit être recalculé (après changement de paramètres)
+// Check whether the hash needs to be recomputed (after a parameter change)
 if ($pm->needsRehash($hash)) {
     $user->setPassword($pm->hash($plainPassword));
 }
 
-// Générer un mot de passe aléatoire (hex, 12 octets = 24 caractères)
+// Generate a random password (hex, 12 bytes = 24 characters)
 $generated = $pm->generate(12);
 
-// Infos sur l'algorithme utilisé
+// Info about the algorithm used
 $info = $pm->getInfo($hash);
 // ['algo' => PASSWORD_BCRYPT, 'algoName' => 'bcrypt', 'options' => ['cost' => 12]]
 ```
 
 ---
 
-## Extension contrôleur
+## Controller Extension
 
-**Fichier :** `Extension/AuthControllerExtension.php`
+**File:** `Extension/AuthControllerExtension.php`
 
-Injecte automatiquement deux méthodes dans tous les contrôleurs.
+Automatically injects two methods into every controller.
 
 ```php
 class AuthController extends AbstractController
@@ -318,7 +318,7 @@ class AuthController extends AbstractController
         ]);
 
         if (!$success) {
-            return $this->jsonError('Identifiants invalides', 401);
+            return $this->jsonError('Invalid credentials', 401);
         }
 
         return $this->redirect('/dashboard');
@@ -342,28 +342,28 @@ class AuthController extends AbstractController
 
 ---
 
-## Extension Twig
+## Twig Extension
 
-**Fichier :** `Extension/AuthViewExtension.php`
+**File:** `Extension/AuthViewExtension.php`
 
-Expose trois fonctions dans tous les templates Twig :
+Exposes three functions in every Twig template:
 
-| Fonction | Description |
+| Function | Description |
 |----------|-------------|
-| `auth_check()` | `true` si l'utilisateur est connecté |
-| `auth_user()` | Objet utilisateur courant (`null` si déconnecté) |
-| `auth_has_role(role)` | `true` si l'utilisateur possède le rôle donné |
+| `auth_check()` | `true` if the user is logged in |
+| `auth_user()` | Current user object (`null` if logged out) |
+| `auth_has_role(role)` | `true` if the user has the given role |
 
 ```twig
 {% if auth_check() %}
-    <span>Bonjour, {{ auth_user().getName() }}</span>
+    <span>Hello, {{ auth_user().getName() }}</span>
 
     {% if auth_has_role('admin') %}
         <a href="/admin">Administration</a>
     {% endif %}
 
-    <a href="/logout">Déconnexion</a>
+    <a href="/logout">Logout</a>
 {% else %}
-    <a href="/login">Connexion</a>
+    <a href="/login">Login</a>
 {% endif %}
 ```

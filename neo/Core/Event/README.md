@@ -1,41 +1,41 @@
-# Système d'Événements
+# Event System
 
-Le module `Event` implémente un système d'événements (pub/sub) pour NeoPHP. Il permet de découpler les composants en émettant des événements que des listeners peuvent intercepter, avec gestion des priorités, arrêt de propagation, découverte automatique par attribut PHP 8, interface subscriber, et cache en production.
+The `Event` module implements an event system (pub/sub) for NeoPHP. It allows decoupling components by emitting events that listeners can intercept, with priority handling, propagation stopping, automatic discovery via PHP 8 attribute, a subscriber interface, and caching in production.
 
 ---
 
-## Sommaire
+## Summary
 
-1. [Fichiers du module](#fichiers-du-module)
-2. [Créer un événement](#créer-un-événement)
+1. [Module Files](#module-files)
+2. [Creating an Event](#creating-an-event)
 3. [ListenerRegistration](#listenerregistration)
-4. [Créer un listener avec l'attribut `#[AsListener]`](#créer-un-listener-avec-lattribut-aslistener)
-5. [Créer un subscriber (multi-événements)](#créer-un-subscriber-multi-événements)
-6. [Dispatcher un événement](#dispatcher-un-événement)
-7. [Enregistrer des listeners manuellement (runtime)](#enregistrer-des-listeners-manuellement-runtime)
-8. [Inspecter les listeners enregistrés](#inspecter-les-listeners-enregistrés)
-9. [Découverte automatique et cache](#découverte-automatique-et-cache)
-10. [Événements fournis par le framework](#événements-fournis-par-le-framework)
-11. [Intégration Profiler](#intégration-profiler)
+4. [Creating a Listener with the `#[AsListener]` Attribute](#creating-a-listener-with-the-aslistener-attribute)
+5. [Creating a Subscriber (multi-event)](#creating-a-subscriber-multi-event)
+6. [Dispatching an Event](#dispatching-an-event)
+7. [Registering Listeners Manually (runtime)](#registering-listeners-manually-runtime)
+8. [Inspecting Registered Listeners](#inspecting-registered-listeners)
+9. [Automatic Discovery and Caching](#automatic-discovery-and-caching)
+10. [Events Provided by the Framework](#events-provided-by-the-framework)
+11. [Profiler Integration](#profiler-integration)
 
 ---
 
-## Fichiers du module
+## Module Files
 
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `EventManager.php` | Dispatcher central, découverte et exécution des listeners |
-| `Listener/ListenerRegistration.php` | DTO représentant un listener enregistré (classe, priorité, méthode, instance) |
-| `Abstract/AbstractEvent.php` | Classe de base pour tous les événements |
-| `Attribute/AsListener.php` | Attribut PHP 8 pour déclarer un listener |
-| `Interface/EventSubscriberInterface.php` | Interface pour les subscribers multi-événements |
-| `Event/RequestEvent.php` | Exemple d'événement fourni par le framework |
+| `EventManager.php` | Central dispatcher, listener discovery and execution |
+| `Listener/ListenerRegistration.php` | DTO representing a registered listener (class, priority, method, instance) |
+| `Abstract/AbstractEvent.php` | Base class for every event |
+| `Attribute/AsListener.php` | PHP 8 attribute for declaring a listener |
+| `Interface/EventSubscriberInterface.php` | Interface for multi-event subscribers |
+| `Event/RequestEvent.php` | Example event provided by the framework |
 
 ---
 
-## Créer un événement
+## Creating an Event
 
-Tout événement doit étendre `AbstractEvent`, qui implémente `EventInterface` et gère l'arrêt de propagation.
+Every event must extend `AbstractEvent`, which implements `EventInterface` and handles propagation stopping.
 
 ```php
 namespace App\Event;
@@ -54,13 +54,13 @@ class UserRegisteredEvent extends AbstractEvent
 }
 ```
 
-### Arrêt de propagation
+### Stopping propagation
 
 ```php
-// Dans un listener, pour empêcher les listeners suivants (priorité inférieure) d'être appelés :
+// Inside a listener, to prevent the next listeners (lower priority) from being called:
 $event->stopPropagation();
 
-// Vérifier l'état
+// Check the state
 if ($event->isPropagationStopped()) { /* ... */ }
 ```
 
@@ -68,31 +68,31 @@ if ($event->isPropagationStopped()) { /* ... */ }
 
 ## ListenerRegistration
 
-**Fichier :** `Listener/ListenerRegistration.php`
+**File:** `Listener/ListenerRegistration.php`
 
-DTO qui remplace le tableau associatif `array{class, priority, method, instance}` autrefois utilisé en interne par `EventManager`. Chaque listener enregistré — qu'il vienne du scan par attribut, d'un subscriber ou d'un ajout manuel — est représenté par une instance de cette classe.
+DTO that replaces the associative array `array{class, priority, method, instance}` formerly used internally by `EventManager`. Every registered listener — whether it comes from attribute scanning, a subscriber, or a manual addition — is represented by an instance of this class.
 
 ```php
 final class ListenerRegistration implements \JsonSerializable
 {
     public function __construct(
-        private readonly string $class,             // Classe du listener
-        private readonly int $priority,              // Priorité (décroissante)
-        private readonly string|array $method,        // Nom de méthode, ou tuple {0: méthode, 1?: priorité}
-        private readonly ?object $instance = null,    // Instance directe, si enregistrée via addListenerInstance()
+        private readonly string $class,             // Listener class
+        private readonly int $priority,              // Priority (descending)
+        private readonly string|array $method,        // Method name, or tuple {0: method, 1?: priority}
+        private readonly ?object $instance = null,    // Direct instance, if registered via addListenerInstance()
     ) {}
 }
 ```
 
-Accès via getters : `getClass()`, `getPriority()`, `getMethod()`, `getInstance()`, ainsi que `resolveMethodName()` qui normalise `method` (chaîne ou tuple) en un simple nom de méthode.
+Accessed via getters: `getClass()`, `getPriority()`, `getMethod()`, `getInstance()`, as well as `resolveMethodName()` which normalizes `method` (string or tuple) into a plain method name.
 
-**Sérialisation :** le DTO implémente `\JsonSerializable`, ce qui permet à `EventManager` de l'écrire tel quel dans le cache (`json_encode`). À la lecture du cache, `ListenerRegistration::fromArray()` reconstruit chaque instance à partir du tableau décodé — les entrées malformées (clé `class` manquante ou de mauvais type, par exemple après une modification manuelle du fichier de cache) sont ignorées plutôt que de provoquer une erreur silencieuse plus loin dans le dispatch. Les listeners enregistrés par instance (`addListenerInstance`) ne sont jamais écrits en cache, puisqu'un objet arbitraire n'est pas sérialisable de façon fiable.
+**Serialization:** the DTO implements `\JsonSerializable`, which lets `EventManager` write it as-is to the cache (`json_encode`). When reading the cache, `ListenerRegistration::fromArray()` rebuilds each instance from the decoded array — malformed entries (missing `class` key or wrong type, for example after a manual edit of the cache file) are ignored rather than causing a silent error further down the dispatch chain. Listeners registered by instance (`addListenerInstance`) are never written to the cache, since an arbitrary object cannot be reliably serialized.
 
 ---
 
-## Créer un listener avec l'attribut `#[AsListener]`
+## Creating a Listener with the `#[AsListener]` Attribute
 
-Le listener doit être placé dans le dossier `listenersPath` configuré dans le conteneur. Il est découvert automatiquement par scan récursif au démarrage.
+The listener must be placed inside the `listenersPath` folder configured in the container. It is automatically discovered through a recursive scan at startup.
 
 ```php
 namespace App\Listener;
@@ -109,25 +109,25 @@ class SendWelcomeEmailListener
 
     public function handle(UserRegisteredEvent $event): void
     {
-        $this->mailer->send($event->getEmail(), 'Bienvenue !');
+        $this->mailer->send($event->getEmail(), 'Welcome!');
     }
 }
 ```
 
-**Paramètres de `#[AsListener]` :**
+**`#[AsListener]` parameters:**
 
-| Paramètre | Type | Description |
+| Parameter | Type | Description |
 |---|---|---|
-| `event` | `class-string` | FQCN de la classe d'événement écoutée |
-| `priority` | `int` | Priorité (plus grande = exécutée en premier) |
+| `event` | `class-string` | FQCN of the listened event class |
+| `priority` | `int` | Priority (higher = runs first) |
 
-La méthode appelée par défaut est `handle()`.
+The default method called is `handle()`.
 
 ---
 
-## Créer un subscriber (multi-événements)
+## Creating a Subscriber (multi-event)
 
-Un subscriber implémente `EventSubscriberInterface` et déclare une map statique `événement → méthode`.
+A subscriber implements `EventSubscriberInterface` and declares a static `event → method` map.
 
 ```php
 namespace App\Listener;
@@ -158,13 +158,13 @@ class UserSubscriber implements EventSubscriberInterface
 }
 ```
 
-La valeur associée à chaque événement peut aussi être un tuple `[méthode, priorité]`, ex. `UserRegisteredEvent::class => ['onRegister', 10]`.
+The value associated with each event can also be a `[method, priority]` tuple, e.g. `UserRegisteredEvent::class => ['onRegister', 10]`.
 
-Les subscribers sont également découverts automatiquement au scan si la classe implémente `EventSubscriberInterface`.
+Subscribers are also automatically discovered during the scan if the class implements `EventSubscriberInterface`.
 
 ---
 
-## Dispatcher un événement
+## Dispatching an Event
 
 ```php
 use App\Event\UserRegisteredEvent;
@@ -175,24 +175,24 @@ $dispatcher = $container->get(EventManager::class);
 $returnedEvent = $dispatcher->dispatch($event);
 ```
 
-Le dispatcher retourne l'événement après exécution, ce qui permet de récupérer des données que les listeners auraient pu y écrire.
+The dispatcher returns the event after execution, which allows retrieving data that listeners may have written to it.
 
 ---
 
-## Enregistrer des listeners manuellement (runtime)
+## Registering Listeners Manually (runtime)
 
-En complément de la découverte automatique, on peut enregistrer des listeners programmatiquement :
+In addition to automatic discovery, listeners can be registered programmatically:
 
 ```php
-// Par nom de classe (résolu par le conteneur à l'exécution)
+// By class name (resolved by the container at runtime)
 $dispatcher->addListener(
     eventClass: UserRegisteredEvent::class,
     listenerClass: SendWelcomeEmailListener::class,
     priority: 5,
-    method: 'handle' // optionnel, défaut: 'handle'
+    method: 'handle' // optional, default: 'handle'
 );
 
-// Par instance directe
+// By direct instance
 $dispatcher->addListenerInstance(
     eventClass: UserRegisteredEvent::class,
     instance: new AuditLogger(),
@@ -200,23 +200,23 @@ $dispatcher->addListenerInstance(
     priority: 0
 );
 
-// Par subscriber
+// By subscriber
 $dispatcher->addSubscriber(new UserSubscriber());
 ```
 
-Chacun de ces appels crée en interne une instance de `ListenerRegistration`.
+Each of these calls internally creates a `ListenerRegistration` instance.
 
 ---
 
-## Inspecter les listeners enregistrés
+## Inspecting Registered Listeners
 
 ```php
-// Tous les listeners, groupés par événement
+// Every listener, grouped by event
 $all = $dispatcher->getListeners();
 
-// Listeners pour un événement spécifique
+// Listeners for a specific event
 $list = $dispatcher->getListeners(UserRegisteredEvent::class);
-// Retourne une liste de ListenerRegistration
+// Returns a list of ListenerRegistration
 
 foreach ($list as $registration) {
     $registration->getClass();
@@ -227,30 +227,30 @@ foreach ($list as $registration) {
 
 ---
 
-## Découverte automatique et cache
+## Automatic Discovery and Caching
 
-Au démarrage, `EventManager` scanne récursivement le dossier `listenersPath`. Pour chaque fichier `.php`, il :
+On startup, `EventManager` recursively scans the `listenersPath` folder. For each `.php` file, it:
 
-1. Extrait le FQCN (namespace + nom de classe)
-2. Cherche l'attribut `#[AsListener]` sur la classe
-3. Vérifie si la classe implémente `EventSubscriberInterface`
-4. Trie les listeners par priorité décroissante
+1. Extracts the FQCN (namespace + class name)
+2. Looks for the `#[AsListener]` attribute on the class
+3. Checks whether the class implements `EventSubscriberInterface`
+4. Sorts listeners by descending priority
 
-**En production** (`environment !== 'dev'`), le résultat (une liste de `ListenerRegistration` sérialisés via `JsonSerializable`) est mis en cache dans :
+**In production** (`environment !== 'dev'`), the result (a list of `ListenerRegistration` serialized via `JsonSerializable`) is cached in:
 
 ```
 storage/var/cache/events/listeners.php
 ```
 
-Ce fichier est lu directement aux démarrages suivants, sans re-scan : chaque entrée décodée est reconstruite en `ListenerRegistration` via `fromArray()`, et toute entrée malformée est silencieusement ignorée. En mode `dev`, le scan est toujours effectué à chaque requête.
+This file is read directly on subsequent startups, with no re-scan: each decoded entry is rebuilt into a `ListenerRegistration` via `fromArray()`, and any malformed entry is silently ignored. In `dev` mode, the scan is always performed on every request.
 
 ---
 
-## Événements fournis par le framework
+## Events Provided by the Framework
 
 ### `RequestEvent`
 
-Dispatché lors de la réception d'une requête HTTP. Contient l'objet `Request`.
+Dispatched when an HTTP request is received. Contains the `Request` object.
 
 ```php
 use Neo\Core\Event\Event\RequestEvent;
@@ -269,13 +269,13 @@ class RequestLoggerListener
 
 ### `ExceptionEvent`
 
-Dispatché par `ErrorManager` lors de la capture d'une exception. Permet d'intercepter les erreurs applicatives (ex. : notification Slack, envoi d'email).
+Dispatched by `ErrorManager` when an exception is caught. Allows intercepting application errors (e.g. Slack notification, sending an email).
 
 ---
 
-## Intégration Profiler
+## Profiler Integration
 
-Si `NEO_PROFILER_ENABLED` est activé, chaque appel à `dispatch()` est chronométré et enregistré dans le collecteur `events` du Profiler, avec :
-- le nom de la classe d'événement
-- la liste des listeners appelés
-- le temps d'exécution en millisecondes
+If `NEO_PROFILER_ENABLED` is enabled, every call to `dispatch()` is timed and recorded in the Profiler's `events` collector, with:
+- the event class name
+- the list of listeners called
+- the execution time in milliseconds

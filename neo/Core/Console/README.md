@@ -1,21 +1,21 @@
 # Console
 
-Le module `Console` est l'infrastructure CLI de NeoPHP. Il fournit le moteur de découverte et d'exécution des commandes, un système d'entrée/sortie typé, des helpers interactifs (questions, choix, confirmation, saisie secrète), un rendu coloré en terminal, et un générateur de commandes.
+The `Console` module is NeoPHP's CLI infrastructure. It provides the command discovery and execution engine, a typed input/output system, interactive helpers (questions, choices, confirmation, hidden input), colored terminal rendering, and a command generator.
 
 ---
 
-## Sommaire
+## Summary
 
 - [ConsoleManager](#consolemanager)
 - [AbstractCommand](#abstractcommand)
-- [Attribut Command](#attribut-command)
+- [Command Attribute](#command-attribute)
 - [Input](#input)
   - [InputArgument](#inputargument)
   - [InputOption](#inputoption)
-  - [Helpers interactifs](#helpers-interactifs)
+  - [Interactive Helpers](#interactive-helpers)
 - [Output](#output)
-- [Enum Color](#enum-color)
-- [Commandes natives](#commandes-natives)
+- [Color Enum](#color-enum)
+- [Native Commands](#native-commands)
   - [app:make:command](#appmakecommand)
   - [app:serve](#appserve)
 
@@ -23,39 +23,39 @@ Le module `Console` est l'infrastructure CLI de NeoPHP. Il fournit le moteur de 
 
 ## ConsoleManager
 
-**Fichier :** `ConsoleManager.php`
+**File:** `ConsoleManager.php`
 
-`ConsoleManager` est le point d'entrée de toute exécution CLI. Il est invoqué depuis le script `bin/neo` et orchestre la découverte, le chargement et l'exécution des commandes.
+`ConsoleManager` is the entry point for every CLI execution. It is invoked from the `bin/neo` script and orchestrates command discovery, loading, and execution.
 
-### Découverte automatique
+### Automatic discovery
 
-Le manager parcourt récursivement deux dossiers à la recherche de fichiers PHP situés dans un sous-dossier `Commands/` :
+The manager recursively scans two folders looking for PHP files located inside a `Commands/` subfolder:
 
-- `neo/` — commandes natives du framework
-- `src/` — commandes des projets applicatifs
+- `neo/` — the framework's native commands
+- `src/` — application projects' commands
 
-Seules les classes étendant `AbstractCommand` et décorées avec `#[Command]` sont enregistrées. Les classes abstraites sont ignorées.
+Only classes extending `AbstractCommand` and decorated with `#[Command]` are registered. Abstract classes are ignored.
 
-### Exécution
-
-```bash
-php bin/neo <commande> [arguments] [options]
-php bin/neo <commande> --help   # Affiche l'aide de la commande
-php bin/neo                     # Affiche la liste de toutes les commandes
-```
-
-### Gestion automatique du projet
-
-Si la commande déclare une option `--project` et qu'aucun projet n'est encore chargé dans le conteneur, le manager interrompt l'exécution pour demander interactivement le projet cible. Le conteneur est ensuite réinstancié avec le bon contexte applicatif avant d'appeler `do()`.
+### Execution
 
 ```bash
-php bin/neo make:controller MonController
-# → Target project ? (liste interactive si --project absent)
+php bin/neo <command> [arguments] [options]
+php bin/neo <command> --help   # Shows the command's help
+php bin/neo                    # Lists all commands
 ```
 
-### Affichage de l'aide globale
+### Automatic project handling
 
-Sans argument, le manager affiche toutes les commandes regroupées par catégorie, triées alphabétiquement.
+If the command declares a `--project` option and no project is yet loaded in the container, the manager interrupts execution to interactively ask for the target project. The container is then re-instantiated with the correct application context before calling `do()`.
+
+```bash
+php bin/neo make:controller MyController
+# → Target project ? (interactive list if --project is absent)
+```
+
+### Global help display
+
+With no argument, the manager displays every command grouped by category, sorted alphabetically.
 
 ```
  CONTROLLER
@@ -76,16 +76,16 @@ Sans argument, le manager affiche toutes les commandes regroupées par catégori
 
 ## AbstractCommand
 
-**Fichier :** `Abstract/AbstractCommand.php`
+**File:** `Abstract/AbstractCommand.php`
 
-Classe de base que doit étendre toute commande NeoPHP. Elle fournit le mécanisme de définition des arguments et options, la validation de l'entrée, et le rendu de l'aide contextuelle.
+Base class that every NeoPHP command must extend. It provides the mechanism for defining arguments and options, input validation, and contextual help rendering.
 
-### Créer une commande
+### Creating a command
 
 ```php
 #[Command(
     name: 'cache:clear',
-    description: 'Vide le cache de l\'application',
+    description: 'Clears the application cache',
     category: 'Cache',
 )]
 final class ClearCacheCommand extends AbstractCommand
@@ -94,7 +94,7 @@ final class ClearCacheCommand extends AbstractCommand
     {
         $this->addArgument(
             name: 'driver',
-            description: 'Driver de cache à vider',
+            description: 'Cache driver to clear',
             mode: InputArgument::OPTIONAL,
             default: 'all',
         );
@@ -103,7 +103,7 @@ final class ClearCacheCommand extends AbstractCommand
             name: 'force',
             shortcut: 'f',
             mode: InputOption::NONE,
-            description: 'Forcer sans confirmation',
+            description: 'Force without confirmation',
         );
     }
 
@@ -112,51 +112,51 @@ final class ClearCacheCommand extends AbstractCommand
         $driver = $input->getArgument('driver');
         $force  = (bool) $input->getOption('force');
 
-        if (!$force && !Input::confirm("Vider le cache '$driver' ?")) {
-            Output::muted('Annulé.');
+        if (!$force && !Input::confirm("Clear the '$driver' cache?")) {
+            Output::muted('Cancelled.');
             return ExitCode::SUCCESS;
         }
 
-        // ... logique de vidage ...
+        // ... clearing logic ...
 
-        Output::success("Cache '$driver' vidé.");
+        Output::success("Cache '$driver' cleared.");
         return ExitCode::SUCCESS;
     }
 }
 ```
 
-### Méthodes disponibles dans `configure()`
+### Methods available inside `configure()`
 
-| Méthode        | Description                                        |
-|----------------|----------------------------------------------------|
-| `addArgument()`| Ajoute un argument positionnel à la commande       |
-| `addOption()`  | Ajoute une option nommée (`--nom` ou `-n`)         |
+| Method          | Description                                          |
+|-------------------|---------------------------------------------------------|
+| `addArgument()`  | Adds a positional argument to the command                |
+| `addOption()`    | Adds a named option (`--name` or `-n`)                    |
 
-### Méthode `do()`
+### The `do()` method
 
-La méthode `do()` est le corps de la commande. Elle reçoit un objet `Input` et un objet `Output`, et doit retourner une valeur de l'enum `ExitCode` :
+The `do()` method is the command's body. It receives an `Input` object and an `Output` object, and must return a value from the `ExitCode` enum:
 
-| Valeur             | Code de sortie | Signification        |
-|--------------------|---------------|----------------------|
-| `ExitCode::SUCCESS`| `0`           | Succès               |
-| `ExitCode::FAILURE`| `1`           | Échec                |
-| `ExitCode::INVALID`| `2`           | Entrée invalide      |
+| Value                | Exit code | Meaning              |
+|-----------------------|-------------|-------------------------|
+| `ExitCode::SUCCESS`  | `0`         | Success                 |
+| `ExitCode::FAILURE`  | `1`         | Failure                 |
+| `ExitCode::INVALID`  | `2`         | Invalid input           |
 
-### Aide automatique
+### Automatic help
 
-Chaque commande bénéficie automatiquement de l'option `--help` / `-h` qui affiche la liste des arguments, options et leur description.
+Every command automatically gets the `--help` / `-h` option, which displays the list of arguments, options and their description.
 
 ```bash
 php bin/neo cache:clear --help
 
 Command     : cache:clear
-Description : Vide le cache de l'application
+Description : Clears the application cache
 
   Arguments:
-  <driver> (optional)          Driver de cache à vider
+  <driver> (optional)          Cache driver to clear
 
   Options:
-  -f, --force                  Forcer sans confirmation
+  -f, --force                  Force without confirmation
 
   Global options:
   --help, -h                   Show this help message
@@ -164,213 +164,213 @@ Description : Vide le cache de l'application
 
 ---
 
-## Attribut Command
+## Command Attribute
 
-**Fichier :** `Attribute/Command.php`
+**File:** `Attribute/Command.php`
 
-Attribut PHP natif (`#[Attribute]`) appliqué au niveau classe pour déclarer une commande et ses métadonnées.
+Native PHP attribute (`#[Attribute]`) applied at the class level to declare a command and its metadata.
 
 ```php
 #[Attribute(Attribute::TARGET_CLASS)]
 class Command
 {
     public function __construct(
-        public ?string $name = null,        // Nom CLI (ex: 'cache:clear')
-        public ?string $description = null, // Description courte
-        public ?string $category = null,    // Groupe dans l'aide (ex: 'Cache')
-        public ?string $project = null,     // Projet associé (optionnel)
+        public ?string $name = null,        // CLI name (e.g. 'cache:clear')
+        public ?string $description = null, // Short description
+        public ?string $category = null,    // Group shown in the help (e.g. 'Cache')
+        public ?string $project = null,     // Associated project (optional)
     ) {}
 }
 ```
 
-La propriété `project` est utilisée par `ConsoleManager::findProjectForCommand()` pour déterminer quel projet charger avant d'exécuter la commande.
+The `project` property is used by `ConsoleManager::findProjectForCommand()` to determine which project to load before running the command.
 
 ---
 
 ## Input
 
-**Fichier :** `Input/Input.php`
+**File:** `Input/Input.php`
 
-Classe responsable de l'analyse et de l'accès aux arguments et options passés en ligne de commande.
+Class responsible for parsing and accessing arguments and options passed on the command line.
 
-### Analyse des tokens CLI
+### Parsing CLI tokens
 
-`Input` gère automatiquement les formes suivantes :
+`Input` automatically handles the following forms:
 
-| Forme                    | Exemple                    | Résultat                        |
-|--------------------------|----------------------------|---------------------------------|
-| Option avec `=`          | `--project=MyApp`          | option `project` = `"MyApp"`    |
-| Option avec valeur       | `--project MyApp`          | option `project` = `"MyApp"`    |
-| Flag (sans valeur)       | `--force`                  | option `force` = `true`         |
-| Raccourci court          | `-f`                       | option `force` = `true`         |
-| Raccourci court + valeur | `-d SubFolder`             | option `dir` = `"SubFolder"`    |
-| Argument positionnel     | `MyController`             | argument `controller` = `"MyController"` |
+| Form                        | Example                    | Result                            |
+|-------------------------------|-------------------------------|--------------------------------------|
+| Option with `=`              | `--project=MyApp`             | option `project` = `"MyApp"`        |
+| Option with value            | `--project MyApp`             | option `project` = `"MyApp"`        |
+| Flag (no value)               | `--force`                     | option `force` = `true`             |
+| Short shortcut                | `-f`                           | option `force` = `true`             |
+| Short shortcut + value        | `-d SubFolder`                 | option `dir` = `"SubFolder"`        |
+| Positional argument          | `MyController`                 | argument `controller` = `"MyController"` |
 
-### Récupérer les valeurs
+### Retrieving values
 
 ```php
 $input->getArgument('controller'); // → "MyController"
 $input->getOption('project');      // → "MyApp"
-$input->hasOption('force');        // → true si --force présent et non false
+$input->hasOption('force');        // → true if --force is present and not false
 ```
 
 ### InputArgument
 
-**Fichier :** `Input/InputArgument.php`
+**File:** `Input/InputArgument.php`
 
-Définit un argument positionnel avec son mode et une valeur par défaut optionnelle.
+Defines a positional argument with its mode and an optional default value.
 
 ```php
 $this->addArgument(
     name: 'files',
-    description: 'Fichiers à traiter',
-    mode: InputArgument::IS_ARRAY, // Capture tous les tokens restants
+    description: 'Files to process',
+    mode: InputArgument::IS_ARRAY, // Captures all remaining tokens
 );
 ```
 
-| Constante                 | Valeur | Comportement                                    |
-|---------------------------|--------|-------------------------------------------------|
-| `InputArgument::REQUIRED` | `1`    | Obligatoire — erreur si absent                 |
-| `InputArgument::OPTIONAL` | `2`    | Facultatif — utilise la valeur par défaut       |
-| `InputArgument::IS_ARRAY` | `4`    | Capture plusieurs valeurs dans un tableau       |
+| Constant                    | Value | Behavior                                          |
+|-------------------------------|---------|------------------------------------------------------|
+| `InputArgument::REQUIRED`   | `1`     | Required — error if absent                          |
+| `InputArgument::OPTIONAL`   | `2`     | Optional — uses the default value                    |
+| `InputArgument::IS_ARRAY`   | `4`     | Captures multiple values into an array                |
 
-Les modes sont combinables par OR : `InputArgument::REQUIRED | InputArgument::IS_ARRAY`.
+Modes can be combined with OR: `InputArgument::REQUIRED | InputArgument::IS_ARRAY`.
 
 ### InputOption
 
-**Fichier :** `Input/InputOption.php`
+**File:** `Input/InputOption.php`
 
-Définit une option nommée avec son raccourci, son mode et sa valeur par défaut.
+Defines a named option with its shortcut, mode, and default value.
 
 ```php
 $this->addOption(
     name: 'format',
     shortcut: 'f',
     mode: InputOption::REQUIRED,
-    description: 'Format de sortie',
+    description: 'Output format',
     default: 'json',
 );
 ```
 
-| Constante                 | Valeur | Comportement                                    |
-|---------------------------|--------|-------------------------------------------------|
-| `InputOption::NONE`       | `1`    | Flag booléen — pas de valeur attendue           |
-| `InputOption::REQUIRED`   | `2`    | Valeur obligatoire (`--format=json` ou `--format json`) |
-| `InputOption::OPTIONAL`   | `4`    | Valeur facultative                              |
-| `InputOption::IS_ARRAY`   | `8`    | Plusieurs valeurs acceptées                     |
+| Constant                    | Value | Behavior                                             |
+|-------------------------------|---------|---------------------------------------------------------|
+| `InputOption::NONE`         | `1`     | Boolean flag — no value expected                        |
+| `InputOption::REQUIRED`     | `2`     | Required value (`--format=json` or `--format json`)      |
+| `InputOption::OPTIONAL`     | `4`     | Optional value                                            |
+| `InputOption::IS_ARRAY`     | `8`     | Multiple values accepted                                   |
 
-### Helpers interactifs
+### Interactive Helpers
 
-Toutes les méthodes interactives sont des méthodes statiques de la classe `Input`.
+All interactive methods are static methods on the `Input` class.
 
-#### `Input::ask()` — Saisie libre
+#### `Input::ask()` — Free text input
 
 ```php
-$name = Input::ask('Nom du projet ?', 'MonProjet');
-// → "Nom du projet ? [MonProjet] : "
+$name = Input::ask('Project name?', 'MyProject');
+// → "Project name? [MyProject] : "
 ```
 
-#### `Input::confirm()` — Oui / Non
+#### `Input::confirm()` — Yes / No
 
 ```php
-if (Input::confirm('Confirmer la suppression ?', false)) {
+if (Input::confirm('Confirm deletion?', false)) {
     // ...
 }
-// → "Confirmer la suppression ? [y/N] : "
-// Accepte : y, yes, o, oui (insensible à la casse)
+// → "Confirm deletion? [y/N] : "
+// Accepts: y, yes, o, oui (case-insensitive)
 ```
 
-#### `Input::choice()` — Sélection dans une liste
+#### `Input::choice()` — Selection from a list
 
 ```php
-$project = Input::choice('Projet cible ?', ['MonSite', 'MonApi', 'Admin'], 'MonSite');
-// → Affiche une liste numérotée, retourne le choix sélectionné
+$project = Input::choice('Target project?', ['MySite', 'MyApi', 'Admin'], 'MySite');
+// → Displays a numbered list, returns the selected choice
 ```
 
-#### `Input::multiChoice()` — Sélection multiple
+#### `Input::multiChoice()` — Multiple selection
 
 ```php
-$formats = Input::multiChoice('Formats à exporter ?', ['json', 'csv', 'xml']);
-// → "1,3" sélectionne json et xml
+$formats = Input::multiChoice('Formats to export?', ['json', 'csv', 'xml']);
+// → "1,3" selects json and xml
 ```
 
-#### `Input::secret()` — Saisie masquée (mots de passe)
+#### `Input::secret()` — Hidden input (passwords)
 
 ```php
-$password = Input::secret('Mot de passe de la base de données ?');
-// → Masque l'entrée clavier sur Unix (stty -echo)
-// → Lecture normale sur Windows
+$password = Input::secret('Database password?');
+// → Masks keyboard input on Unix (stty -echo)
+// → Normal reading on Windows
 ```
 
-#### `Input::autocomplete()` — Saisie avec suggestions
+#### `Input::autocomplete()` — Input with suggestions
 
 ```php
 $expression = Input::autocomplete(
-    'Expression cron ?',
+    'Cron expression?',
     ['* * * * *', '0 * * * *', '0 0 * * *'],
     '* * * * *'
 );
-// → Complète automatiquement si la saisie correspond au début d'une suggestion
+// → Automatically completes if the input matches the start of a suggestion
 ```
 
 ---
 
 ## Output
 
-**Fichier :** `Output/Output.php`
+**File:** `Output/Output.php`
 
-Classe utilitaire de rendu terminal. Toutes ses méthodes sont statiques.
+Terminal rendering utility class. All of its methods are static.
 
-### Méthodes de rendu
+### Rendering methods
 
-| Méthode                           | Couleur  | Exemple d'usage                              |
-|-----------------------------------|----------|----------------------------------------------|
-| `Output::success($message)`       | Vert     | Confirmation d'une opération réussie         |
-| `Output::error($message)`         | Rouge    | Affichage d'une erreur                       |
-| `Output::warning($message)`       | Jaune    | Avertissement non bloquant                   |
-| `Output::info($message)`          | Cyan `→` | Information courante                         |
-| `Output::muted($message)`         | Grisé    | Message secondaire, peu important            |
-| `Output::step($step, $message)`   | Bleu     | Étape dans un processus multi-phases         |
-| `Output::skip($message)`          | Jaune/dim| Élément ignoré (`[SKIP]`)                   |
-| `Output::label($label, $value)`   | Gras     | Affichage d'une paire clé/valeur             |
-| `Output::title($message)`         | Blanc/gras| En-tête de section avec séparateur         |
-| `Output::separator()`             | Grisé    | Ligne de séparation horizontale              |
-| `Output::newLine()`               | —        | Saut de ligne                                |
-| `Output::badge($text, $color)`    | BG color | Badge coloré inline (retourne une string)    |
-| `Output::usage($command, $desc)`  | Cyan     | En-tête d'aide d'une commande                |
-| `Output::option($flag, $desc)`    | Jaune    | Ligne d'aide pour une option                 |
-| `Output::argument($name, $desc)`  | Cyan     | Ligne d'aide pour un argument                |
-| `Output::example($cmd)`           | Vert     | Exemple de commande                          |
-| `Output::progress($cur, $total)`  | Vert     | Barre de progression en temps réel           |
-| `Output::colorize($text, $color)` | —        | Colorise une chaîne (retourne une string)    |
+| Method                             | Color     | Example usage                                  |
+|---------------------------------------|-------------|----------------------------------------------------|
+| `Output::success($message)`         | Green       | Confirmation of a successful operation             |
+| `Output::error($message)`           | Red         | Displaying an error                                |
+| `Output::warning($message)`         | Yellow      | Non-blocking warning                               |
+| `Output::info($message)`            | Cyan `→`    | Regular information                                |
+| `Output::muted($message)`           | Grayed out  | Secondary, low-importance message                  |
+| `Output::step($step, $message)`     | Blue        | Step within a multi-phase process                  |
+| `Output::skip($message)`            | Yellow/dim  | Skipped item (`[SKIP]`)                            |
+| `Output::label($label, $value)`     | Bold        | Displaying a key/value pair                        |
+| `Output::title($message)`           | White/bold  | Section header with a separator                    |
+| `Output::separator()`               | Grayed out  | Horizontal separator line                          |
+| `Output::newLine()`                 | —           | Line break                                         |
+| `Output::badge($text, $color)`      | BG color    | Inline colored badge (returns a string)            |
+| `Output::usage($command, $desc)`    | Cyan        | Help header for a command                          |
+| `Output::option($flag, $desc)`      | Yellow      | Help line for an option                            |
+| `Output::argument($name, $desc)`    | Cyan        | Help line for an argument                          |
+| `Output::example($cmd)`             | Green       | Example command                                    |
+| `Output::progress($cur, $total)`    | Green       | Real-time progress bar                             |
+| `Output::colorize($text, $color)`   | —           | Colorizes a string (returns a string)               |
 
-### Exemples concrets
+### Concrete examples
 
 ```php
-Output::title('Synchronisation des projets');
-Output::info('Analyse en cours...');
-Output::step('1/3', 'Lecture des fichiers sources');
-Output::step('2/3', 'Compilation des assets');
-Output::step('3/3', 'Mise à jour du manifest');
-Output::success('Synchronisation terminée.');
+Output::title('Project synchronization');
+Output::info('Analyzing...');
+Output::step('1/3', 'Reading source files');
+Output::step('2/3', 'Compiling assets');
+Output::step('3/3', 'Updating the manifest');
+Output::success('Synchronization complete.');
 
-// Barre de progression
+// Progress bar
 for ($i = 1; $i <= 10; $i++) {
-    Output::progress($i, 10, "Fichier $i/10");
+    Output::progress($i, 10, "File $i/10");
     usleep(100000);
 }
 
-// Badge inline
-echo Output::badge('NEW', 'green') . ' Fonctionnalité disponible.' . "\n";
+// Inline badge
+echo Output::badge('NEW', 'green') . ' Feature available.' . "\n";
 ```
 
 ---
 
-## Enum Color
+## Color Enum
 
-**Fichier :** `Enum/Color.php`
+**File:** `Enum/Color.php`
 
-Enum PHP pur représentant les codes ANSI de couleur et de style. Utilisé en interne par `Output`.
+Pure PHP enum representing ANSI color and style codes. Used internally by `Output`.
 
 ```php
 enum Color: string
@@ -384,26 +384,26 @@ enum Color: string
     case BLUE   = "\033[34m";
     case CYAN   = "\033[36m";
     case WHITE  = "\033[37m";
-    // Fonds : BG_RED, BG_GREEN, BG_YELLOW, BG_BLUE, BG_CYAN
+    // Backgrounds: BG_RED, BG_GREEN, BG_YELLOW, BG_BLUE, BG_CYAN
 }
 ```
 
-Chaque case expose deux méthodes :
+Each case exposes two methods:
 
 ```php
-Color::GREEN->wrap('Texte vert');  // → "\033[32mTexte vert\033[0m"
-Color::BOLD->apply();              // → "\033[1m" (sans reset automatique)
+Color::GREEN->wrap('Green text');   // → "\033[32mGreen text\033[0m"
+Color::BOLD->apply();               // → "\033[1m" (without automatic reset)
 ```
 
 ---
 
-## Commandes natives
+## Native Commands
 
 ### `app:make:command`
 
-**Fichier :** `Commands/MakeCommand.php`
+**File:** `Commands/MakeCommand.php`
 
-Génère un squelette de commande pour un projet applicatif.
+Generates a command skeleton for an application project.
 
 #### Synopsis
 
@@ -413,23 +413,23 @@ php bin/neo app:make:command [commandName] --project=<Project> [--name=<cli:name
 
 #### Options
 
-| Nom          | Description                                              |
-|--------------|----------------------------------------------------------|
-| `commandName`| Nom de la classe PHP (ex. `CleanLogsCommand`)            |
-| `--project`  | Projet cible dans `./src/`                               |
-| `--name`     | Nom CLI de la commande (ex. `cache:clear`)               |
-| `--category` | Catégorie (`app`, `other`, `testing`, `cron`, `config`, `debug`) |
-| `--force`    | Écrase le fichier si il existe déjà                     |
+| Name           | Description                                                       |
+|------------------|-----------------------------------------------------------------------|
+| `commandName`   | PHP class name (e.g. `CleanLogsCommand`)                              |
+| `--project`     | Target project inside `./src/`                                         |
+| `--name`        | CLI name of the command (e.g. `cache:clear`)                          |
+| `--category`    | Category (`app`, `other`, `testing`, `cron`, `config`, `debug`)       |
+| `--force`       | Overwrites the file if it already exists                              |
 
-Si un paramètre est absent, la commande le demande interactivement. Le nom CLI est deviné automatiquement depuis le nom de classe (`CleanLogsCommand` → `clean:logs`).
+If a parameter is missing, the command asks for it interactively. The CLI name is automatically guessed from the class name (`CleanLogsCommand` → `clean:logs`).
 
-#### Exemple d'utilisation
+#### Usage example
 
 ```bash
 php bin/neo app:make:command CleanLogsCommand --project=MyProject --name=logs:clean --category=app
 ```
 
-#### Fichier généré
+#### Generated file
 
 ```
 src/MyProject/App/Commands/CleanLogsCommand.php
@@ -469,9 +469,9 @@ final class CleanLogsCommand extends AbstractCommand
 
 ### `app:serve`
 
-**Fichier :** `Commands/ServeCommand.php`
+**File:** `Commands/ServeCommand.php`
 
-Lance le serveur HTTP intégré de PHP pour un projet NeoPHP. L'adresse et le port sont lus depuis la clé `access` du fichier `app.config.php` du projet.
+Starts PHP's built-in HTTP server for a NeoPHP project. The address and port are read from the `access` key in the project's `app.config.php` file.
 
 #### Synopsis
 
@@ -479,13 +479,13 @@ Lance le serveur HTTP intégré de PHP pour un projet NeoPHP. L'adresse et le po
 php bin/neo app:serve [project]
 ```
 
-Si `project` est omis, une liste interactive des projets disponibles est affichée.
+If `project` is omitted, an interactive list of available projects is displayed.
 
 ```bash
 php bin/neo app:serve MyProject
 # → Starting server for MyProject
 # → URL: http://myproject.localhost:8001
-# → (serveur PHP lancé sur localhost:8001)
+# → (PHP server started on localhost:8001)
 
 php bin/neo app:serve
 # → Available projects:
@@ -494,31 +494,31 @@ php bin/neo app:serve
 # → Choose a project
 ```
 
-Le serveur est démarré via `passthru("php -S {access} -t public")`, en ciblant le dossier `public/` comme racine web.
+The server is started via `passthru("php -S {access} -t public")`, targeting the `public/` folder as the web root.
 
 ---
 
-## Structure des fichiers
+## File structure
 
 ```
 neo/Core/Console/
-├── ConsoleManager.php              # Orchestrateur CLI principal
+├── ConsoleManager.php             # Main CLI orchestrator
 ├── Abstract/
-│   └── AbstractCommand.php        # Classe de base pour toutes les commandes
+│   └── AbstractCommand.php        # Base class for all commands
 ├── Attribute/
-│   └── Command.php                # Attribut #[Command]
+│   └── Command.php                # #[Command] attribute
 ├── Input/
-│   ├── Input.php                  # Parsing CLI + helpers interactifs
-│   ├── InputArgument.php          # Définition d'un argument
-│   └── InputOption.php            # Définition d'une option
+│   ├── Input.php                  # CLI parsing + interactive helpers
+│   ├── InputArgument.php          # Argument definition
+│   └── InputOption.php            # Option definition
 ├── Output/
-│   └── Output.php                 # Rendu terminal coloré
+│   └── Output.php                 # Colored terminal rendering
 ├── Enum/
-│   └── Color.php                  # Codes ANSI
+│   └── Color.php                  # ANSI codes
 ├── Interface/
 │   └── CommandInterface.php
 ├── Helper/
-│   └── Fs.php                     # Utilitaires filesystem (ensureDir, pascalCase...)
+│   └── Fs.php                     # Filesystem utilities (ensureDir, pascalCase...)
 └── Commands/
     ├── MakeCommand.php            # app:make:command
     └── ServeCommand.php           # app:serve

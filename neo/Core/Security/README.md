@@ -1,35 +1,35 @@
 # Security
 
-Le module `Security` regroupe trois sous-systèmes complémentaires qui sécurisent les applications NeoPHP :
+The `Security` module brings together three complementary subsystems that secure NeoPHP applications:
 
-- **Auth** — authentification par session ou JWT, gestion des rôles, hachage de mots de passe.
-- **CSRF** — protection contre les attaques Cross-Site Request Forgery via tokens de session.
-- **Middleware** — pipeline d'autorisation déclaratif par attributs PHP 8, avec middlewares intégrés et support de middlewares personnalisés.
+- **Auth** — session or JWT authentication, role management, password hashing.
+- **CSRF** — protection against Cross-Site Request Forgery attacks via session tokens.
+- **Middleware** — declarative, attribute-based authorization pipeline for PHP 8, with built-in middlewares and support for custom middlewares.
 
 ---
 
-## Structure du module
+## Module Structure
 
 ```
 Security/
 ├── Auth/
-│   ├── AuthManager.php                    Point d'entrée de l'authentification
+│   ├── AuthManager.php                    Entry point for authentication
 │   ├── AuthModule.php
-│   ├── JwtManager.php                     JWT HMAC-SHA256 sans dépendance
-│   ├── PasswordManager.php                Hachage bcrypt (cost 12)
+│   ├── JwtManager.php                     JWT HMAC-SHA256 with no dependency
+│   ├── PasswordManager.php                bcrypt hashing (cost 12)
 │   ├── Collector/  AuthCollector
 │   ├── Exception/  AuthException, JwtException
 │   ├── Extension/  AuthControllerExtension, AuthViewExtension
 │   └── Guard/      SessionGuard, TokenGuard
 ├── Csrf/
-│   ├── CsrfManager.php                    Token unique par session
-│   ├── CsrfTokenManager.php               Tokens nommés avec expiration
+│   ├── CsrfManager.php                    Single token per session
+│   ├── CsrfTokenManager.php               Named tokens with expiration
 │   ├── CsrfModule.php
 │   ├── Exception/  CsrfException
 │   ├── Extension/  CsrfViewExtension
 │   └── Token/      CsrfToken
 └── Middleware/
-    ├── MiddlewareManager.php              Orchestrateur du pipeline
+    ├── MiddlewareManager.php              Pipeline orchestrator
     ├── MiddlewareModule.php
     ├── Interface/  MiddlewareInterface
     ├── Attribute/  Middleware, IsGranted
@@ -41,29 +41,29 @@ Security/
 
 ---
 
-## Documentation par composant
+## Documentation by Component
 
-| Composant | Description | README |
+| Component | Description | README |
 |-----------|-------------|--------|
-| `Auth` | Session/JWT, rôles, bcrypt, JwtManager | [Auth/README.md](Auth/README.md) |
-| `Csrf` | Token session, tokens nommés, Twig `csrf_token()` | [Csrf/README.md](Csrf/README.md) |
-| `Middleware` | Pipeline attributs, middlewares intégrés, personnalisés | [Middleware/README.md](Middleware/README.md) |
+| `Auth` | Session/JWT, roles, bcrypt, JwtManager | [Auth/README.md](Auth/README.md) |
+| `Csrf` | Session token, named tokens, Twig `csrf_token()` | [Csrf/README.md](Csrf/README.md) |
+| `Middleware` | Attribute pipeline, built-in and custom middlewares | [Middleware/README.md](Middleware/README.md) |
 
 ---
 
-## Extensions contrôleur
+## Controller Extensions
 
-| Méthode | Composant |
+| Method | Component |
 |---------|-----------|
-| `auth()` | Auth — accès à `AuthManager` |
-| `getPasswordManager()` | Auth — accès à `PasswordManager` |
-| `getMiddleware()` | Middleware — accès à `MiddlewareManager` |
+| `auth()` | Auth — access to `AuthManager` |
+| `getPasswordManager()` | Auth — access to `PasswordManager` |
+| `getMiddleware()` | Middleware — access to `MiddlewareManager` |
 
-## Extensions Twig
+## Twig Extensions
 
-| Fonction | Composant | Description |
+| Function | Component | Description |
 |----------|-----------|-------------|
-| `auth_check()` | Auth | `true` si l'utilisateur est connecté |
-| `auth_user()` | Auth | Objet utilisateur courant |
-| `auth_has_role(role)` | Auth | `true` si l'utilisateur a le rôle donné |
-| `csrf_token(id?)` | Csrf | Token CSRF pour les formulaires |
+| `auth_check()` | Auth | `true` if the user is logged in |
+| `auth_user()` | Auth | Current user object |
+| `auth_has_role(role)` | Auth | `true` if the user has the given role |
+| `csrf_token(id?)` | Csrf | CSRF token for forms |

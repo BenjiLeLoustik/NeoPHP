@@ -1,15 +1,15 @@
 # Cookie
 
-`Neo\Core\Http\Client\Cookie\Cookie` encapsule la gestion des cookies PHP avec préfixage automatique et configuration centralisée.
+`Neo\Core\Http\Client\Cookie\Cookie` encapsulates PHP cookie management with automatic prefixing and centralized configuration.
 
 ---
 
-## Sommaire
+## Summary
 
 1. [Structure](#structure)
 2. [Configuration](#configuration)
-3. [Utilisation](#utilisation)
-4. [Extension contrôleur](#extension-contrôleur)
+3. [Usage](#usage)
+4. [Controller Extension](#controller-extension)
 
 ---
 
@@ -17,74 +17,74 @@
 
 ```
 Client/Cookie/
-├── Cookie.php                          # Gestion des cookies
+├── Cookie.php                          # Cookie management
 └── Extension/
-    └── CookieControllerExtension.php   # Injecte getCookie() dans les contrôleurs
+    └── CookieControllerExtension.php   # Injects getCookie() into controllers
 ```
 
 ---
 
 ## Configuration
 
-Configuré depuis `session.config.php`, clé `cookie` :
+Configured from `session.config.php`, under the `cookie` key:
 
 ```php
 return [
     'cookie' => [
         'prefix'    => 'neo_',
-        'lifetime'  => 2592000,  // 30 jours (en secondes)
+        'lifetime'  => 2592000,  // 30 days (in seconds)
         'path'      => '/',
         'domain'    => '',
-        'secure'    => true,     // Cookie HTTPS uniquement
-        'http_only' => true,     // Cookie inaccessible en JavaScript
+        'secure'    => true,     // HTTPS-only cookie
+        'http_only' => true,     // Cookie inaccessible from JavaScript
         'same_site' => 'Lax',
     ],
 ];
 ```
 
-Tous les noms de cookies sont automatiquement préfixés (ex. : `user_theme` → `neo_user_theme`). Les méthodes `get`, `has` et `remove` appliquent le même préfixe de façon transparente.
+Every cookie name is automatically prefixed (e.g. `user_theme` → `neo_user_theme`). The `get`, `has`, and `remove` methods transparently apply the same prefix.
 
 ---
 
-## Utilisation
+## Usage
 
 ```php
 $cookie = $container->get(Cookie::class);
 
-// Écrire un cookie (valeurs de config par défaut)
+// Write a cookie (default config values)
 $cookie->set('user_theme', 'dark');
 
-// Avec paramètres personnalisés
+// With custom parameters
 $cookie->set(
     name: 'remember_token',
     value: $token,
-    expire: time() + 86400,   // expire dans 1 jour
+    expire: time() + 86400,   // expires in 1 day
     path: '/',
     domain: 'example.com',
     secure: true,
     httpOnly: true
 );
 
-// Lire
-$theme = $cookie->get('user_theme', 'light'); // valeur ou défaut
+// Read
+$theme = $cookie->get('user_theme', 'light'); // value or default
 
-// Vérifier l'existence
+// Check existence
 $cookie->has('user_theme'); // true/false
 
-// Supprimer (expire dans le passé)
+// Remove (expires in the past)
 $cookie->remove('user_theme');
 
-// Tous les cookies bruts ($_COOKIE complet, non filtrés par préfixe)
+// All raw cookies (full $_COOKIE, unfiltered by prefix)
 $cookie->all();
 ```
 
 ---
 
-## Extension contrôleur
+## Controller Extension
 
-**Fichier :** `Extension/CookieControllerExtension.php`
+**File:** `Extension/CookieControllerExtension.php`
 
-Injecte automatiquement `getCookie()` dans tous les contrôleurs.
+Automatically injects `getCookie()` into every controller.
 
 ```php
 class PreferenceController extends AbstractController

@@ -1,17 +1,17 @@
 # Responses
 
-Le sous-module `Response` couvre les trois types de réponses HTTP et le `ResponseManager` qui les expose via le conteneur et les contrôleurs.
+The `Response` sub-module covers the three types of HTTP responses and the `ResponseManager` that exposes them through the container and controllers.
 
 ---
 
-## Sommaire
+## Summary
 
 1. [Structure](#structure)
 2. [Response](#response)
 3. [JsonResponse](#jsonresponse)
 4. [RedirectResponse](#redirectresponse)
 5. [ResponseManager](#responsemanager)
-6. [Extension contrôleur](#extension-contrôleur)
+6. [Controller Extension](#controller-extension)
 
 ---
 
@@ -21,23 +21,23 @@ Le sous-module `Response` couvre les trois types de réponses HTTP et le `Respon
 
 ```
 Response/
-├── ResponseManager.php              # Fabrique de réponses
-├── ResponseModule.php               # Enregistrement DI
+├── ResponseManager.php              # Response factory
+├── ResponseModule.php               # DI registration
 ├── Types/
-│   ├── Response.php                 # Réponse HTTP générique
-│   ├── JsonResponse.php             # Réponse JSON
-│   └── RedirectResponse.php         # Réponse de redirection
+│   ├── Response.php                 # Generic HTTP response
+│   ├── JsonResponse.php             # JSON response
+│   └── RedirectResponse.php         # Redirect response
 └── Extension/
-    └── ResponseControllerExtension.php  # Injecte json(), jsonSuccess(), jsonError()
+    └── ResponseControllerExtension.php  # Injects json(), jsonSuccess(), jsonError()
 ```
 
 ---
 
 ## Response
 
-`Neo\Core\Http\Response\Types\Response` est la classe de base pour toutes les réponses.
+`Neo\Core\Http\Response\Types\Response` is the base class for every response.
 
-### Construction et chaînage
+### Construction and chaining
 
 ```php
 $response = new Response();
@@ -45,80 +45,80 @@ $response
     ->setStatusCode(200)
     ->setHeader('X-Frame-Options', 'DENY')
     ->setHeader('Content-Type', 'text/html; charset=utf-8')
-    ->setContent('<h1>Bonjour</h1>');
+    ->setContent('<h1>Hello</h1>');
 ```
 
 ### `setHeader` vs `addHeader`
 
 ```php
-// setHeader : écrase la valeur existante
+// setHeader: overwrites the existing value
 $response->setHeader('Cache-Control', 'no-cache');
 
-// addHeader : concatène si la clé existe déjà (séparateur : ", ")
+// addHeader: concatenates if the key already exists (separator: ", ")
 $response->addHeader('Cache-Control', 'no-store');
-// Résultat : 'no-cache, no-store'
+// Result: 'no-cache, no-store'
 ```
 
-### Lecture
+### Reading
 
 ```php
-$response->getStatusCode();  // int : code HTTP
-$response->getHeaders();     // array<string, string> : en-têtes
-$response->getContent();     // string : corps brut
+$response->getStatusCode();  // int: HTTP status code
+$response->getHeaders();     // array<string, string>: headers
+$response->getContent();     // string: raw body
 ```
 
-### Décodage JSON
+### JSON decoding
 
 ```php
-// Décode le corps JSON en tableau PHP
-// Lève HttpClientException si le corps n'est pas un JSON valide ou n'est pas un tableau
+// Decodes the JSON body into a PHP array
+// Throws HttpClientException if the body is not valid JSON or is not an array
 $data = $response->toArray();
 ```
 
-Utilisé principalement avec `HttpClientManager` pour consommer des API JSON.
+Mainly used with `HttpClientManager` to consume JSON APIs.
 
-### Envoi
+### Sending
 
 ```php
 $response->send();
-// Appelle http_response_code(), header() pour chaque en-tête, puis echo du contenu
+// Calls http_response_code(), header() for each header, then echoes the content
 ```
 
 ---
 
 ## JsonResponse
 
-`JsonResponse` étend `Response`. Encodage JSON automatique avec l'en-tête `Content-Type: application/json; charset=utf-8`.
+`JsonResponse` extends `Response`. Automatic JSON encoding with the `Content-Type: application/json; charset=utf-8` header.
 
 ```php
-// Tableau
+// Array
 $response = new JsonResponse(['status' => 'ok', 'user' => ['id' => 1]]);
 
-// Objet
+// Object
 $response = new JsonResponse($userObject);
 
-// Avec code HTTP personnalisé
+// With a custom HTTP code
 $response = new JsonResponse(['error' => 'Not found'], 404);
 
 $response->send();
 ```
 
-L'encodage lève une `JsonException` si les données ne sont pas sérialisables (`JSON_THROW_ON_ERROR`).
+Encoding throws a `JsonException` if the data is not serializable (`JSON_THROW_ON_ERROR`).
 
 ---
 
 ## RedirectResponse
 
-`RedirectResponse` étend `Response`. Positionne le code HTTP et l'en-tête `Location`.
+`RedirectResponse` extends `Response`. Sets the HTTP status code and the `Location` header.
 
 ```php
-// Redirection temporaire (302 par défaut)
+// Temporary redirect (302 by default)
 $response = new RedirectResponse('/dashboard');
 
-// Redirection permanente
+// Permanent redirect
 $response = new RedirectResponse('/new-url', 301);
 
-// Redirection après formulaire (Post/Redirect/Get)
+// Redirect after a form submission (Post/Redirect/Get)
 $response = new RedirectResponse('/form?success=1', 303);
 
 $response->send();
@@ -128,39 +128,39 @@ $response->send();
 
 ## ResponseManager
 
-**Fichier :** `ResponseManager.php`
+**File:** `ResponseManager.php`
 
-Fabrique de réponses enregistrée dans le conteneur DI. Expose des raccourcis pour les cas courants.
+Response factory registered in the DI container. Exposes shortcuts for common cases.
 
 ```php
 $manager = $container->get(ResponseManager::class);
 
-// Réponse JSON générique
+// Generic JSON response
 $manager->json(['key' => 'value'], 200);
 
-// Réponse JSON succès (enveloppe { success: true, data: ... })
+// Successful JSON response (wraps { success: true, data: ... })
 $manager->jsonSuccess(['id' => 42]);
 $manager->jsonSuccess([], 201);
 
-// Réponse JSON erreur (enveloppe { success: false, error: ... })
-$manager->jsonError('Ressource introuvable', 404);
-$manager->jsonError('Validation échouée', 422, ['fields' => ['email']]);
+// Error JSON response (wraps { success: false, error: ... })
+$manager->jsonError('Resource not found', 404);
+$manager->jsonError('Validation failed', 422, ['fields' => ['email']]);
 
-// Redirection
+// Redirect
 $manager->redirect('/dashboard');
 $manager->redirect('/new-url', 301);
 
-// Réponse vide à construire manuellement
+// Empty response to build manually
 $response = $manager->make(); // new Response()
 ```
 
 ---
 
-## Extension contrôleur
+## Controller Extension
 
-**Fichier :** `Extension/ResponseControllerExtension.php`
+**File:** `Extension/ResponseControllerExtension.php`
 
-Injecte automatiquement `json()`, `jsonSuccess()` et `jsonError()` dans tous les contrôleurs.
+Automatically injects `json()`, `jsonSuccess()`, and `jsonError()` into every controller.
 
 ```php
 class ApiController extends AbstractController
@@ -171,7 +171,7 @@ class ApiController extends AbstractController
         $user = $this->getRepository(User::class)->find($id);
 
         if (!$user) {
-            return $this->jsonError('Utilisateur introuvable', 404);
+            return $this->jsonError('User not found', 404);
         }
 
         return $this->jsonSuccess(['id' => $user->getId(), 'name' => $user->getName()]);

@@ -1,48 +1,48 @@
 # Translation
 
-Le module Translation offre un système d'internationalisation (i18n) complet pour les applications NeoPHP. Il gère la résolution automatique de la locale, le chargement de fichiers de traduction PHP par domaine, l'écriture automatique des clés manquantes en mode développement, ainsi qu'une intégration native avec Twig et le Profiler.
+The Translation module provides a complete internationalization (i18n) system for NeoPHP applications. It handles automatic locale resolution, loading of PHP translation files by domain, automatic writing of missing keys in development mode, as well as native integration with Twig and the Profiler.
 
 ---
 
-## Sommaire
+## Table of Contents
 
-1. [Structure du module](#structure-du-module)
+1. [Module Structure](#module-structure)
 2. [Configuration](#configuration)
-3. [Fichiers de traduction](#fichiers-de-traduction)
+3. [Translation Files](#translation-files)
 4. [TranslationManager](#translationmanager)
 5. [LocaleManager](#localemanager)
 6. [TranslationDomain](#translationdomain)
 7. [TranslationRegistry](#translationregistry)
-8. [TranslationLoader et TranslationWriter](#translationloader-et-translationwriter)
-9. [Intégration Twig](#intégration-twig)
-10. [Helper global translate()](#helper-global-translate)
+8. [TranslationLoader and TranslationWriter](#translationloader-and-translationwriter)
+9. [Twig Integration](#twig-integration)
+10. [Global Helper translate()](#global-helper-translate)
 11. [TranslationCollector (Profiler)](#translationcollector-profiler)
-12. [Commande translation:sync](#commande-translationsync)
+12. [translation:sync Command](#translationsync-command)
 
 ---
 
-## Structure du module
+## Module Structure
 
 ```
 Translation/
-├── TranslationManager.php              # Gestionnaire principal (implements TranslatorInterface)
-├── TranslationModule.php               # Enregistrement dans le conteneur DI
+├── TranslationManager.php              # Main manager (implements TranslatorInterface)
+├── TranslationModule.php               # Registration in the DI container
 ├── Domain/
-│   └── TranslationDomain.php           # Normalisation et résolution des domaines
+│   └── TranslationDomain.php           # Normalization and resolution of domains
 ├── Loader/
-│   └── TranslationLoader.php           # Chargement des fichiers de traduction avec cache
+│   └── TranslationLoader.php           # Loading of translation files with cache
 ├── Registry/
-│   └── TranslationRegistry.php         # Registre statique des chemins de traduction
+│   └── TranslationRegistry.php         # Static registry of translation paths
 ├── Locale/
-│   └── LocaleManager.php               # Résolution de la locale active
+│   └── LocaleManager.php               # Resolution of the active locale
 ├── Writer/
-│   └── TranslationWriter.php           # Écriture automatique des clés manquantes
+│   └── TranslationWriter.php           # Automatic writing of missing keys
 ├── Collector/
-│   └── TranslationCollector.php        # Collecteur pour le Profiler
+│   └── TranslationCollector.php        # Collector for the Profiler
 ├── Extension/
-│   └── TranslationViewExtension.php    # Fonctions et filtres Twig
+│   └── TranslationViewExtension.php    # Twig functions and filters
 ├── Helper/
-│   └── Translate.php                   # Fonction globale translate()
+│   └── Translate.php                   # Global translate() function
 ├── Interface/
 │   ├── TranslatorInterface.php
 │   └── TranslationCollectorInterface.php
@@ -54,7 +54,7 @@ Translation/
 
 ## Configuration
 
-La configuration se trouve dans `src/MonProjet/Config/app.config.php` :
+Configuration is found in `src/MyProject/Config/app.config.php`:
 
 ```php
 return [
@@ -70,26 +70,26 @@ return [
 ];
 ```
 
-| Clé | Type | Description |
+| Key | Type | Description |
 |---|---|---|
-| `enabled` | `bool` | Active ou désactive le système de traduction |
-| `default_locale` | `string` | Locale utilisée par défaut |
-| `available_locales` | `array` | Map `code => libellé` des locales disponibles |
+| `enabled` | `bool` | Enables or disables the translation system |
+| `default_locale` | `string` | Locale used by default |
+| `available_locales` | `array` | Map `code => label` of available locales |
 
-Lorsque `enabled` vaut `false`, la méthode `translate()` retourne directement le texte d'origine avec les remplacements appliqués.
+When `enabled` is `false`, the `translate()` method directly returns the original text with the replacements applied.
 
 ---
 
-## Fichiers de traduction
+## Translation Files
 
-Les traductions sont des fichiers PHP qui retournent un tableau associatif `clé => traduction`.
+Translations are PHP files that return an associative array `key => translation`.
 
-**Structure de dossiers :**
+**Folder structure:**
 
 ```
-src/MonProjet/Translations/
+src/MyProject/Translations/
 ├── fr/
-│   ├── common.php      # Domaine par défaut
+│   ├── common.php      # Default domain
 │   ├── auth.php
 │   └── emails.php
 └── en/
@@ -98,7 +98,7 @@ src/MonProjet/Translations/
     └── emails.php
 ```
 
-**Exemple de fichier `fr/common.php` :**
+**Example `fr/common.php` file:**
 
 ```php
 <?php
@@ -113,7 +113,7 @@ return [
 ];
 ```
 
-**Exemple de fichier `en/common.php` :**
+**Example `en/common.php` file:**
 
 ```php
 <?php
@@ -128,177 +128,177 @@ return [
 ];
 ```
 
-Le chemin est résolu selon la formule : `{basePath}/{locale}/{domain}.php`
+The path is resolved using the formula: `{basePath}/{locale}/{domain}.php`
 
 ---
 
 ## TranslationManager
 
-`Neo\Core\Translation\TranslationManager` est le point d'entrée principal. Il implémente `TranslatorInterface`.
+`Neo\Core\Translation\TranslationManager` is the main entry point. It implements `TranslatorInterface`.
 
-### Traduire un texte
+### Translating a Text
 
 ```php
 use Neo\Core\Translation\TranslationManager;
 
 $translator = $container->get(TranslationManager::class);
 
-// Traduction simple
+// Simple translation
 echo $translator->translate('Bienvenue');
 
-// Traduction avec remplacements (:param)
+// Translation with replacements (:param)
 echo $translator->translate('Bonjour :name', ['name' => 'Alice']);
 
-// Traduction dans un domaine spécifique
+// Translation in a specific domain
 echo $translator->translate('Connexion', [], 'auth');
 ```
 
-Les remplacements fonctionnent avec la syntaxe `:nomDuParametre` dans la valeur traduite.
+Replacements work with the `:parameterName` syntax in the translated value.
 
-### Changer la locale
+### Changing the Locale
 
 ```php
-// Change la locale active et enregistre un cookie (durée par défaut : 1 an)
+// Changes the active locale and stores a cookie (default duration: 1 year)
 $translator->setLocale('en');
 
-// Durée personnalisée en secondes
+// Custom duration in seconds
 $translator->setLocale('es', lifetime: 7200);
 ```
 
-Si `available_locales` est défini dans la configuration et que la locale demandée n'en fait pas partie, une `TranslationException` (code 400) est levée.
+If `available_locales` is defined in the configuration and the requested locale is not part of it, a `TranslationException` (code 400) is thrown.
 
-### Autres méthodes
+### Other Methods
 
 ```php
-$translator->getLocale();              // Retourne la locale active, ex: 'fr'
-$translator->getLocales();             // Retourne le tableau available_locales
-$translator->isEnabledTranslation();   // Retourne true si le système est actif
+$translator->getLocale();              // Returns the active locale, e.g. 'fr'
+$translator->getLocales();             // Returns the available_locales array
+$translator->isEnabledTranslation();   // Returns true if the system is active
 ```
 
 ---
 
 ## LocaleManager
 
-`Neo\Core\Translation\Locale\LocaleManager` est responsable de la **résolution automatique** de la locale au démarrage. Il suit cette priorité :
+`Neo\Core\Translation\Locale\LocaleManager` is responsible for the **automatic resolution** of the locale at startup. It follows this priority order:
 
-1. Cookie `lang` présent et valide → locale du cookie
-2. Locale par défaut configurée (`default_locale`) si elle est dans `available_locales`
-3. Fallback sur `'fr'`
+1. `lang` cookie present and valid → locale from the cookie
+2. Configured default locale (`default_locale`) if it is within `available_locales`
+3. Fallback to `'fr'`
 
 ```php
 $locale = LocaleManager::resolve($container);
-// Retourne ex: 'en' si le cookie lang=en est présent
+// Returns e.g. 'en' if the lang=en cookie is present
 ```
 
 ---
 
 ## TranslationDomain
 
-`Neo\Core\Translation\Domain\TranslationDomain` gère la normalisation des noms de domaine.
+`Neo\Core\Translation\Domain\TranslationDomain` handles the normalization of domain names.
 
 ```php
 use Neo\Core\Translation\Domain\TranslationDomain;
 
-// Normalise null ou '' vers 'common'
+// Normalizes null or '' to 'common'
 TranslationDomain::normalize(null);   // 'common'
 TranslationDomain::normalize('');     // 'common'
 TranslationDomain::normalize('auth'); // 'auth'
 
-// Résout le chemin complet vers un fichier de traduction
+// Resolves the full path to a translation file
 TranslationDomain::resolveFilePath('/app/Translations', 'fr', 'auth');
-// Résultat : '/app/Translations/fr/auth.php'
+// Result: '/app/Translations/fr/auth.php'
 ```
 
-La constante `TranslationDomain::DEFAULT` vaut `'common'`.
+The `TranslationDomain::DEFAULT` constant equals `'common'`.
 
 ---
 
 ## TranslationRegistry
 
-`Neo\Core\Translation\Registry\TranslationRegistry` maintient la liste statique des dossiers de traduction à consulter. Plusieurs chemins peuvent être enregistrés ; le `TranslationLoader` les parcourt tous et fusionne les résultats (`array_replace`).
+`Neo\Core\Translation\Registry\TranslationRegistry` maintains the static list of translation folders to consult. Multiple paths can be registered; the `TranslationLoader` iterates over all of them and merges the results (`array_replace`).
 
 ```php
 use Neo\Core\Translation\Registry\TranslationRegistry;
 
-// Enregistrer un dossier de traductions
+// Register a translations folder
 TranslationRegistry::registerPath('/app/src/Blog/Translations');
 TranslationRegistry::registerPath('/app/src/Shared/Translations');
 
-// Récupérer tous les chemins enregistrés
+// Retrieve all registered paths
 $paths = TranslationRegistry::getPaths();
 ```
 
 ---
 
-## TranslationLoader et TranslationWriter
+## TranslationLoader and TranslationWriter
 
 ### TranslationLoader
 
-`Neo\Core\Translation\Loader\TranslationLoader` charge les fichiers de traduction avec un **cache en mémoire** (par clé `domain:locale`). En mode développement, il invalide l'OPcache et le cache de stat PHP à chaque chargement pour garantir la fraîcheur des fichiers.
+`Neo\Core\Translation\Loader\TranslationLoader` loads translation files with an **in-memory cache** (keyed by `domain:locale`). In development mode, it invalidates OPcache and PHP's stat cache on every load to guarantee file freshness.
 
 ```php
 $loader = new TranslationLoader();
 
-// Charge fr/common.php depuis tous les chemins enregistrés
+// Loads fr/common.php from all registered paths
 $translations = $loader->load('fr');
 
-// Charge fr/auth.php
+// Loads fr/auth.php
 $translations = $loader->load('fr', 'auth');
 
-// Invalide le cache pour forcer un rechargement
+// Invalidates the cache to force a reload
 $loader->invalidate('fr', 'auth');
 ```
 
 ### TranslationWriter
 
-`Neo\Core\Translation\Writer\TranslationWriter` est utilisé en mode développement (`environment === 'dev'`) pour **ajouter automatiquement les clés manquantes** dans le fichier de traduction correspondant. Cela évite d'avoir à créer manuellement chaque clé.
+`Neo\Core\Translation\Writer\TranslationWriter` is used in development mode (`environment === 'dev'`) to **automatically add missing keys** to the corresponding translation file. This avoids having to manually create every key.
 
-Lorsqu'une clé n'est pas trouvée, elle est ajoutée avec sa propre valeur comme traduction par défaut :
+When a key is not found, it is added with its own value as the default translation:
 
 ```php
-// Dans fr/common.php, si 'Nouveau message' est absent, il devient :
+// In fr/common.php, if 'Nouveau message' is missing, it becomes:
 // 'Nouveau message' => 'Nouveau message'
 ```
 
 ---
 
-## Intégration Twig
+## Twig Integration
 
-`Neo\Core\Translation\Extension\TranslationViewExtension` expose automatiquement des fonctions et filtres Twig dès que le module Translation est actif.
+`Neo\Core\Translation\Extension\TranslationViewExtension` automatically exposes Twig functions and filters as soon as the Translation module is active.
 
-### Fonctions disponibles dans les templates
+### Functions Available in Templates
 
 ```twig
-{# Traduction simple #}
+{# Simple translation #}
 {{ translate('Bienvenue') }}
 
-{# Alias court #}
+{# Short alias #}
 {{ trans('Bienvenue') }}
 
-{# Avec remplacements #}
+{# With replacements #}
 {{ translate('Bonjour :name', {name: user.name}) }}
 
-{# Dans un domaine spécifique #}
+{# In a specific domain #}
 {{ translate('Connexion', {}, 'auth') }}
 
-{# Locale active #}
+{# Active locale #}
 {{ getLocale() }}
 
-{# Toutes les locales disponibles #}
+{# All available locales #}
 {% for code, label in getLocales() %}
     <a href="/lang/{{ code }}">{{ label }}</a>
 {% endfor %}
 
-{# Vérifier si la traduction est activée #}
+{# Check whether translation is enabled #}
 {% if isEnabledTranslation() %}
     {# ... #}
 {% endif %}
 ```
 
-### Filtre disponible
+### Available Filter
 
 ```twig
-{# Filtre Twig équivalent à trans() #}
+{# Twig filter equivalent to trans() #}
 {{ 'Bienvenue'|trans }}
 {{ 'Bonjour :name'|trans({name: user.name}) }}
 {{ 'Connexion'|trans({}, 'auth') }}
@@ -306,75 +306,75 @@ Lorsqu'une clé n'est pas trouvée, elle est ajoutée avec sa propre valeur comm
 
 ---
 
-## Helper global translate()
+## Global Helper translate()
 
-Le fichier `Helper/Translate.php` définit la fonction globale `translate()`, disponible partout dans le code PHP sans injection de dépendances.
+The `Helper/Translate.php` file defines the global `translate()` function, available anywhere in the PHP code without dependency injection.
 
 ```php
-// Dans un contrôleur, un service, ou n'importe quelle classe
+// In a controller, a service, or any class
 $message = translate('Bienvenue');
 $message = translate('Bonjour :name', ['name' => 'Alice']);
 $message = translate('Connexion', [], 'auth');
 ```
 
-La fonction résout automatiquement le `TranslationManager` depuis le `ContainerRegistry`.
+The function automatically resolves the `TranslationManager` from the `ContainerRegistry`.
 
 ---
 
 ## TranslationCollector (Profiler)
 
-`Neo\Core\Translation\Collector\TranslationCollector` s'intègre au Profiler NeoPHP pour afficher en temps réel les informations de traduction durant la requête :
+`Neo\Core\Translation\Collector\TranslationCollector` integrates with the NeoPHP Profiler to display translation information in real time during the request:
 
-- Locale active
-- Nombre de clés résolues (hits)
-- Nombre de clés manquantes (misses)
-- Tableau détaillé des hits et misses par domaine
+- Active locale
+- Number of resolved keys (hits)
+- Number of missing keys (misses)
+- Detailed table of hits and misses by domain
 
-Le tab du Profiler s'affiche en vert si toutes les clés sont résolues, en jaune si des clés manquent, en gris si la traduction est désactivée.
+The Profiler tab is displayed in green if all keys are resolved, in yellow if some keys are missing, in gray if translation is disabled.
 
 ---
 
-## Commande translation:sync
+## translation:sync Command
 
-`translation:sync` scanne les fichiers source du projet (`src/MonProjet/`) à la recherche de tous les appels à `translate()`, `trans()`, les filtres Twig `|trans`, et les commentaires `// @translatable`, puis synchronise les fichiers de traduction.
+`translation:sync` scans the project's source files (`src/MyProject/`) looking for every call to `translate()`, `trans()`, the Twig `|trans` filter, and `// @translatable` comments, then synchronizes the translation files.
 
 ```bash
-# Voir ce qui serait ajouté/supprimé sans écrire
+# See what would be added/removed without writing
 php neo translation:sync --project=Blog --dry-run
 
-# Synchroniser (ajoute les clés manquantes)
+# Synchronize (adds missing keys)
 php neo translation:sync --project=Blog
 
-# Synchroniser et supprimer les clés obsolètes
+# Synchronize and remove obsolete keys
 php neo translation:sync --project=Blog --prune
 ```
 
-**Options :**
+**Options:**
 
 | Option | Description |
 |---|---|
-| `--project` | Projet cible (dossier dans `src/`) |
-| `--dry-run` | Affiche les différences sans écrire |
-| `--prune` | Supprime les clés qui ne sont plus utilisées dans le code (destructif) |
+| `--project` | Target project (folder in `src/`) |
+| `--dry-run` | Displays the differences without writing |
+| `--prune` | Removes keys that are no longer used in the code (destructive) |
 
-**Patterns reconnus automatiquement :**
+**Automatically Recognized Patterns:**
 
 ```php
-// Appels PHP directs
-translate('Ma clé');
-translate('Ma clé', ['param' => 'valeur'], 'domain');
-trans('Ma clé');
+// Direct PHP calls
+translate('My key');
+translate('My key', ['param' => 'value'], 'domain');
+trans('My key');
 
-// Dans les templates Twig
-{{ translate('Ma clé') }}
-{{ 'Ma clé'|trans }}
-{{ 'Ma clé'|trans({}, 'auth') }}
+// In Twig templates
+{{ translate('My key') }}
+{{ 'My key'|trans }}
+{{ 'My key'|trans({}, 'auth') }}
 
-// Annotation dans les fichiers de config
+// Annotation in config files
 'default_role' => 'admin', // @translatable
 'default_role' => 'admin', // @translatable:auth
 ```
 
-Les locales sont découvertes automatiquement depuis `app.config.php` (`available_locales`) ou depuis les dossiers existants dans le répertoire `Translations/`.
+Locales are automatically discovered from `app.config.php` (`available_locales`) or from existing folders in the `Translations/` directory.
 
-Chaque clé nouvelle est ajoutée avec elle-même comme valeur par défaut (`'Ma clé' => 'Ma clé'`), facilitant la traduction ultérieure.
+Each new key is added with itself as the default value (`'My key' => 'My key'`), making later translation easier.

@@ -1,14 +1,14 @@
 # Routing
 
-Le module `Routing` est responsable de la correspondance entre les requêtes HTTP entrantes et les méthodes de contrôleurs PHP. Il s'appuie sur des **attributs PHP 8** pour déclarer les routes directement sur les classes et méthodes, gère un système de cache pour la production, et expose des helpers dans les contrôleurs et les vues Twig.
+The `Routing` module is responsible for matching incoming HTTP requests to PHP controller methods. It relies on **PHP 8 attributes** to declare routes directly on classes and methods, manages a cache system for production, and exposes helpers in controllers and Twig views.
 
 ---
 
-## Sommaire
+## Summary
 
-1. [Vue d'ensemble](#vue-densemble)
+1. [Overview](#overview)
 2. [RouterModule](#routermodule)
-3. [Attributs de route](#attributs-de-route)
+3. [Route Attributes](#route-attributes)
    - [MainRoute](#mainroute)
    - [Route](#route)
    - [RateLimit](#ratelimit)
@@ -18,31 +18,31 @@ Le module `Routing` est responsable de la correspondance entre les requêtes HTT
 6. [Extensions](#extensions)
    - [RouterControllerExtension](#routercontrollerextension)
    - [RouterViewExtension](#routerviewextension)
-7. [Commande debug:router](#commande-debugrouter)
-8. [Gestion des erreurs](#gestion-des-erreurs)
+7. [The debug:router Command](#the-debugrouter-command)
+8. [Error Handling](#error-handling)
 
 ---
 
-## Vue d'ensemble
+## Overview
 
 ```
-Requête HTTP
+HTTP Request
      │
      ▼
 RouterManager::dispatch()
-     ├── Scan des contrôleurs (ou lecture du cache JSON en prod)
-     ├── Matching du chemin avec compilePattern()
-     ├── MiddlewareManager::run()   ← vérification des middlewares
-     └── Résolution des paramètres + invoke du contrôleur
+     ├── Controller scan (or reads the JSON cache in prod)
+     ├── Path matching via compilePattern()
+     ├── MiddlewareManager::run()   ← middleware checks
+     └── Parameter resolution + controller invocation
 ```
 
 ---
 
 ## RouterModule
 
-Fichier : `RouterModule.php`
+File: `RouterModule.php`
 
-### Dépendances
+### Dependencies
 
 ```php
 public function dependencies(): array
@@ -54,9 +54,9 @@ public function dependencies(): array
 }
 ```
 
-### Enregistrement
+### Registration
 
-Le module enregistre le `RouterManager` dans le conteneur DI :
+The module registers `RouterManager` in the DI container:
 
 ```php
 public function register(Container $container): void
@@ -65,17 +65,17 @@ public function register(Container $container): void
 }
 ```
 
-En mode CLI, `init()` retourne le module lui-même (le routeur n'est pas utile en console). En mode HTTP, il retourne l'instance de `RouterManager`, qui scanne les contrôleurs au moment de sa construction.
+In CLI mode, `init()` returns the module itself (the router isn't useful in console). In HTTP mode, it returns the `RouterManager` instance, which scans the controllers at construction time.
 
 ---
 
-## Attributs de route
+## Route Attributes
 
 ### MainRoute
 
-Fichier : `Attribute/MainRoute.php`
+File: `Attribute/MainRoute.php`
 
-`#[MainRoute]` s'applique à une **classe** de contrôleur et définit un préfixe de chemin et de nom pour toutes les routes de la classe.
+`#[MainRoute]` applies to a controller **class** and defines a path and name prefix for every route in the class.
 
 ```php
 use Neo\Core\Routing\Attribute\MainRoute;
@@ -84,39 +84,39 @@ use Neo\Core\Routing\Attribute\Route;
 #[MainRoute(path: '/admin', name: 'admin')]
 class AdminController extends AbstractController
 {
-    // Route finale : GET /admin/dashboard
-    // Nom final  : admin.dashboard
+    // Final route: GET /admin/dashboard
+    // Final name : admin.dashboard
     #[Route(path: '/dashboard', name: 'dashboard')]
     public function dashboard(): Response { ... }
 
-    // Route finale : DELETE /admin/users/{id}
-    // Nom final  : admin.delete_user
+    // Final route: DELETE /admin/users/{id}
+    // Final name : admin.delete_user
     #[Route(path: '/users/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(int $id): Response { ... }
 }
 ```
 
-| Paramètre | Type | Description |
+| Parameter | Type | Description |
 |---|---|---|
-| `path` | `string` | Préfixe de chemin (le `/` final est supprimé automatiquement) |
-| `name` | `string` | Préfixe de nom (un `.` est ajouté comme séparateur) |
+| `path` | `string` | Path prefix (the trailing `/` is automatically removed) |
+| `name` | `string` | Name prefix (a `.` is added as a separator) |
 
 ### Route
 
-Fichier : `Attribute/Route.php`
+File: `Attribute/Route.php`
 
-`#[Route]` s'applique à une **méthode publique** de contrôleur.
+`#[Route]` applies to a **public** controller method.
 
 ```php
-// Route simple
+// Simple route
 #[Route(path: '/articles', name: 'article.list')]
 public function list(): Response { ... }
 
-// Route avec méthodes HTTP multiples
+// Route with multiple HTTP methods
 #[Route(path: '/articles', name: 'article.create', methods: ['POST'])]
 public function create(): Response { ... }
 
-// Route avec paramètre dynamique et contrainte regex
+// Route with a dynamic parameter and a regex constraint
 #[Route(
     path: '/articles/{slug}',
     name: 'article.show',
@@ -125,136 +125,136 @@ public function create(): Response { ... }
 )]
 public function show(string $slug): Response { ... }
 
-// Route avec paramètre optionnel
+// Route with an optional parameter
 #[Route(path: '/archive/{year?}', name: 'archive')]
 public function archive(?int $year = null): Response { ... }
 ```
 
-| Paramètre | Type | Défaut | Description |
+| Parameter | Type | Default | Description |
 |---|---|---|---|
-| `path` | `string` | — | Chemin de la route (segments `{param}` ou `{param?}`) |
-| `name` | `string` | `''` | Nom unique de la route |
-| `methods` | `array` | `['GET']` | Méthodes HTTP acceptées |
-| `requirements` | `array` | `[]` | Contraintes regex par paramètre |
+| `path` | `string` | — | Route path (`{param}` or `{param?}` segments) |
+| `name` | `string` | `''` | Unique route name |
+| `methods` | `array` | `['GET']` | Accepted HTTP methods |
+| `requirements` | `array` | `[]` | Regex constraints per parameter |
 
 ### RateLimit
 
-Fichier : `Attribute/RateLimit.php`
+File: `Attribute/RateLimit.php`
 
-`#[RateLimit]` peut être placé sur une **classe** ou une **méthode**. Il limite le nombre de requêtes par IP sur une fenêtre de temps.
+`#[RateLimit]` can be placed on a **class** or a **method**. It limits the number of requests per IP over a time window.
 
 ```php
 use Neo\Core\Routing\Attribute\RateLimit;
 
-// Limite toute la classe à 30 requêtes par minute
+// Limits the whole class to 30 requests per minute
 #[RateLimit(maxAttempts: 30, decaySeconds: 60)]
 class ApiController extends AbstractController
 {
-    // Limite spécifique à cette action : 5 tentatives par minute
-    #[RateLimit(maxAttempts: 5, decaySeconds: 60, message: 'Trop de tentatives de connexion.')]
+    // Specific limit for this action: 5 attempts per minute
+    #[RateLimit(maxAttempts: 5, decaySeconds: 60, message: 'Too many login attempts.')]
     #[Route(path: '/login', name: 'api.login', methods: ['POST'])]
     public function login(): Response { ... }
 }
 ```
 
-| Paramètre | Type | Défaut | Description |
+| Parameter | Type | Default | Description |
 |---|---|---|---|
-| `maxAttempts` | `int` | `60` | Nombre maximum de requêtes |
-| `decaySeconds` | `int` | `60` | Durée de la fenêtre en secondes |
-| `message` | `string` | `'Too many requests...'` | Message d'erreur retourné (429) |
+| `maxAttempts` | `int` | `60` | Maximum number of requests |
+| `decaySeconds` | `int` | `60` | Window duration in seconds |
+| `message` | `string` | `'Too many requests...'` | Error message returned (429) |
 
 ### Maintenance
 
-Fichier : `Attribute/Maintenance.php`
+File: `Attribute/Maintenance.php`
 
-`#[Maintenance]` peut être placé sur une **classe** (tout le contrôleur) ou une **méthode** (route spécifique). Quand la route est touchée, le `MiddlewareManager` retourne une réponse 503.
+`#[Maintenance]` can be placed on a **class** (the whole controller) or a **method** (a specific route). When the route is hit, `MiddlewareManager` returns a 503 response.
 
 ```php
 use Neo\Core\Routing\Attribute\Maintenance;
 
-// Tout le contrôleur en maintenance
-#[Maintenance(message: 'Mise à jour en cours, revenez dans quelques minutes.')]
+// The whole controller is under maintenance
+#[Maintenance(message: 'Update in progress, please check back in a few minutes.')]
 class ShopController extends AbstractController { ... }
 
-// Seulement une action en maintenance
+// Only one action is under maintenance
 #[Maintenance]
 #[Route(path: '/checkout', name: 'shop.checkout', methods: ['POST'])]
 public function checkout(): Response { ... }
 ```
 
-Si le fichier de vue `maintenance.html.twig` existe, il est rendu avec la variable `message`. Sinon, le message texte brut est retourné directement.
+If the `maintenance.html.twig` view file exists, it is rendered with the `message` variable. Otherwise, the plain text message is returned directly.
 
 ---
 
 ## RouterManager
 
-Fichier : `RouterManager.php`
+File: `RouterManager.php`
 
-### Scan des contrôleurs
+### Controller Scan
 
-Au démarrage, le `RouterManager` parcourt récursivement le répertoire `controllersPath` (enregistré dans le conteneur DI). Il extrait le FQCN de chaque fichier PHP, utilise le `ScannerAttributeManager` pour lire les attributs `#[MainRoute]` (sur la classe) et `#[Route]` (sur les méthodes publiques), puis peuple la `RouteCollection`.
+On startup, `RouterManager` recursively walks the `controllersPath` directory (registered in the DI container). It extracts the FQCN of each PHP file, uses `ScannerAttributeManager` to read the `#[MainRoute]` (on the class) and `#[Route]` (on public methods) attributes, then populates the `RouteCollection`.
 
-### Cache en production
+### Production Cache
 
-En mode `prod` (environment != 'dev'), les routes sont mises en cache dans un fichier JSON :
+In `prod` mode (environment != 'dev'), routes are cached in a JSON file:
 
 ```
 storage/var/cache/router/routes.json
 ```
 
-Au prochain démarrage, ce fichier est lu directement et le scan PHP est évité. Le cache est invalidé manuellement (en supprimant le fichier) ou lors d'un déploiement.
+On the next startup, this file is read directly and the PHP scan is skipped. The cache is invalidated manually (by deleting the file) or during a deployment.
 
-En mode `dev`, le scan est effectué à chaque requête et les conflits de routes déclenchent un `E_USER_WARNING`.
+In `dev` mode, the scan is performed on every request and route conflicts trigger an `E_USER_WARNING`.
 
-### Dispatch d'une requête
+### Dispatching a Request
 
 ```php
 $response = $routerManager->dispatch($request, $response);
 ```
 
-Algorithme de dispatch :
+Dispatch algorithm:
 
-1. Normalisation de la méthode HTTP et du chemin.
-2. Pour chaque route enregistrée : tentative de matching via `compilePattern()`.
-3. Si le chemin correspond mais pas la méthode HTTP : exception 405.
-4. Si aucune route ne correspond : exception 404.
-5. Si une route correspond : exécution des middlewares, puis injection des paramètres dans la méthode du contrôleur.
+1. Normalizes the HTTP method and the path.
+2. For each registered route: attempts matching via `compilePattern()`.
+3. If the path matches but not the HTTP method: 405 exception.
+4. If no route matches: 404 exception.
+5. If a route matches: runs the middlewares, then injects the parameters into the controller method.
 
-### Injection des paramètres dans le contrôleur
+### Injecting Parameters into the Controller
 
-Le `RouterManager` utilise la réflexion pour injecter les paramètres dans les méthodes de contrôleur :
+`RouterManager` uses reflection to inject parameters into controller methods:
 
-1. **Paramètre de route** (ex. `$id`) : injecté depuis les captures du pattern.
-2. **Type non-primitif** (ex. `Request $request`) : résolu depuis le conteneur DI.
-3. **Valeur par défaut** : utilisée si le paramètre a une valeur par défaut définie.
+1. **Route parameter** (e.g. `$id`): injected from the pattern's captures.
+2. **Non-primitive type** (e.g. `Request $request`): resolved from the DI container.
+3. **Default value**: used if the parameter has a defined default value.
 
 ```php
 #[Route(path: '/users/{id}', name: 'user.show')]
 public function show(int $id, Request $request): Response
 {
-    // $id est injecté depuis l'URL
-    // $request est résolu depuis le conteneur DI
+    // $id is injected from the URL
+    // $request is resolved from the DI container
 }
 ```
 
-### Compilation de patterns
+### Pattern Compilation
 
-Les segments dynamiques sont compilés en expressions régulières avec capture nommée :
+Dynamic segments are compiled into regular expressions with named captures:
 
-| Segment | Regex générée | Optionnel |
+| Segment | Generated regex | Optional |
 |---|---|---|
-| `{id}` | `/(?P<id>[^/]+)` | Non |
-| `{slug}` avec `requirements: ['slug' => '[a-z0-9\-]+']` | `/(?P<slug>[a-z0-9\-]+)` | Non |
-| `{year?}` | `(?:/(?P<year>[^/]+))?` | Oui |
+| `{id}` | `/(?P<id>[^/]+)` | No |
+| `{slug}` with `requirements: ['slug' => '[a-z0-9\-]+']` | `/(?P<slug>[a-z0-9\-]+)` | No |
+| `{year?}` | `(?:/(?P<year>[^/]+))?` | Yes |
 
-### Génération d'URL
+### URL Generation
 
 ```php
-// Depuis n'importe où avec accès au RouterManager
-$url = $routerManager->generateUrl('article.show', ['slug' => 'mon-article']);
-// Résultat : '/articles/mon-article'
+// From anywhere with access to RouterManager
+$url = $routerManager->generateUrl('article.show', ['slug' => 'my-article']);
+// Result: '/articles/my-article'
 
-// Paramètres optionnels non fournis → segment supprimé
+// Optional parameters not provided → segment removed
 $url = $routerManager->generateUrl('archive'); // '/archive'
 ```
 
@@ -262,12 +262,12 @@ $url = $routerManager->generateUrl('archive'); // '/archive'
 
 ## RouteCollection
 
-Fichier : `Collection/RouteCollection.php`
+File: `Collection/RouteCollection.php`
 
-La `RouteCollection` est la structure de données interne du routeur. Elle organise les routes par méthode HTTP puis par chemin.
+`RouteCollection` is the router's internal data structure. It organizes routes by HTTP method, then by path.
 
 ```php
-// Structure interne
+// Internal structure
 [
     'GET' => [
         '/articles'      => ['name' => 'article.list',  'controller' => '...', 'action' => 'list',  'requirements' => []],
@@ -279,13 +279,13 @@ La `RouteCollection` est la structure de données interne du routeur. Elle organ
 ]
 ```
 
-### Sérialisation (cache)
+### Serialization (cache)
 
 ```php
-// Sérialisation vers JSON (prod)
+// Serialization to JSON (prod)
 $json = json_encode($collection->toArray());
 
-// Désérialisation depuis JSON
+// Deserialization from JSON
 $collection = RouteCollection::fromArray(json_decode($json, true));
 ```
 
@@ -295,38 +295,38 @@ $collection = RouteCollection::fromArray(json_decode($json, true));
 
 ### RouterControllerExtension
 
-Fichier : `Extension/RouterControllerExtension.php`
+File: `Extension/RouterControllerExtension.php`
 
-Cette extension est automatiquement appliquée à tous les contrôleurs qui étendent `AbstractController`. Elle ajoute les méthodes suivantes :
+This extension is automatically applied to every controller that extends `AbstractController`. It adds the following methods:
 
 ```php
-// Obtenir le chemin d'une route nommée
-$path = $this->getRoutePath('article.show', ['slug' => 'mon-article']);
-// Résultat : '/articles/mon-article'
+// Get the path of a named route
+$path = $this->getRoutePath('article.show', ['slug' => 'my-article']);
+// Result: '/articles/my-article'
 
-// Obtenir l'URL de retour (referrer ou fallback)
+// Get the return URL (referrer or fallback)
 $back = $this->getRedirectBack('home');
-$back = $this->getRedirectBack(null); // fallback sur '/'
+$back = $this->getRedirectBack(null); // fallback to '/'
 
-// Redirections
+// Redirects
 return $this->redirectToRoute('dashboard');
 return $this->redirectToRoute('article.show', ['slug' => 'test']);
-return $this->redirectToPath('/chemin/absolu', 301);
+return $this->redirectToPath('/absolute/path', 301);
 return $this->redirectBack('home', [], 302);
 ```
 
 ### RouterViewExtension
 
-Fichier : `Extension/RouterViewExtension.php`
+File: `Extension/RouterViewExtension.php`
 
-Cette extension ajoute deux fonctions globales dans les templates Twig :
+This extension adds two global functions in Twig templates:
 
 ```twig
-{# Générer un lien depuis le nom d'une route #}
-<a href="{{ path('article.show', {slug: 'mon-article'}) }}">Lire l'article</a>
-<a href="{{ path('home') }}">Accueil</a>
+{# Generate a link from a route name #}
+<a href="{{ path('article.show', {slug: 'my-article'}) }}">Read the article</a>
+<a href="{{ path('home') }}">Home</a>
 
-{# Obtenir le nom de la route courante (utile pour les menus actifs) #}
+{# Get the name of the current route (useful for active menus) #}
 {% if currentRoute() == 'admin.dashboard' %}
     <li class="active">Dashboard</li>
 {% endif %}
@@ -334,27 +334,27 @@ Cette extension ajoute deux fonctions globales dans les templates Twig :
 
 ---
 
-## Commande debug:router
+## The debug:router Command
 
-Fichier : `Commands/DebugRouterCommand.php`
+File: `Commands/DebugRouterCommand.php`
 
-La commande `debug:router` affiche toutes les routes enregistrées pour un projet, avec colorisation par méthode HTTP.
+The `debug:router` command displays every route registered for a project, colorized by HTTP method.
 
 ```bash
-# Afficher toutes les routes du projet "app"
+# Display every route for the "app" project
 php neo debug:router --project=app
 
-# Filtrer par méthode HTTP
+# Filter by HTTP method
 php neo debug:router --project=app --method=POST
 
-# Filtrer par nom de route
+# Filter by route name
 php neo debug:router --project=app --name=admin
 
-# Filtrer par chemin
+# Filter by path
 php neo debug:router --project=app --path=/api
 ```
 
-Exemple de sortie :
+Example output:
 
 ```
 Routes for app (12)
@@ -367,17 +367,17 @@ Routes for app (12)
   DELETE  /admin/users/{id}                  admin.delete_user       App\Controller\AdminController::deleteUser
 ```
 
-Couleurs : `GET` vert, `POST` jaune, `PUT`/`PATCH` cyan, `DELETE` rouge.
+Colors: `GET` green, `POST` yellow, `PUT`/`PATCH` cyan, `DELETE` red.
 
 ---
 
-## Gestion des erreurs
+## Error Handling
 
-| Situation | Exception | Code HTTP |
+| Situation | Exception | HTTP Code |
 |---|---|---|
-| Aucune route ne correspond | `RouteNotFoundException` | 404 |
-| Chemin connu, mauvaise méthode HTTP | `RouterException` | 405 |
-| Paramètre de contrôleur non injectable | `RouterException` | 500 |
-| Erreur dans le contrôleur | `RouterException` (wrapping) | 500 |
+| No route matches | `RouteNotFoundException` | 404 |
+| Known path, wrong HTTP method | `RouterException` | 405 |
+| Non-injectable controller parameter | `RouterException` | 500 |
+| Error inside the controller | `RouterException` (wrapping) | 500 |
 
-Les exceptions `RouteNotFoundException` et `RouterException` étendent `FrameworkException` et sont gérées par le gestionnaire d'erreurs global du framework.
+`RouteNotFoundException` and `RouterException` extend `FrameworkException` and are handled by the framework's global error handler.

@@ -1,43 +1,43 @@
 # Markdown
 
-Parseur Markdown léger sans dépendance externe. Convertit du texte Markdown (ou un fichier `.md`) en tableau d'objets `AbstractBlock`, utilisables directement dans les templates Twig via la fonction `markdown_blocks()` et le filtre `md_inline`.
+Lightweight Markdown parser with no external dependencies. Converts Markdown text (or a `.md` file) into an array of `AbstractBlock` objects, usable directly in Twig templates via the `markdown_blocks()` function and the `md_inline` filter.
 
 ---
 
-## Sommaire
+## Table of Contents
 
-1. [Structure du module](#structure-du-module)
-2. [Hiérarchie des blocs](#hiérarchie-des-blocs)
-    - [AbstractBlock](#abstractblock)
-    - [HeadingBlock](#headingblock)
-    - [ParagraphBlock](#paragraphblock)
-    - [CodeBlock](#codeblock)
-    - [ListBlock](#listblock)
-    - [TableBlock](#tableblock)
-    - [QuoteBlock](#quoteblock)
-    - [HrBlock](#hrblock)
+1. [Module Structure](#module-structure)
+2. [Block Hierarchy](#block-hierarchy)
+   - [AbstractBlock](#abstractblock)
+   - [HeadingBlock](#headingblock)
+   - [ParagraphBlock](#paragraphblock)
+   - [CodeBlock](#codeblock)
+   - [ListBlock](#listblock)
+   - [TableBlock](#tableblock)
+   - [QuoteBlock](#quoteblock)
+   - [HrBlock](#hrblock)
 3. [MarkdownManager](#markdownmanager)
-    - [Méthode `blocks()`](#méthode-blocks)
-    - [Méthode `parse()`](#méthode-parse)
-    - [Méthode `parseFile()`](#méthode-parsefile)
-    - [Méthode `renderInline()`](#méthode-renderinline)
+   - [`blocks()` Method](#blocks-method)
+   - [`parse()` Method](#parse-method)
+   - [`parseFile()` Method](#parsefile-method)
+   - [`renderInline()` Method](#renderinline-method)
 4. [MarkdownViewExtension](#markdownviewextension)
-    - [Fonction Twig `markdown_blocks()`](#fonction-twig-markdown_blocks)
-    - [Filtre Twig `md_inline`](#filtre-twig-md_inline)
-5. [Template de rendu](#template-de-rendu)
+   - [Twig Function `markdown_blocks()`](#twig-function-markdown_blocks)
+   - [Twig Filter `md_inline`](#twig-filter-md_inline)
+5. [Rendering Template](#rendering-template)
 6. [MarkdownModule](#markdownmodule)
 7. [MarkdownException](#markdownexception)
 
 ---
 
-## Structure du module
+## Module Structure
 
 ```
 Tools/Markdown/
-├── MarkdownManager.php                  # Parseur principal
-├── MarkdownModule.php                   # Enregistrement dans le conteneur DI
+├── MarkdownManager.php                  # Main parser
+├── MarkdownModule.php                   # Registration in the DI container
 ├── Block/
-│   ├── AbstractBlock.php                # Classe de base commune
+│   ├── AbstractBlock.php                # Common base class
 │   ├── HeadingBlock.php
 │   ├── ParagraphBlock.php
 │   ├── CodeBlock.php
@@ -46,22 +46,22 @@ Tools/Markdown/
 │   ├── QuoteBlock.php
 │   └── HrBlock.php
 ├── Extension/
-│   └── MarkdownViewExtension.php        # Fonction et filtre Twig
+│   └── MarkdownViewExtension.php        # Twig function and filter
 └── Exception/
-    └── MarkdownException.php            # Exception spécifique
+    └── MarkdownException.php            # Specific exception
 ```
 
 ---
 
-## Hiérarchie des blocs
+## Block Hierarchy
 
-**Dossier :** `Block/`
+**Folder:** `Block/`
 
-`MarkdownManager::parse()` (et donc `blocks()` / `parseFile()`) ne retourne plus des tableaux associatifs génériques, mais une liste d'objets typés, chacun héritant d'`AbstractBlock`. Chaque type de bloc a sa propre forme (propriétés `readonly`), ce qui apporte l'autocomplétion et la vérification statique côté PHP — tout en restant transparent côté Twig, où `block.type`, `block.text`, etc. continuent de fonctionner exactement comme avant (Twig lit indifféremment une clé de tableau ou une propriété publique).
+`MarkdownManager::parse()` (and therefore `blocks()` / `parseFile()`) no longer returns generic associative arrays, but a list of typed objects, each inheriting from `AbstractBlock`. Each block type has its own shape (`readonly` properties), which brings autocompletion and static checking on the PHP side — while remaining transparent on the Twig side, where `block.type`, `block.text`, etc. continue to work exactly as before (Twig reads an array key or a public property indifferently).
 
 ### AbstractBlock
 
-Classe abstraite commune à tous les blocs. Porte uniquement la propriété `type`, fixée par chaque sous-classe.
+Abstract class common to all blocks. Carries only the `type` property, set by each subclass.
 
 ```php
 abstract class AbstractBlock
@@ -74,17 +74,17 @@ abstract class AbstractBlock
 
 ### HeadingBlock
 
-Titre (`#` à `######`).
+Heading (`#` to `######`).
 
 ```php
-public readonly int $level;    // 1 à 6
+public readonly int $level;    // 1 to 6
 public readonly string $text;
-public readonly string $slug;  // Pour les ancres HTML
+public readonly string $slug;  // For HTML anchors
 ```
 
 ### ParagraphBlock
 
-Paragraphe de texte.
+Text paragraph.
 
 ```php
 public readonly string $text;
@@ -92,25 +92,25 @@ public readonly string $text;
 
 ### CodeBlock
 
-Bloc de code délimité par ``` ``` ```.
+Code block delimited by triple backtick fences (```).
 
 ```php
-public readonly string $language; // Vide si non spécifié
+public readonly string $language; // Empty if not specified
 public readonly string $content;
 ```
 
 ### ListBlock
 
-Liste à puces ou numérotée.
+Bulleted or numbered list.
 
 ```php
-public readonly bool $ordered;   // true pour 1. 2. 3. ...
+public readonly bool $ordered;   // true for 1. 2. 3. ...
 public readonly array $items;    // list<string>
 ```
 
 ### TableBlock
 
-Tableau Markdown.
+Markdown table.
 
 ```php
 public readonly array $header;   // list<string>
@@ -119,45 +119,45 @@ public readonly array $rows;     // list<list<string>>
 
 ### QuoteBlock
 
-Citation (`>`).
+Quote (`>`).
 
 ```php
-public readonly string $content; // Lignes jointes par \n
+public readonly string $content; // Lines joined by \n
 ```
 
 ### HrBlock
 
-Séparateur horizontal (`---`, `***`, `___`). Ne porte aucune donnée en dehors de `type`.
+Horizontal separator (`---`, `***`, `___`). Carries no data beyond `type`.
 
 ---
 
 ## MarkdownManager
 
-**Fichier :** `MarkdownManager.php`
+**File:** `MarkdownManager.php`
 
-Point d'entrée du parseur. Accepte aussi bien une chaîne Markdown brute qu'un chemin de fichier `.md`. Les résultats sont mis en cache en mémoire (basé sur le chemin résolu et le `filemtime` du fichier).
+Entry point of the parser. Accepts both a raw Markdown string and a `.md` file path. Results are cached in memory (based on the resolved path and the file's `filemtime`).
 
-### Méthode `blocks()`
+### `blocks()` Method
 
 ```php
 public function blocks(string $input): array // list<AbstractBlock>
 ```
 
-Méthode principale. Son comportement dépend de `$input` :
+Main method. Its behavior depends on `$input`:
 
-- Si `$input` termine par `.md` ou `.markdown` (sans saut de ligne), il est traité comme un chemin de fichier.
-    - Le fichier est cherché en absolu, puis relatif à `ROOT_DIR` ou `publicPath`.
-    - Si le fichier n'est pas trouvé, une `MarkdownException` (code 404) est levée avec un diagnostic indiquant le segment manquant dans l'arborescence.
-- Sinon, `$input` est parsé directement comme contenu Markdown.
+- If `$input` ends with `.md` or `.markdown` (with no line break), it is treated as a file path.
+   - The file is looked up as an absolute path, then relative to `ROOT_DIR` or `publicPath`.
+   - If the file is not found, a `MarkdownException` (code 404) is thrown with a diagnostic indicating the missing segment in the tree.
+- Otherwise, `$input` is parsed directly as Markdown content.
 
 ```php
 $manager = $container->get(MarkdownManager::class);
 
-// Depuis un fichier
+// From a file
 $blocks = $manager->blocks('neo/Core/Asset/README.md');
 
-// Depuis une chaîne
-$blocks = $manager->blocks("# Titre\n\nUn paragraphe.");
+// From a string
+$blocks = $manager->blocks("# Title\n\nA paragraph.");
 
 foreach ($blocks as $block) {
     if ($block instanceof HeadingBlock) {
@@ -166,94 +166,94 @@ foreach ($blocks as $block) {
 }
 ```
 
-### Méthode `parse()`
+### `parse()` Method
 
 ```php
 public function parse(string $markdown): array // list<AbstractBlock>
 ```
 
-Parse une chaîne Markdown et retourne la liste d'objets `AbstractBlock`. Traite les blocs dans l'ordre : `CodeBlock`, `HeadingBlock`, `HrBlock`, `QuoteBlock`, `TableBlock`, `ListBlock`, `ParagraphBlock`.
+Parses a Markdown string and returns the list of `AbstractBlock` objects. Processes blocks in order: `CodeBlock`, `HeadingBlock`, `HrBlock`, `QuoteBlock`, `TableBlock`, `ListBlock`, `ParagraphBlock`.
 
 ```php
-$blocks = $manager->parse("## Titre\n\nContenu.");
+$blocks = $manager->parse("## Title\n\nContent.");
 ```
 
-### Méthode `parseFile()`
+### `parseFile()` Method
 
 ```php
 public function parseFile(string $path): array // list<AbstractBlock>
 ```
 
-Résout le chemin du fichier (absolu ou relatif à la racine du projet), lit son contenu et appelle `parse()`. Le résultat est mis en cache avec la clé `{chemin_résolu}:{filemtime}` pour éviter les re-parsings inutiles.
+Resolves the file path (absolute or relative to the project root), reads its content, and calls `parse()`. The result is cached with the key `{resolved_path}:{filemtime}` to avoid unnecessary re-parsing.
 
-Lève une `MarkdownException` (code 404) si le fichier est introuvable, ou (code 500) s'il ne peut pas être lu.
+Throws a `MarkdownException` (code 404) if the file cannot be found, or (code 500) if it cannot be read.
 
-### Méthode `renderInline()`
+### `renderInline()` Method
 
 ```php
 public function renderInline(string $text): string
 ```
 
-Applique la mise en forme inline sur un texte : échappe d'abord le HTML via `htmlspecialchars`, puis transforme la syntaxe Markdown inline en balises HTML.
+Applies inline formatting to a text: first escapes HTML via `htmlspecialchars`, then converts inline Markdown syntax into HTML tags.
 
-| Syntaxe Markdown | Résultat HTML |
-|------------------|---------------|
-| `` `code` `` | `<code>code</code>` |
-| `![alt](url)` | `<img src="url" alt="alt">` |
-| `[texte](url)` | `<a href="url">texte</a>` |
-| `**gras**` ou `__gras__` | `<strong>gras</strong>` |
-| `*italique*` ou `_italique_` | `<em>italique</em>` |
+| Markdown Syntax          | HTML Result |
+|--------------------------|---------------|
+| `'''code'''`             | `<code>code</code>` |
+| `![alt] (url)`           | `<img src="url" alt="alt">` |
+| `[text] (url)`           | `<a href="url">text</a>` |
+| `**bold**` or `__bold__` | `<strong>bold</strong>` |
+| `*italic*` or `_italic_` | `<em>italic</em>` |
 
 ---
 
 ## MarkdownViewExtension
 
-**Fichier :** `Extension/MarkdownViewExtension.php`
+**File:** `Extension/MarkdownViewExtension.php`
 
-Extension Twig enregistrée automatiquement via l'attribut `#[Extension(type: ExtensionTypeEnum::VIEW)]`. Elle expose une fonction et un filtre Twig. Aucun changement lié à la hiérarchie de blocs : elle délègue simplement à `MarkdownManager`, qui renvoie désormais des objets au lieu de tableaux.
+Twig extension automatically registered via the `#[Extension(type: ExtensionTypeEnum::VIEW)]` attribute. It exposes a Twig function and filter. No change related to the block hierarchy: it simply delegates to `MarkdownManager`, which now returns objects instead of arrays.
 
-### Fonction Twig `markdown_blocks()`
+### Twig Function `markdown_blocks()`
 
-Appelle `MarkdownManager::blocks()` depuis un template Twig.
+Calls `MarkdownManager::blocks()` from a Twig template.
 
 ```twig
-{# Depuis un fichier .md #}
-{% set blocks = markdown_blocks('chemin/vers/fichier.md') %}
+{# From a .md file #}
+{% set blocks = markdown_blocks('path/to/file.md') %}
 
-{# Depuis une variable contenant du Markdown brut #}
+{# From a variable containing raw Markdown #}
 {% set blocks = markdown_blocks(article.content) %}
 ```
 
-### Filtre Twig `md_inline`
+### Twig Filter `md_inline`
 
-Applique `MarkdownManager::renderInline()` sur une chaîne. Marqué `is_safe: html`, le résultat n'est pas ré-échappé par Twig.
+Applies `MarkdownManager::renderInline()` to a string. Marked `is_safe: html`, the result is not re-escaped by Twig.
 
 ```twig
-{# Dans un template #}
+{# In a template #}
 <p>{{ block.text|md_inline|raw }}</p>
 <li>{{ item|md_inline|raw }}</li>
 ```
 
-> **Note :** Le filtre produit déjà du HTML échappé (via `htmlspecialchars`). L'usage de `|raw` est nécessaire uniquement si la config Twig a `auto_escape` activé — ce qui est le cas par défaut dans NeoPHP.
+> **Note:** The filter already produces escaped HTML (via `htmlspecialchars`). Using `|raw` is only necessary if the Twig config has `auto_escape` enabled — which is the default in NeoPHP.
 
 ---
 
-## Template de rendu
+## Rendering Template
 
-NeoPHP inclut un template Twig prêt à l'emploi pour afficher un document Markdown complet.
+NeoPHP includes a ready-to-use Twig template to display a full Markdown document.
 
-**Fichier :** `src/<Projet>/Templates/markdown/document.html.twig`
+**File:** `src/<Project>/Templates/markdown/document.html.twig`
 
 ```twig
 {% include 'markdown/document.html.twig'
     with { blocks: markdown_blocks('neo/Core/Asset/README.md') } %}
 ```
 
-Ce template itère sur les blocs et génère le HTML correspondant pour chaque type (`heading`, `paragraph`, `code`, `list`, `table`, `quote`, `hr`). Il encapsule le tout dans `<div class="markdown-body">`.
+This template iterates over the blocks and generates the corresponding HTML for each type (`heading`, `paragraph`, `code`, `list`, `table`, `quote`, `hr`). It wraps everything in `<div class="markdown-body">`.
 
-Comme Twig accède indifféremment aux clés de tableau et aux propriétés publiques d'un objet, ce template n'a pas eu besoin d'être modifié suite au passage aux objets `AbstractBlock` — `block.type`, `block.text`, `block.level`, etc. continuent de fonctionner à l'identique.
+Since Twig accesses array keys and an object's public properties indifferently, this template did not need to be modified after the switch to `AbstractBlock` objects — `block.type`, `block.text`, `block.level`, etc. continue to work identically.
 
-**Affichage personnalisé sans le template :**
+**Custom display without the template:**
 
 ```twig
 {% for block in markdown_blocks('docs/guide.md') %}
@@ -271,12 +271,12 @@ Comme Twig accède indifféremment aux clés de tableau et aux propriétés publ
 
 ## MarkdownModule
 
-**Fichier :** `MarkdownModule.php`
+**File:** `MarkdownModule.php`
 
-Enregistre le `MarkdownManager` comme service singleton dans le conteneur DI. Déclare `ViewModule` comme dépendance afin que la `MarkdownViewExtension` puisse être injectée dans Twig.
+Registers `MarkdownManager` as a singleton service in the DI container. Declares `ViewModule` as a dependency so that `MarkdownViewExtension` can be injected into Twig.
 
 ```php
-// Résolution directe depuis le conteneur
+// Direct resolution from the container
 $manager = $container->get(MarkdownManager::class);
 ```
 
@@ -284,20 +284,20 @@ $manager = $container->get(MarkdownManager::class);
 
 ## MarkdownException
 
-**Fichier :** `Exception/MarkdownException.php`
+**File:** `Exception/MarkdownException.php`
 
-Étend `FrameworkException`. Levée dans deux cas :
+Extends `FrameworkException`. Thrown in two cases:
 
 | Code | Cause |
 |------|-------|
-| `404` | Fichier Markdown introuvable. Le message inclut un diagnostic du segment manquant dans l'arborescence. |
-| `500` | Fichier trouvé mais illisible (`file_get_contents` a échoué). |
+| `404` | Markdown file not found. The message includes a diagnostic of the missing segment in the tree. |
+| `500` | File found but unreadable (`file_get_contents` failed). |
 
 ```php
 try {
     $blocks = $manager->blocks('docs/missing.md');
 } catch (\Neo\Core\Tools\Markdown\Exception\MarkdownException $e) {
     // $e->getCode() === 404
-    // $e->getMessage() contient le chemin résolu et le premier segment manquant
+    // $e->getMessage() contains the resolved path and the first missing segment
 }
 ```

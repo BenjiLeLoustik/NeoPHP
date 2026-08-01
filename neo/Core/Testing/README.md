@@ -1,45 +1,45 @@
 # Testing
 
-Le module Testing fournit l'infrastructure complète de tests pour les applications NeoPHP. Il s'appuie sur PHPUnit et propose quatre classes de base spécialisées, un système d'attributs PHP 8 pour déclarer les tests directement sur les classes métier, ainsi qu'un générateur automatique de fichiers de test.
+The Testing module provides the complete testing infrastructure for NeoPHP applications. It builds on PHPUnit and offers four specialized base classes, a PHP 8 attribute system for declaring tests directly on business classes, as well as an automatic test file generator.
 
 ---
 
-## Sommaire
+## Table of Contents
 
-1. [Structure du module](#structure-du-module)
-2. [Classes de base](#classes-de-base)
+1. [Module Structure](#module-structure)
+2. [Base Classes](#base-classes)
    - [TestCase](#testcase)
    - [DatabaseTestCase](#databasetestcase)
    - [FeatureTestCase](#featuretestcase)
    - [MiddlewareTestCase](#middlewaretestcase)
-3. [Attribut #[Test] et enum TestType](#attribut-test-et-enum-testtype)
-4. [Scanner et Générateur automatique](#scanner-et-générateur-automatique)
-5. [Commandes CLI](#commandes-cli)
-6. [Conventions de nommage et structure](#conventions-de-nommage-et-structure)
+3. [The #[Test] Attribute and the TestType Enum](#the-test-attribute-and-the-testtype-enum)
+4. [Scanner and Automatic Generator](#scanner-and-automatic-generator)
+5. [CLI Commands](#cli-commands)
+6. [Naming Conventions and Structure](#naming-conventions-and-structure)
 
 ---
 
-## Structure du module
+## Module Structure
 
 ```
 Testing/
-├── TestCase.php                    # Classe de base pour les tests unitaires
-├── DatabaseTestCase.php            # Classe de base pour les tests de base de données
-├── FeatureTestCase.php             # Classe de base pour les tests HTTP / feature
-├── MiddlewareTestCase.php          # Classe de base pour les tests de middleware
+├── TestCase.php                    # Base class for unit tests
+├── DatabaseTestCase.php            # Base class for database tests
+├── FeatureTestCase.php             # Base class for HTTP / feature tests
+├── MiddlewareTestCase.php          # Base class for middleware tests
 ├── Attribute/
-│   └── Test.php                   # Attribut PHP 8 #[Test]
+│   └── Test.php                   # PHP 8 #[Test] attribute
 ├── Enum/
-│   └── TestType.php               # Enum des types de tests (unit, feature, database, middleware)
+│   └── TestType.php               # Enum of test types (unit, feature, database, middleware)
 ├── Context/
-│   ├── TestClassContext.php        # Contexte d'une classe analysée
-│   └── TestMethodContext.php       # Contexte d'une méthode analysée
+│   ├── TestClassContext.php        # Context of an analyzed class
+│   └── TestMethodContext.php       # Context of an analyzed method
 ├── Scanner/
-│   └── TestScanner.php            # Scanner de classes portant l'attribut #[Test]
+│   └── TestScanner.php            # Scanner for classes carrying the #[Test] attribute
 ├── Generator/
-│   └── TestGenerator.php          # Générateur de fichiers de test
+│   └── TestGenerator.php          # Test file generator
 ├── Scaffold/
-│   └── TestScaffolder.php         # Création de la structure Tests/ initiale
+│   └── TestScaffolder.php         # Creation of the initial Tests/ structure
 ├── Template/
 │   ├── UnitTestTemplate.php
 │   ├── FeatureTestTemplate.php
@@ -55,46 +55,46 @@ Testing/
 
 ---
 
-## Classes de base
+## Base Classes
 
 ### TestCase
 
-`Neo\Core\Testing\TestCase` est la classe mère pour tous les tests **unitaires**. Elle initialise l'application NeoPHP et expose le conteneur d'injection de dépendances.
+`Neo\Core\Testing\TestCase` is the parent class for all **unit** tests. It bootstraps the NeoPHP application and exposes the dependency injection container.
 
 ```php
 use Neo\Core\Testing\TestCase;
 
-class MonServiceTest extends TestCase
+class MyServiceTest extends TestCase
 {
-    public function test_calcul(): void
+    public function test_calculation(): void
     {
-        $service = $this->get(MonService::class);
-        $this->assertSame(42, $service->calculer());
+        $service = $this->get(MyService::class);
+        $this->assertSame(42, $service->calculate());
     }
 }
 ```
 
-**Méthodes disponibles :**
+**Available Methods:**
 
-| Méthode | Description |
+| Method | Description |
 |---|---|
-| `get(string $id): mixed` | Résout un service depuis le conteneur DI |
-| `swap(string $id, mixed $value): void` | Remplace un service dans le conteneur (mock) |
+| `get(string $id): mixed` | Resolves a service from the DI container |
+| `swap(string $id, mixed $value): void` | Replaces a service in the container (mock) |
 
-L'instance de `App` est partagée (propriété `static $app`) entre les méthodes d'un même test pour éviter de réinitialiser l'application à chaque test.
+The `App` instance is shared (static `static $app` property) between methods of the same test to avoid re-initializing the application for every test.
 
 ```php
-class MonTest extends TestCase
+class MyTest extends TestCase
 {
-    public function test_avec_mock(): void
+    public function test_with_mock(): void
     {
-        // Remplace le mailer réel par un faux
+        // Replace the real mailer with a fake one
         $this->swap(Mailer::class, new FakeMailer());
 
-        $service = $this->get(MonService::class);
-        $service->envoyerEmail('test@example.com');
+        $service = $this->get(MyService::class);
+        $service->sendEmail('test@example.com');
 
-        $this->assertTrue(true); // pas d'exception = succès
+        $this->assertTrue(true); // no exception = success
     }
 }
 ```
@@ -103,14 +103,14 @@ class MonTest extends TestCase
 
 ### DatabaseTestCase
 
-`Neo\Core\Testing\DatabaseTestCase` est spécialisée pour les tests qui interagissent avec la base de données. Chaque test s'exécute dans une **transaction automatiquement annulée** (`rollBack`) à la fin, garantissant l'isolation complète sans polluer la base.
+`Neo\Core\Testing\DatabaseTestCase` is specialized for tests that interact with the database. Each test runs inside a **transaction that is automatically rolled back** (`rollBack`) at the end, guaranteeing complete isolation without polluting the database.
 
 ```php
 use Neo\Core\Testing\DatabaseTestCase;
 
 class UserRepositoryTest extends DatabaseTestCase
 {
-    public function test_insertion_utilisateur(): void
+    public function test_user_insertion(): void
     {
         $id = $this->insertFixture('users', [
             'name'  => 'Alice',
@@ -121,60 +121,60 @@ class UserRepositoryTest extends DatabaseTestCase
         $this->assertIsInt((int) $id);
     }
 
-    public function test_suppression_utilisateur(): void
+    public function test_user_deletion(): void
     {
         $this->insertFixture('users', ['name' => 'Bob', 'email' => 'bob@example.com']);
 
-        // Après suppression logique
-        $this->assertDatabaseMissing('users', ['email' => 'inconnu@example.com']);
+        // After logical deletion
+        $this->assertDatabaseMissing('users', ['email' => 'unknown@example.com']);
     }
 }
 ```
 
-**Méthodes disponibles :**
+**Available Methods:**
 
-| Méthode | Description |
+| Method | Description |
 |---|---|
-| `insertFixture(string $table, array $data): int\|string` | Insère une ligne dans la table et retourne le dernier ID inséré |
-| `fetchAll(string $table, string $where, array $bindings): array` | Récupère toutes les lignes d'une table |
-| `assertDatabaseHas(string $table, array $data): void` | Vérifie qu'une ligne correspondant aux critères existe |
-| `assertDatabaseMissing(string $table, array $data): void` | Vérifie qu'aucune ligne ne correspond aux critères |
-| `get(string $id): mixed` | Résout un service DI |
-| `swap(string $id, mixed $value): void` | Remplace un service (mock) |
+| `insertFixture(string $table, array $data): int\|string` | Inserts a row into the table and returns the last inserted ID |
+| `fetchAll(string $table, string $where, array $bindings): array` | Retrieves all rows from a table |
+| `assertDatabaseHas(string $table, array $data): void` | Checks that a row matching the criteria exists |
+| `assertDatabaseMissing(string $table, array $data): void` | Checks that no row matches the criteria |
+| `get(string $id): mixed` | Resolves a DI service |
+| `swap(string $id, mixed $value): void` | Replaces a service (mock) |
 
-La propriété `$this->pdo` expose directement la connexion PDO active si des requêtes plus complexes sont nécessaires.
+The `$this->pdo` property directly exposes the active PDO connection if more complex queries are needed.
 
 ---
 
 ### FeatureTestCase
 
-`Neo\Core\Testing\FeatureTestCase` permet de tester les routes HTTP de l'application en envoyant de **vraies requêtes** à travers le kernel NeoPHP. Les réponses sont des objets `Response` complets.
+`Neo\Core\Testing\FeatureTestCase` allows testing the application's HTTP routes by sending **real requests** through the NeoPHP kernel. Responses are full `Response` objects.
 
 ```php
 use Neo\Core\Testing\FeatureTestCase;
 
 class ArticleControllerTest extends FeatureTestCase
 {
-    public function test_liste_articles(): void
+    public function test_article_list(): void
     {
         $response = $this->get('/articles');
 
         $this->assertStatus(200, $response);
-        $this->assertSeeText('Mes articles', $response);
+        $this->assertSeeText('My articles', $response);
     }
 
-    public function test_creation_article(): void
+    public function test_article_creation(): void
     {
         $response = $this->post('/articles', [
-            'title'   => 'Mon article',
-            'content' => 'Contenu de test',
+            'title'   => 'My article',
+            'content' => 'Test content',
         ]);
 
         $this->assertStatus(201, $response);
         $this->assertJsonKey('id', $response);
     }
 
-    public function test_suppression_article(): void
+    public function test_article_deletion(): void
     {
         $response = $this->delete('/articles/1', [
             'Authorization' => 'Bearer token123',
@@ -183,18 +183,18 @@ class ArticleControllerTest extends FeatureTestCase
         $this->assertStatus(200, $response);
     }
 
-    public function test_mise_a_jour_article(): void
+    public function test_article_update(): void
     {
-        $response = $this->put('/articles/1', ['title' => 'Nouveau titre']);
+        $response = $this->put('/articles/1', ['title' => 'New title']);
 
         $this->assertStatus(200, $response);
     }
 }
 ```
 
-**Méthodes HTTP disponibles :**
+**Available HTTP Methods:**
 
-| Méthode | Signature |
+| Method | Signature |
 |---|---|
 | `get` | `get(string $uri, array $headers = []): Response` |
 | `post` | `post(string $uri, array $body = [], array $headers = []): Response` |
@@ -202,30 +202,30 @@ class ArticleControllerTest extends FeatureTestCase
 | `delete` | `delete(string $uri, array $headers = []): Response` |
 | `request` | `request(string $method, string $uri, array $body, array $headers): Response` |
 
-**Assertions disponibles :**
+**Available Assertions:**
 
 | Assertion | Description |
 |---|---|
-| `assertStatus(int $expected, Response $response)` | Vérifie le code HTTP de la réponse |
-| `assertSeeText(string $text, Response $response)` | Vérifie la présence d'un texte dans la réponse |
-| `assertJsonKey(string $key, Response $response)` | Vérifie qu'une clé existe dans la réponse JSON |
+| `assertStatus(int $expected, Response $response)` | Checks the response's HTTP status code |
+| `assertSeeText(string $text, Response $response)` | Checks that a text is present in the response |
+| `assertJsonKey(string $key, Response $response)` | Checks that a key exists in the JSON response |
 
-Les exceptions `FrameworkException` sont interceptées et converties en réponses avec le code HTTP approprié (par défaut 500).
+`FrameworkException` exceptions are caught and converted into responses with the appropriate HTTP code (500 by default).
 
 ---
 
 ### MiddlewareTestCase
 
-`Neo\Core\Testing\MiddlewareTestCase` est dédiée aux tests de **middlewares**. Elle permet d'instancier un middleware via le conteneur DI et de vérifier son comportement (passage ou blocage).
+`Neo\Core\Testing\MiddlewareTestCase` is dedicated to testing **middlewares**. It allows instantiating a middleware via the DI container and checking its behavior (pass or block).
 
 ```php
 use Neo\Core\Testing\MiddlewareTestCase;
 
 class AuthMiddlewareTest extends MiddlewareTestCase
 {
-    public function test_middleware_autorise_utilisateur_connecte(): void
+    public function test_middleware_allows_logged_in_user(): void
     {
-        // Simuler un utilisateur connecté
+        // Simulate a logged-in user
         $this->swap(AuthService::class, new FakeAuthService(authenticated: true));
 
         $middleware = $this->makeMiddleware(AuthMiddleware::class);
@@ -233,7 +233,7 @@ class AuthMiddlewareTest extends MiddlewareTestCase
         $this->assertMiddlewarePasses($middleware);
     }
 
-    public function test_middleware_bloque_utilisateur_non_connecte(): void
+    public function test_middleware_blocks_logged_out_user(): void
     {
         $this->swap(AuthService::class, new FakeAuthService(authenticated: false));
 
@@ -244,124 +244,124 @@ class AuthMiddlewareTest extends MiddlewareTestCase
 }
 ```
 
-**Méthodes disponibles :**
+**Available Methods:**
 
-| Méthode | Description |
+| Method | Description |
 |---|---|
-| `makeMiddleware(string $class, array $params = []): MiddlewareInterface` | Instancie un middleware via le conteneur |
-| `assertMiddlewarePasses(MiddlewareInterface $m)` | Vérifie que `handle()` retourne `true` |
-| `assertMiddlewareBlocks(MiddlewareInterface $m)` | Vérifie que `handle()` retourne `false` ou lève une `FrameworkException` |
-| `assertMiddlewareBlocksWithCode(MiddlewareInterface $m, int $code)` | Vérifie que le middleware lève une `FrameworkException` avec le code HTTP précis |
-| `get(string $id): mixed` | Résout un service DI |
-| `swap(string $id, mixed $value): void` | Remplace un service (mock) |
+| `makeMiddleware(string $class, array $params = []): MiddlewareInterface` | Instantiates a middleware via the container |
+| `assertMiddlewarePasses(MiddlewareInterface $m)` | Checks that `handle()` returns `true` |
+| `assertMiddlewareBlocks(MiddlewareInterface $m)` | Checks that `handle()` returns `false` or throws a `FrameworkException` |
+| `assertMiddlewareBlocksWithCode(MiddlewareInterface $m, int $code)` | Checks that the middleware throws a `FrameworkException` with the exact HTTP code |
+| `get(string $id): mixed` | Resolves a DI service |
+| `swap(string $id, mixed $value): void` | Replaces a service (mock) |
 
 ---
 
-## Attribut #[Test] et enum TestType
+## The #[Test] Attribute and the TestType Enum
 
-### Attribut #[Test]
+### The #[Test] Attribute
 
-L'attribut `Neo\Core\Testing\Attribute\Test` peut être posé sur une **classe** ou une **méthode** pour indiquer au générateur automatique comment créer le test correspondant.
+The `Neo\Core\Testing\Attribute\Test` attribute can be placed on a **class** or a **method** to tell the automatic generator how to create the corresponding test.
 
 ```php
 use Neo\Core\Testing\Attribute\Test;
 
 #[Test(type: 'unit')]
-class MonService
+class MyService
 {
     #[Test(cases: [['input' => 'foo', 'expected' => 'FOO']])]
-    public function transformer(string $input): string
+    public function transform(string $input): string
     {
         return strtoupper($input);
     }
 
     #[Test(skip: true)]
-    public function methodeTropComplexe(): void
+    public function tooComplexMethod(): void
     {
-        // ce test sera ignoré par le générateur
+        // this test will be ignored by the generator
     }
 }
 ```
 
-**Paramètres de l'attribut :**
+**Attribute Parameters:**
 
-| Paramètre | Type | Défaut | Description |
+| Parameter | Type | Default | Description |
 |---|---|---|---|
-| `type` | `string` | `'auto'` | Type de test : `unit`, `feature`, `database`, `middleware`, `auto` |
-| `cases` | `array` | `[]` | Jeux de données pour les data providers |
-| `route` | `?string` | `null` | Route HTTP à appeler (tests feature) |
-| `httpMethod` | `string` | `'GET'` | Méthode HTTP (tests feature) |
-| `dataset` | `array` | `[]` | Données statiques partagées |
-| `skip` | `bool` | `false` | Ignore cette classe/méthode lors de la génération |
-| `extends` | `?string` | `null` | Classe parente personnalisée à étendre |
+| `type` | `string` | `'auto'` | Test type: `unit`, `feature`, `database`, `middleware`, `auto` |
+| `cases` | `array` | `[]` | Data sets for data providers |
+| `route` | `?string` | `null` | HTTP route to call (feature tests) |
+| `httpMethod` | `string` | `'GET'` | HTTP method (feature tests) |
+| `dataset` | `array` | `[]` | Shared static data |
+| `skip` | `bool` | `false` | Skips this class/method during generation |
+| `extends` | `?string` | `null` | Custom parent class to extend |
 
-### Enum TestType
+### TestType Enum
 
-`Neo\Core\Testing\Enum\TestType` détermine quel `TestCase` utiliser selon le contexte.
+`Neo\Core\Testing\Enum\TestType` determines which `TestCase` to use depending on the context.
 
-| Valeur | TestCase généré | Sous-dossier |
+| Value | Generated TestCase | Subfolder |
 |---|---|---|
 | `unit` | `TestCase` | `Unit/` |
 | `feature` | `FeatureTestCase` | `Feature/` |
 | `database` | `DatabaseTestCase` | `Database/` |
 | `middleware` | `MiddlewareTestCase` | `Middleware/` |
-| `auto` | Détecté depuis le FQCN | (varie) |
+| `auto` | Detected from the FQCN | (varies) |
 
-La détection automatique (`auto`) inspecte le nom de la classe :
-- Contient `Repository` → `DatabaseTestCase`
-- Contient `Controller` → `FeatureTestCase`
-- Contient `Middleware` → `MiddlewareTestCase`
-- Sinon → `TestCase`
+Automatic detection (`auto`) inspects the class name:
+- Contains `Repository` → `DatabaseTestCase`
+- Contains `Controller` → `FeatureTestCase`
+- Contains `Middleware` → `MiddlewareTestCase`
+- Otherwise → `TestCase`
 
 ---
 
-## Scanner et Générateur automatique
+## Scanner and Automatic Generator
 
 ### TestScanner
 
-`Neo\Core\Testing\Scanner\TestScanner` parcourt récursivement le dossier source (`src/MonProjet/`) à la recherche de fichiers PHP portant l'attribut `#[Test]`. Il retourne une liste de `TestClassContext`.
+`Neo\Core\Testing\Scanner\TestScanner` recursively walks the source folder (`src/MyProject/`) looking for PHP files carrying the `#[Test]` attribute. It returns a list of `TestClassContext`.
 
 ```php
 $scanner = new TestScanner();
-$contexts = $scanner->scan('/chemin/vers/src/MonProjet');
+$contexts = $scanner->scan('/path/to/src/MyProject');
 
 foreach ($contexts as $ctx) {
-    echo $ctx->fqcn;       // Nom complet de la classe
-    echo $ctx->shortName;  // Nom court
+    echo $ctx->fqcn;       // Full class name
+    echo $ctx->shortName;  // Short name
     echo $ctx->type->value; // 'unit', 'feature', etc.
 }
 ```
 
 ### TestGenerator
 
-`Neo\Core\Testing\Generator\TestGenerator` utilise le `TestScanner` pour analyser le projet et génère les fichiers de test correspondants selon les templates disponibles.
+`Neo\Core\Testing\Generator\TestGenerator` uses `TestScanner` to analyze the project and generates the corresponding test files based on the available templates.
 
 ```php
 $generator = new TestGenerator($container);
 
 $result = $generator->generate(
-    force: false,      // Ne pas écraser les fichiers existants
-    onlyType: 'unit',  // Générer uniquement les tests unitaires
-    dryRun: true,      // Simuler sans écrire
+    force: false,      // Do not overwrite existing files
+    onlyType: 'unit',  // Generate only unit tests
+    dryRun: true,      // Simulate without writing
 );
 
 // $result = ['generated' => [...], 'skipped' => [...]]
 ```
 
-Les templates utilisés varient selon le type et le contexte de la classe :
-- Classe dans un namespace `Model` (sans `Repository` ni `Controller`) → `ModelTestTemplate`
+The templates used vary depending on the type and context of the class:
+- Class in a `Model` namespace (without `Repository` or `Controller`) → `ModelTestTemplate`
 - Type `database` → `DatabaseTestTemplate`
 - Type `feature` → `FeatureTestTemplate`
 - Type `middleware` → `MiddlewareTestTemplate`
-- Sinon → `UnitTestTemplate`
+- Otherwise → `UnitTestTemplate`
 
 ---
 
-## Commandes CLI
+## CLI Commands
 
-### `make:test` — Générer un test manuellement
+### `make:test` — Generate a Test Manually
 
-Crée un fichier de test PHPUnit à partir d'un squelette adapté au type choisi.
+Creates a PHPUnit test file from a skeleton adapted to the chosen type.
 
 ```bash
 php neo make:test UserTest --project=Blog --type=unit
@@ -369,20 +369,20 @@ php neo make:test ArticleControllerTest --project=Blog --type=feature
 php neo make:test UserRepositoryTest --project=Blog --type=database --force
 ```
 
-**Options :**
+**Options:**
 
 | Option | Description |
 |---|---|
-| `testName` (argument) | Nom de la classe de test (suffixe `Test` ajouté automatiquement) |
-| `--project` | Projet cible (dossier dans `src/`) |
-| `--type` | Type : `unit`, `feature`, `database`, `middleware` |
-| `--force` | Écrase le fichier s'il existe déjà |
+| `testName` (argument) | Name of the test class (`Test` suffix added automatically) |
+| `--project` | Target project (folder in `src/`) |
+| `--type` | Type: `unit`, `feature`, `database`, `middleware` |
+| `--force` | Overwrites the file if it already exists |
 
-Fichier généré dans : `src/MonProjet/Tests/Unit/UserTest.php`
+File generated at: `src/MyProject/Tests/Unit/UserTest.php`
 
-### `make:test:auto` — Génération automatique depuis les attributs
+### `make:test:auto` — Automatic Generation from Attributes
 
-Scanne le projet à la recherche de classes annotées `#[Test]` et génère les tests correspondants.
+Scans the project for classes annotated with `#[Test]` and generates the corresponding tests.
 
 ```bash
 php neo make:test:auto --project=Blog
@@ -391,36 +391,36 @@ php neo make:test:auto --project=Blog --dry-run
 php neo make:test:auto --project=Blog --force
 ```
 
-**Options :**
+**Options:**
 
 | Option | Description |
 |---|---|
-| `--project` | Projet cible |
-| `--force` | Écrase les fichiers existants |
-| `--only` | Filtre par type : `unit`, `feature`, `database`, `middleware` |
-| `--dry-run` | Affiche ce qui serait généré sans écrire |
+| `--project` | Target project |
+| `--force` | Overwrites existing files |
+| `--only` | Filters by type: `unit`, `feature`, `database`, `middleware` |
+| `--dry-run` | Shows what would be generated without writing |
 
-### `run:test` — Lancer un test ciblé
+### `run:test` — Run a Targeted Test
 
-Exécute un fichier de test PHPUnit précis avec `--testdox`.
+Runs a specific PHPUnit test file with `--testdox`.
 
 ```bash
 php neo run:test UserTest --project=Blog
 php neo run:test UserTest --project=Blog --type=unit --filter=test_creation
 ```
 
-**Options :**
+**Options:**
 
 | Option | Description |
 |---|---|
-| `testName` (argument) | Nom de la classe de test |
-| `--project` | Projet cible |
-| `--type` | Restreint la recherche au sous-dossier du type |
-| `--filter` | Filtre PHPUnit sur le nom de méthode |
+| `testName` (argument) | Name of the test class |
+| `--project` | Target project |
+| `--type` | Restricts the search to the type's subfolder |
+| `--filter` | PHPUnit filter on the method name |
 
-### `run:test:all` — Lancer tous les tests d'un projet
+### `run:test:all` — Run All of a Project's Tests
 
-Exécute la suite complète via `phpunit.xml` du projet.
+Runs the full suite via the project's `phpunit.xml`.
 
 ```bash
 php neo run:test:all --project=Blog
@@ -428,29 +428,29 @@ php neo run:test:all --project=Blog --coverage
 php neo run:test:all --project=Blog --format=html --stop-on-failure
 ```
 
-**Options :**
+**Options:**
 
 | Option | Description |
 |---|---|
-| `--project` | Projet cible |
-| `--format` | Format de sortie : `console`, `html`, `both` |
-| `--coverage` | Génère un rapport de couverture (nécessite Xdebug ou PCOV) |
-| `--stop-on-failure` | Arrête l'exécution au premier échec |
+| `--project` | Target project |
+| `--format` | Output format: `console`, `html`, `both` |
+| `--coverage` | Generates a coverage report (requires Xdebug or PCOV) |
+| `--stop-on-failure` | Stops execution on the first failure |
 
-Les rapports HTML sont générés dans `src/MonProjet/Storage/reports/`.
+HTML reports are generated in `src/MyProject/Storage/reports/`.
 
 ---
 
-## Conventions de nommage et structure
+## Naming Conventions and Structure
 
-La structure de tests attendue dans chaque projet :
+The expected test structure in each project:
 
 ```
-src/MonProjet/
+src/MyProject/
 └── Tests/
     ├── phpunit.xml
     ├── Unit/
-    │   └── MonServiceTest.php
+    │   └── MyServiceTest.php
     ├── Feature/
     │   └── ArticleControllerTest.php
     ├── Database/
@@ -459,6 +459,6 @@ src/MonProjet/
         └── AuthMiddlewareTest.php
 ```
 
-- Le nom de la classe de test doit toujours se terminer par `Test` (ajouté automatiquement si absent).
-- Les namespaces suivent la convention `Neo\Src\MonProjet\Tests\{Type}`.
-- Chaque test doit étendre la classe de base correspondante à son type.
+- The test class name must always end with `Test` (added automatically if absent).
+- Namespaces follow the convention `Neo\Src\MyProject\Tests\{Type}`.
+- Each test must extend the base class corresponding to its type.

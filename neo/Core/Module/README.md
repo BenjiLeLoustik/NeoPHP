@@ -1,36 +1,36 @@
 # Module
 
-Le sous-système `Module` est le point d'entrée de toute fonctionnalité du framework NeoPHP. Il définit un contrat uniforme (`ModuleInterface`) que chaque composant doit respecter, et fournit un gestionnaire (`ModuleManager`) capable de découvrir, ordonner et initialiser automatiquement tous les modules présents dans le projet.
+The `Module` subsystem is the entry point for every feature of the NeoPHP framework. It defines a uniform contract (`ModuleInterface`) that every component must follow, and provides a manager (`ModuleManager`) capable of automatically discovering, ordering, and initializing every module present in the project.
 
 ---
 
-## Sommaire
+## Summary
 
-1. [Concepts fondamentaux](#concepts-fondamentaux)
+1. [Core Concepts](#core-concepts)
 2. [ModuleInterface](#moduleinterface)
 3. [ModuleManager](#modulemanager)
 4. [ModuleException](#moduleexception)
-5. [Créer un module personnalisé](#créer-un-module-personnalisé)
-6. [Cycle de vie d'un module](#cycle-de-vie-dun-module)
-7. [Résolution des dépendances](#résolution-des-dépendances)
+5. [Creating a Custom Module](#creating-a-custom-module)
+6. [Module Lifecycle](#module-lifecycle)
+7. [Dependency Resolution](#dependency-resolution)
 
 ---
 
-## Concepts fondamentaux
+## Core Concepts
 
-Un **module** dans NeoPHP est une classe dont le nom se termine par `Module.php` et qui implémente `ModuleInterface`. Le framework parcourt récursivement un répertoire de base à la recherche de ces classes, les charge dans le bon ordre selon leurs dépendances, puis les initialise dans le conteneur d'injection de dépendances.
+A **module** in NeoPHP is a class whose name ends with `Module.php` and which implements `ModuleInterface`. The framework recursively scans a base directory looking for these classes, loads them in the correct order based on their dependencies, then initializes them in the dependency injection container.
 
-Les modules jouent trois rôles :
+Modules play three roles:
 
-- **Découverte** : le `ModuleManager` trouve automatiquement tous les modules via la réflexion PHP.
-- **Enregistrement** : chaque module déclare ses liaisons dans le conteneur DI via `register()`.
-- **Initialisation** : chaque module retourne un objet "manager" via `init()` qui est ensuite disponible dans le conteneur sous l'alias `<nom>.manager`.
+- **Discovery**: `ModuleManager` automatically finds every module through PHP reflection.
+- **Registration**: each module declares its bindings in the DI container via `register()`.
+- **Initialization**: each module returns a "manager" object via `init()`, which then becomes available in the container under the `<name>.manager` alias.
 
 ---
 
 ## ModuleInterface
 
-Fichier : `Interface/ModuleInterface.php`
+File: `Interface/ModuleInterface.php`
 
 ```php
 namespace Neo\Core\Module\Interface;
@@ -40,75 +40,75 @@ use Neo\Core\DI\Container;
 interface ModuleInterface
 {
     /**
-     * Retourne les classes de modules dont ce module dépend.
+     * Returns the module classes this module depends on.
      * @return array<class-string>
      */
     public function dependencies(): array;
 
     /**
-     * Enregistre les liaisons dans le conteneur DI (appelé avant init).
+     * Registers bindings in the DI container (called before init).
      */
     public function register(Container $container): void;
 
     /**
-     * Initialise le module et retourne son objet principal (manager, service...).
+     * Initializes the module and returns its main object (manager, service...).
      */
     public function init(Container $container): object;
 }
 ```
 
-### Contrat
+### Contract
 
-| Méthode | Rôle | Moment d'appel |
+| Method | Role | When it's called |
 |---|---|---|
-| `dependencies()` | Déclare les modules prérequis | Avant `register()` et `init()` |
-| `register()` | Lie les classes au conteneur DI | Avant `init()` |
-| `init()` | Initialise et retourne le manager | Après `register()` de tous les modules ordonnés |
+| `dependencies()` | Declares the required modules | Before `register()` and `init()` |
+| `register()` | Binds classes to the DI container | Before `init()` |
+| `init()` | Initializes and returns the manager | After `register()` has run for every ordered module |
 
 ---
 
 ## ModuleManager
 
-Fichier : `ModuleManager.php`
+File: `ModuleManager.php`
 
-### Découverte automatique : `discover()`
+### Automatic Discovery: `discover()`
 
 ```php
 $manager = new ModuleManager($container);
-$manager->discover('/chemin/vers/neo/Core');
+$manager->discover('/path/to/neo/Core');
 ```
 
-La méthode `discover()` parcourt récursivement le répertoire fourni. Elle sélectionne uniquement les fichiers dont le nom se termine par `Module.php`, extrait le FQCN (namespace + classe) via des expressions régulières sur le code source, vérifie que la classe implémente bien `ModuleInterface`, et exclut par défaut les classes situées dans des namespaces `\Tests\` ou `\Fixture\`.
+The `discover()` method recursively walks the provided directory. It only selects files whose name ends with `Module.php`, extracts the FQCN (namespace + class) through regular expressions on the source code, checks that the class does implement `ModuleInterface`, and by default excludes classes located in `\Tests\` or `\Fixture\` namespaces.
 
 ```php
-// Exclure les fixtures de test (comportement par défaut)
+// Exclude test fixtures (default behavior)
 $manager->discover($basePath, excludeTestFixtures: true);
 
-// Inclure tout (utile pour les tests)
+// Include everything (useful for tests)
 $manager->discover($basePath, excludeTestFixtures: false);
 ```
 
-### Démarrage : `boot()`
+### Startup: `boot()`
 
 ```php
 $manager->boot();
 ```
 
-La méthode `boot()` :
+The `boot()` method:
 
-1. Calcule l'ordre topologique des modules via `resolveDependencyOrder()`.
-2. Pour chaque module (dans l'ordre) :
-   - Instancie la classe du module.
-   - Appelle `register($container)`.
-   - Injecte les résultats des modules dépendants comme sous-clés dans le conteneur (ex. `router.configModule`).
-   - Appelle `init($container)` et récupère le résultat.
-   - Enregistre le résultat dans le conteneur sous `<alias>.manager` (ex. `router.manager`).
+1. Computes the topological order of modules via `resolveDependencyOrder()`.
+2. For each module (in order):
+   - Instantiates the module class.
+   - Calls `register($container)`.
+   - Injects the results of dependent modules as sub-keys in the container (e.g. `router.configModule`).
+   - Calls `init($container)` and retrieves the result.
+   - Registers the result in the container under `<alias>.manager` (e.g. `router.manager`).
 
-### Dérivation de l'alias
+### Alias Derivation
 
-Le `ModuleManager` dérive automatiquement un alias court à partir du nom de la classe. Le suffixe `Module` est supprimé et la première lettre est mise en minuscule :
+`ModuleManager` automatically derives a short alias from the class name. The `Module` suffix is removed and the first letter is lowercased:
 
-| Classe | Alias |
+| Class | Alias |
 |---|---|
 | `RouterModule` | `router` |
 | `ProfilerModule` | `profiler` |
@@ -118,7 +118,7 @@ Le `ModuleManager` dérive automatiquement un alias court à partir du nom de la
 
 ## ModuleException
 
-Fichier : `Exception/ModuleException.php`
+File: `Exception/ModuleException.php`
 
 ```php
 namespace Neo\Core\Module\Exception;
@@ -128,28 +128,28 @@ use Neo\Core\Error\Exception\FrameworkException;
 class ModuleException extends FrameworkException {}
 ```
 
-`ModuleException` étend `FrameworkException` et est levée dans deux situations :
+`ModuleException` extends `FrameworkException` and is thrown in two situations:
 
-**Dépendance circulaire :**
+**Circular dependency:**
 ```
 Circular dependency detected in module "App\RouterModule".
-Code HTTP : 500
-Contexte : ['module' => '...', 'chain' => [...]]
+HTTP code: 500
+Context: ['module' => '...', 'chain' => [...]]
 ```
 
-**Module introuvable :**
+**Module not found:**
 ```
 Module 'App\MissingModule' is missing but is required by 'App\RouterModule'.
 Make sure it is present in neo/Core and correctly loaded.
-Code HTTP : 500
-Contexte : ['missing' => '...', 'requiredBy' => '...']
+HTTP code: 500
+Context: ['missing' => '...', 'requiredBy' => '...']
 ```
 
 ---
 
-## Créer un module personnalisé
+## Creating a Custom Module
 
-Voici un exemple complet de module qui enregistre un service `PaymentService` dans le conteneur :
+Here is a complete example of a module that registers a `PaymentService` service in the container:
 
 ```php
 <?php
@@ -165,7 +165,7 @@ class PaymentModule implements ModuleInterface
 {
     public function dependencies(): array
     {
-        // Ce module nécessite que ConfigModule soit initialisé avant lui
+        // This module requires ConfigModule to be initialized before it
         return [
             ConfigModule::class,
         ];
@@ -173,7 +173,7 @@ class PaymentModule implements ModuleInterface
 
     public function register(Container $container): void
     {
-        // Enregistrement paresseux : la factory n'est appelée qu'au premier get()
+        // Lazy registration: the factory is only called on the first get()
         $container->set(PaymentService::class, fn(Container $c) => new PaymentService(
             $c->get('payment.configModule')->from('payment')->all()
         ));
@@ -181,63 +181,63 @@ class PaymentModule implements ModuleInterface
 
     public function init(Container $container): object
     {
-        // Retourner l'objet principal du module
-        // Il sera accessible via $container->get('payment.manager')
+        // Return the module's main object
+        // It will be accessible via $container->get('payment.manager')
         return $container->get(PaymentService::class);
     }
 }
 ```
 
-### Convention de nommage
+### Naming Convention
 
-- Le fichier doit s'appeler `PaymentModule.php`.
-- La classe doit implémenter `ModuleInterface`.
-- Le nom doit se terminer par `Module`.
+- The file must be named `PaymentModule.php`.
+- The class must implement `ModuleInterface`.
+- The name must end with `Module`.
 
 ---
 
-## Cycle de vie d'un module
+## Module Lifecycle
 
 ```
 discover()
-    ├── Scan récursif du répertoire
-    ├── Filtre : nom se termine par "Module.php"
-    ├── Extraction FQCN par regex
-    ├── Vérification : implements ModuleInterface
-    └── Ajout dans $this->modules[]
+    ├── Recursive scan of the directory
+    ├── Filter: name ends with "Module.php"
+    ├── FQCN extraction via regex
+    ├── Check: implements ModuleInterface
+    └── Added to $this->modules[]
 
 boot()
-    ├── resolveDependencyOrder() → tri topologique
-    └── Pour chaque module (dans l'ordre) :
+    ├── resolveDependencyOrder() → topological sort
+    └── For each module (in order):
         ├── new $moduleClass()
         ├── $module->register($container)
-        ├── Injection des résultats des dépendances
-        │     ex. $container->set('router.configModule', $configResult)
+        ├── Injection of dependency results
+        │     e.g. $container->set('router.configModule', $configResult)
         ├── $result = $module->init($container)
         └── $container->set('router.manager', $result)
 ```
 
 ---
 
-## Résolution des dépendances
+## Dependency Resolution
 
-Le `ModuleManager` utilise un algorithme de tri topologique (DFS - Depth-First Search) pour déterminer l'ordre d'initialisation. Il détecte automatiquement les dépendances circulaires.
+`ModuleManager` uses a topological sort algorithm (DFS - Depth-First Search) to determine the initialization order. It automatically detects circular dependencies.
 
-**Exemple avec dépendances imbriquées :**
+**Example with nested dependencies:**
 
 ```
 ProfilerModule
     ├── ResponseModule
     ├── EventModule
     ├── RouterModule
-    │     ├── ConfigModule   ← partagé
+    │     ├── ConfigModule   ← shared
     │     └── ViewModule
     ├── AuthModule
     ├── TranslationModule
-    └── ConfigModule         ← déjà résolu, ignoré
+    └── ConfigModule         ← already resolved, skipped
 ```
 
-Ordre d'initialisation produit :
+Resulting initialization order:
 1. `ConfigModule`
 2. `ViewModule`
 3. `RouterModule`
@@ -247,4 +247,4 @@ Ordre d'initialisation produit :
 7. `TranslationModule`
 8. `ProfilerModule`
 
-Chaque module n'est initialisé qu'une seule fois, même s'il apparaît dans plusieurs arbres de dépendances.
+Each module is initialized only once, even if it appears in multiple dependency trees.

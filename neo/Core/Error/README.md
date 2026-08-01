@@ -1,98 +1,98 @@
-# Gestion des Erreurs et Exceptions
+# Error and Exception Handling
 
-Le module `Error` centralise la capture, la journalisation, la diffusion et le rendu de toutes les erreurs et exceptions survenant dans NeoPHP. Il distingue les environnements `dev` (trace complète) et `prod` (message générique sécurisé), et s'intègre avec les modules Logger, Event et View.
+The `Error` module centralizes the capture, logging, dispatching, and rendering of every error and exception occurring in NeoPHP. It distinguishes between `dev` environments (full trace) and `prod` environments (generic, safe message), and integrates with the Logger, Event, and View modules.
 
 ---
 
-## Fichiers du module
+## Module Files
 
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `ErrorManager.php` | Gestionnaire principal des erreurs et exceptions |
-| `ErrorModule.php` | Module d'initialisation (enregistrement dans le conteneur) |
-| `Exception/FrameworkException.php` | Exception de base enrichie du framework |
+| `ErrorManager.php` | Main error and exception manager |
+| `ErrorModule.php` | Initialization module (registration in the container) |
+| `Exception/FrameworkException.php` | Enriched base exception of the framework |
 
 ---
 
 ## FrameworkException
 
-`Neo\Core\Error\Exception\FrameworkException` étend `\Exception` avec deux champs supplémentaires : un **titre** lisible et un **contexte** structuré.
+`Neo\Core\Error\Exception\FrameworkException` extends `\Exception` with two additional fields: a human-readable **title** and a structured **context**.
 
-### Constructeur
+### Constructor
 
 ```php
 new FrameworkException(
-    title: 'Accès refusé',
-    message: 'Vous n\'avez pas la permission d\'accéder à cette ressource.',
+    title: 'Access Denied',
+    message: 'You do not have permission to access this resource.',
     code: 403,
     context: ['user_id' => 42, 'route' => '/admin'],
-    previous: $previousException // optionnel
+    previous: $previousException // optional
 );
 ```
 
-### Méthodes
+### Methods
 
 ```php
-$e->getTitle();   // string : titre court (ex: "Accès refusé")
-$e->getContext(); // array<string, mixed> : données de contexte
-$e->getMessage(); // string : message détaillé (hérité de \Exception)
-$e->getCode();    // int : code HTTP ou code d'erreur
+$e->getTitle();   // string: short title (e.g. "Access Denied")
+$e->getContext(); // array<string, mixed>: context data
+$e->getMessage(); // string: detailed message (inherited from \Exception)
+$e->getCode();    // int: HTTP status code or error code
 ```
 
-### Conversion depuis un `Throwable` quelconque
+### Converting from any `Throwable`
 
 ```php
-$frameworkException = FrameworkException::fromThrowable($e, 'Erreur personnalisée');
+$frameworkException = FrameworkException::fromThrowable($e, 'Custom error');
 ```
 
-Le contexte inclut automatiquement `file`, `line`, `trace` et `previous` de l'exception d'origine.
+The context automatically includes `file`, `line`, `trace`, and `previous` from the original exception.
 
 ---
 
 ## ErrorManager
 
-`Neo\Core\Error\ErrorManager` est le gestionnaire central. Il s'enregistre comme handler PHP natif et orchestre : journalisation, diffusion d'événement, rendu de la réponse.
+`Neo\Core\Error\ErrorManager` is the central manager. It registers itself as a native PHP handler and orchestrates: logging, event dispatching, and response rendering.
 
-### Initialisation au bootstrap (avant le conteneur)
+### Bootstrap initialization (before the container)
 
-Pour les erreurs très précoces (avant que le conteneur soit disponible), un handler de secours statique peut être enregistré :
+For very early errors (before the container is available), a static fallback handler can be registered:
 
 ```php
 ErrorManager::registerBootstrap();
 ```
 
-Ce handler détecte automatiquement l'environnement (`dev` si `localhost` ou `127.0.0.1`, `prod` sinon) et rend une page HTML de secours.
+This handler automatically detects the environment (`dev` if `localhost` or `127.0.0.1`, `prod` otherwise) and renders a fallback HTML page.
 
-### Initialisation complète (via le module)
+### Full initialization (via the module)
 
 ```php
 $errorManager = new ErrorManager($container);
-$errorManager->setEnv('dev'); // ou 'prod'
-$errorManager->register();    // installe set_exception_handler + set_error_handler
+$errorManager->setEnv('dev'); // or 'prod'
+$errorManager->register();    // installs set_exception_handler + set_error_handler
 ```
 
 ---
 
-### Comportement de `handleException(Throwable $e)`
+### `handleException(Throwable $e)` behavior
 
-Le traitement suit quatre étapes dans l'ordre :
+Processing follows four steps, in order:
 
-**1. Journalisation**
+**1. Logging**
 
-Tente d'écrire via le `LoggerModule` du conteneur dans le canal `framework`. En cas d'échec, écrit directement dans `storage/logs/framework.log`.
+Attempts to write via the container's `LoggerModule` to the `framework` channel. On failure, writes directly to `storage/logs/framework.log`.
 
 ```
-[2026-07-28 14:30:00] Neo\Core\Error\Exception\FrameworkException: Message ici
+[2026-07-28 14:30:00] Neo\Core\Error\Exception\FrameworkException: Message here
   in /app/src/Service/MyService.php:42
 ```
 
-**2. Diffusion d'un événement**
+**2. Event dispatching**
 
-Un `ExceptionEvent` est dispatché via l'`EventModule`, permettant à n'importe quel listener d'intercepter l'erreur.
+An `ExceptionEvent` is dispatched via the `EventModule`, allowing any listener to intercept the error.
 
-**3. Rendu de la vue d'erreur**
+**3. Error view rendering**
 
-Si un fichier `views/errors/{code}.html.twig` existe et que le `ViewModule` est disponible, la vue Twig est rendue avec les variables :
+If a `views/errors/{code}.html.twig` file exists and the `ViewModule` is available, the Twig view is rendered with the following variables:
 
 ```twig
 {# views/errors/404.html.twig #}
@@ -103,23 +103,23 @@ Si un fichier `views/errors/{code}.html.twig` existe et que le `ViewModule` est 
 {% endif %}
 ```
 
-En `prod`, `message` est remplacé par un message générique selon le code HTTP, et `context` est vidé.
+In `prod`, `message` is replaced with a generic message based on the HTTP code, and `context` is cleared.
 
-**4. Rendu de secours HTML**
+**4. HTML fallback rendering**
 
-Si aucune vue Twig n'est disponible, un HTML inline est généré.
+If no Twig view is available, inline HTML is generated.
 
 ---
 
-### Rendu de secours HTML (inline)
+### Inline HTML fallback rendering
 
-La méthode statique `renderFallbackHtml()` produit une page HTML complète, auto-suffisante, sans dépendances externes.
+The static method `renderFallbackHtml()` produces a complete, self-contained HTML page with no external dependencies.
 
-**En mode `dev`** : affichage du nom de classe de l'exception, du fichier, de la ligne, de la stack trace (50 frames max), et du contexte.
+**In `dev` mode**: displays the exception's class name, file, line, stack trace (max 50 frames), and context.
 
-**En mode `prod`** : message générique selon le code HTTP :
+**In `prod` mode**: generic message based on the HTTP code:
 
-| Code | Message prod |
+| Code | Prod message |
 |---|---|
 | 404 | The page you are looking for could not be found. |
 | 403 | You do not have permission to access this resource. |
@@ -130,56 +130,56 @@ La méthode statique `renderFallbackHtml()` produit une page HTML complète, aut
 | 429 | Too many requests, please try again in a few moments. |
 | 5xx | An internal error has occurred, please try again later. |
 
-La couleur de l'interface s'adapte au code :
+The interface color adapts to the code:
 
-| Plage | Couleur |
+| Range | Color |
 |---|---|
 | 5xx | Orange (`#c2410c`) |
-| 404 | Bleu (`#1d4ed8`) |
-| 403 / 401 | Violet (`#7e22ce`) |
-| Autres | Rouge (`#b91c1c`) |
+| 404 | Blue (`#1d4ed8`) |
+| 403 / 401 | Purple (`#7e22ce`) |
+| Others | Red (`#b91c1c`) |
 
 ---
 
-### Gestion des erreurs PHP natives
+### Handling native PHP errors
 
-`handleError()` convertit toute erreur PHP (`E_WARNING`, `E_NOTICE`, etc.) en `ErrorException`, puis délègue à `handleException()`. Les erreurs supprimées par `@` sont ignorées.
+`handleError()` converts any PHP error (`E_WARNING`, `E_NOTICE`, etc.) into an `ErrorException`, then delegates to `handleException()`. Errors suppressed with `@` are ignored.
 
 ```php
-// Toute erreur PHP native sera traitée comme une exception
-trigger_error('Mon message', E_USER_WARNING);
+// Any native PHP error will be treated as an exception
+trigger_error('My message', E_USER_WARNING);
 ```
 
 ---
 
 ## ErrorModule
 
-`ErrorModule` implémente `ModuleInterface` et déclare les dépendances du module :
+`ErrorModule` implements `ModuleInterface` and declares the module's dependencies:
 
 ```php
-// Dépendances déclarées
+// Declared dependencies
 ConfigModule::class
 EventModule::class
 LoggerModule::class
 ViewModule::class
 ```
 
-Il enregistre `ErrorManager` dans le conteneur et l'initialise :
+It registers `ErrorManager` in the container and initializes it:
 
 ```php
-// Enregistrement
+// Registration
 $container->set(ErrorManager::class, fn(Container $c) => new ErrorManager($c));
 
-// Initialisation : register() est appelé sauf en contexte de test (_NEO_TEST_PROJECT)
+// Initialization: register() is called except in a test context (_NEO_TEST_PROJECT)
 $errorHandler->register();
-$errorHandler->setEnv($env); // lu depuis config app.environment
+$errorHandler->setEnv($env); // read from the app.environment config
 ```
 
 ---
 
-## Créer ses propres exceptions
+## Creating your own exceptions
 
-Toutes les exceptions du framework héritent de `FrameworkException` :
+Every framework exception extends `FrameworkException`:
 
 ```php
 namespace App\Exception;
@@ -191,8 +191,8 @@ class ValidationException extends FrameworkException
     public function __construct(array $errors)
     {
         parent::__construct(
-            title: 'Données invalides',
-            message: 'La validation a échoué.',
+            title: 'Invalid Data',
+            message: 'Validation failed.',
             code: 422,
             context: ['errors' => $errors]
         );
@@ -202,15 +202,15 @@ class ValidationException extends FrameworkException
 
 ```php
 throw new ValidationException([
-    'email' => 'Adresse email invalide.',
-    'name'  => 'Le nom est requis.',
+    'email' => 'Invalid email address.',
+    'name'  => 'Name is required.',
 ]);
 ```
 
-L'`ErrorManager` capturera cette exception, la journalisera, et rendra la page `views/errors/422.html.twig` si elle existe.
+`ErrorManager` will catch this exception, log it, and render the `views/errors/422.html.twig` page if it exists.
 
 ---
 
-## Intégration avec le Profiler
+## Integration with the Profiler
 
-Si la constante `NEO_PROFILER_ENABLED` est définie et vraie, la toolbar du Profiler est injectée automatiquement dans le HTML de la page d'erreur, juste avant `</body>`.
+If the `NEO_PROFILER_ENABLED` constant is defined and true, the Profiler toolbar is automatically injected into the error page's HTML, just before `</body>`.

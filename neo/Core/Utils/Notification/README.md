@@ -1,10 +1,10 @@
 # Notification
 
-Le sous-module `Notification` fournit un système d'envoi multi-canaux (Email, Slack, SMS) avec un patron builder fluide et intégration automatique du Profiler.
+The `Notification` submodule provides a multi-channel sending system (Email, Slack, SMS) with a fluent builder pattern and automatic Profiler integration.
 
 ---
 
-## Sommaire
+## Table of Contents
 
 1. [Structure](#structure)
 2. [NotificationManager](#notificationmanager)
@@ -12,7 +12,7 @@ Le sous-module `Notification` fournit un système d'envoi multi-canaux (Email, S
 4. [SlackChannel](#slackchannel)
 5. [SmsChannel](#smschannel)
 6. [NotificationEnum](#notificationenum)
-7. [Intégration Profiler](#intégration-profiler)
+7. [Profiler Integration](#profiler-integration)
 
 ---
 
@@ -20,23 +20,23 @@ Le sous-module `Notification` fournit un système d'envoi multi-canaux (Email, S
 
 ```
 Notification/
-├── NotificationManager.php             # Builder fluide multi-canaux
-├── NotificationModule.php              # Enregistrement DI
+├── NotificationManager.php             # Fluent multi-channel builder
+├── NotificationModule.php              # DI registration
 ├── Channel/
 │   ├── ChannelInterface.php
 │   ├── Email/
-│   │   └── EmailChannel.php            # Envoi SMTP via PHPMailer
+│   │   └── EmailChannel.php            # SMTP sending via PHPMailer
 │   ├── Slack/
-│   │   └── SlackChannel.php            # Envoi via Incoming Webhook
+│   │   └── SlackChannel.php            # Sending via Incoming Webhook
 │   └── Sms/
-│       ├── SmsChannel.php              # Abstraction SMS multi-drivers
+│       ├── SmsChannel.php              # Multi-driver SMS abstraction
 │       └── Driver/
 │           ├── DriverInterface.php
 │           ├── TwilioDriver.php
 │           ├── VonageDriver.php
-│           └── LogDriver.php           # Driver de développement (log sans envoi)
+│           └── LogDriver.php           # Development driver (logs without sending)
 ├── Collector/
-│   └── NotificationCollector.php      # Collecteur Profiler
+│   └── NotificationCollector.php      # Profiler collector
 ├── Enum/
 │   └── NotificationEnum.php
 └── Exception/
@@ -48,9 +48,9 @@ Notification/
 
 ## NotificationManager
 
-**Fichier :** `NotificationManager.php`
+**File:** `NotificationManager.php`
 
-Builder fluide pour envoyer des notifications via n'importe quel canal.
+Fluent builder for sending notifications through any channel.
 
 ```php
 $notif = $container->get(NotificationManager::class);
@@ -60,7 +60,7 @@ $result = $notif
     ->channel(EmailChannel::class)
     ->setParams([
         'to'      => 'alice@example.com',
-        'subject' => 'Bienvenue !',
+        'subject' => 'Welcome!',
     ])
     ->setTemplate('emails/welcome.html.twig', ['user' => $user])
     ->doSend();
@@ -80,23 +80,23 @@ $result = $notif
     ->doSend();
 ```
 
-**Flux d'exécution de `doSend()` :**
+**`doSend()` Execution Flow:**
 
-1. Vérification qu'un canal est sélectionné.
-2. Rendu du template via le moteur de vue du projet.
-3. Appel de `channel->send()`.
-4. Enregistrement dans le Profiler (si actif).
-5. Réinitialisation du builder pour la prochaine utilisation.
+1. Checks that a channel has been selected.
+2. Renders the template via the project's view engine.
+3. Calls `channel->send()`.
+4. Records into the Profiler (if active).
+5. Resets the builder for the next use.
 
 ---
 
 ## EmailChannel
 
-**Fichier :** `Channel/Email/EmailChannel.php`
+**File:** `Channel/Email/EmailChannel.php`
 
-Utilise **PHPMailer** pour l'envoi SMTP. Supporte plusieurs drivers SMTP configurables.
+Uses **PHPMailer** for SMTP sending. Supports several configurable SMTP drivers.
 
-**Configuration `api.config.php` :**
+**`api.config.php` Configuration:**
 
 ```php
 return [
@@ -105,7 +105,7 @@ return [
         'default' => 'smtp',
         'from' => [
             'address' => 'noreply@myapp.com',
-            'name'    => 'Mon Application',
+            'name'    => 'My Application',
         ],
         'drivers' => [
             'smtp' => [
@@ -127,15 +127,15 @@ return [
 ];
 ```
 
-**Paramètres acceptés :**
+**Accepted Parameters:**
 
-| Clé | Type | Description |
+| Key | Type | Description |
 |-----|------|-------------|
-| `to` | `string\|array` | Destinataire(s) |
-| `cc` | `string\|array` | Copie(s) |
-| `bcc` | `string\|array` | Copie(s) cachée(s) |
-| `subject` | `string` | Objet de l'email |
-| `driver` | `string` | Driver SMTP à utiliser (optionnel) |
+| `to` | `string\|array` | Recipient(s) |
+| `cc` | `string\|array` | Copy recipient(s) |
+| `bcc` | `string\|array` | Blind copy recipient(s) |
+| `subject` | `string` | Email subject |
+| `driver` | `string` | SMTP driver to use (optional) |
 
 ```php
 $notif
@@ -143,7 +143,7 @@ $notif
     ->setParams([
         'to'      => ['alice@example.com', 'bob@example.com'],
         'cc'      => 'manager@example.com',
-        'subject' => 'Rapport mensuel',
+        'subject' => 'Monthly Report',
         'driver'  => 'smtp',
     ])
     ->setTemplate('emails/report.html.twig', ['data' => $reportData])
@@ -154,11 +154,11 @@ $notif
 
 ## SlackChannel
 
-**Fichier :** `Channel/Slack/SlackChannel.php`
+**File:** `Channel/Slack/SlackChannel.php`
 
-Envoie des messages via l'API Incoming Webhooks Slack.
+Sends messages via the Slack Incoming Webhooks API.
 
-**Configuration `api.config.php` :**
+**`api.config.php` Configuration:**
 
 ```php
 return [
@@ -174,13 +174,13 @@ return [
 ];
 ```
 
-**Paramètres acceptés :**
+**Accepted Parameters:**
 
-| Clé | Type | Description |
+| Key | Type | Description |
 |-----|------|-------------|
-| `channel` | `string` | Canal Slack (`#channel` ou `@user`) |
-| `username` | `string` | Nom d'affichage du bot |
-| `icon` | `string` | Emoji de l'icône |
+| `channel` | `string` | Slack channel (`#channel` or `@user`) |
+| `username` | `string` | Bot display name |
+| `icon` | `string` | Icon emoji |
 
 ```php
 $notif
@@ -194,19 +194,19 @@ $notif
 
 ## SmsChannel
 
-**Fichier :** `Channel/Sms/SmsChannel.php`
+**File:** `Channel/Sms/SmsChannel.php`
 
-Abstraction SMS multi-drivers. Supporte l'envoi vers plusieurs destinataires et gère les échecs partiels.
+Multi-driver SMS abstraction. Supports sending to multiple recipients and handles partial failures.
 
-**Drivers disponibles :**
+**Available Drivers:**
 
-| Driver | Classe | Description |
+| Driver | Class | Description |
 |--------|--------|-------------|
-| `twilio` | `TwilioDriver` | API Twilio REST |
-| `vonage` | `VonageDriver` | API Vonage (ex-Nexmo) |
-| `log` | `LogDriver` | Journalise sans envoyer (développement) |
+| `twilio` | `TwilioDriver` | Twilio REST API |
+| `vonage` | `VonageDriver` | Vonage API (formerly Nexmo) |
+| `log` | `LogDriver` | Logs without sending (development) |
 
-**Configuration `api.config.php` :**
+**`api.config.php` Configuration:**
 
 ```php
 return [
@@ -229,7 +229,7 @@ return [
 ];
 ```
 
-**Comportement partiel :** Si l'envoi réussit pour certains destinataires et échoue pour d'autres, `SmsChannel` retourne `NotificationEnum::PARTIAL`. Si tous échouent, une `ChannelException` est levée.
+**Partial Behavior:** If sending succeeds for some recipients and fails for others, `SmsChannel` returns `NotificationEnum::PARTIAL`. If all fail, a `ChannelException` is thrown.
 
 ```php
 $result = $notif
@@ -239,8 +239,8 @@ $result = $notif
     ->doSend();
 
 match ($result) {
-    NotificationEnum::SUCCESS => $logger->info('Tous les SMS envoyés'),
-    NotificationEnum::PARTIAL => $logger->warning('Certains SMS ont échoué'),
+    NotificationEnum::SUCCESS => $logger->info('All SMS sent'),
+    NotificationEnum::PARTIAL => $logger->warning('Some SMS failed'),
     default => null,
 };
 ```
@@ -249,22 +249,22 @@ match ($result) {
 
 ## NotificationEnum
 
-**Fichier :** `Enum/NotificationEnum.php`
+**File:** `Enum/NotificationEnum.php`
 
 ```php
 enum NotificationEnum: string
 {
-    case SUCCESS = 'success';  // Envoi entièrement réussi
-    case FAILED  = 'failed';   // Envoi complètement échoué
-    case PARTIAL = 'partial';  // Envoi partiellement réussi (SMS multi-destinataires)
-    case SKIPPED = 'skipped';  // Canal désactivé
+    case SUCCESS = 'success';  // Fully successful send
+    case FAILED  = 'failed';   // Completely failed send
+    case PARTIAL = 'partial';  // Partially successful send (multi-recipient SMS)
+    case SKIPPED = 'skipped';  // Channel disabled
 }
 ```
 
 ---
 
-## Intégration Profiler
+## Profiler Integration
 
-`NotificationManager` s'intègre au Profiler de NeoPHP lorsque `NEO_PROFILER_ENABLED` est défini. Chaque envoi est collecté via `NotificationCollector` et visible dans le panneau de débogage.
+`NotificationManager` integrates with the NeoPHP Profiler when `NEO_PROFILER_ENABLED` is set. Each send is collected via `NotificationCollector` and visible in the debug panel.
 
-Le rendu des templates utilise le moteur de vue du projet (injecté comme `notification.viewModule`), ce qui permet d'utiliser Twig pour les corps des notifications.
+Template rendering uses the project's view engine (injected as `notification.viewModule`), which allows Twig to be used for notification bodies.
