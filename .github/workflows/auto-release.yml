@@ -81,15 +81,22 @@ jobs:
 
           \$new = \"v{\$major}.{\$minor}.{\$patch}\";
 
+          file_put_contents('VERSION', ltrim($new, 'v'));
+          
           echo \$new;
-          file_put_contents('version.txt', \$new);
-          "
-
-          echo "VERSION=$(cat version.txt)" >> $GITHUB_OUTPUT
+          file_put_contents('new_version.txt', $new);
+  
+          echo "VERSION=$(cat new_version.txt)" >> $GITHUB_OUTPUT
 
       - name: Generate changelog
         run: |
           git log ${{ steps.tag.outputs.TAG }}..HEAD --pretty=format:"- %s (%h)" > CHANGELOG.md
+
+      - name: Upload VERSION
+        uses: actions/upload-artifact@v4
+        with:
+          name: VERSION
+          path: VERSION
 
       - name: Create Git tag
         if: ${{ steps.tag.outputs.TAG != steps.version.outputs.VERSION }}
