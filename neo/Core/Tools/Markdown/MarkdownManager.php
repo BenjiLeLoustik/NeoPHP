@@ -4,6 +4,14 @@ declare(strict_types=1);
 namespace Neo\Core\Tools\Markdown;
 
 use Neo\Core\DI\Container;
+use Neo\Core\Tools\Markdown\Block\AbstractBlock;
+use Neo\Core\Tools\Markdown\Block\CodeBlock;
+use Neo\Core\Tools\Markdown\Block\HeadingBlock;
+use Neo\Core\Tools\Markdown\Block\HrBlock;
+use Neo\Core\Tools\Markdown\Block\ListBlock;
+use Neo\Core\Tools\Markdown\Block\ParagraphBlock;
+use Neo\Core\Tools\Markdown\Block\QuoteBlock;
+use Neo\Core\Tools\Markdown\Block\TableBlock;
 use Neo\Core\Tools\Markdown\Exception\MarkdownException;
 
 class MarkdownManager
@@ -11,7 +19,7 @@ class MarkdownManager
     private Container $container;
 
     /**
-     * @var array<string, array<int, array<string, mixed>>>
+     * @var array<string, list<AbstractBlock>>
      */
     private array $cache = [];
 
@@ -21,7 +29,7 @@ class MarkdownManager
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return list<AbstractBlock>
      * @throws MarkdownException
      */
     public function blocks(string $input): array
@@ -51,7 +59,7 @@ class MarkdownManager
     /**
      * @param list<string> $paths
      * @param list<string> $filenames
-     * @return list<array{path: string, relative: string, title: string, blocks: array<int, array<string, mixed>>}>
+     * @return list<array{path: string, relative: string, title: string, blocks: list<AbstractBlock>}>
      * @throws MarkdownException
      */
     public function getAllMarkdown(array $paths, array $filesnames = ['README.md', 'readme.md']): array
@@ -79,7 +87,7 @@ class MarkdownManager
 
                 $file = str_replace('\\', '/', $item->getPathname());
                 $blocks = $this->blocks($file);
-                
+
                 $parentName = basename(dirname($file));
                 $docs[] = [
                     'path' => $file,
@@ -101,13 +109,13 @@ class MarkdownManager
     }
 
     /**
-     * @param array<int, array<string, mixed>> $blocks
+     * @param list<AbstractBlock> $blocks
      */
     private function extractDescription(array $blocks): ?string
     {
         foreach ($blocks as $block) {
-            if (($block['type'] ?? null) === 'paragraph') {
-                return (string) $block['text'];
+            if ($block instanceof ParagraphBlock) {
+                return $block->getText();
             }
         }
 
@@ -115,13 +123,13 @@ class MarkdownManager
     }
 
     /**
-     * @param array<int, array<string, mixed>> $blocks
+     * @param list<AbstractBlock> $blocks
      */
     private function extractTitle(array $blocks): ?string
     {
         foreach ($blocks as $block) {
-            if (($block['type'] ?? null) === 'heading' && ($block['level'] ?? null) === 1) {
-                return (string) $block['text'];
+            if ($block instanceof HeadingBlock && $block->level === 1) {
+                return $block->getText();
             }
         }
 
@@ -170,7 +178,7 @@ class MarkdownManager
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return list<AbstractBlock>
      * @throws MarkdownException
      */
     public function parseFile(string $path): array
@@ -205,7 +213,7 @@ class MarkdownManager
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return list<AbstractBlock>
      */
     public function parse(string $markdown): array
     {
@@ -231,27 +239,18 @@ class MarkdownManager
                     $i++;
                 }
                 $i++;
-                $blocks[] = [
-                    'type' => 'code',
-                    'language' => $language,
-                    'content' => implode("\n", $code),
-                ];
+                $blocks[] = new CodeBlock($language, implode("\n", $code));
                 continue;
             }
 
             if (preg_match('/^(#{1,6})\s+(.*?)\s*#*\s*$/', $line, $m)) {
-                $blocks[] = [
-                    'type' => 'heading',
-                    'level' => strlen($m[1]),
-                    'text' => $m[2],
-                    'slug' => $this->slug($m[2]),
-                ];
+                $blocks[] = new HeadingBlock(strlen($m[1]), $m[2], $this->slug($m[2]));
                 $i++;
                 continue;
             }
 
             if (preg_match('/^\s*([-*_])(\s*\1){2,}\s*$/', $line)) {
-                $blocks[] = ['type' => 'hr'];
+                $blocks[] = new HrBlock();
                 $i++;
                 continue;
             }
@@ -263,10 +262,7 @@ class MarkdownManager
                     $quote[] = $mm[1];
                     $i++;
                 }
-                $blocks[] = [
-                    'type' => 'quote',
-                    'content' => implode("\n", $quote),
-                ];
+                $blocks[] = new QuoteBlock(implode("\n", $quote));
                 continue;
             }
 
@@ -276,7 +272,7 @@ class MarkdownManager
                 && preg_match('/^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/', $lines[$i + 1])
             ) {
                 $header = $this->splitTableRow($line);
-                $i += 2; // En-tête + séparateur.
+                $i += 2;
                 $rows = [];
                 while (
                     $i < $count
@@ -286,11 +282,7 @@ class MarkdownManager
                     $rows[] = $this->splitTableRow($lines[$i]);
                     $i++;
                 }
-                $blocks[] = [
-                    'type' => 'table',
-                    'header' => $header,
-                    'rows' => $rows,
-                ];
+                $blocks[] = new TableBlock($header, $rows);
                 continue;
             }
 
@@ -304,11 +296,7 @@ class MarkdownManager
                     $items[] = $mm[2];
                     $i++;
                 }
-                $blocks[] = [
-                    'type' => 'list',
-                    'ordered' => $ordered,
-                    'items' => $items,
-                ];
+                $blocks[] = new ListBlock($ordered, $items);
                 continue;
             }
 
@@ -321,10 +309,7 @@ class MarkdownManager
                 $paragraph[] = trim($lines[$i]);
                 $i++;
             }
-            $blocks[] = [
-                'type' => 'paragraph',
-                'text' => implode(' ', $paragraph),
-            ];
+            $blocks[] = new ParagraphBlock(implode(' ', $paragraph));
         }
 
         return $blocks;
@@ -397,7 +382,7 @@ class MarkdownManager
     }
 
     /**
-     * @return array<int, string>
+     * @return list<string>
      */
     private function splitTableRow(string $line): array
     {
