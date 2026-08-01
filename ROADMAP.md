@@ -119,7 +119,7 @@ neo/Core/
 
 ### 🔧 Améliorations — Architecture & Qualité
 
-- [ ] 🟡 **`AttributeScanResult` DTO** — remplace `array{target, attribute, arguments, type, reflection}` retourné par `ScannerAttributeManager`
+- [x] 🟡 **`AttributeScanResult` DTO** — remplace `array{target, attribute, arguments, type, reflection}` retourné par `ScannerAttributeManager`
   - Consommé par 4 composants : `RouterManager`, `MiddlewareManager`, `CronScanner`, `TestScanner`
   - Fichiers concernés : `neo/Core/Utils/Scanner/ScannerAttributeManager.php` et tous ses consommateurs
 
