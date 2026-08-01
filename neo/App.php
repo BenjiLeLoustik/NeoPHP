@@ -75,7 +75,16 @@ class App
 
         $dispatcher->dispatch(new RequestEvent($request));
 
-        $result = $router->dispatch($request, $response);
+        ob_start();
+
+        try {
+            $result = $router->dispatch($request, $response);
+        } catch (\Throwable $e) {
+            ob_end_clean();
+            throw $e;
+        }
+
+        ob_end_clean();
 
         if ($result instanceof Response) {
             $responseEvent = new ResponseEvent($result);
