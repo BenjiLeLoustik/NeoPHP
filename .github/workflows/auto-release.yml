@@ -28,66 +28,65 @@ jobs:
       - name: Compute version bump (PHP)
         id: version
         run: |
-          php -r "
-          \$tag = '${{ steps.tag.outputs.TAG }}';
+          php <<'PHP'
+          <?php
 
-          \$raw = shell_exec('git log ' . \$tag . '..HEAD --pretty=%s');
-          \$commits = array_filter(explode(PHP_EOL, trim(\$raw)));
+          $tag = '${{ steps.tag.outputs.TAG }}';
 
-          preg_match('/v(\d+)\.(\d+)\.(\d+)/', \$tag, \$m);
+          $raw = shell_exec('git log ' . $tag . '..HEAD --pretty=%s');
+          $commits = array_filter(explode(PHP_EOL, trim($raw)));
 
-          \$major = (int)\$m[1];
-          \$minor = (int)\$m[2];
-          \$patch = (int)\$m[3];
+          preg_match('/v(\d+)\.(\d+)\.(\d+)/', $tag, $m);
 
-          \$hasBreaking = false;
-          \$hasFeature = false;
-          \$hasFix = false;
+          $major = (int) $m[1];
+          $minor = (int) $m[2];
+          $patch = (int) $m[3];
 
-          foreach (\$commits as \$msg) {
+          $hasBreaking = false;
+          $hasFeature = false;
+          $hasFix = false;
 
-              if (preg_match('/!:/', \$msg) || str_contains(\$msg, 'BREAKING')) {
-                  \$hasBreaking = true;
+          foreach ($commits as $msg) {
+
+              if (preg_match('/!:/', $msg) || str_contains($msg, 'BREAKING')) {
+                  $hasBreaking = true;
                   break;
               }
 
-              if (preg_match('/^(docs|chore|style)(\(.+\))?:/', \$msg)) {
+              if (preg_match('/^(docs|chore|style)(\(.+\))?:/', $msg)) {
                   continue;
               }
 
-              if (preg_match('/^feat(\(.+\))?:/', \$msg)) {
-                  \$hasFeature = true;
+              if (preg_match('/^feat(\(.+\))?:/', $msg)) {
+                  $hasFeature = true;
               }
 
-              if (preg_match('/^fix(\(.+\))?:/', \$msg)) {
-                  \$hasFix = true;
+              if (preg_match('/^fix(\(.+\))?:/', $msg)) {
+                  $hasFix = true;
               }
           }
 
-          if (\$hasBreaking) {
-              \$major++;
-              \$minor = 0;
-              \$patch = 0;
-
-          } elseif (\$hasFeature) {
-              \$minor++;
-              \$patch = 0;
-
-          } elseif (\$hasFix) {
-              \$patch++;
-
+          if ($hasBreaking) {
+              $major++;
+              $minor = 0;
+              $patch = 0;
+          } elseif ($hasFeature) {
+              $minor++;
+              $patch = 0;
+          } elseif ($hasFix) {
+              $patch++;
           } else {
-              \$patch++;
+              $patch++;
           }
 
-          \$new = \"v{\$major}.{\$minor}.{\$patch}\";
+          $new = "v{$major}.{$minor}.{$patch}";
 
           file_put_contents('VERSION', ltrim($new, 'v'));
-          
-          echo \$new;
-          file_put_contents('new_version.txt', $new);
-  
-          echo "VERSION=$(cat new_version.txt)" >> $GITHUB_OUTPUT
+
+          echo "VERSION=$new" >> getenv('GITHUB_OUTPUT');
+
+          echo $new;
+          PHP
 
       - name: Generate changelog
         run: |
