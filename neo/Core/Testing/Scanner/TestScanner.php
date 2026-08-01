@@ -65,15 +65,18 @@ class TestScanner
 
             foreach ($results as $entry) {
                 /** @var Test $test */
-                $test = $entry['attribute'];
+                $test = $entry->getAttribute();
 
-                if ($entry['type'] === 'class') {
+                if ($entry->getType() === 'class') {
                     $classTest = $test;
-                } elseif ($entry['type'] === 'method') {
+                } elseif ($entry->getType() === 'method') {
                     if ($test->skip) continue;
 
-                    /** @var array{reflection: ReflectionMethod} $entry */
-                    $refMethod = $entry['reflection'];
+                    $refMethod = $entry->getReflection();
+
+                    if (!$refMethod instanceof ReflectionMethod) {
+                        continue;
+                    }
 
                     $methodCtxs[] = new TestMethodContext(
                         name: $refMethod->getName(),
