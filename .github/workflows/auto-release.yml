@@ -93,8 +93,22 @@ jobs:
           PHP
 
       - name: Generate changelog
+        if: ${{ steps.tag.outputs.TAG != steps.version.outputs.VERSION }}
         run: |
-          git log ${{ steps.tag.outputs.TAG }}..HEAD --pretty=format:"- %s (%h)" > CHANGELOG.md
+          touch CHANGELOG.md
+
+          {
+            echo "${{ steps.version.outputs.VERSION }}"
+            git log ${{ steps.tag.outputs.TAG }}..HEAD --pretty=format:"- %s (%h)"
+          } > CHANGELOG_ENTRY.md
+
+          {
+            cat CHANGELOG_ENTRY.md
+            echo ""
+            echo ""
+            cat CHANGELOG.md
+          } > CHANGELOG.tmp.md
+          mv CHANGELOG.tmp.md CHANGELOG.md
 
       - name: Commit generated files
         run: |
@@ -123,5 +137,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.VERSION }}
-          body_path: CHANGELOG.md
+          body_path: CHANGELOG_ENTRY.md
           generate_release_notes: true
