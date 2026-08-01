@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Neo\Core\Utils\Scanner;
+namespace Neo\Core\Utils\Scanner\Result;
 
 use ReflectionClass;
 use ReflectionMethod;

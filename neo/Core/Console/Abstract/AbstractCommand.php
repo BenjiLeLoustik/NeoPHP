@@ -117,7 +117,14 @@ abstract class AbstractCommand implements CommandInterface
             ->withAttribute(Command::class)
             ->scan();
 
-        return !empty($results) ? $results[0]['attribute'] : null;
+        if (empty($results)) {
+            return null;
+        }
+
+        /** @var Command $attribute */
+        $attribute = $results[0]->getAttribute();
+
+        return $attribute;
     }
 
     /** @return list<string> */

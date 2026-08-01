@@ -73,8 +73,12 @@ class SeedManager
             }
 
             /** @var Seeder $meta */
-            $meta = $scanResults[0]['attribute'];
-            $seeders[] = ['class' => $fqcn, 'order' => $meta->order, 'group' => $meta->group];
+            $meta = $scanResults[0]->getAttribute();
+            $seeders[] = [
+                'class' => $fqcn,
+                'order' => $meta->order,
+                'group' => $meta->group
+            ];
         }
 
         usort($seeders, static fn (array $a, array $b) => $a['order'] <=> $b['order']);

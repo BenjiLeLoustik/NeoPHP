@@ -100,7 +100,7 @@ final class ExtensionManager
                 }
 
                 /** @var Extension $meta */
-                $meta = $scanResults[0]['attribute'];
+                $meta = $scanResults[0]->getAttribute();
 
                 if ($meta->type !== $type) {
                     continue;

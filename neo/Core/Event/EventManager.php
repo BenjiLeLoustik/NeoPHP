@@ -97,7 +97,7 @@ class EventManager
 
             foreach ($results as $entry) {
                 /** @var AsListener $listener */
-                $listener = $entry['attribute'];
+                $listener = $entry->getAttribute();
                 $this->listeners[$listener->event][] = new ListenerRegistration(
                     class: $fqcn,
                     priority: $listener->priority,

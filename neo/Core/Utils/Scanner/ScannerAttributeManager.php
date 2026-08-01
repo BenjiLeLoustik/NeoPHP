@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Utils\Scanner;
 
+use Neo\Core\Utils\Scanner\Result\AttributeScanResult;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
