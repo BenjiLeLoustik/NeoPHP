@@ -1,3 +1,9 @@
+v4.19.0
+- docs: update ROADMAP (5669e0b)
+- docs: document persistent connections and transaction leak warning (2a9481c)
+- feat: add persistan option key (4ffd28c)
+- feat: support persistent PDO connections via config option (2182fdf)
+
 v4.18.2
 - docs: update ROADMAP (d2a2275)
 
