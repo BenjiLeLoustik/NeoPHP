@@ -83,6 +83,7 @@ class MarkdownManager
                 $docs[] = [
                     'path' => $file,
                     'relative' => ltrim(substr($file, strlen($root)), '/'),
+                    'slug' => $this->slug(basename(dirname($file))),
                     'title' => $this->extractTitle($blocks) ?? basename(dirname($file)),
                     'description' => $this->extractDescription($blocks),
                 ];
@@ -403,7 +404,7 @@ class MarkdownManager
 
     private function slug(string $text): string
     {
-        $text = preg_replace('/[*_`~]+/', '', $text) ?? $text; // marqueurs markdown
+        $text = preg_replace('/[*_`~]+/', '', $text) ?? $text;
         $text = strip_tags($text);
         $text = mb_strtolower(trim($text));
         $text = preg_replace('/[^\p{L}\p{N}\s-]+/u', '', $text) ?? $text;
