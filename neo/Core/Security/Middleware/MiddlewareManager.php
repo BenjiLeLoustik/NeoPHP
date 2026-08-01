@@ -16,6 +16,7 @@ use Neo\Core\Security\Middleware\Default\IsGrantedMiddleware;
 use Neo\Core\Security\Middleware\Default\RateLimitMiddleware;
 use Neo\Core\Security\Middleware\Exception\MiddlewareException;
 use Neo\Core\Security\Middleware\Interface\MiddlewareInterface;
+use Neo\Core\Security\Middleware\Meta\MiddlewareMeta;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use ReflectionException;
 use ReflectionMethod;
@@ -35,7 +36,7 @@ class MiddlewareManager
 
     private ?string $lastMethod = null;
 
-    /** @var array<string, array<int, array<string, mixed>>> */
+    /** @var array<string, list<MiddlewareMeta>> */
     private array $middlewareCache = [];
 
     public function __construct(Container $container)
@@ -65,11 +66,11 @@ class MiddlewareManager
         $flash = $this->container->get('middleware.clientModule')->flash();
 
         foreach ($middlewares as $meta) {
-            $middlewareClass = $meta['class'];
-            $onError = $meta['onError'] ?? 'block';
-            $message = $meta['message'] ?? 'Middleware failed';
-            $redirect = $meta['redirect'] ?? null;
-            $isClassMiddleware = $meta['isClass'] ?? false;
+            $middlewareClass = $meta->getClass();
+            $onError = $meta->getOnError();
+            $message = $meta->getMessage();
+            $redirect = $meta->getRedirect();
+            $isClassMiddleware = $meta->isClass();
             $result = false;
 
             if (!class_exists($middlewareClass)) {
@@ -77,9 +78,9 @@ class MiddlewareManager
                 return $this->handleFailure($message, $onError, $redirect, $response, $flash, $router, $isClassMiddleware);
             }
 
-            $middleware = empty($meta['params'])
+            $middleware = empty($meta->getParams())
                 ? $this->container->get($middlewareClass)
-                : $this->container->make($middlewareClass, $meta['params']);
+                : $this->container->make($middlewareClass, $meta->getParams());
 
             if (!$middleware instanceof MiddlewareInterface) {
                 $this->recordError($middlewareClass, 'Middleware must implement MiddlewareInterface', $onError);
@@ -111,15 +112,15 @@ class MiddlewareManager
     public function isAccessible(string $controller, ?string $method = null): bool
     {
         foreach ($this->getMiddlewares($controller, $method) as $meta) {
-            $middlewareClass = $meta['class'];
+            $middlewareClass = $meta->getClass();
 
             if (!class_exists($middlewareClass)) {
                 return false;
             }
 
-            $middleware = empty($meta['params'])
+            $middleware = empty($meta->getParams())
                 ? $this->container->get($middlewareClass)
-                : $this->container->make($middlewareClass, $meta['params']);
+                : $this->container->make($middlewareClass, $meta->getParams());
 
             if (!$middleware instanceof MiddlewareInterface) {
                 return false;
@@ -182,14 +183,7 @@ class MiddlewareManager
     }
 
     /**
-     * @return array<int, array{
-     *     class: class-string,
-     *     message: string,
-     *     onError: string,
-     *     redirect: ?string,
-     *     isClass: bool,
-     *     params: array<string, mixed>
-     * }>
+     * @return list<MiddlewareMeta>
      * @throws ReflectionException
      */
     private function getMiddlewares(string $controller, ?string $method = null): array
@@ -209,15 +203,15 @@ class MiddlewareManager
         foreach ($classResults as $entry) {
             if ($entry['attribute'] instanceof MiddlewareAttribute) {
                 $i = $entry['attribute'];
-                $all[] = [
-                    'class' => $i->use,
-                    'message' => $i->message,
-                    'onError' => $i->onError,
-                    'redirect' => $i->redirect,
-                    'isClass' => true,
-                    'params' => $i->params,
-                    'priority' => $i->priority,
-                ];
+                $all[] = new MiddlewareMeta(
+                    class: $i->use,
+                    message: $i->message,
+                    onError: $i->onError,
+                    redirect: $i->redirect,
+                    isClass: true,
+                    params: $i->params,
+                    priority: $i->priority,
+                );
             } elseif ($entry['attribute'] instanceof RateLimit) {
                 $all[] = $this->buildRateLimitMeta($entry['attribute'], true);
             } elseif ($entry['attribute'] instanceof IsGranted) {
@@ -240,15 +234,15 @@ class MiddlewareManager
 
                 if ($entry['attribute'] instanceof MiddlewareAttribute) {
                     $i = $entry['attribute'];
-                    $all[] = [
-                        'class' => $i->use,
-                        'message'  => $i->message,
-                        'onError' => $i->onError,
-                        'redirect' => $i->redirect,
-                        'isClass' => false,
-                        'params' => $i->params,
-                        'priority' => $i->priority,
-                    ];
+                    $all[] = new MiddlewareMeta(
+                        class: $i->use,
+                        message: $i->message,
+                        onError: $i->onError,
+                        redirect: $i->redirect,
+                        isClass: false,
+                        params: $i->params,
+                        priority: $i->priority,
+                    );
                 } elseif ($entry['attribute'] instanceof RateLimit) {
                     $all[] = $this->buildRateLimitMeta($entry['attribute'], false);
                 } elseif ($entry['attribute'] instanceof IsGranted) {
@@ -257,61 +251,41 @@ class MiddlewareManager
             }
         }
 
-        usort($all, fn($a, $b) => $b['priority'] <=> $a['priority']);
+        usort($all, static fn (MiddlewareMeta $a, MiddlewareMeta $b): int => $b->getPriority() <=> $a->getPriority());
 
         return $this->middlewareCache[$cacheKey] = $all;
     }
 
-    /**
-     * @return array{
-     *     class: class-string,
-     *     message: string,
-     *     onError: string,
-     *     redirect: ?string,
-     *     isClass: bool,
-     *     params: array<string, mixed>
-     * }
-     */
-    private function buildRateLimitMeta(RateLimit $attr, bool $isClass): array
+    private function buildRateLimitMeta(RateLimit $attr, bool $isClass): MiddlewareMeta
     {
-        return [
-            'class' => RateLimitMiddleware::class,
-            'message' => $attr->message,
-            'onError' => 'block',
-            'redirect' => null,
-            'isClass' => $isClass,
-            'params' => [
+        return new MiddlewareMeta(
+            class: RateLimitMiddleware::class,
+            message: $attr->message,
+            onError: 'block',
+            redirect: null,
+            isClass: $isClass,
+            params: [
                 'maxAttempts' => $attr->maxAttempts,
                 'decaySeconds' => $attr->decaySeconds,
                 'message' => $attr->message,
             ],
-            'priority' => 0,
-        ];
+            priority: 0,
+        );
     }
 
-    /**
-     * @return array{
-     *     class: class-string,
-     *     message: string,
-     *     onError: string,
-     *     redirect: ?string,
-     *     isClass: bool,
-     *     params: array<string, mixed>
-     * }
-     */
-    private function buildIsGrantedMeta(IsGranted $attr, bool $isClass): array
+    private function buildIsGrantedMeta(IsGranted $attr, bool $isClass): MiddlewareMeta
     {
-        return [
-            'class' => IsGrantedMiddleware::class,
-            'message' => $attr->message !== '' ? $attr->message : 'Access denied.',
-            'onError' => $attr->onError,
-            'redirect' => $attr->redirect,
-            'isClass' => $isClass,
-            'params' => [
+        return new MiddlewareMeta(
+            class: IsGrantedMiddleware::class,
+            message: $attr->message !== '' ? $attr->message : 'Access denied.',
+            onError: $attr->onError,
+            redirect: $attr->redirect,
+            isClass: $isClass,
+            params: [
                 'roles' => $attr->roles,
             ],
-            'priority' => 0,
-        ];
+            priority: 0,
+        );
     }
 
     /**
