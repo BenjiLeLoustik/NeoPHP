@@ -1,3 +1,6 @@
+v4.17.1
+- fix: migrate remaining ScannerAttributeManager consumers to AttributeScanResult getters (79e1c54)
+
 v4.17.0
 - docs: update ROADMAP (7e1e058)
 - docs: document AttributeScanResult DTO in Scanner README (844b312)
