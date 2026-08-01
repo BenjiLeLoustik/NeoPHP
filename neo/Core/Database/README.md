@@ -15,6 +15,7 @@ Ce module fournit l'ensemble de la couche d'accès aux données du framework Neo
    - [ObjectHydrator](#objecthydrator)
    - [ProxyFactory](#proxyfactory)
    - [QueryBuilder](#querybuilder)
+   - [Pagination](#pagination)
    - [Collections](#collections)
 3. [Mapping — Attributs PHP](#mapping--attributs-php)
    - [ClassMetaData et MetadataFactory](#classmetadata-et-metadatafactory)
@@ -73,6 +74,9 @@ Database/
 │   ├── Connection/         # DatabaseConnection
 │   └── Introspector/       # DatabaseIntrospector
 │       └── Metadata/       # ColumnMetadata, ForeignKeyMetadata, IndexMetadata
+├── Pagination/
+│   ├── Paginator.php
+│   └── Extension/          # PaginationViewExtension (fonction Twig paginator_links)
 ├── Commands/               # Commandes CLI
 └── DatabaseManager.php
 ```
@@ -194,7 +198,12 @@ $user = $repo->findOneBy(['email' => 'alice@example.com']);
 
 // Compter
 $count = $repo->count(['active' => true]);
+
+// Pagination
+$paginator = $repo->paginate(page: 1, perPage: 20, criteria: ['role' => 'admin'], orderBy: ['name' => 'ASC']);
 ```
+
+Voir la section [Pagination](#pagination) pour l'API complète de l'objet retourné.
 
 **Dépôt personnalisé :**
 
@@ -308,6 +317,66 @@ QueryBuilder::for($db, 'users')
 // Inspecter le SQL généré
 echo $qb->toSql();
 ```
+
+### Pagination
+
+**Fichiers :** `Database/Pagination/Paginator.php`, `Database/Pagination/Extension/PaginationViewExtension.php`
+
+`Paginator` est un conteneur standalone qui porte les éléments d'une page et les métadonnées associées (page courante, nombre total, etc.). Il est produit soit par `QueryBuilder::paginate()`, soit par `EntityRepository::paginate()`.
+
+**Depuis le QueryBuilder :**
+
+```php
+$paginator = QueryBuilder::for($db, 'posts')
+    ->where('published', '=', true)
+    ->orderBy('created_at', 'DESC')
+    ->paginate(page: 2, perPage: 10);
+```
+
+`paginate()` clone le builder pour exécuter le `COUNT()` séparément — le builder d'origine (colonnes, `LIMIT`/`OFFSET`) n'est pas altéré et peut continuer à être utilisé après.
+
+**Depuis un EntityRepository :**
+
+```php
+$paginator = $repo->paginate(page: 1, perPage: 20, criteria: ['role' => 'admin'], orderBy: ['name' => 'ASC']);
+```
+
+**API de `Paginator` :**
+
+| Méthode | Description |
+|---------|-------------|
+| `getItems()` | Éléments de la page courante (`list<T>`) |
+| `getCurrentPage()` | Numéro de la page courante |
+| `getPerPage()` | Nombre d'éléments par page |
+| `getTotalItems()` | Nombre total d'éléments (toutes pages confondues) |
+| `getTotalPages()` | Nombre total de pages |
+| `hasNextPage()` / `hasPreviousPage()` | `bool` |
+| `getNextPage()` / `getPreviousPage()` | Numéro de page suivante/précédente, ou `null` |
+| `getLinks(int $onEachSide = 2)` | Fenêtre glissante de numéros de page pour la navigation, ex. `[1, null, 4, 5, 6, null, 12]` (`null` = `...`) |
+
+`Paginator` implémente aussi `\IteratorAggregate` et `\Countable` : on peut itérer directement dessus (`foreach ($paginator as $item)`) ou faire `count($paginator)`.
+
+**Rendu dans un template Twig :**
+
+La fonction `paginator_links()` génère la navigation HTML. Aucun texte n'est codé en dur dans l'extension : les libellés sont des paramètres, avec des symboles neutres par défaut.
+
+```twig
+{# Navigation basique, symboles par défaut (« / » / …) #}
+{{ paginator_links(paginator) }}
+
+{# Base URL explicite (sinon le chemin de la requête courante est utilisé) #}
+{{ paginator_links(paginator, '/posts') }}
+
+{# Libellés personnalisés / traduits via le module i18n #}
+{{ paginator_links(
+    paginator,
+    prevLabel: translate('pagination.prev'),
+    nextLabel: translate('pagination.next'),
+    gapLabel: translate('pagination.gap')
+) }}
+```
+
+La navigation ajoute un paramètre `?page=N` (ou `&page=N` si l'URL de base contient déjà une query string) à chaque lien, et ne s'affiche pas si le paginator ne contient qu'une seule page.
 
 ### Collections
 
