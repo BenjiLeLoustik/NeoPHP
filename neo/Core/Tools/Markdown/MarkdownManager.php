@@ -48,6 +48,65 @@ class MarkdownManager
         return $this->parse($input);
     }
 
+    /**
+     * @param list<string> $paths
+     * @param list<string> $filenames
+     * @return list<array{path: string, relative: string, title: string, blocks: array<int, array<string, mixed>>}>
+     * @throws MarkdownException
+     */
+    public function getAllMarkdown(array $paths, array $filesnames = ['README.md', 'readme.md']): array
+    {
+        $docs = [];
+        $wanted = array_map('strtolower', $filesnames);
+
+        foreach ($paths as $path) {
+            $root = rtrim(str_replace('\\', '/', $path), '/');
+
+            if (!is_dir($root)) {
+                continue;
+            }
+
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+
+            /** @var \SplFileInfo $item */
+            foreach ($iterator as $item) {
+                if (!$item->isFile() || !in_array(strtolower($item->getFilename()), $wanted, true)) {
+                    continue;
+                }
+
+                $file = str_replace('\\', '/', $item->getPathname());
+                $blocks = $this->blocks($file);
+
+                $docs[] = [
+                    'path' => $file,
+                    'relative' => ltrim(substr($file, strlen($root)), '/'),
+                    'title' => $this->extractTitle($blocks) ?? basename(dirname($file))
+                ];
+            }
+        }
+
+        usort($docs, static fn (array $a, array $b): int => strcmp($a['relative'], $b['relative']));
+
+        return $docs;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $blocks
+     */
+    private function extractTitle(array $blocks): ?string
+    {
+        foreach ($blocks as $block) {
+            if (($block['type'] ?? null) === 'heading' && ($block['level'] ?? null) === 1) {
+                return (string) $block['text'];
+            }
+        }
+
+        return null;
+    }
+
     private function diagnosePath(string $base, string $relative): string
     {
         $segments = array_values(array_filter(
