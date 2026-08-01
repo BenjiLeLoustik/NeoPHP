@@ -4,7 +4,7 @@ Ce module fournit l'ensemble de la couche d'accès aux données du framework Neo
 
 ---
 
-## Table des matières
+## Sommaire
 
 1. [Architecture générale](#architecture-générale)
 2. [ORM — Object-Relational Mapper](#orm--object-relational-mapper)
