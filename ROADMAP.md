@@ -1,7 +1,7 @@
 # ROADMAP — Suivi du framework NeoPHP
 
 > Analyse complète du codebase
-> Dernière mise à jour : 2026-07-28
+> Dernière mise à jour : 2026-08-01
 
 ---
 
@@ -107,6 +107,7 @@ neo/Core/
 |----------|-------------|--------|
 | **`@` operator** utilisé pour supprimer des erreurs à certains endroits | Divers | Faible |
 | **Singleton statique du Container** (`getInstance()`) — état global, problématique pour les tests | `Container.php` | Moyen |
+| **Tableaux de forme fixe** passés entre composants sans DTO — blocks Markdown, résultats scanner, metadata middleware, introspection DB, listeners, config rôle | Divers | Moyen |
 
 ---
 
@@ -117,6 +118,30 @@ neo/Core/
 ---
 
 ### 🔧 Améliorations — Architecture & Qualité
+
+- [ ] 🟡 **`AttributeScanResult` DTO** — remplace `array{target, attribute, arguments, type, reflection}` retourné par `ScannerAttributeManager`
+  - Consommé par 4 composants : `RouterManager`, `MiddlewareManager`, `CronScanner`, `TestScanner`
+  - Fichiers concernés : `neo/Core/Utils/Scanner/ScannerAttributeManager.php` et tous ses consommateurs
+
+- [ ] 🟡 **`MiddlewareMeta` DTO readonly** — remplace `array{class, message, onError, redirect, isClass, params, priority}` dans `MiddlewareManager`
+  - Construit et consommé dans le même fichier, amélioration de lisibilité et de type safety
+  - Fichier concerné : `neo/Core/Security/Middleware/MiddlewareManager.php`
+
+- [ ] 🟡 **Hiérarchie `AbstractBlock`** — remplace `array<string, mixed>` retourné par `MarkdownManager::parse()`
+  - 7 types distincts avec des formes différentes : `HeadingBlock`, `CodeBlock`, `ParagraphBlock`, `ListBlock`, `TableBlock`, `QuoteBlock`, `HrBlock`
+  - Fichiers concernés : `neo/Core/Tools/Markdown/MarkdownManager.php`, `neo/Core/Tools/Markdown/Extension/MarkdownViewExtension.php`
+
+- [ ] 🟠 **`ListenerRegistration` DTO** — remplace `array{class, priority, method, instance}` dans `EventManager`
+  - Sérialisé/désérialisé en JSON, source d'erreurs silencieuses lors de la désérialisation
+  - Fichier concerné : `neo/Core/Event/EventManager.php`
+
+- [ ] 🟠 **`ColumnMetadata`, `ForeignKeyMetadata`, `IndexMetadata` DTOs** — remplace les tableaux retournés par `DatabaseIntrospector`
+  - Utilisés dans le pipeline de génération de migrations (`SchemaDiffer`, `MigrationGenerator`)
+  - Fichier concerné : `neo/Core/Database/Access/Introspector/DatabaseIntrospector.php`
+
+- [ ] 🟠 **`RoleConfig` DTO** — partagé entre `SessionGuard` et `TokenGuard` pour la configuration des rôles
+  - Les deux guards accèdent au même tableau `['relation', 'field', 'model']` sans contrat partagé
+  - Fichiers concernés : `neo/Core/Security/Auth/Guard/SessionGuard.php`, `neo/Core/Security/Auth/Guard/TokenGuard.php`
 
 - [ ] 🟠 **Remplacer le singleton statique du Container** par une injection via le kernel
   - `Container::getInstance()` crée un état global partagé entre tous les tests, rendant l'isolation impossible
@@ -275,8 +300,9 @@ Le framework convient très bien à des **projets petits à moyens** (blog, back
 1. Module Testing — valider le scaffold en conditions réelles + EntityFactory
 2. Tests du framework lui-même (ORM, Router, Container)
 3. Remplacer singleton Container par injection via le kernel
-4. Database Seeding + Pagination avancée + Validation avancée (valeur produit directe)
-5. API Resources + Versioning API (si usage API)
-6. Cache avancé / Logging avancé / Stockage fichiers (selon besoins projet)
-7. Queue / WebSockets / GraphQL (selon besoins projet avancés)
+4. DTOs et typage fort (AttributeScanResult, MiddlewareMeta, AbstractBlock, ListenerRegistration, etc.)
+5. Database Seeding + Pagination avancée + Validation avancée (valeur produit directe)
+6. API Resources + Versioning API (si usage API)
+7. Cache avancé / Logging avancé / Stockage fichiers (selon besoins projet)
+8. Queue / WebSockets / GraphQL (selon besoins projet avancés)
 ```

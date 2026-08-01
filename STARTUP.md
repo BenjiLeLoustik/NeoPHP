@@ -7,17 +7,17 @@ Ce guide vous permet de créer votre première application NeoPHP de A à Z. Il 
 ## Sommaire
 
 1. [Prérequis](#1-prérequis)
-2. [Installation](#2-installation)
-3. [Créer un projet](#3-créer-un-projet)
-4. [Serveur de développement](#4-serveur-de-développement)
-5. [Configuration](#5-configuration)
+2. [Installation du framework](#2-installation-du-framework)
+3. [Créer un nouveau projet](#3-créer-un-nouveau-projet)
+4. [Lancer le serveur de développement](#4-lancer-le-serveur-de-développement)
+5. [Fichiers de configuration](#5-fichiers-de-configuration)
 6. [Routes et contrôleurs](#6-routes-et-contrôleurs)
-7. [Vues Twig](#7-vues-twig)
-8. [Base de données](#8-base-de-données)
+7. [Vues avec Twig](#7-vues-avec-twig)
+8. [Base de données et ORM](#8-base-de-données-et-orm)
 9. [Formulaires](#9-formulaires)
 10. [Authentification](#10-authentification)
 11. [Middlewares](#11-middlewares)
-12. [Commandes](#12-commandes)
+12. [Référence des commandes CLI](#12-référence-des-commandes-cli)
 
 ---
 
@@ -42,9 +42,9 @@ composer -V
 
 ---
 
-## 2. Installation
+## 2. Installation du framework
 
-Clonez le dépôt, puis installez les dépendances :
+Clonez le dépôt NeoPHP, puis installez les dépendances PHP via Composer :
 
 ```bash
 # HTTPS
@@ -62,15 +62,17 @@ composer install
 
 ---
 
-## 3. Créer un projet
+## 3. Créer un nouveau projet
 
-NeoPHP héberge un ou plusieurs projets dans `src/`. La commande suivante génère toute la structure :
+NeoPHP peut héberger un ou plusieurs projets indépendants dans le dossier `src/`. La commande suivante génère automatiquement toute l'arborescence nécessaire pour un nouveau site :
 
 ```bash
 php bin/neo project:create MonSite
 ```
 
-Structure créée dans `src/MonSite/` :
+### Structure générée
+
+Chaque projet est autonome et regroupe son code, ses templates, sa configuration et ses assets :
 
 ```
 src/MonSite/
@@ -100,7 +102,9 @@ src/MonSite/
 
 ---
 
-## 4. Serveur de développement
+## 4. Lancer le serveur de développement
+
+NeoPHP embarque le serveur PHP intégré, pratique pour développer sans configurer Apache ou Nginx en local :
 
 ```bash
 php bin/neo app:serve MonSite
@@ -112,11 +116,13 @@ Le site est accessible sur **http://localhost:8000**.
 
 ---
 
-## 5. Configuration
+## 5. Fichiers de configuration
 
-### app.config.php
+Chaque projet possède son propre dossier `Config/`, avec un fichier dédié par domaine (application, base de données, moteur de templates, etc.). Voici les trois fichiers à connaître pour démarrer.
 
-Fichier de configuration principal. La clé `access` détermine quel projet est servi selon le domaine HTTP.
+### Configuration générale — app.config.php
+
+Fichier de configuration principal du projet. La clé `access` détermine quel projet est servi selon le domaine HTTP appelé, ce qui permet d'héberger plusieurs sites côte à côte.
 
 ```php
 // src/MonSite/Config/app.config.php
@@ -139,7 +145,9 @@ La section `general` est disponible dans tous les templates via la variable glob
 <title>{{ app.name }}</title>
 ```
 
-### database.config.php
+### Connexion à la base de données — database.config.php
+
+Définit la ou les connexions disponibles pour le projet. Plusieurs connexions peuvent être déclarées sous `connections`, la clé `use` indiquant celle utilisée par défaut.
 
 ```php
 // src/MonSite/Config/database.config.php
@@ -160,7 +168,9 @@ return [
 ];
 ```
 
-### twig.config.php
+### Moteur de templates — twig.config.php
+
+Réglages du rendu Twig. Pensez à activer `cache` et désactiver `debug` avant une mise en production.
 
 ```php
 // src/MonSite/Config/twig.config.php
@@ -178,7 +188,7 @@ return [
 
 ## 6. Routes et contrôleurs
 
-### Générer
+### Générer un contrôleur
 
 ```bash
 php bin/neo make:controller TaskController --project=MonSite
@@ -186,9 +196,9 @@ php bin/neo make:controller TaskController --project=MonSite
 
 Cela crée `src/MonSite/App/Controllers/TaskController.php`.
 
-### Routes
+### Déclarer des routes par attributs
 
-Les routes sont déclarées par attributs PHP directement sur les classes et méthodes. `#[MainRoute]` définit un préfixe de chemin et de nom pour tout le contrôleur ; `#[Route]` déclare chaque route individuelle.
+Les routes sont déclarées par attributs PHP directement sur les classes et méthodes, sans fichier de routage séparé. `#[MainRoute]` définit un préfixe de chemin et de nom pour tout le contrôleur ; `#[Route]` déclare chaque route individuelle.
 
 ```php
 <?php
@@ -253,7 +263,7 @@ final class TaskController extends AbstractController
 }
 ```
 
-### Requête
+### Lire les données de la requête
 
 ```php
 // Paramètres GET
@@ -266,7 +276,9 @@ $title = $this->getRequest()->body('title');
 $token = $this->getRequest()->header('Authorization');
 ```
 
-### Réponses
+### Construire une réponse
+
+Un contrôleur peut retourner une vue Twig, une redirection ou une réponse JSON :
 
 ```php
 // Rendu d'un template Twig
@@ -281,7 +293,9 @@ return $this->jsonSuccess(['id' => 42]);
 return $this->jsonError('Non trouvé', 404);
 ```
 
-### Debug router
+### Vérifier les routes enregistrées
+
+Pratique pour vérifier qu'une route est bien enregistrée et connaître son nom exact :
 
 ```bash
 php bin/neo debug:router --project=MonSite
@@ -289,9 +303,9 @@ php bin/neo debug:router --project=MonSite
 
 ---
 
-## 7. Vues Twig
+## 7. Vues avec Twig
 
-### Emplacement
+### Emplacement des templates
 
 Les templates se trouvent dans `src/<Projet>/Templates/`. Le chemin passé à `render()` est **relatif à ce dossier**.
 
@@ -313,7 +327,9 @@ return $this->render('pages/tasks/index.html.twig', ['tasks' => $tasks]);
 //                   ^--- relatif à src/MonSite/Templates/
 ```
 
-### Layout de base
+### Créer le layout de base
+
+Un layout commun définit la structure HTML partagée (head, navigation, footer) que chaque page vient compléter :
 
 ```twig
 {# src/MonSite/Templates/layouts/base.html.twig #}
@@ -343,7 +359,9 @@ return $this->render('pages/tasks/index.html.twig', ['tasks' => $tasks]);
 </html>
 ```
 
-### Héritage
+### Étendre le layout dans une page
+
+Chaque page étend le layout avec `extends` et vient remplir les blocs définis (`title`, `content`, etc.) :
 
 ```twig
 {# src/MonSite/Templates/pages/tasks/index.html.twig #}
@@ -366,9 +384,9 @@ return $this->render('pages/tasks/index.html.twig', ['tasks' => $tasks]);
 {% endblock %}
 ```
 
-### Rendu Twig
+### Afficher un formulaire dans une vue
 
-Le système de formulaires expose des fonctions Twig natives. Le token CSRF est inclus automatiquement.
+Le système de formulaires expose des fonctions Twig natives, avec plusieurs niveaux de granularité selon le contrôle souhaité sur le rendu. Le token CSRF est inclus automatiquement.
 
 ```twig
 {# src/MonSite/Templates/pages/tasks/form.html.twig #}
@@ -398,7 +416,7 @@ Le système de formulaires expose des fonctions Twig natives. Le token CSRF est 
 {% endblock %}
 ```
 
-### Référence
+### Fonctions et variables globales disponibles dans les templates
 
 | Élément | Description |
 |---------|-------------|
@@ -415,9 +433,9 @@ Le système de formulaires expose des fonctions Twig natives. Le token CSRF est 
 | `auth_has_role('admin')` | `true` si l'utilisateur possède le rôle |
 | `translate('clé')` | Traduction d'une clé |
 
-### Assets
+### Compiler les assets CSS/JS
 
-Placez vos fichiers CSS dans `src/MonSite/Assets/css/` et compilez-les :
+Placez vos fichiers CSS et JS dans `src/MonSite/Assets/` puis recompilez-les à chaque modification :
 
 ```bash
 php bin/neo asset:reload --project=MonSite
@@ -425,17 +443,17 @@ php bin/neo asset:reload --project=MonSite
 
 ---
 
-## 8. Base de données
+## 8. Base de données et ORM
 
-### Créer la base
+### Créer la base de données
 
 ```bash
 php bin/neo database:create --project=MonSite
 ```
 
-### Entité
+### Générer une entité
 
-La commande est interactive : elle vous demande les propriétés et leurs types.
+Une entité représente une table en base sous forme de classe PHP. La commande est interactive : elle vous demande les propriétés et leurs types.
 
 ```bash
 php bin/neo make:entity Task --project=MonSite
@@ -486,7 +504,9 @@ class TaskRepository extends EntityRepository
 }
 ```
 
-### Migrations
+### Générer et appliquer les migrations
+
+Une migration traduit les changements d'une entité en instructions SQL. Le flux habituel : générer, vérifier, puis appliquer.
 
 ```bash
 # Aperçu sans écrire de fichier
@@ -499,9 +519,9 @@ php bin/neo database:orm:diff --project=MonSite --name=create_tasks_table
 php bin/neo database:migration:migrate --project=MonSite
 ```
 
-### EntityManager
+### Manipuler les entités avec l'EntityManager
 
-L'`EntityManager` est injecté automatiquement via le constructeur ou récupéré depuis le conteneur :
+L'`EntityManager` centralise la persistance (création, modification, suppression) et est injecté automatiquement via le constructeur ou récupéré depuis le conteneur :
 
 ```php
 use Neo\Core\Database\ORM\Persistence\EntityManager;
@@ -540,7 +560,7 @@ final class TaskController extends AbstractController
 }
 ```
 
-### API
+### Méthodes principales de l'EntityManager
 
 | Méthode | Description |
 |---------|-------------|
@@ -551,7 +571,9 @@ final class TaskController extends AbstractController
 | `getRepository(Task::class)` | Retourne le repository associé |
 | `wrapInTransaction(fn)` | Exécute un callback dans une transaction |
 
-### Repository
+### Ajouter des requêtes personnalisées dans un repository
+
+Chaque entité possède un repository dédié, où l'on peut ajouter des méthodes de requête métier via le query builder :
 
 ```php
 class TaskRepository extends EntityRepository
@@ -572,7 +594,7 @@ class TaskRepository extends EntityRepository
 
 Le framework dispose d'un système de formulaires complet via `FormFactory`, `FormBuilder` et `FormRenderer`. Il gère la création des champs, la validation, le mapping vers une entité et l'inclusion automatique du token CSRF.
 
-### Contrôleur
+### Créer et traiter un formulaire dans le contrôleur
 
 ```php
 use Neo\Core\Database\Form\FormFactory;
@@ -640,7 +662,9 @@ final class TaskController extends AbstractController
 }
 ```
 
-### Template
+### Afficher le formulaire dans le template
+
+Trois niveaux de rendu sont possibles, du plus automatique au plus granulaire :
 
 ```twig
 {% extends 'layouts/base.html.twig' %}
@@ -668,7 +692,7 @@ final class TaskController extends AbstractController
 {% endblock %}
 ```
 
-### Types de champs
+### Types de champs disponibles
 
 | Type | HTML généré |
 |------|-------------|
@@ -682,7 +706,7 @@ final class TaskController extends AbstractController
 | `date` | `<input type="date">` |
 | `hidden` | `<input type="hidden">` |
 
-### Fonctions Twig
+### Fonctions Twig pour le rendu des formulaires
 
 | Fonction | Description |
 |----------|-------------|
@@ -698,7 +722,9 @@ final class TaskController extends AbstractController
 
 ## 10. Authentification
 
-### Configuration
+### Configurer le système d'authentification
+
+Le mode `session` convient aux applications web classiques ; le mode `token` (JWT) est adapté aux API sans état.
 
 ```php
 // src/MonSite/Config/auth.config.php
@@ -724,14 +750,14 @@ Pour JWT, remplacez `guard` par `'token'` et ajoutez :
 ],
 ```
 
-### Entité User
+### Générer l'entité User
 
 ```bash
 php bin/neo make:entity User --project=MonSite
 # Propriétés : email (string), password (string), role (string)
 ```
 
-### Contrôleur
+### Contrôleur de connexion et d'inscription
 
 ```php
 use Neo\Core\Security\Middleware\Attribute\Middleware;
@@ -792,7 +818,7 @@ final class AuthController extends AbstractController
 }
 ```
 
-### API
+### Méthodes du service d'authentification
 
 | Méthode | Description |
 |---------|-------------|
@@ -811,7 +837,7 @@ final class AuthController extends AbstractController
 
 Un middleware est une vérification exécutée avant le contrôleur. Il retourne `true` pour laisser passer la requête, `false` pour la bloquer.
 
-### Générer
+### Générer un middleware
 
 ```bash
 php bin/neo make:middleware AdminOnly --project=MonSite
@@ -841,9 +867,9 @@ class AdminOnlyMiddleware implements MiddlewareInterface
 
 Les dépendances du constructeur sont injectées automatiquement par le conteneur DI.
 
-### Appliquer
+### Appliquer un middleware à une route ou un contrôleur
 
-L'attribut `#[Middleware]` est répétable et peut se placer sur la classe (toutes les routes) ou sur une méthode (une seule route).
+L'attribut `#[Middleware]` est répétable et peut se placer sur la classe (toutes les routes du contrôleur) ou sur une méthode (une seule route).
 
 ```php
 use Neo\Core\Security\Middleware\Attribute\Middleware;
@@ -867,7 +893,7 @@ public function create(): Response { ... }
 public function admin(): Response { ... }
 ```
 
-### Paramètres `#[Middleware]`
+### Options de l'attribut `#[Middleware]`
 
 | Paramètre | Défaut | Description |
 |-----------|--------|-------------|
@@ -878,7 +904,7 @@ public function admin(): Response { ... }
 | `params` | `[]` | Paramètres supplémentaires pour le constructeur |
 | `priority` | `0` | Ordre d'exécution (décroissant) |
 
-### Intégrés
+### Middlewares fournis par le framework
 
 | Classe | Description |
 |--------|-------------|
@@ -892,9 +918,11 @@ public function admin(): Response { ... }
 
 ---
 
-## 12. Commandes
+## 12. Référence des commandes CLI
 
-### Projet
+Récapitulatif de toutes les commandes `php bin/neo` disponibles, regroupées par usage.
+
+### Gestion de projet
 
 | Commande | Description |
 |----------|-------------|
@@ -902,7 +930,7 @@ public function admin(): Response { ... }
 | `project:create <Nom> --skeleton` | Créer avec structure minimale |
 | `app:serve <Nom>` | Démarrer le serveur PHP intégré |
 
-### Génération de code
+### Génération de code (scaffolding)
 
 | Commande | Description |
 |----------|-------------|
@@ -914,7 +942,7 @@ public function admin(): Response { ... }
 | `make:cron <Nom> --project=X` | Générer une tâche planifiée |
 | `app:make:command <Nom> --project=X` | Générer une commande CLI |
 
-### Base de données
+### Base de données et migrations
 
 | Commande | Description |
 |----------|-------------|
@@ -925,7 +953,7 @@ public function admin(): Response { ... }
 | `database:migration:rollback --project=X` | Annuler la dernière migration |
 | `database:migration:status --project=X` | Statut des migrations |
 
-### Utilitaires
+### Utilitaires divers
 
 | Commande | Description |
 |----------|-------------|
