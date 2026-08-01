@@ -8,12 +8,13 @@ Le sous-module `Middleware` fournit un pipeline d'autorisation déclaratif par a
 
 1. [Structure](#structure)
 2. [MiddlewareInterface](#middlewareinterface)
-3. [MiddlewareManager](#middlewaremanager)
-4. [Attribut `#[Middleware]`](#attribut-middleware)
-5. [Attribut `#[IsGranted]`](#attribut-isgranted)
-6. [Middlewares intégrés](#middlewares-intégrés)
-7. [Créer un middleware personnalisé](#créer-un-middleware-personnalisé)
-8. [Commande CLI](#commande-cli)
+3. [MiddlewareMeta](#middlewaremeta)
+4. [MiddlewareManager](#middlewaremanager)
+5. [Attribut `#[Middleware]`](#attribut-middleware)
+6. [Attribut `#[IsGranted]`](#attribut-isgranted)
+7. [Middlewares intégrés](#middlewares-intégrés)
+8. [Créer un middleware personnalisé](#créer-un-middleware-personnalisé)
+9. [Commande CLI](#commande-cli)
 
 ---
 
@@ -25,6 +26,8 @@ Middleware/
 ├── MiddlewareModule.php                # Enregistrement DI
 ├── Interface/
 │   └── MiddlewareInterface.php         # Contrat : handle(): bool
+├── Meta/
+│   └── MiddlewareMeta.php              # DTO des métadonnées d'un middleware résolu
 ├── Attribute/
 │   ├── Middleware.php                  # Attribut déclaratif (répétable)
 │   └── IsGranted.php                   # Raccourci pour les rôles
@@ -65,6 +68,31 @@ interface MiddlewareInterface
 
 ---
 
+## MiddlewareMeta
+
+**Fichier :** `Meta/MiddlewareMeta.php`
+
+DTO qui représente un middleware résolu pour une classe/méthode donnée, qu'il provienne d'un attribut `#[Middleware]`, `#[IsGranted]` ou `#[RateLimit]`. Utilisé en interne par `MiddlewareManager::getMiddlewares()` : c'est cette forme typée qui remplace l'ancien tableau associatif et qui est parcourue par `run()` et `isAccessible()`.
+
+```php
+final class MiddlewareMeta
+{
+    public function __construct(
+        public string $class,      // Classe du middleware à exécuter
+        public string $message,    // Message en cas d'échec
+        public string $onError,    // 'block' ou 'soft'
+        public ?string $redirect,  // Nom de route de redirection, ou null
+        public bool $isClass,      // true si déclaré sur la classe, false si sur la méthode
+        public array $params,      // Paramètres injectés au constructeur du middleware
+        public int $priority,      // Ordre d'exécution (décroissant)
+    ) {}
+}
+```
+
+Chaque propriété est accessible via un getter dédié (`getClass()`, `getMessage()`, `getOnError()`, `getRedirect()`, `isClass()`, `getParams()`, `getPriority()`). Le DTO est purement descriptif : il n'a pas de setter, ses instances sont construites une seule fois lors de la découverte des middlewares puis mises en cache.
+
+---
+
 ## MiddlewareManager
 
 **Fichier :** `MiddlewareManager.php`
@@ -73,7 +101,7 @@ Chef d'orchestre du pipeline. Appelé automatiquement par le `RouterManager` ava
 
 ### Découverte des middlewares
 
-Le manager lit les attributs `#[Middleware]`, `#[IsGranted]` et `#[RateLimit]` sur la **classe** du contrôleur ET sur la **méthode** ciblée. Les middlewares de classe sont appliqués en premier, puis ceux de la méthode. L'ordre final est déterminé par le champ `priority` (valeur plus haute = exécutée en premier).
+Le manager lit les attributs `#[Middleware]`, `#[IsGranted]` et `#[RateLimit]` sur la **classe** du contrôleur ET sur la **méthode** ciblée, et les transforme en instances de `MiddlewareMeta`. Les middlewares de classe sont appliqués en premier, puis ceux de la méthode. L'ordre final est déterminé par `getPriority()` (valeur plus haute = exécutée en premier).
 
 ### Exécution
 
