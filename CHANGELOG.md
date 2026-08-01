@@ -1,1 +1,1 @@
-- doc: update documentation for ROADMAP and STATUP (b142e5a)
+- docs: fix title and subtitle length size (fedc553)
