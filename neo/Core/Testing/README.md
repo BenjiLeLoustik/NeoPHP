@@ -4,7 +4,7 @@ The Testing module provides the complete testing infrastructure for NeoPHP appli
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Module Structure](#module-structure)
 2. [Base Classes](#base-classes)

@@ -4,7 +4,7 @@ The `Config` submodule loads, exposes, and allows modification of a project's PH
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Structure](#structure)
 2. [ConfigManager](#configmanager)

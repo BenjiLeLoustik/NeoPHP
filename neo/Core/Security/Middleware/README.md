@@ -4,7 +4,7 @@ The `Middleware` submodule provides a declarative, attribute-based authorization
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Structure](#structure)
 2. [MiddlewareInterface](#middlewareinterface)

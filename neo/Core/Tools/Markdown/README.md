@@ -4,7 +4,7 @@ Lightweight Markdown parser with no external dependencies. Converts Markdown tex
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Module Structure](#module-structure)
 2. [Block Hierarchy](#block-hierarchy)

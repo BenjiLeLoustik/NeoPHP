@@ -4,7 +4,7 @@ The `Logger` submodule provides a structured logging system with support for RFC
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Structure](#structure)
 2. [Configuration](#configuration)

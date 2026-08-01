@@ -4,7 +4,7 @@ The `Scanner` submodule provides a reflection tool for discovering and reading P
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Structure](#structure)
 2. [ScannerAttributeManager](#scannerattributemanager)

@@ -4,7 +4,7 @@ The `Notification` submodule provides a multi-channel sending system (Email, Sla
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Structure](#structure)
 2. [NotificationManager](#notificationmanager)

@@ -4,7 +4,7 @@ The View module integrates the **Twig** template engine into NeoPHP. It exposes 
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Module Structure](#module-structure)
 2. [Twig Configuration](#twig-configuration)

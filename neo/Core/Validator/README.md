@@ -6,7 +6,7 @@ Since the refactoring, each constraint is **split into two files**: a PHP attrib
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Module Structure](#module-structure)
 2. [Interfaces](#interfaces)

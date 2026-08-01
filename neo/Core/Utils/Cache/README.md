@@ -4,7 +4,7 @@ The `Cache` submodule provides a caching system with several interchangeable dri
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Structure](#structure)
 2. [Configuration](#configuration)

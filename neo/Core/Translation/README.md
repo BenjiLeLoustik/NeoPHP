@@ -4,7 +4,7 @@ The Translation module provides a complete internationalization (i18n) system fo
 
 ---
 
-## Table of Contents
+## Summary
 
 1. [Module Structure](#module-structure)
 2. [Configuration](#configuration)
