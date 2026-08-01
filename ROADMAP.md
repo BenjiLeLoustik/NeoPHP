@@ -123,7 +123,7 @@ neo/Core/
   - Consommé par 4 composants : `RouterManager`, `MiddlewareManager`, `CronScanner`, `TestScanner`
   - Fichiers concernés : `neo/Core/Utils/Scanner/ScannerAttributeManager.php` et tous ses consommateurs
 
-- [ ] 🟡 **`MiddlewareMeta` DTO readonly** — remplace `array{class, message, onError, redirect, isClass, params, priority}` dans `MiddlewareManager`
+- [x] 🟡 **`MiddlewareMeta` DTO readonly** — remplace `array{class, message, onError, redirect, isClass, params, priority}` dans `MiddlewareManager`
   - Construit et consommé dans le même fichier, amélioration de lisibilité et de type safety
   - Fichier concerné : `neo/Core/Security/Middleware/MiddlewareManager.php`
 
