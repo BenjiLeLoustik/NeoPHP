@@ -7,6 +7,7 @@ use Neo\Core\Database\ORM\Persistence\EntityManager;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Request\Request;
+use Neo\Core\Security\Auth\Config\RoleConfig;
 use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Exception\JwtException;
 use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;
@@ -125,7 +126,9 @@ class AuthManager
     {
         $guardType = $this->config['guard'] ?? 'session';
         $options = $this->config['options'] ?? [];
-        $role = $this->config['role'] ?? [];
+        $role = is_array($this->config['role'] ?? null) ? $this->config['role'] : [];
+
+        $roleConfig = RoleConfig::fromArray($role);
 
         $em = $this->container->get(EntityManager::class);
 
@@ -142,7 +145,7 @@ class AuthManager
                 $this->config['model'],
                 $this->config['identifier'] ?? 'email',
                 $this->config['password'] ?? 'password',
-                $role
+                $roleConfig
             ),
             default => new SessionGuard(
                 $this->container->get('auth.clientModule')->session(),
@@ -151,7 +154,7 @@ class AuthManager
                 $this->config['model'],
                 $this->config['identifier'] ?? 'email',
                 $this->config['password'] ?? 'password',
-                $role,
+                $roleConfig,
                 (int) ($options['timeout'] ?? 1800)
             ),
         };
