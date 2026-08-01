@@ -27,13 +27,22 @@ return [
     'connections' => [
         'default' => [
             'driver'  => "mysql",
-            'host'    => "localhost",
+            'host'    => "127.0.0.1",
             'port'    => 3306,
             'user'    => "",
             'pass'    => "",
             'dbname'  => "",
             'charset' => "utf8mb4",
             'prefix'  => "",
+
+            /**
+             * Persistent PDO connections (PDO::ATTR_PERSISTENT).
+             * Reduces reconnection overhead on high-traffic FPM servers.
+             * Warning: an uncommitted/unrolled-back transaction can leak into
+             * the next request served by the same worker. Only enable this if
+             * the application code guarantees every transaction is closed.
+             */
+            'persistent' => false,
         ],
     ],
 ];
