@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database\ORM\Persistence;
 
 use Neo\Core\Database\ORM\Mapping\ClassMetaData;
+use Neo\Core\Database\Pagination\Paginator;
 
 /**
  * @template TEntity of object
@@ -54,6 +55,22 @@ class EntityRepository
     {
         $result = $this->persister()->loadAll($this->toColumns($criteria), $orderBy, 1);
         return $result[0] ?? null;
+    }
+
+    /**
+     * @param array<string, mixed> $criteria
+     * @param array<string, string> $orderBy
+     * @return Paginator<TEntity>
+     */
+    public function paginate(int $page = 1, int $perPage = 15, array $criteria = [], array $orderBy = []): Paginator
+    {
+        $page = max(1, $page);
+        $totalItems = $this->count($criteria);
+        $offset = ($page - 1) * $perPage;
+
+        $items = $this->findBy($criteria, $orderBy, $perPage, $offset);
+
+        return new Paginator($items, $totalItems, $page, $perPage);
     }
 
     /**
