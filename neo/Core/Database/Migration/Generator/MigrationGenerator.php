@@ -4,10 +4,18 @@ declare(strict_types=1);
 namespace Neo\Core\Database\Migration\Generator;
 
 use Neo\Core\Database\Access\Introspector\DatabaseIntrospector;
+use Neo\Core\Database\Access\Introspector\Metadata\ColumnMetadata;
 use Neo\Core\Database\Exception\DatabaseException;
 
 /**
- * @phpstan-type ColumnDef array{name: string, type: string, nullable?: bool, default?: string|null, key?: string, extra?: string}
+ * @phpstan-type ColumnDef array{
+ *     name: string,
+ *     type: string,
+ *     nullable?: bool,
+ *     default?: string|null,
+ *     key?: string,
+ *     extra?: string
+ * }
  */
 final class MigrationGenerator
 {
@@ -27,7 +35,10 @@ final class MigrationGenerator
                 continue;
             }
 
-            $columns = $this->introspector->getColumns($table);
+            $columns = array_map(
+                static fn (ColumnMetadata $column): array => $column->toArray(),
+                $this->introspector->getColumns($table)
+            );
             $upLines[] = $this->guardedCreateTable($table, $columns);
             $downLines[] = $this->guardedDropTable($table);
         }
