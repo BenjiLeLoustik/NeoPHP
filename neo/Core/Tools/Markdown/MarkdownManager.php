@@ -83,7 +83,8 @@ class MarkdownManager
                 $docs[] = [
                     'path' => $file,
                     'relative' => ltrim(substr($file, strlen($root)), '/'),
-                    'title' => $this->extractTitle($blocks) ?? basename(dirname($file))
+                    'title' => $this->extractTitle($blocks) ?? basename(dirname($file)),
+                    'description' => $this->extractDescription($blocks),
                 ];
             }
         }
@@ -91,6 +92,20 @@ class MarkdownManager
         usort($docs, static fn (array $a, array $b): int => strcmp($a['relative'], $b['relative']));
 
         return $docs;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $blocks
+     */
+    private function extractDescription(array $blocks): ?string
+    {
+        foreach ($blocks as $block) {
+            if (($block['type'] ?? null) === 'paragraph') {
+                return (string) $block['text'];
+            }
+        }
+
+        return null;
     }
 
     /**
