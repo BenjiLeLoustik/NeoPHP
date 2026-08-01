@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace Neo\Core\Database\Access\Introspector;
 
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
+use Neo\Core\Database\Access\Introspector\Metadata\ColumnMetadata;
+use Neo\Core\Database\Access\Introspector\Metadata\ForeignKeyMetadata;
+use Neo\Core\Database\Access\Introspector\Metadata\IndexMetadata;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
 use PDO;
@@ -23,7 +26,9 @@ class DatabaseIntrospector
         $this->pdo = DatabaseConnection::getPdo($this->connection);
 
         $connectionName = $connection ?? DatabaseConnection::getDefaultName();
-        $this->prefix = $container->get('database.configModule')->from('database')->get("connections.{$connectionName}.prefix") ?? '';
+        $this->prefix = $container->get('database.configModule')
+            ->from('database')
+            ->get("connections.{$connectionName}.prefix") ?? '';
     }
 
     public static function on(Container $container, string $connection): self
@@ -69,7 +74,7 @@ class DatabaseIntrospector
     }
 
     /**
-     * @return list<array{name: string, type: string, nullable: bool, default: string|null, key: string, extra: string}>
+     * @return list<ColumnMetadata>
      */
     public function getColumns(string $table): array
     {
@@ -79,14 +84,14 @@ class DatabaseIntrospector
 
             $columns = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $columns[] = [
-                    'name' => $row['Field'],
-                    'type' => $row['Type'],
-                    'nullable' => $row['Null'] === 'YES',
-                    'default' => $row['Default'],
-                    'key' => $row['Key'],
-                    'extra' => $row['Extra'],
-                ];
+                $columns[] = new ColumnMetadata(
+                    name: $row['Field'],
+                    type: $row['Type'],
+                    nullable: $row['Null'] === 'YES',
+                    default: $row['Default'],
+                    key: $row['Key'],
+                    extra: $row['Extra'],
+                );
             }
 
             return $columns;
@@ -101,7 +106,7 @@ class DatabaseIntrospector
     }
 
     /**
-     * @return list<array{name: string, column: string, referencedTable: string, referencedColumn: string, onDelete: string, onUpdate: string}>
+     * @return list<ForeignKeyMetadata>
      */
     public function getForeignKeys(string $table): array
     {
@@ -129,14 +134,14 @@ class DatabaseIntrospector
 
             $fks = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $fks[] = [
-                    'name' => $row['name'],
-                    'column' => $row['col'],
-                    'referencedTable' => $row['ref_table'],
-                    'referencedColumn' => $row['ref_col'],
-                    'onDelete' => $row['on_delete'],
-                    'onUpdate' => $row['on_update'],
-                ];
+                $fks[] = new ForeignKeyMetadata(
+                    name: $row['name'],
+                    column: $row['col'],
+                    referencedTable: $row['ref_table'],
+                    referencedColumn: $row['ref_col'],
+                    onDelete: $row['on_delete'],
+                    onUpdate: $row['on_update'],
+                );
             }
 
             return $fks;
@@ -151,7 +156,7 @@ class DatabaseIntrospector
     }
 
     /**
-     * @return list<array{name: string, columns: list<string>, unique: bool}>
+     * @return list<IndexMetadata>
      */
     public function getIndexes(string $table): array
     {
@@ -159,21 +164,24 @@ class DatabaseIntrospector
             $stmt = $this->pdo->prepare("SHOW INDEX FROM `{$table}`");
             $stmt->execute();
 
+            /** @var array<string, array{unique: bool, columns: array<int, string>}> $grouped */
             $grouped = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $name = $row['Key_name'];
                 if ($name === 'PRIMARY') {
                     continue;
                 }
-                $grouped[$name] ??= ['name' => $name, 'columns' => [], 'unique' => ((int) $row['Non_unique']) === 0];
+                $grouped[$name] ??= ['unique' => ((int) $row['Non_unique']) === 0, 'columns' => []];
                 $grouped[$name]['columns'][(int) $row['Seq_in_index']] = $row['Column_name'];
             }
 
-            return array_values(array_map(static function (array $index): array {
-                ksort($index['columns']);
-                $index['columns'] = array_values($index['columns']);
-                return $index;
-            }, $grouped));
+            $indexes = [];
+            foreach ($grouped as $name => $data) {
+                ksort($data['columns']);
+                $indexes[] = new IndexMetadata($name, array_values($data['columns']), $data['unique']);
+            }
+
+            return $indexes;
         } catch (PDOException $e) {
             throw new DatabaseException(
                 title: 'Database Introspection Error',
