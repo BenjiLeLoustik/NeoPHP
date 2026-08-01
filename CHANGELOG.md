@@ -1,3 +1,6 @@
+v4.20.5
+- fix: remove auth from gitignore (b01b8fd)
+
 v4.20.4
 - fix: use AttributeScanResult getters instead of array access in ConsoleManager (2938884)
 
