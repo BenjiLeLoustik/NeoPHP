@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database\Migration;
 
 use Neo\Core\Database\Access\Introspector\DatabaseIntrospector;
+use Neo\Core\Database\Access\Introspector\Metadata\ColumnMetadata;
 use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Database\Exception\DatabaseException;
 
@@ -71,7 +72,14 @@ final class MigrationSchemaSnapshot
     }
 
     /**
-     * @return array<string, list<array{name: string, type: string, nullable: bool, default: string|null, key: string, extra: string}>>
+     * @return array<string, list<array{
+     *     name: string,
+     *     type: string,
+     *     nullable: bool,
+     *     default: string|null,
+     *     key: string,
+     *     extra: string
+     * }>>
      */
     public function getCurrentSchema(): array
     {
@@ -79,7 +87,14 @@ final class MigrationSchemaSnapshot
     }
 
     /**
-     * @return array<string, list<array{name: string, type: string, nullable: bool, default: string|null, key: string, extra: string}>>
+     * @return array<string, list<array{
+     *     name: string,
+     *     type: string,
+     *     nullable: bool,
+     *     default: string|null,
+     *     key: string,
+     *     extra: string
+     * }>>
      */
     private function buildDumpArray(): array
     {
@@ -91,7 +106,10 @@ final class MigrationSchemaSnapshot
                 continue;
             }
 
-            $dump[$table] = $this->introspector->getColumns($table);
+            $dump[$table] = array_map(
+                static fn (ColumnMetadata $column): array => $column->toArray(),
+                $this->introspector->getColumns($table)
+            );
         }
 
         ksort($dump);
