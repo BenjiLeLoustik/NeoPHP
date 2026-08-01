@@ -7,6 +7,7 @@ use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Form\PropertyAccessor;
 use Neo\Core\Database\ORM\Persistence\EntityManager;
 use Neo\Core\Http\Client\Session\Session;
+use Neo\Core\Security\Auth\Config\RoleConfig;
 use Neo\Core\Security\Auth\Exception\AuthException;
 use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;
 use Neo\Core\Security\Auth\PasswordManager;
@@ -21,7 +22,6 @@ final class SessionGuard implements GuardInterface
 
     /**
      * @param class-string $model
-     * @param array<string, mixed> $role
      */
     public function __construct(
         private readonly Session $session,
@@ -30,7 +30,7 @@ final class SessionGuard implements GuardInterface
         private readonly string $model,
         private readonly string $identifier,
         private readonly string $password,
-        private readonly array $role = [],
+        private readonly ?RoleConfig $role = null,
         private readonly int $timeout = self::DEFAULT_TIMEOUT,
     ) {
         $this->accessor = new PropertyAccessor();
@@ -126,7 +126,7 @@ final class SessionGuard implements GuardInterface
      */
     public function hasRole(string $role): bool
     {
-        if ($this->role === []) {
+        if ($this->role === null) {
             return false;
         }
 
@@ -136,19 +136,19 @@ final class SessionGuard implements GuardInterface
             return false;
         }
 
-        $roleValue = $this->accessor->getValue($user, $this->role['relation']);
+        $roleValue = $this->accessor->getValue($user, $this->role->getRelation());
 
         if ($roleValue === null) {
             return false;
         }
 
-        $field = $this->role['field'];
+        $field = $this->role->getField();
 
         if (is_object($roleValue)) {
             return $this->accessor->getValue($roleValue, $field) === $role;
         }
 
-        $roleEntity = $this->em->find($this->role['model'], $roleValue);
+        $roleEntity = $this->em->find($this->role->getModel(), $roleValue);
 
         return $roleEntity !== null && $this->accessor->getValue($roleEntity, $field) === $role;
     }
