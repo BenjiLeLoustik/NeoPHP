@@ -1,3 +1,6 @@
+v4.20.4
+- fix: use AttributeScanResult getters instead of array access in ConsoleManager (2938884)
+
 v4.20.3
 - fix: replace "Table of Contents" to "Summary" (38290dc)
 
