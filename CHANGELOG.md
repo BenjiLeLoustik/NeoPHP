@@ -1,4 +1,4 @@
-- docs: update ROADMAP (d3668f7)
-- docs: document MiddlewareMeta DTO in README (e5cf9e7)
-- refactor: replace array shape with MiddlewareMeta DTO in MiddlewareManager (fb5a389)
-- feat: add MiddlewareMeta DTO (d329ffe)
+- docs: update ROADMAP (97865db)
+- docs: document ListenerRegistration DTO in Event README (a3e776c)
+- refactor: use ListenerRegistration instead of array shape in EventManager (a6f304c)
+- feat: add ListenerRegistration DTO with JSON serialization support (383481c)
