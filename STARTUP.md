@@ -4,24 +4,24 @@ This guide walks you through building your first NeoPHP application from scratch
 
 ---
 
-## Table of contents
+## Summary
 
-1. [Prerequisites](#1-prerequisites)
-2. [Installing the framework](#2-installing-the-framework)
-3. [Creating a new project](#3-creating-a-new-project)
-4. [Starting the development server](#4-starting-the-development-server)
-5. [Configuration files](#5-configuration-files)
-6. [Routes and controllers](#6-routes-and-controllers)
-7. [Views with Twig](#7-views-with-twig)
-8. [Database and ORM](#8-database-and-orm)
-9. [Forms](#9-forms)
-10. [Authentication](#10-authentication)
-11. [Middlewares](#11-middlewares)
-12. [CLI command reference](#12-cli-command-reference)
+- [Prerequisites](#1-prerequisites)
+- [Installing the framework](#2-installing-the-framework)
+- [Creating a new project](#3-creating-a-new-project)
+- [Starting the development server](#4-starting-the-development-server
+- [Configuration files](#5-configuration-files)
+- [Routes and controllers](#6-routes-and-controllers)
+- [Views with Twig](#7-views-with-twig)
+- [Database and ORM](#8-database-and-orm)
+- [Forms](#9-forms)
+- [Authentication](#10-authentication)
+- [Middlewares](#11-middlewares)
+- [CLI command reference](#12-cli-command-reference)
 
 ---
 
-## 1. Prerequisites
+## Prerequisites
 
 | Tool | Minimum version |
 |-------|-----------------|
@@ -42,7 +42,7 @@ composer -V
 
 ---
 
-## 2. Installing the framework
+## Installing the framework
 
 Clone the NeoPHP repository, then install the PHP dependencies via Composer:
 
@@ -62,7 +62,7 @@ composer install
 
 ---
 
-## 3. Creating a new project
+## Creating a new project
 
 NeoPHP can host one or more independent projects in the `src/` folder. The following command automatically generates the entire folder structure needed for a new site:
 
@@ -102,7 +102,7 @@ src/MySite/
 
 ---
 
-## 4. Starting the development server
+## Starting the development server
 
 NeoPHP ships with PHP's built-in server, handy for developing locally without configuring Apache or Nginx:
 
@@ -116,7 +116,7 @@ The site is available at **http://localhost:8000**.
 
 ---
 
-## 5. Configuration files
+##Configuration files
 
 Each project has its own `Config/` folder, with a dedicated file per domain (application, database, template engine, etc.). Here are the three files to know to get started.
 
@@ -186,7 +186,7 @@ return [
 
 ---
 
-## 6. Routes and controllers
+## Routes and controllers
 
 ### Generating a controller
 
@@ -303,7 +303,7 @@ php bin/neo debug:router --project=MySite
 
 ---
 
-## 7. Views with Twig
+## Views with Twig
 
 ### Template location
 
@@ -443,7 +443,7 @@ php bin/neo asset:reload --project=MySite
 
 ---
 
-## 8. Database and ORM
+## Database and ORM
 
 ### Creating the database
 
@@ -590,7 +590,7 @@ class TaskRepository extends EntityRepository
 
 ---
 
-## 9. Forms
+## Forms
 
 The framework has a full form system via `FormFactory`, `FormBuilder`, and `FormRenderer`. It handles field creation, validation, mapping to an entity, and automatically includes the CSRF token.
 
@@ -720,7 +720,7 @@ Three levels of rendering are possible, from most automatic to most granular:
 
 ---
 
-## 10. Authentication
+## Authentication
 
 ### Configuration
 
@@ -833,7 +833,7 @@ final class AuthController extends AbstractController
 
 ---
 
-## 11. Middlewares
+## Middlewares
 
 A middleware is a check run before the controller. It returns `true` to let the request through, `false` to block it.
 
@@ -918,7 +918,7 @@ public function admin(): Response { ... }
 
 ---
 
-## 12. CLI command reference
+## CLI command reference
 
 Summary of all available `php bin/neo` commands, grouped by use case.
 
