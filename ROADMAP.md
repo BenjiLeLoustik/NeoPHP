@@ -162,7 +162,7 @@ neo/Core/
   - `RouterManager` scanne les contrôleurs via `ReflectionClass` à chaque requête dev — déjà mis en cache JSON en prod, mais le cache dev est rechargé à chaque fois
   - Fichiers prioritaires : `neo/Core/Database/ORM/Mapping/MetadataFactory.php`, `neo/Core/Routing/RouterManager.php`
 
-- [ ] 🟡 **Contrôler le buffering de sortie** — `ob_start()` / `ob_end_clean()` autour du dispatch dans `App::run()` pour éviter tout flush prématuré avant que les headers soient envoyés
+- [x] 🟡 **Contrôler le buffering de sortie** — `ob_start()` / `ob_end_clean()` autour du dispatch dans `App::run()` pour éviter tout flush prématuré avant que les headers soient envoyés
 
 - [ ] 🟠 **Détection automatique des requêtes N+1** en mode dev
   - Dans `DatabaseManager` (ou le `QueryCollector`), compter les requêtes identiques (même table, même structure, paramètres différents) dans une même requête HTTP
