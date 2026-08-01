@@ -201,21 +201,22 @@ class MiddlewareManager
             ->scan();
 
         foreach ($classResults as $entry) {
-            if ($entry['attribute'] instanceof MiddlewareAttribute) {
-                $i = $entry['attribute'];
+            $attribute = $entry->getAttribute();
+
+            if ($attribute instanceof MiddlewareAttribute) {
                 $all[] = new MiddlewareMeta(
-                    class: $i->use,
-                    message: $i->message,
-                    onError: $i->onError,
-                    redirect: $i->redirect,
+                    class: $attribute->use,
+                    message: $attribute->message,
+                    onError: $attribute->onError,
+                    redirect: $attribute->redirect,
                     isClass: true,
-                    params: $i->params,
-                    priority: $i->priority,
+                    params: $attribute->params,
+                    priority: $attribute->priority,
                 );
-            } elseif ($entry['attribute'] instanceof RateLimit) {
-                $all[] = $this->buildRateLimitMeta($entry['attribute'], true);
-            } elseif ($entry['attribute'] instanceof IsGranted) {
-                $all[] = $this->buildIsGrantedMeta($entry['attribute'], true);
+            } elseif ($attribute instanceof RateLimit) {
+                $all[] = $this->buildRateLimitMeta($attribute, true);
+            } elseif ($attribute instanceof IsGranted) {
+                $all[] = $this->buildIsGrantedMeta($attribute, true);
             }
         }
 
@@ -225,28 +226,28 @@ class MiddlewareManager
                 ->scan();
 
             foreach ($methodResults as $entry) {
-                /** @var array{reflection: ReflectionMethod, attribute: MiddlewareAttribute|RateLimit|IsGranted} $entry */
-                $refMethod = $entry['reflection'];
+                $refMethod = $entry->getReflection();
 
-                if ($refMethod->getName() !== $method) {
+                if (!$refMethod instanceof ReflectionMethod || $refMethod->getName() !== $method) {
                     continue;
                 }
 
-                if ($entry['attribute'] instanceof MiddlewareAttribute) {
-                    $i = $entry['attribute'];
+                $attribute = $entry->getAttribute();
+
+                if ($attribute instanceof MiddlewareAttribute) {
                     $all[] = new MiddlewareMeta(
-                        class: $i->use,
-                        message: $i->message,
-                        onError: $i->onError,
-                        redirect: $i->redirect,
+                        class: $attribute->use,
+                        message: $attribute->message,
+                        onError: $attribute->onError,
+                        redirect: $attribute->redirect,
                         isClass: false,
-                        params: $i->params,
-                        priority: $i->priority,
+                        params: $attribute->params,
+                        priority: $attribute->priority,
                     );
-                } elseif ($entry['attribute'] instanceof RateLimit) {
-                    $all[] = $this->buildRateLimitMeta($entry['attribute'], false);
-                } elseif ($entry['attribute'] instanceof IsGranted) {
-                    $all[] = $this->buildIsGrantedMeta($entry['attribute'], false);
+                } elseif ($attribute instanceof RateLimit) {
+                    $all[] = $this->buildRateLimitMeta($attribute, false);
+                } elseif ($attribute instanceof IsGranted) {
+                    $all[] = $this->buildIsGrantedMeta($attribute, false);
                 }
             }
         }
@@ -336,11 +337,12 @@ class MiddlewareManager
                 ->scan();
 
             foreach ($methodResults as $entry) {
-                /** @var array{reflection: ReflectionMethod, attribute: Maintenance} $entry */
-                $refMethod = $entry['reflection'];
+                $refMethod = $entry->getReflection();
 
-                if ($refMethod->getName() === $method) {
-                    $maintenance = $entry['attribute'];
+                if ($refMethod instanceof ReflectionMethod && $refMethod->getName() === $method) {
+                    /** @var Maintenance $attribute */
+                    $attribute = $entry->getAttribute();
+                    $maintenance = $attribute;
                     break;
                 }
             }
@@ -353,7 +355,9 @@ class MiddlewareManager
                 ->scan();
 
             if (!empty($classResults)) {
-                $maintenance = $classResults[0]['attribute'];
+                /** @var Maintenance $attribute */
+                $attribute = $classResults[0]->getAttribute();
+                $maintenance = $attribute;
             }
         }
 

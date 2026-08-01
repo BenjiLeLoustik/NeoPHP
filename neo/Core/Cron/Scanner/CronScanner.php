@@ -12,7 +12,14 @@ use ReflectionMethod;
 class CronScanner
 {
     /**
-     * @return list<array{class: class-string, method: string, expression: string, description: string, timezone: string, lock: bool}>
+     * @return list<array{
+     *     class: class-string,
+     *     method: string,
+     *     expression: string,
+     *     description: string,
+     *     timezone: string,
+     *     lock: bool
+     * }>
      * @throws ReflectionException
      */
     public function scan(string $cronsPath): array
@@ -61,9 +68,14 @@ class CronScanner
                 ->scan();
 
             foreach ($results as $entry) {
-                /** @var array{attribute: Cron, reflection: ReflectionMethod} $entry */
-                $cron = $entry['attribute'];
-                $refMethod = $entry['reflection'];
+                $refMethod = $entry->getReflection();
+
+                if (!$refMethod instanceof ReflectionMethod) {
+                    continue;
+                }
+
+                /** @var Cron $cron */
+                $cron = $entry->getAttribute();
 
                 $jobs[] = [
                     'class' => $fqcn,

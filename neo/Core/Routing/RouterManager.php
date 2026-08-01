@@ -123,21 +123,25 @@ class RouterManager
             $prefixPath = '';
             $prefixName = '';
             foreach ($results as $entry) {
-                if ($entry['type'] === 'class' && $entry['attribute'] instanceof MainRouteAttribute) {
-                    $prefixPath = rtrim($entry['attribute']->path, '/');
-                    $prefixName = $entry['attribute']->name . '.';
+                if ($entry->getType() === 'class' && $entry->getAttribute() instanceof MainRouteAttribute) {
+                    $prefixPath = rtrim($entry->getAttribute()->path, '/');
+                    $prefixName = $entry->getAttribute()->name . '.';
                     break;
                 }
             }
 
             foreach ($results as $entry) {
-                if ($entry['type'] !== 'method' || !($entry['attribute'] instanceof RouteAttribute)) {
+                if ($entry->getType() !== 'method' || !($entry->getAttribute() instanceof RouteAttribute)) {
                     continue;
                 }
 
-                /** @var array{attribute: RouteAttribute, reflection: ReflectionMethod} $entry */
-                $route = $entry['attribute'];
-                $refMethod = $entry['reflection'];
+                $route = $entry->getAttribute();
+                $refMethod = $entry->getReflection();
+
+                if (!$refMethod instanceof ReflectionMethod) {
+                    continue;
+                }
+
                 $action = $refMethod->getName();
 
                 $path = $prefixPath . '/' . ltrim($route->path, '/');
