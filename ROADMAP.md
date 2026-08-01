@@ -214,7 +214,7 @@ neo/Core/
   - Règles personnalisées via interface `ConstraintInterface` avec message dynamique
   - Validation dans les formulaires : déclencher le validateur sur `$form->isValid()` plutôt que manuellement
 
-- [ ] 🟠 **Classe `Paginator` standalone**
+- [x] 🟠 **Classe `Paginator` standalone**
   - Actuellement `QueryBuilder::paginate()` retourne un tableau brut sans métadonnées
   - Créer `Paginator` avec : `getItems()`, `getCurrentPage()`, `getTotalPages()`, `getTotalItems()`, `hasNextPage()`, `hasPreviousPage()`, `getLinks()`
   - Extension Twig `paginator_links(paginator)` pour rendre la navigation
