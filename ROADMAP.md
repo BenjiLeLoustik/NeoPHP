@@ -127,7 +127,7 @@ neo/Core/
   - Construit et consommé dans le même fichier, amélioration de lisibilité et de type safety
   - Fichier concerné : `neo/Core/Security/Middleware/MiddlewareManager.php`
 
-- [ ] 🟡 **Hiérarchie `AbstractBlock`** — remplace `array<string, mixed>` retourné par `MarkdownManager::parse()`
+- [x] 🟡 **Hiérarchie `AbstractBlock`** — remplace `array<string, mixed>` retourné par `MarkdownManager::parse()`
   - 7 types distincts avec des formes différentes : `HeadingBlock`, `CodeBlock`, `ParagraphBlock`, `ListBlock`, `TableBlock`, `QuoteBlock`, `HrBlock`
   - Fichiers concernés : `neo/Core/Tools/Markdown/MarkdownManager.php`, `neo/Core/Tools/Markdown/Extension/MarkdownViewExtension.php`
 
