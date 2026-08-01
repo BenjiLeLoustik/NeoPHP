@@ -9,18 +9,14 @@ use Neo\Core\Event\Attribute\AsListener;
 use Neo\Core\Event\Exception\EventException;
 use Neo\Core\Event\Interface\EventInterface;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
+use Neo\Core\Event\Listener\ListenerRegistration;
 use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 
 class EventManager
 {
     /**
-     * @var array<class-string, list<array{
-     * class: class-string,
-     * priority: int,
-     * method?: string|array{0: string, 1?: int},
-     * instance?: object
-     * }>>
+     * @var array<class-string, list<ListenerRegistration>>
      */
     private array $listeners = [];
     private Container $container;
@@ -56,7 +52,7 @@ class EventManager
 
         if (!$this->isDebug() && file_exists($cacheFile)) {
             $decoded = json_decode(file_get_contents($cacheFile), true);
-            $this->listeners = is_array($decoded) ? $decoded : [];
+            $this->listeners = $this->hydrateListeners(is_array($decoded) ? $decoded : []);
             return;
         }
 
@@ -102,26 +98,27 @@ class EventManager
             foreach ($results as $entry) {
                 /** @var AsListener $listener */
                 $listener = $entry['attribute'];
-                $this->listeners[$listener->event][] = [
-                    'class' => $fqcn,
-                    'priority' => $listener->priority,
-                ];
+                $this->listeners[$listener->event][] = new ListenerRegistration(
+                    class: $fqcn,
+                    priority: $listener->priority,
+                );
             }
 
             if (new \ReflectionClass($fqcn)->implementsInterface(EventSubscriberInterface::class)) {
                 foreach ($fqcn::getSubscribedEvents() as $eventClass => $method) {
-                    $this->listeners[$eventClass][] = [
-                        'class' => $fqcn,
-                        'method' => $method,
-                        'priority' => 0,
-                    ];
+                    $this->listeners[$eventClass][] = new ListenerRegistration(
+                        class: $fqcn,
+                        priority: 0,
+                        method: $method,
+                    );
                 }
             }
         }
 
         foreach ($this->listeners as &$list) {
-            usort($list, fn($a, $b) => $b['priority'] <=> $a['priority']);
+            usort($list, static fn (ListenerRegistration $a, ListenerRegistration $b): int => $b->getPriority() <=> $a->getPriority());
         }
+        unset($list);
 
         if (!$this->isDebug()) {
             $cacheDir = dirname($cacheFile);
@@ -143,6 +140,32 @@ class EventManager
     }
 
     /**
+     * @param array<mixed> $decoded
+     * @return array<class-string, list<ListenerRegistration>>
+     */
+    private function hydrateListeners(array $decoded): array
+    {
+        $listeners = [];
+
+        foreach ($decoded as $eventClass => $entries) {
+            if (!is_string($eventClass) || !is_array($entries)) {
+                continue;
+            }
+
+            foreach ($entries as $entry) {
+                if (!is_array($entry) || !isset($entry['class']) || !is_string($entry['class'])) {
+                    continue;
+                }
+
+                /** @var array{class: class-string, priority: int, method?: string|array{0: string, 1?: int}} $entry */
+                $listeners[$eventClass][] = ListenerRegistration::fromArray($entry);
+            }
+        }
+
+        return $listeners;
+    }
+
+    /**
      * @throws EventException
      * @throws ContainerException
      */
@@ -159,20 +182,20 @@ class EventManager
                 break;
             }
 
-            $listener = $meta['instance'] ?? $this->container->get($meta['class']);
+            $listener = $meta->getInstance() ?? $this->container->get($meta->getClass());
 
-            $method = $meta['method'] ?? 'handle';
+            $method = $meta->resolveMethodName();
 
             if (!method_exists($listener, $method)) {
                 throw new EventException(
                     title: 'Event Listener Error',
-                    message: sprintf("Method '%s' does not exist on listener '%s'.", $method, $meta['class']),
+                    message: sprintf("Method '%s' does not exist on listener '%s'.", $method, $meta->getClass()),
                     code: 500
                 );
             }
 
             $listener->$method($event);
-            $called[] = $meta['class'];
+            $called[] = $meta->getClass();
         }
 
         if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
@@ -190,41 +213,48 @@ class EventManager
         int $priority = 0,
         string $method = 'handle'
     ): void {
-        $this->listeners[$eventClass][] = array(
-            'class' => $listenerClass,
-            'method' => $method,
-            'priority' => $priority,
+        $this->listeners[$eventClass][] = new ListenerRegistration(
+            class: $listenerClass,
+            priority: $priority,
+            method: $method,
         );
 
-        usort($this->listeners[$eventClass], fn($a, $b) => $b['priority'] <=> $a['priority']);
+        usort(
+            $this->listeners[$eventClass],
+            static fn (ListenerRegistration $a, ListenerRegistration $b): int => $b->getPriority() <=> $a->getPriority(),
+        );
     }
 
     public function addListenerInstance(string $eventClass, object $instance, string $method = 'handle', int $priority = 0): void
     {
-        $this->listeners[$eventClass][] = [
-            'instance' => $instance,
-            'class' => get_class($instance),
-            'method' => $method,
-            'priority' => $priority,
-        ];
+        $this->listeners[$eventClass][] = new ListenerRegistration(
+            class: get_class($instance),
+            priority: $priority,
+            method: $method,
+            instance: $instance,
+        );
 
         usort(
             $this->listeners[$eventClass],
-            fn ($a, $b) => $b['priority'] <=> $a['priority'],
+            static fn (ListenerRegistration $a, ListenerRegistration $b): int => $b->getPriority() <=> $a->getPriority(),
         );
     }
 
     public function addSubscriber(EventSubscriberInterface $subscriber): void
     {
-        foreach ($subscriber::getSubscribedEvents() as $eventClass => $method) {
-            $this->addListener($eventClass, get_class($subscriber), 0, $method);
+        foreach ($subscriber::getSubscribedEvents() as $eventClass => $methodOrTuple) {
+            [$method, $priority] = is_array($methodOrTuple)
+                ? [$methodOrTuple[0], $methodOrTuple[1] ?? 0]
+                : [$methodOrTuple, 0];
+
+            $this->addListener($eventClass, get_class($subscriber), $priority, $method);
         }
     }
 
     /**
      * @return ($eventClass is null
-     * ? array<class-string, list<array{class: class-string, priority: int, method?: string|array{0: string, 1?: int}, instance?: object}>>
-     * : list<array{class: class-string, priority: int, method?: string|array{0: string, 1?: int}, instance?: object}>)
+     * ? array<class-string, list<ListenerRegistration>>
+     * : list<ListenerRegistration>)
      */
     public function getListeners(?string $eventClass = null): array
     {
