@@ -1,3 +1,14 @@
+v4.18.0
+- fix: remove redundant isAbstract() check and use AttributeScanResult getters in ConsoleManager (761732f)
+- docs: update ROADMAP (d3c04c6)
+- docs: document DatabaseIntrospector and its metadata DTOs in README (7343a07)
+- refactor: convert ColumnMetadata to array in MigrationGenerator::generate() (daa18da)
+- refactor: convert ColumnMetadata to array at JSON snapshot boundary in MigrationSchemaSnapshot (d32c9fa)
+- refactor: return metadata DTOs from DatabaseIntrospector (a39184e)
+- feat: add IndexMetadata DTO (d5666fd)
+- feat: add ForeignKeyMetadata DTO (abc80d1)
+- feat: add ColumnMetadata DTO (4779cd8)
+
 v4.17.1
 - fix: migrate remaining ScannerAttributeManager consumers to AttributeScanResult getters (79e1c54)
 
