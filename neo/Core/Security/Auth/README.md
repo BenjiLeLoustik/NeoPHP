@@ -9,12 +9,13 @@ Le sous-module `Auth` gère l'authentification des utilisateurs par session PHP 
 1. [Structure](#structure)
 2. [Configuration](#configuration)
 3. [AuthManager](#authmanager)
-4. [SessionGuard](#sessionguard)
-5. [TokenGuard](#tokenguard)
-6. [JwtManager](#jwtmanager)
-7. [PasswordManager](#passwordmanager)
-8. [Extension contrôleur](#extension-contrôleur)
-9. [Extension Twig](#extension-twig)
+4. [RoleConfig](#roleconfig)
+5. [SessionGuard](#sessionguard)
+6. [TokenGuard](#tokenguard)
+7. [JwtManager](#jwtmanager)
+8. [PasswordManager](#passwordmanager)
+9. [Extension contrôleur](#extension-contrôleur)
+10. [Extension Twig](#extension-twig)
 
 ---
 
@@ -26,6 +27,7 @@ Auth/
 ├── AuthModule.php                      # Enregistrement DI
 ├── JwtManager.php                      # Génération/validation JWT (HMAC-SHA256)
 ├── PasswordManager.php                 # Hachage bcrypt
+├── RoleConfig.php                      # DTO de configuration des rôles, partagé entre les guards
 ├── Collector/
 │   └── AuthCollector.php              # Collecteur Profiler
 ├── Exception/
@@ -85,6 +87,8 @@ return [
 
 Si `enabled` vaut `false`, l'`AuthManager` est instancié sans guard. Toute méthode nécessitant un guard lèvera une `AuthException`.
 
+La clé `role` est transformée par `AuthManager` en instance de `RoleConfig` (ou `null` si absente/incomplète) avant d'être transmise au guard.
+
 ---
 
 ## AuthManager
@@ -129,6 +133,27 @@ return match($guardType) {
 
 ---
 
+## RoleConfig
+
+**Fichier :** `RoleConfig.php`
+
+DTO qui remplace le tableau associatif `['relation', 'model', 'field']` autrefois dupliqué entre `SessionGuard` et `TokenGuard`. Il représente la configuration des rôles telle que déclarée sous la clé `role` de `auth.config.php`.
+
+```php
+class RoleConfig
+{
+    public function __construct(
+        private string $relation, // Propriété de l'entité User pointant vers le rôle
+        private string $model,    // Classe (FQCN) de l'entité Role
+        private string $field,    // Champ du rôle à comparer avec hasRole()
+    ) {}
+}
+```
+
+Accès via `getRelation()`, `getModel()`, `getField()`. `RoleConfig::fromArray($data)` construit l'instance à partir du tableau de configuration et retourne `null` si l'une des trois clés est absente ou n'est pas une chaîne — c'est ce `null` que les guards interprètent comme « pas de gestion de rôle configurée » dans `hasRole()`.
+
+---
+
 ## SessionGuard
 
 **Fichier :** `Guard/SessionGuard.php`
@@ -163,6 +188,8 @@ $this->session->set('_auth_last_activity', time());
 
 Le timeout par défaut est **1800 secondes** (30 minutes), configurable via `options.timeout`.
 
+**Vérification des rôles :** `hasRole()` reçoit un `?RoleConfig` en dépendance et retourne directement `false` s'il vaut `null`.
+
 ---
 
 ## TokenGuard
@@ -193,6 +220,8 @@ $token = $auth->generateToken($userObject);
 - Pas de stockage côté serveur.
 
 **Récupération de l'utilisateur :** décode le token, extrait le claim `sub`, charge l'entité depuis la base de données via l'`EntityManager`.
+
+**Vérification des rôles :** même logique que `SessionGuard`, basée sur le même `?RoleConfig`.
 
 ---
 
