@@ -22,6 +22,7 @@ Ce module fournit l'ensemble de la couche d'accès aux données du framework Neo
    - [Types ORM](#types-orm)
    - [Platform](#platform)
 4. [Migrations](#migrations)
+   - [DatabaseIntrospector](#databaseintrospector)
    - [MigrationRunner](#migrationrunner)
    - [MigrationGenerator](#migrationgenerator)
    - [SchemaDiffer](#schemadiffer)
@@ -71,6 +72,7 @@ Database/
 ├── Access/
 │   ├── Connection/         # DatabaseConnection
 │   └── Introspector/       # DatabaseIntrospector
+│       └── Metadata/       # ColumnMetadata, ForeignKeyMetadata, IndexMetadata
 ├── Commands/               # Commandes CLI
 └── DatabaseManager.php
 ```
@@ -559,6 +561,45 @@ $platform->getName();                   // 'mysql'
 ---
 
 ## Migrations
+
+### DatabaseIntrospector
+
+**Fichier :** `Access/Introspector/DatabaseIntrospector.php`
+
+Lit la structure réelle de la base de données (tables, colonnes, clés étrangères, index) via `information_schema` et `SHOW`/`DESCRIBE`. C'est la source de vérité utilisée par le pipeline de migration pour comparer l'état actuel de la base à l'état souhaité (entités ORM).
+
+Les résultats sont retournés sous forme de DTOs typés, dans `Access/Introspector/Metadata/` :
+
+| Méthode | Retour |
+|---------|--------|
+| `getTables()` | `list<string>` |
+| `getColumns(string $table)` | `list<ColumnMetadata>` |
+| `getForeignKeys(string $table)` | `list<ForeignKeyMetadata>` |
+| `getIndexes(string $table)` | `list<IndexMetadata>` |
+
+```php
+$introspector = new DatabaseIntrospector($container);
+// Ou sur une connexion spécifique :
+$introspector = DatabaseIntrospector::on($container, 'secondary');
+
+foreach ($introspector->getColumns('users') as $column) {
+    echo $column->getName() . ' : ' . $column->getType();
+    if ($column->isNullable()) {
+        echo ' (nullable)';
+    }
+}
+
+foreach ($introspector->getForeignKeys('posts') as $fk) {
+    echo $fk->getColumn() . ' → ' . $fk->getReferencedTable() . '.' . $fk->getReferencedColumn();
+}
+
+foreach ($introspector->getIndexes('posts') as $index) {
+    echo $index->getName() . ' : ' . implode(', ', $index->getColumns());
+    echo $index->isUnique() ? ' (unique)' : '';
+}
+```
+
+Chaque DTO expose aussi une méthode `toArray()` qui reconstruit la forme `array{...}` d'origine. Elle est utilisée à la frontière avec les composants qui manipulent encore des tableaux génériques — notamment `MigrationSchemaSnapshot`, qui sérialise le schéma en JSON pour le stocker en base (`neo_schema_snapshots`), et `MigrationGenerator::generate()`, qui réutilise la même logique de construction de SQL que `generateDiff()`. `SchemaDiffer` continue de travailler exclusivement sur des tableaux, puisqu'il compare aussi bien le schéma courant (introspecté) que le schéma désiré (issu de `SchemaTool`, côté ORM) ou un ancien schéma relu depuis un snapshot JSON.
 
 ### MigrationRunner
 
