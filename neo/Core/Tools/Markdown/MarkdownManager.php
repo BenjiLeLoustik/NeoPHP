@@ -79,12 +79,17 @@ class MarkdownManager
 
                 $file = str_replace('\\', '/', $item->getPathname());
                 $blocks = $this->blocks($file);
-
+                
+                $parentName = basename(dirname($file));
                 $docs[] = [
                     'path' => $file,
                     'relative' => ltrim(substr($file, strlen($root)), '/'),
-                    'slug' => $this->slug(basename(dirname($file))),
-                    'title' => $this->extractTitle($blocks) ?? basename(dirname($file)),
+                    'slug' => $this->slug(
+                        in_array($parentName, ['.', '..', ''], true)
+                            ? basename($file, '.md')
+                            : $parentName
+                    ),
+                    'title' => $this->extractTitle($blocks) ?? $parentName,
                     'description' => $this->extractDescription($blocks),
                 ];
             }
