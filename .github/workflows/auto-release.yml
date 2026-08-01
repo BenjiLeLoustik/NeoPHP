@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   release:
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
     runs-on: ubuntu-latest
 
     steps:
@@ -92,19 +93,27 @@ jobs:
         run: |
           git log ${{ steps.tag.outputs.TAG }}..HEAD --pretty=format:"- %s (%h)" > CHANGELOG.md
 
-      - name: Upload VERSION
-        uses: actions/upload-artifact@v4
-        with:
-          name: VERSION
-          path: VERSION
+      - name: Commit generated files
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+          git add VERSION CHANGELOG.md
+          git commit -m "chore(release): update version and changelog" || true
+          git push 
 
       - name: Create Git tag
         if: ${{ steps.tag.outputs.TAG != steps.version.outputs.VERSION }}
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git tag ${{ steps.version.outputs.VERSION }} || true
-          git push origin ${{ steps.version.outputs.VERSION }} || true
+          
+          git fetch origin main
+          git checkout main
+          git pull origin main
+          
+          git tag ${{ steps.version.outputs.VERSION }}
+          git push origin ${{ steps.version.outputs.VERSION }}
 
       - name: Create GitHub Release
         if: ${{ steps.tag.outputs.TAG != steps.version.outputs.VERSION }}
