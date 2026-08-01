@@ -1,4 +1,1 @@
-- fix: fix github output generation (3849e3a)
-- fix: fix auto release php script quoting (9b5f51c)
-- feat: update auto release workflow (8027b75)
-- feat: update auto-release to generate valid versionning file (b946122)
+- fix: remove deprecated curl_close() (7c728b6)
