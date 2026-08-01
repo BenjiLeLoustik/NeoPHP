@@ -79,7 +79,6 @@ class HttpClientManager implements HttpClientInterface
 
         if ($content === false) {
             $message = curl_error($ch);
-            curl_close($ch);
 
             throw new HttpClientException(
                 title: 'HTTP Transport Error',
@@ -89,7 +88,6 @@ class HttpClientManager implements HttpClientInterface
         }
 
         $statusCode = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-        curl_close($ch);
 
         $response = new Response()
             ->setStatusCode($statusCode)
