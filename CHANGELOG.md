@@ -1,3 +1,6 @@
+v4.16.1
+- fix: accumulate changelog entries instead of overwriting on each release (1aef400)
+
 - docs: update ROADMAP (d9acce7)
 - docs: document RoleConfig DTO in Auth README (cec95a5)
 - refactor: build RoleConfig from config array in AuthManager (df9022e)
