@@ -1,3 +1,6 @@
+v4.18.2
+- docs: update ROADMAP (d2a2275)
+
 v4.18.1
 - fix: buffer output during dispatch to prevent premature flush before headers are sent (7070295)
 
