@@ -20,8 +20,13 @@ final class ScannerAttributeManager
     /** @var string|null $attributeFilter */
     private ?string $attributeFilter = null;
 
-    private int $methodFlags = ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_PROTECTED | ReflectionMethod::IS_PRIVATE;
-    private int $propertyFlags = ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED | ReflectionProperty::IS_PRIVATE;
+    private int $methodFlags = ReflectionMethod::IS_PUBLIC |
+    ReflectionMethod::IS_PROTECTED |
+    ReflectionMethod::IS_PRIVATE;
+
+    private int $propertyFlags = ReflectionProperty::IS_PUBLIC |
+    ReflectionProperty::IS_PROTECTED |
+    ReflectionProperty::IS_PRIVATE;
 
     /** @var ReflectionClass<object> */
     private ReflectionClass $reflection;
@@ -81,7 +86,7 @@ final class ScannerAttributeManager
     }
 
     /**
-     * @return list<array{target: string, attribute: object, arguments: array<mixed>, type: string, reflection: ReflectionClass<object>|ReflectionMethod|ReflectionProperty|ReflectionParameter}>
+     * @return list<AttributeScanResult>
      */
     public function scan(): array
     {
@@ -125,7 +130,7 @@ final class ScannerAttributeManager
      * @param ReflectionClass<object>|ReflectionMethod|ReflectionProperty|ReflectionParameter $reflector
      * @param 'class'|'method'|'property'|'parameter' $type
      * @param string $targetLabel
-     * @return list<array{target: string, attribute: object, arguments: array<mixed>, type: string, reflection: ReflectionClass<object>|ReflectionMethod|ReflectionProperty|ReflectionParameter}>
+     * @return list<AttributeScanResult>
      */
     private function scanTarget(
         ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionParameter $reflector,
@@ -139,12 +144,12 @@ final class ScannerAttributeManager
             : $reflector->getAttributes();
 
         foreach ($rawAttributes as $rawAttr) {
-            $entries[] = array(
-                'target' => $targetLabel,
-                'attribute' => $rawAttr->newInstance(),
-                'arguments' => $rawAttr->getArguments(),
-                'type' => $type,
-                'reflection' => $reflector,
+            $entries[] = new AttributeScanResult(
+                target: $targetLabel,
+                attribute: $rawAttr->newInstance(),
+                arguments: $rawAttr->getArguments(),
+                type: $type,
+                reflection: $reflector,
             );
         }
 
