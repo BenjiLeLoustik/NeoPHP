@@ -24,9 +24,13 @@ class DatabaseConnection
             return;
         }
 
-        $dbEnabled = $container->get('database.configModule')
-            ->from('database')
-            ->get('enabled');
+        try {
+            $dbEnabled = $container->get('database.configModule')
+                ->from('database')
+                ->get('enabled');
+        } catch (\Throwable) {
+            return;
+        }
 
         if ($dbEnabled !== true) {
             return;
