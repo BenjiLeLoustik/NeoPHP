@@ -1,3 +1,6 @@
+v4.20.7
+- fix: use symlink instead of mirror for project path repositories (ec55f18)
+
 v4.20.6
 - fix: DatabaseConnection should not fail when database.config.php is missing (3ecda78)
 
