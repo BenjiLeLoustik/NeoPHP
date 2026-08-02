@@ -465,7 +465,7 @@ JS;
         $data['repositories'][] = [
             'type' => 'path',
             'url' => 'src/' . $name,
-            'options' => ['symlink' => false],
+            'options' => ['symlink' => true],
         ];
         $data['require'][$packageName] = '@dev';
 

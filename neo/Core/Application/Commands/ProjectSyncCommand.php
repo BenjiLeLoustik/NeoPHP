@@ -80,7 +80,7 @@ final class ProjectSyncCommand extends AbstractCommand
         $data['repositories'][] = [
             'type' => 'path',
             'url' => $repoUrl,
-            'options' => ['symlink' => false]
+            'options' => ['symlink' => true]
         ];
         $data['require'][strtolower($name) . '/app'] = '@dev';
         $data['minimum-stability'] = 'dev';
