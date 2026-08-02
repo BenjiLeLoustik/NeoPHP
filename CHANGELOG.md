@@ -1,3 +1,6 @@
+v4.20.6
+- fix: DatabaseConnection should not fail when database.config.php is missing (3ecda78)
+
 v4.20.5
 - fix: remove auth from gitignore (b01b8fd)
 
