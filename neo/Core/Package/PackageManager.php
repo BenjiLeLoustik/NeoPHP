@@ -140,7 +140,7 @@ final class PackageManager
 
         $configSource = $packagePath . '/Config';
         if (is_dir($configSource)) {
-            $this->copyConfigDefaults($configSource, $appPath . '/Config');
+            $this->copyConfigDefaults($configSource, $appPath, $name);
         }
 
         $moduleSource = $packagePath . '/Module.php';
@@ -162,7 +162,14 @@ final class PackageManager
         }
 
         if (!@symlink($source, $target)) {
-            $this->copyDirectoryRecursive($source, $target);
+            throw new PackageException(
+                title: 'Symlink Failed',
+                message: sprintf(
+                    "Could not create symlink '%s' -> '%s'. On Windows, enable Developer Mode or run as Administrator.",
+                    $target,
+                    $source
+                ),
+            );
         }
     }
 
@@ -175,7 +182,14 @@ final class PackageManager
         }
 
         if (!@symlink($source, $target)) {
-            copy($source, $target);
+            throw new PackageException(
+                title: 'Symlink Failed',
+                message: sprintf(
+                    "Could not create symlink '%s' -> '%s'. On Windows, enable Developer Mode or run as Administrator.",
+                    $target,
+                    $source
+                ),
+            );
         }
     }
 
@@ -215,10 +229,12 @@ final class PackageManager
         return $created;
     }
 
-    private function copyConfigDefaults(string $source, string $targetDir): void
+    private function copyConfigDefaults(string $source, string $appPath, string $packageName): void
     {
+        $targetDir = $appPath . '/Config/Packages/' . $packageName;
+
         if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0755, true);
+            mkdir($targetDir, 0775, true);
         }
 
         foreach (glob($source . '/*.config.php') ?: [] as $file) {
@@ -255,31 +271,6 @@ final class PackageManager
 
         if (file_exists($path)) {
             unlink($path);
-        }
-    }
-
-    private function copyDirectoryRecursive(string $source, string $target): void
-    {
-        if (!is_dir($target)) {
-            mkdir($target, 0755, true);
-        }
-
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::SELF_FIRST
-        );
-
-        foreach ($iterator as $item) {
-            $relative = substr($item->getPathname(), strlen($source) + 1);
-            $destination = $target . '/' . $relative;
-
-            if ($item->isDir()) {
-                if (!is_dir($destination)) {
-                    mkdir($destination, 0755, true);
-                }
-            } else {
-                copy($item->getPathname(), $destination);
-            }
         }
     }
 
