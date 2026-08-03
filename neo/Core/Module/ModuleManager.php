@@ -6,6 +6,7 @@ namespace Neo\Core\Module;
 use Neo\Core\DI\Container;
 use Neo\Core\Module\Exception\ModuleException;
 use Neo\Core\Module\Interface\ModuleInterface;
+use Neo\Core\Utils\Scanner\ScannerFileManager;
 use ReflectionException;
 
 class ModuleManager
@@ -17,30 +18,17 @@ class ModuleManager
 
     public function discover(string $basePath, bool $excludeTestFixtures = true): self
     {
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($basePath)
-        );
+        $results = new ScannerFileManager()
+            ->paths([$basePath])
+            ->withFilenameSuffix('Module.php')
+            ->scan();
 
-        foreach ($iterator as $file) {
-            if (!$file->isFile() || $file->getExtension() !== 'php') {
-                continue;
-            }
-
-            if (!str_ends_with($file->getFilename(), 'Module.php')) {
-                continue;
-            }
-
-            $fqcn = $this->resolveFqcn($file->getRealPath());
-
-            if ($fqcn === null) {
-                continue;
-            }
+        foreach ($results as $result) {
+            $fqcn = $result->getFqcn();
 
             if ($excludeTestFixtures && (str_contains($fqcn, '\\Tests\\') || str_contains($fqcn, '\\Fixture\\'))) {
                 continue;
             }
-
-            require_once $file->getRealPath();
 
             if (!class_exists($fqcn)) {
                 continue;
@@ -105,27 +93,6 @@ class ModuleManager
         $shortName = new \ReflectionClass($moduleClass)->getShortName();
         $stripped = str_ends_with($shortName, 'Module') ? substr($shortName, 0, -6) : $shortName;
         return lcfirst($stripped);
-    }
-
-    private function resolveFqcn(string $filePath): ?string
-    {
-        $src = file_get_contents($filePath);
-        if ($src === false) {
-            return null;
-        }
-
-        $namespace = '';
-        if (preg_match('/namespace\s+([^;]+);/i', $src, $m)) {
-            $namespace = trim($m[1]);
-        }
-
-        if (!preg_match('/class\s+([A-Za-z0-9_]+)/i', $src, $m)) {
-            return null;
-        }
-
-        $className = trim($m[1]);
-
-        return $namespace !== '' ? $namespace . '\\' . $className : $className;
     }
 
     /**
