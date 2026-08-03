@@ -12,6 +12,7 @@ use Neo\Core\Event\Interface\EventSubscriberInterface;
 use Neo\Core\Event\Listener\ListenerRegistration;
 use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
+use Neo\Core\Utils\Scanner\ScannerFileManager;
 
 class EventManager
 {
@@ -58,61 +59,12 @@ class EventManager
 
         $listenersPath = $this->container->get('listenersPath');
 
-        if (!is_dir($listenersPath)) {
-            return;
-        }
+        $results = new ScannerFileManager()
+            ->paths([$listenersPath])
+            ->scan();
 
-        $rii = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($listenersPath)
-        );
-
-        foreach ($rii as $file) {
-            if (!$file->isFile() || $file->getExtension() !== 'php') {
-                continue;
-            }
-
-            $filePath = $file->getRealPath();
-            $src = file_get_contents($filePath);
-            if ($src === false) continue;
-
-            $namespace = '';
-            if (preg_match('/namespace\s+([^;]+);/i', $src, $m)) {
-                $namespace = trim($m[1]);
-            }
-
-            if (!preg_match('/class\s+([A-Za-z0-9_]+)/i', $src, $mClass)) {
-                continue;
-            }
-
-            $fqcn = $namespace !== '' ? $namespace . '\\' . $mClass[1] : $mClass[1];
-
-            require_once $filePath;
-
-            if (!class_exists($fqcn)) continue;
-
-            $results = new ScannerAttributeManager($fqcn)
-                ->onClass()
-                ->withAttribute(AsListener::class)
-                ->scan();
-
-            foreach ($results as $entry) {
-                /** @var AsListener $listener */
-                $listener = $entry->getAttribute();
-                $this->listeners[$listener->event][] = new ListenerRegistration(
-                    class: $fqcn,
-                    priority: $listener->priority,
-                );
-            }
-
-            if (new \ReflectionClass($fqcn)->implementsInterface(EventSubscriberInterface::class)) {
-                foreach ($fqcn::getSubscribedEvents() as $eventClass => $method) {
-                    $this->listeners[$eventClass][] = new ListenerRegistration(
-                        class: $fqcn,
-                        priority: 0,
-                        method: $method,
-                    );
-                }
-            }
+        foreach ($results as $result) {
+            $this->processListenerClass($result->getFqcn());
         }
 
         foreach ($this->listeners as &$list) {
@@ -134,6 +86,37 @@ class EventManager
                     title: 'Event Cache Write Error',
                     message: sprintf("Unable to write event cache file '%s'.", $cacheFile),
                     code: 500
+                );
+            }
+        }
+    }
+
+    private function processListenerClass(string $fqcn): void
+    {
+        if (!class_exists($fqcn)) {
+            return;
+        }
+
+        $results = new ScannerAttributeManager($fqcn)
+            ->onClass()
+            ->withAttribute(AsListener::class)
+            ->scan();
+
+        foreach ($results as $entry) {
+            /** @var AsListener $listener */
+            $listener = $entry->getAttribute();
+            $this->listeners[$listener->event][] = new ListenerRegistration(
+                class: $fqcn,
+                priority: $listener->priority,
+            );
+        }
+
+        if (new \ReflectionClass($fqcn)->implementsInterface(EventSubscriberInterface::class)) {
+            foreach ($fqcn::getSubscribedEvents() as $eventClass => $method) {
+                $this->listeners[$eventClass][] = new ListenerRegistration(
+                    class: $fqcn,
+                    priority: 0,
+                    method: $method,
                 );
             }
         }
