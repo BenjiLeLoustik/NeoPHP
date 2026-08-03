@@ -11,6 +11,9 @@ final class PackageManager
 {
     private const string LOCK_FILENAME = 'packages.lock.json';
 
+    /**
+     * @var array<string, string>
+     */
     private const array LINKED_FOLDERS = [
         'Controllers' => 'App/Controllers/_packages',
         'Views' => 'Templates/_packages',
@@ -26,7 +29,7 @@ final class PackageManager
     }
 
     /**
-     * @return array{int, list<string>}
+     * @return array{synced: int<0, max>, projects: list<string>}
      */
     public function syncAllProjects(): array
     {
