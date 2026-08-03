@@ -12,8 +12,7 @@ use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use Neo\Core\Utils\Scanner\ScannerFileManager;
 use ReflectionClass;
 use ReflectionException;
 
@@ -30,29 +29,20 @@ class ConsoleManager
 
     public function __construct(private readonly Container $container) {}
 
-    private static function requireCommandFiles(): void
+    /**
+     * @return list<string>
+     */
+    private static function scanCommandClasses(): array
     {
-        foreach (self::COMMAND_BASE_PATHS as $basePath) {
-            if (!is_dir($basePath)) {
-                continue;
-            }
+        $results = new ScannerFileManager()
+            ->paths(self::COMMAND_BASE_PATHS)
+            ->withPathSegment('Commands')
+            ->scan();
 
-            $iterator = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($basePath)
-            );
-
-            foreach ($iterator as $file) {
-                if (!$file->isFile() || $file->getExtension() !== 'php') {
-                    continue;
-                }
-
-                if (!str_contains($file->getPathname(), DIRECTORY_SEPARATOR . 'Commands' . DIRECTORY_SEPARATOR)) {
-                    continue;
-                }
-
-                require_once $file->getPathname();
-            }
-        }
+        return array_values(array_filter(
+            array_map(static fn($r) => $r->getFqcn(), $results),
+            static fn(string $fqcn) => is_subclass_of($fqcn, AbstractCommand::class)
+        ));
     }
 
     /**
@@ -60,13 +50,7 @@ class ConsoleManager
      */
     public static function findProjectForCommand(string $commandName): ?string
     {
-        self::requireCommandFiles();
-
-        foreach (get_declared_classes() as $class) {
-            if (!is_subclass_of($class, AbstractCommand::class)) {
-                continue;
-            }
-
+        foreach (self::scanCommandClasses() as $class) {
             $results = new ScannerAttributeManager($class)
                 ->onClass()
                 ->withAttribute(Command::class)
@@ -97,13 +81,7 @@ class ConsoleManager
     /** @throws ReflectionException */
     private function loadCommands(): void
     {
-        self::requireCommandFiles();
-
-        foreach (get_declared_classes() as $class) {
-            if (!is_subclass_of($class, AbstractCommand::class)) {
-                continue;
-            }
-
+        foreach (self::scanCommandClasses() as $class) {
             $results = new ScannerAttributeManager($class)
                 ->onClass()
                 ->withAttribute(Command::class)
@@ -124,7 +102,6 @@ class ConsoleManager
             $instance->configure();
 
             $name = $instance->getName();
-
             if ($name === '') {
                 continue;
             }
