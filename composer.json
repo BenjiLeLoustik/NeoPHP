@@ -61,7 +61,15 @@
             "/src/*/Storage/"
         ]
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
-    "repositories": []
+    "repositories": [],
+    "scripts": {
+        "post-autoload-dump": [
+            "Neo\\Core\\Package\\PackageManager::sync"
+        ],
+        "post-update-cmd": [
+            "Neo\\Core\\Package\\PackageManager::sync"
+        ]
+    }
 }
