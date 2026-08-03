@@ -13,10 +13,10 @@ final class PackageManager
 
     private const array LINKED_FOLDERS = [
         'Controllers' => 'App/Controllers/_packages',
-        'Views'       => 'Templates/_packages',
-        'Listeners'   => 'App/Event/Listener/_packages',
-        'Crons'       => 'App/Crons/_packages',
-        'Commands'    => 'App/Commands/_packages',
+        'Views' => 'Templates/_packages',
+        'Listeners' => 'App/Event/Listener/_packages',
+        'Crons' => 'App/Crons/_packages',
+        'Commands' => 'App/Commands/_packages',
     ];
 
     public static function sync(mixed $event = null): void
@@ -34,7 +34,10 @@ final class PackageManager
         $srcDir = $basePath . '/src';
 
         if (!is_dir($srcDir)) {
-            return ['synced' => 0, 'projects' => []];
+            return [
+                'synced' => 0,
+                'projects' => []
+            ];
         }
 
         $projects = array_filter(
@@ -49,7 +52,10 @@ final class PackageManager
             $syncedProjects[] = basename($projectDir);
         }
 
-        return ['synced' => count($syncedProjects), 'projects' => $syncedProjects];
+        return [
+            'synced' => count($syncedProjects),
+            'projects' => $syncedProjects
+        ];
     }
 
     /**
