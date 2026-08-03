@@ -16,6 +16,7 @@ use Neo\Core\Routing\Exception\RouteNotFoundException;
 use Neo\Core\Routing\Exception\RouterException;
 use Neo\Core\Security\Middleware\MiddlewareManager;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
+use Neo\Core\Utils\Scanner\ScannerFileManager;
 use ReflectionException;
 use ReflectionMethod;
 use Throwable;
@@ -71,101 +72,12 @@ class RouterManager
             }
         }
 
-        $realControllersPath = realpath($this->controllersPath);
+        $results = new ScannerFileManager()
+            ->paths([$this->controllersPath])
+            ->scan();
 
-        $rii = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->controllersPath)
-        );
-
-        foreach ($rii as $file) {
-            if (!$file->isFile() || $file->getExtension() !== 'php') {
-                continue;
-            }
-
-            $filePath = $file->getRealPath();
-            if ($filePath === false) continue;
-
-            if ($realControllersPath === false || !str_starts_with($filePath, $realControllersPath . DIRECTORY_SEPARATOR)) {
-                continue;
-            }
-
-            $src = file_get_contents($filePath);
-            if ($src === false) continue;
-
-            $namespace = '';
-            if (preg_match('/namespace\s+([^;]+);/i', $src, $m)) {
-                $namespace = trim($m[1]);
-            }
-
-            if (!preg_match('/class\s+([A-Za-z0-9_]+)/i', $src, $mClass)) {
-                continue;
-            }
-
-            $classShort = $mClass[1];
-            $fqcn = $namespace !== '' ? $namespace . '\\' . $classShort : $classShort;
-
-            $declaredBefore = get_declared_classes();
-            require_once $filePath;
-
-            if (!class_exists($fqcn)) {
-                $declaredAfter = get_declared_classes();
-                $new = array_diff($declaredAfter, $declaredBefore);
-                if (empty($new)) continue;
-                $fqcn = array_values($new)[0];
-                if (!class_exists($fqcn)) continue;
-            }
-
-            $results = new ScannerAttributeManager($fqcn)
-                ->onClass()
-                ->onMethods(ReflectionMethod::IS_PUBLIC)
-                ->scan();
-
-            $prefixPath = '';
-            $prefixName = '';
-            foreach ($results as $entry) {
-                if ($entry->getType() === 'class' && $entry->getAttribute() instanceof MainRouteAttribute) {
-                    $prefixPath = rtrim($entry->getAttribute()->path, '/');
-                    $prefixName = $entry->getAttribute()->name . '.';
-                    break;
-                }
-            }
-
-            foreach ($results as $entry) {
-                if ($entry->getType() !== 'method' || !($entry->getAttribute() instanceof RouteAttribute)) {
-                    continue;
-                }
-
-                $route = $entry->getAttribute();
-                $refMethod = $entry->getReflection();
-
-                if (!$refMethod instanceof ReflectionMethod) {
-                    continue;
-                }
-
-                $action = $refMethod->getName();
-
-                $path = $prefixPath . '/' . ltrim($route->path, '/');
-                $name = $prefixName . $route->name;
-
-                foreach ($route->methods as $httpMethod) {
-                    if ($this->isDebug() && $this->routes->has($httpMethod, $path)) {
-                        trigger_error(
-                            "Route conflict: [{$httpMethod}] {$path} is already defined. "
-                            . "Overwritten by {$fqcn}::{$action}.",
-                            E_USER_WARNING
-                        );
-                    }
-
-                    $this->routes->add(
-                        $httpMethod,
-                        $path,
-                        $name,
-                        $fqcn,
-                        $action,
-                        $route->requirements
-                    );
-                }
-            }
+        foreach ($results as $result) {
+            $this->processControllerClass($result->getFqcn());
         }
 
         if (!$this->isDebug()) {
@@ -177,6 +89,57 @@ class RouterManager
                 $cacheFile,
                 json_encode($this->routes->toArray(), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
             );
+        }
+    }
+
+    private function processControllerClass(string $fqcn): void
+    {
+        if (!class_exists($fqcn)) {
+            return;
+        }
+
+        $results = new ScannerAttributeManager($fqcn)
+            ->onClass()
+            ->onMethods(ReflectionMethod::IS_PUBLIC)
+            ->scan();
+
+        $prefixPath = '';
+        $prefixName = '';
+        foreach ($results as $entry) {
+            if ($entry->getType() === 'class' && $entry->getAttribute() instanceof MainRouteAttribute) {
+                $prefixPath = rtrim($entry->getAttribute()->path, '/');
+                $prefixName = $entry->getAttribute()->name . '.';
+                break;
+            }
+        }
+
+        foreach ($results as $entry) {
+            if ($entry->getType() !== 'method' || !($entry->getAttribute() instanceof RouteAttribute)) {
+                continue;
+            }
+
+            $route = $entry->getAttribute();
+            $refMethod = $entry->getReflection();
+
+            if (!$refMethod instanceof ReflectionMethod) {
+                continue;
+            }
+
+            $action = $refMethod->getName();
+            $path = $prefixPath . '/' . ltrim($route->path, '/');
+            $name = $prefixName . $route->name;
+
+            foreach ($route->methods as $httpMethod) {
+                if ($this->isDebug() && $this->routes->has($httpMethod, $path)) {
+                    trigger_error(
+                        "Route conflict: [{$httpMethod}] {$path} is already defined. "
+                        . "Overwritten by {$fqcn}::{$action}.",
+                        E_USER_WARNING
+                    );
+                }
+
+                $this->routes->add($httpMethod, $path, $name, $fqcn, $action, $route->requirements);
+            }
         }
     }
 
