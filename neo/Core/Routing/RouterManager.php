@@ -8,6 +8,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Http\Response\Types\Response;
+use Neo\Core\Package\Interface\PackageInterface;
 use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Routing\Attribute\MainRoute as MainRouteAttribute;
 use Neo\Core\Routing\Attribute\Route as RouteAttribute;
@@ -72,8 +73,20 @@ class RouterManager
             }
         }
 
+        $paths = [$this->controllersPath];
+
+        if ($this->container->has('packages')) {
+            /** @var array<int, PackageInterface> $packages */
+            foreach ($this->container->get('packages') as $package) {
+                $path = $package->getControllerPath();
+                if ($path !== null) {
+                    $paths[] = $path;
+                }
+            }
+        }
+
         $results = new ScannerFileManager()
-            ->paths([$this->controllersPath])
+            ->paths($paths)
             ->scan();
 
         foreach ($results as $result) {
