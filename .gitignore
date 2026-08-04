@@ -1,6 +1,7 @@
 # Dependencies
 /vendor/
 composer.lock
+composer.local.json
 
 # Compiled Assets
 /public/builds/
