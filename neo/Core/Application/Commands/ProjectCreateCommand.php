@@ -439,29 +439,30 @@ JS;
 
     private function registerInRootComposer(string $name): void
     {
-        $rootPath = ROOT_DIR . '/composer.json';
+        $localPath = ROOT_DIR . '/composer.local.json';
         $packageName = strtolower($name) . '/app';
 
-        if (!file_exists($rootPath)) {
-            Output::warning('Root composer.json not found.');
-            return;
+        $data = file_exists($localPath)
+            ? json_decode(file_get_contents($localPath), true)
+            : ['repositories' => [], 'require' => []];
+
+        if (!is_array($data)) {
+            $data = ['repositories' => [], 'require' => []];
         }
 
-        $data = json_decode(file_get_contents($rootPath), true);
-        $repositories = $data['repositories'] ?? [];
+        $data['repositories'] ??= [];
+        $data['require'] ??= [];
 
         $alreadyExists = array_filter(
-            $repositories,
+            $data['repositories'],
             fn($repo) => ($repo['url'] ?? '') === 'src/' . $name,
         );
 
         if (!empty($alreadyExists)) {
-            Output::skip("Project '$name' already registered in root composer.json.");
+            Output::skip("Project '$name' already registered in composer.local.json.");
             return;
         }
 
-        $data['minimum-stability'] = 'dev';
-        $data['prefer-stable'] = true;
         $data['repositories'][] = [
             'type' => 'path',
             'url' => 'src/' . $name,
@@ -470,11 +471,11 @@ JS;
         $data['require'][$packageName] = '@dev';
 
         file_put_contents(
-            $rootPath,
+            $localPath,
             json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",
         );
 
-        Output::muted('Root composer.json updated.');
+        Output::muted('composer.local.json updated.');
     }
 
     /**
