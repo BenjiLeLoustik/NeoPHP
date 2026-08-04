@@ -440,11 +440,18 @@ JS;
     private function registerInRootComposer(string $name): void
     {
         $localPath = ROOT_DIR . '/composer.local.json';
+        $distPath = ROOT_DIR . '/composer.local.json.dist';
         $packageName = strtolower($name) . '/app';
 
-        $data = file_exists($localPath)
-            ? json_decode(file_get_contents($localPath), true)
-            : ['repositories' => [], 'require' => []];
+        if (!file_exists($localPath)) {
+            $seed = file_exists($distPath)
+                ? file_get_contents($distPath)
+                : json_encode(['repositories' => [], 'require' => []], JSON_PRETTY_PRINT);
+
+            file_put_contents($localPath, $seed);
+        }
+
+        $data = json_decode(file_get_contents($localPath), true);
 
         if (!is_array($data)) {
             $data = ['repositories' => [], 'require' => []];
