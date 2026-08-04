@@ -6,6 +6,7 @@ namespace Neo\Core\View;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\Interface\ModuleInterface;
+use Neo\Core\Package\PackageModule;
 use Neo\Core\Utils\Config\ConfigModule;
 
 class ViewModule implements ModuleInterface
@@ -14,6 +15,7 @@ class ViewModule implements ModuleInterface
     {
         return [
             ConfigModule::class,
+            PackageModule::class
         ];
     }
 
