@@ -26,5 +26,7 @@ interface PackageInterface
 
     public function getConfigPath(): ?string;
 
+    public function getAssetsPath(): ?string;
+
     public function register(Container $container): void;
 }

@@ -53,6 +53,11 @@ class AbstractPackage implements PackageInterface
         return $this->resolve('config');
     }
 
+    public function getAssetsPath(): ?string
+    {
+        return $this->resolve('src/Assets');
+    }
+
     public function register(Container $container): void
     {}
 
