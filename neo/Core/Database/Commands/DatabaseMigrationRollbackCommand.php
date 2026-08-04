@@ -14,6 +14,7 @@ use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Database\Migration\Runner\MigrationRunner;
 use Neo\Core\DI\Container;
+use Neo\Core\Package\Interface\PackageInterface;
 
 #[Command(
     name: 'database:migration:rollback',
@@ -49,7 +50,7 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
         $force = (bool) $input->getOption('force');
 
         $basePath = ROOT_DIR . "/src/$project";
-        $migrationsPath = "$basePath/Database/Migrations";
+        $migrationsPaths = ["$basePath/Database/Migrations"];
 
         if (!is_dir($basePath)) {
             Output::error("Project '$project' not found.");
@@ -59,6 +60,16 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
         try {
             new ApplicationPaths($this->container)->register($project);
             $this->container->get(DatabaseConnection::class);
+
+            if ($this->container->has('packages')) {
+                /** @var array<int, PackageInterface> $packages */
+                foreach ($this->container->get('packages') as $package) {
+                    $path = $package->getMigrationsPath();
+                    if ($path !== null) {
+                        $migrationsPaths[] = $path;
+                    }
+                }
+            }
 
             if (!DatabaseConnection::isConnected()) {
                 Output::error('Database not connected.');
@@ -80,9 +91,8 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
             Output::title("Rolling back batch #$lastBatch");
 
             foreach ($inBatch as $name => $row) {
-                $file = $migrationsPath . '/' . $name . '.php';
-                $exists = file_exists($file);
-                $warn = $exists ? '' : Output::colorize('  [file missing]', 'yellow');
+                $file = $this->findMigrationFile($name, $migrationsPaths);
+                $warn = $file !== null ? '' : Output::colorize('  [file missing]', 'yellow');
                 Output::muted("  · $name$warn");
             }
 
@@ -91,7 +101,8 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
                 return ExitCode::SUCCESS;
             }
 
-            $rolledBack = $runner->rollback($migrationsPath);
+            $rolledBack = $runner->rollback($migrationsPaths);
+
             foreach ($rolledBack as $name) {
                 Output::success("Rolled back: $name");
             }
@@ -101,6 +112,21 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
             Output::error('Rollback failed: ' . $e->getMessage());
             return ExitCode::FAILURE;
         }
+    }
+
+    /**
+     * @param list<string> $migrationsPaths
+     */
+    private function findMigrationFile(string $name, array $migrationsPaths): ?string
+    {
+        foreach ($migrationsPaths as $path) {
+            $file = $path . '/' . $name . '.php';
+            if (file_exists($file)) {
+                return $file;
+            }
+        }
+
+        return null;
     }
 
     protected function getAvailableProjects(): array
