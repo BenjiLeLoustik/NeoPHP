@@ -74,5 +74,10 @@
             "recurse": true,
             "replace": false
         }
+    },
+    "config": {
+        "allow-plugins": {
+            "wikimedia/composer-merge-plugin": true
+        }
     }
 }
