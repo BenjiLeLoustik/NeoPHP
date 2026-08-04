@@ -12,7 +12,7 @@ use Neo\Core\Utils\Scanner\ScannerFileManager;
 
 /**
  * @method \Neo\Core\Utils\Scanner\ScannerAttributeManager getScanner(string $classname)
- * @method \Neo\Core\Utils\Scanner\ScannerFileManager getFileScanner();
+ * @method \Neo\Core\Utils\Scanner\ScannerFileManager getFileScanner()
  */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]
 class ScannerControllerExtension implements ControllerExtensionInterface

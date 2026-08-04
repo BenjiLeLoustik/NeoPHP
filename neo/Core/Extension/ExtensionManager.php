@@ -9,6 +9,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
+use Neo\Core\Utils\Scanner\ScannerFileManager;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
 final class ExtensionManager
@@ -46,6 +47,7 @@ final class ExtensionManager
 
     /**
      * @return list<object>
+     * @throws \ReflectionException
      */
     private function discover(ExtensionTypeEnum $type): array
     {
