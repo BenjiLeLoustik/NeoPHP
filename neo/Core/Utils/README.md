@@ -1,6 +1,6 @@
 # Utilities
 
-The `Utils` module brings together the framework's cross-cutting utilities: cache, configuration, logging, multi-channel notifications, and PHP attribute scanner.
+The `Utils` module brings together the framework's cross-cutting utilities: cache, configuration, logging, multi-channel notifications, and the PHP attribute/file scanners.
 
 ---
 
@@ -34,7 +34,9 @@ Utils/
 │   └── NotificationModule.php
 └── Scanner/
     ├── Extension/  ScannerControllerExtension
+    ├── Result/     AttributeScanResult, FileScanResult
     ├── ScannerAttributeManager.php
+    ├── ScannerFileManager.php
     └── ScannerModule.php
 ```
 
@@ -48,7 +50,7 @@ Utils/
 | `Config` | Loading of `*.config.php`, dot-notation access, test override | [Config/README.md](Config/README.md) |
 | `Logger` | RFC 5424 levels, channels, daily / size rotation, ZIP archiving | [Logger/README.md](Logger/README.md) |
 | `Notification` | Email (PHPMailer), Slack (Webhook), SMS (Twilio/Vonage/Log) | [Notification/README.md](Notification/README.md) |
-| `Scanner` | PHP 8 reflection on class, method, property, and parameter attributes | [Scanner/README.md](Scanner/README.md) |
+| `Scanner` | PHP 8 reflection on class, method, property, and parameter attributes, plus directory-based class discovery | [Scanner/README.md](Scanner/README.md) |
 
 ---
 
@@ -59,6 +61,8 @@ Utils/
 | `getCache()` | Cache |
 | `getConfig()` | Config |
 | `getLogger()` | Logger |
+| `getScanner(string $className)` | Scanner (attribute scanning) |
+| `getFileScanner()` | Scanner (directory-based class discovery) |
 
 ---
 
