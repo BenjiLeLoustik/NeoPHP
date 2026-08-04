@@ -11,6 +11,8 @@ use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Package\Interface\PackageInterface;
+use Neo\Core\Utils\Scanner\Result\FileScanResult;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
 use ReflectionClass;
@@ -27,18 +29,55 @@ class ConsoleManager
     /** @var array<string, array{instance: AbstractCommand, description: string, category: string}> */
     private array $commands = [];
 
-    public function __construct(private readonly Container $container) {}
+    public function __construct(
+        private Container $container
+    ) {
+    }
 
     /**
-     * @return list<string>
+     * @return list<class-string>
      */
-    private static function scanCommandClasses(): array
+    public static function scanBaseCommandClasses(): array
     {
         $results = new ScannerFileManager()
             ->paths(self::COMMAND_BASE_PATHS)
             ->withPathSegment('Commands')
             ->scan();
 
+        return self::filterCommandClasses($results);
+    }
+
+    /**
+     * @return list<class-string>
+     */
+    private function scanCommandClasses(): array
+    {
+        $paths = self::COMMAND_BASE_PATHS;
+
+        if ($this->container->has('packages')) {
+            /** @var array<int, PackageInterface> $packages */
+            foreach ($this->container->get('packages') as $package) {
+                $path = $package->getCommandsPath();
+                if ($path !== null) {
+                    $paths[] = $path;
+                }
+            }
+        }
+
+        $results = new ScannerFileManager()
+            ->paths($paths)
+            ->withPathSegment('Commands')
+            ->scan();
+
+        return self::filterCommandClasses($results);
+    }
+
+    /**
+     * @param list<FileScanResult> $results
+     * @return list<class-string>
+     */
+    private static function filterCommandClasses(array $results): array
+    {
         return array_values(array_filter(
             array_map(static fn($r) => $r->getFqcn(), $results),
             static fn(string $fqcn) => is_subclass_of($fqcn, AbstractCommand::class)
@@ -50,7 +89,7 @@ class ConsoleManager
      */
     public static function findProjectForCommand(string $commandName): ?string
     {
-        foreach (self::scanCommandClasses() as $class) {
+        foreach (self::scanBaseCommandClasses() as $class) {
             $results = new ScannerAttributeManager($class)
                 ->onClass()
                 ->withAttribute(Command::class)
@@ -81,7 +120,7 @@ class ConsoleManager
     /** @throws ReflectionException */
     private function loadCommands(): void
     {
-        foreach (self::scanCommandClasses() as $class) {
+        foreach ($this->scanCommandClasses() as $class) {
             $results = new ScannerAttributeManager($class)
                 ->onClass()
                 ->withAttribute(Command::class)
