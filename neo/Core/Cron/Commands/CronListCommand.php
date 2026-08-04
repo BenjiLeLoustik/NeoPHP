@@ -12,6 +12,7 @@ use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\Cron\Scanner\CronScanner;
 use Neo\Core\DI\Container;
+use Neo\Core\Package\Interface\PackageInterface;
 
 #[Command(
     name: 'cron:list',
@@ -44,10 +45,21 @@ final class CronListCommand extends AbstractCommand
         }
 
         new ApplicationPaths($this->container)->register($project);
-        $cronsPath = $this->container->get('cronsPath');
+
+        $paths = [$this->container->get('cronsPath')];
+
+        if ($this->container->has('packages')) {
+            /** @var array<int, PackageInterface> $packages */
+            foreach ($this->container->get('packages') as $package) {
+                $path = $package->getCronsPath();
+                if ($path !== null) {
+                    $paths[] = $path;
+                }
+            }
+        }
 
         $scanner = new CronScanner();
-        $jobs = $scanner->scan($cronsPath);
+        $jobs = $scanner->scan($paths);
 
         if (empty($jobs)) {
             Output::muted('No cron jobs found.');
