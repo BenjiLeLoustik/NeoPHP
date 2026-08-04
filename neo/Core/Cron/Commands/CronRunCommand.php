@@ -10,9 +10,14 @@ use Neo\Core\Console\Enum\ExitCode;
 use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
+use Neo\Core\Cron\Exception\CronException;
 use Neo\Core\Cron\Runner\CronRunner;
 use Neo\Core\Cron\Scanner\CronScanner;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Package\Interface\PackageInterface;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 #[Command(
     name: 'cron:run',
@@ -35,6 +40,13 @@ final class CronRunCommand extends AbstractCommand
         );
     }
 
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws CronException
+     * @throws \ReflectionException
+     * @throws ContainerExceptionInterface
+     * @throws ContainerException
+     */
     public function do(Input $input, Output $output): ExitCode
     {
         $project = $input->getOption('project');
@@ -45,10 +57,21 @@ final class CronRunCommand extends AbstractCommand
         }
 
         new ApplicationPaths($this->container)->register($project);
-        $cronsPath = $this->container->get('cronsPath');
+
+        $paths = [$this->container->get('cronsPath')];
+
+        if ($this->container->has('packages')) {
+            /** @var array<int, PackageInterface> $packages */
+            foreach ($this->container->get('packages') as $package) {
+                $path = $package->getCronsPath();
+                if ($path !== null) {
+                    $paths[] = $path;
+                }
+            }
+        }
 
         $scanner = new CronScanner();
-        $jobs = $scanner->scan($cronsPath);
+        $jobs = $scanner->scan($paths);
 
         if (empty($jobs)) {
             Output::muted('No cron jobs found.');
