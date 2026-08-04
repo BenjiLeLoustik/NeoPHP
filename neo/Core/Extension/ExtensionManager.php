@@ -8,6 +8,7 @@ use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
+use Neo\Core\Package\Interface\PackageInterface;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
 use Neo\Core\View\Interface\TwigExtensionInterface;
@@ -54,8 +55,20 @@ final class ExtensionManager
         $results = [];
         $basePath = realpath(__DIR__ . '/../../../');
 
+        $scanPaths = [
+            $basePath . '/neo',
+            $basePath . '/src',
+        ];
+
+        if ($this->container->has('packages')) {
+            /** @var array<int, PackageInterface> $packages */
+            foreach ($this->container->get('packages') as $package) {
+                $scanPaths[] = $package->getPath();
+            }
+        }
+
         $scanResults = new ScannerFileManager()
-            ->paths([$basePath . '/neo', $basePath . '/src'])
+            ->paths($scanPaths)
             ->withFilenameSuffix('Extension.php')
             ->scan();
 
