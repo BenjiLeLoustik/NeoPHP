@@ -111,21 +111,24 @@ final class MigrationRunner
     }
 
     /**
+     * @param list<string> $searchPaths
      * @return list<string>
      */
-    public function rollback(string $migrationsPath, ?MigrationSchemaSnapshot $snapshot = null): array
+    public function rollback(array $searchPaths, ?MigrationSchemaSnapshot $snapshot = null): array
     {
         $rolledBack = [];
 
-        foreach (glob($migrationsPath . '/*', GLOB_ONLYDIR) ?: [] as $subDir) {
-            $connection = basename($subDir);
-            DatabaseConnection::connectTo($connection);
-            $db = DatabaseManager::on($connection);
-            $runner = new self($db);
-            $rolledBack = array_merge($rolledBack, $runner->rollbackForPath($subDir, $db));
+        foreach ($searchPaths as $migrationsPath) {
+            foreach (glob($migrationsPath . '/*', GLOB_ONLYDIR) ?: [] as $subDir) {
+                $connection = basename($subDir);
+                DatabaseConnection::connectTo($connection);
+                $db = DatabaseManager::on($connection);
+                $runner = new self($db);
+                $rolledBack = array_merge($rolledBack, $runner->rollbackForPaths([$subDir], $db));
+            }
         }
 
-        $rolledBack = array_merge($rolledBack, $this->rollbackForPath($migrationsPath, $this->db));
+        $rolledBack = array_merge($rolledBack, $this->rollbackForPaths($searchPaths, $this->db));
 
         if ($snapshot !== null && count($rolledBack) > 0) {
             $snapshot->take();
@@ -185,9 +188,24 @@ final class MigrationRunner
     }
 
     /**
+     * @param list<string> $searchPaths
+     */
+    private function findMigrationFile(string $className, array $searchPaths): ?string
+    {
+        foreach ($searchPaths as $path) {
+            $file = "$path/$className.php";
+            if (file_exists($file)) {
+                return $file;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param list<string> $searchPaths
      * @return list<string>
      */
-    private function rollbackForPath(string $path, DatabaseManager $db): array
+    private function rollbackForPaths(array $searchPaths, DatabaseManager $db): array
     {
         $lastBatch = $this->getLastBatch();
         if ($lastBatch === 0) return [];
@@ -200,9 +218,9 @@ final class MigrationRunner
         $rolledBack = [];
         foreach ($rows as $row) {
             $className = $row['migration'];
-            $file = "$path/$className.php";
+            $file = $this->findMigrationFile($className, $searchPaths);
 
-            if (file_exists($file)) {
+            if ($file !== null) {
                 require_once $file;
                 $instance = new $className();
                 $instance->down($db);
