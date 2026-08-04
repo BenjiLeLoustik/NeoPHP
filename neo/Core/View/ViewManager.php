@@ -5,6 +5,7 @@ namespace Neo\Core\View;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Package\Interface\PackageInterface;
 use Neo\Core\View\Exception\ViewException;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 use Twig\Environment;
@@ -31,6 +32,16 @@ class ViewManager
         $twigConfig = $config->from('twig')->all();
 
         $loader = new FilesystemLoader($this->container->get('viewsPath'));
+
+        if ($this->container->has('packages')) {
+            /** @var array<int, PackageInterface> $packages */
+            foreach ($this->container->get('packages') as $package) {
+                $path = $package->getViewPath();
+                if ($path !== null) {
+                    $loader->addPath($path, $package->getName());
+                }
+            }
+        }
 
         $twigCache = $twigConfig['cache']
             ? $this->container->get('storagePath') . '/var/cache/Twig/'
