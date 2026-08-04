@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Neo\Core\Utils\Scanner;
 
 use Neo\Core\Utils\Scanner\Result\FileScanResult;
+use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -18,6 +19,9 @@ class ScannerFileManager
     private ?string $filenameSuffixFilter = null;
 
     private string $extension = 'php';
+
+    /** @var list<string> */
+    private array $excludedSegments = [];
 
     /**
      * @param list<string> $paths
@@ -43,6 +47,14 @@ class ScannerFileManager
     public function withFilenameSuffix(string $suffix): static
     {
         $this->filenameSuffixFilter = $suffix;
+        return $this;
+    }
+
+    public function withExcludedSegment(string ...$segments): static
+    {
+        foreach ($segments as $segment) {
+            $this->excludedSegments[] = $segment;
+        }
         return $this;
     }
 
@@ -76,9 +88,21 @@ class ScannerFileManager
 
         $results = [];
 
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($path)
-        );
+        $directoryIterator = new RecursiveDirectoryIterator($path);
+
+        $iterator = $this->excludedSegments === []
+            ? new RecursiveIteratorIterator($directoryIterator)
+            : new RecursiveIteratorIterator(
+                new RecursiveCallbackFilterIterator(
+                    $directoryIterator,
+                    function (\SplFileInfo $current) {
+                        if ($current->isDir()) {
+                            return !in_array($current->getFilename(), $this->excludedSegments, true);
+                        }
+                        return true;
+                    }
+                )
+            );
 
         foreach ($iterator as $file) {
             if (!$file->isFile() || $file->getExtension() !== $this->extension) {
