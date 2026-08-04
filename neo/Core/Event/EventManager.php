@@ -10,6 +10,7 @@ use Neo\Core\Event\Exception\EventException;
 use Neo\Core\Event\Interface\EventInterface;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
 use Neo\Core\Event\Listener\ListenerRegistration;
+use Neo\Core\Package\Interface\PackageInterface;
 use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
@@ -57,10 +58,20 @@ class EventManager
             return;
         }
 
-        $listenersPath = $this->container->get('listenersPath');
+        $paths = [$this->container->get('listenersPath')];
+
+        if ($this->container->has('packages')) {
+            /** @var array<int, PackageInterface> $packages */
+            foreach ($this->container->get('packages') as $package) {
+                $path = $package->getListenersPath();
+                if ($path !== null) {
+                    $paths[] = $path;
+                }
+            }
+        }
 
         $results = new ScannerFileManager()
-            ->paths([$listenersPath])
+            ->paths($paths)
             ->scan();
 
         foreach ($results as $result) {
