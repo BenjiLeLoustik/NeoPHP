@@ -11,6 +11,7 @@ use ReflectionMethod;
 class CronScanner
 {
     /**
+     * @param list<string> $cronsPaths
      * @return list<array{
      *     class: class-string,
      *     method: string,
@@ -21,12 +22,12 @@ class CronScanner
      * }>
      * @throws ReflectionException
      */
-    public function scan(string $cronsPath): array
+    public function scan(array $cronsPaths): array
     {
         $jobs = [];
 
         $results = new ScannerFileManager()
-            ->paths([$cronsPath])
+            ->paths($cronsPaths)
             ->scan();
 
         foreach ($results as $result) {
