@@ -45,6 +45,10 @@ return [
             'en' => 'Anglais',
         ],
     ],
+    
+    'package' => [
+        // \Vendor\PackageName\PackageName::class,
+    ]
 ];
 PHP;
     }
