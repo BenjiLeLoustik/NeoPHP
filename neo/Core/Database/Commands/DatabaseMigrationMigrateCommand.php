@@ -14,6 +14,7 @@ use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Database\Migration\Runner\MigrationRunner;
 use Neo\Core\DI\Container;
+use Neo\Core\Package\Interface\PackageInterface;
 
 #[Command(
     name: 'database:migration:migrate',
@@ -23,7 +24,7 @@ use Neo\Core\DI\Container;
 final class DatabaseMigrationMigrateCommand extends AbstractCommand
 {
     public function __construct(
-        private readonly Container $container
+        private Container $container
     ) {}
 
     public function configure(): void
@@ -49,7 +50,7 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
         $dryRun = (bool) $input->getOption('dry-run');
 
         $basePath = ROOT_DIR . "/src/$project";
-        $migrationsPath = "$basePath/Database/Migrations";
+        $migrationsPaths = ["$basePath/Database/Migrations"];
 
         if (!is_dir($basePath)) {
             Output::error("Project '$project' not found.");
@@ -60,6 +61,16 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
             new ApplicationPaths($this->container)->register($project);
             $this->container->get(DatabaseConnection::class);
 
+            if ($this->container->has('packages')) {
+                /** @var array<int, PackageInterface> $packages */
+                foreach ($this->container->get('packages') as $package) {
+                    $path = $package->getMigrationsPath();
+                    if ($path !== null) {
+                        $migrationsPaths[] = $path;
+                    }
+                }
+            }
+
             if (!DatabaseConnection::isConnected()) {
                 Output::error('Database not connected.');
                 return ExitCode::FAILURE;
@@ -67,7 +78,11 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
 
             $db = new DatabaseManager();
             $runner = new MigrationRunner($db, 'default');
-            $pending = $runner->getPending($migrationsPath);
+
+            $pending = [];
+            foreach ($migrationsPaths as $path) {
+                $pending = array_merge($pending, $runner->getPending($path));
+            }
 
             if (empty($pending)) {
                 Output::success('Nothing to migrate.');
@@ -89,7 +104,11 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
                 return ExitCode::SUCCESS;
             }
 
-            $ran = $runner->run($migrationsPath, false);
+            $ran = [];
+            foreach ($migrationsPaths as $path) {
+                $ran = array_merge($ran, $runner->run($path, false));
+            }
+
             foreach ($ran as $name) {
                 Output::success("Applied: $name");
             }
