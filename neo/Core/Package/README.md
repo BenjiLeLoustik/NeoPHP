@@ -297,7 +297,7 @@ package, a missing file, or any path escaping that folder.
   `vendor/vendor-name/{package}/src/Assets/`, bypassing PHP entirely — this
   is an infrastructure-level optimization, outside the framework's scope.
 
-### Using package Less/CSS sources in a project's own pipeline
+### Using package Less/CSS sources
 
 Less resolves `@import` by filesystem path, not by URL, so a project can
 import a package's Less sources directly into its own stylesheet without
@@ -649,7 +649,7 @@ final class GreetingRepository extends EntityRepository
 }
 ```
 
-### `database/Migrations/MigrationVersion_Hello_20260101_000000_CreateGreetingsTable.php`
+### `database/Migrations/MigrationVersion_Hello_*.php`
 
 ```php
 <?php
