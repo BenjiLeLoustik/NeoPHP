@@ -1,3 +1,6 @@
+v4.22.1
+- docs: fix reduce text (1e46ee8)
+
 v4.22.0
 - docs: document package assets convention and PackageAssetController (b7ba716)
 - feat: add PackageAssetController to serve package static assets (aea1c5e)
