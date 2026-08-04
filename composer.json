@@ -45,7 +45,9 @@
         "ext-simplexml": "*",
         "phpmailer/phpmailer": "^7.1",
         "ext-fileinfo": "*",
-        "predis/predis": "^3.5"
+        "predis/predis": "^3.5",
+        "neo_php_site/app": "@dev",
+        "test/app": "@dev"
     },
     "require-dev": {
         "phpunit/phpunit": "^13.0",
@@ -61,7 +63,26 @@
             "/src/*/Storage/"
         ]
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
-    "repositories": []
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/hello-package"
+        },
+        {
+            "type": "path",
+            "url": "src/Neo_Php_Site",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "src/Test",
+            "options": {
+                "symlink": true
+            }
+        }
+    ]
 }
