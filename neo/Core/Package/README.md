@@ -24,8 +24,9 @@ to be edited by the developer once installed.
 7. [Configuration](#configuration)
 8. [Entities and Repositories](#entities-and-repositories)
 9. [Migrations](#migrations)
-10. [Local Development](#local-development)
-11. [Full Example](#full-example)
+10. [Assets](#Assets)
+11. [Local Development](#local-development)
+12. [Full Example](#full-example)
 
 ---
 
@@ -244,6 +245,82 @@ final class MigrationVersion_Hello_20260101_000000_CreateGreetingsTable implemen
 ```
 
 ---
+
+## Assets
+
+A package can ship its own static assets (CSS, JS, images, fonts) under
+`src/Assets/`. Unlike controllers, views, or listeners, these files are
+neither scanned nor copied — they are served on demand, straight from
+wherever Composer installed the package, by a dedicated core controller.
+
+```
+{package-root}/
+└── src/
+    └── Assets/
+        ├── css/
+        │   └── style.css
+        └── js/
+            └── app.js
+```
+
+### Serving package assets
+
+`PackageAssetController` (`neo/Core/Package/Controllers/PackageAssetController.php`)
+exposes every package's `getAssetsPath()` under a single route:
+
+```
+GET /packages-assets/{package}/{path}
+```
+
+Reference a package's asset in a template using its `getName()` value:
+
+```twig
+<link rel="stylesheet" href="/packages-assets/Hello/css/style.css">
+<script src="/packages-assets/Hello/js/app.js"></script>
+```
+
+The controller resolves `{path}` strictly inside the package's `Assets/`
+folder (path traversal is rejected) and returns a `404` for an unknown
+package, a missing file, or any path escaping that folder.
+
+### Limitations
+
+- **No compilation pipeline.** Unlike a project's own `Assets/` (compiled
+  and minified by `AssetManager` into `public/builds/`), package assets are
+  served exactly as shipped. A package author is responsible for delivering
+  already-minified files if needed.
+- **Served through PHP**, not directly by the web server — acceptable for
+  typical package assets (icons, a small admin dashboard's CSS/JS), but not
+  a replacement for the project's own static asset pipeline. For
+  high-traffic assets, the web server can optionally be configured to
+  intercept `/packages-assets/{Name}/...` and serve the file directly from
+  `vendor/vendor-name/{package}/src/Assets/`, bypassing PHP entirely — this
+  is an infrastructure-level optimization, outside the framework's scope.
+
+### Using package Less/CSS sources in a project's own pipeline
+
+Less resolves `@import` by filesystem path, not by URL, so a project can
+import a package's Less sources directly into its own stylesheet without
+any framework-level wiring:
+
+```less
+// src/MyProject/Assets/less/app.less
+
+@import "../../../../vendor/vendor-name/hello-package/src/Assets/less/variables.less";
+
+.my-custom-class {
+    color: @hello-primary-color;
+}
+```
+
+`AssetManager` compiles the project's own `app.less` as usual — it never
+needs to know a package exists. The only caveat is that the relative path
+to `vendor/` depends on the importing file's exact depth in the project.
+
+There is currently no equivalent mechanism for JavaScript (no import
+resolution across `vendor/` at compile time) — a package's JS should be
+loaded separately via `PackageAssetController`, alongside the project's own
+compiled `app.js`, rather than merged into it.
 
 ## Local Development
 
