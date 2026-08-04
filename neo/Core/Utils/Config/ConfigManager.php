@@ -33,6 +33,7 @@ class ConfigManager
     {
         $this->container = $container;
         $this->loadConfigurations($this->container->get('configsPath'));
+        $this->loadPackageConfigurations($this->container->get('configsPath'));
 
         if ($this->container->has('testConfigsPath')) {
             $testConfigsPath = $this->container->get('testConfigsPath');
@@ -64,6 +65,46 @@ class ConfigManager
             }
 
             $this->configs[$key] = $data;
+        }
+    }
+
+    /**
+     * @throws ConfigException
+     */
+    private function loadPackageConfigurations(string $configDir): void
+    {
+        $packagesDir = rtrim($configDir, '/\\') . DIRECTORY_SEPARATOR . 'Packages';
+
+        if (!is_dir($packagesDir)) {
+            return;
+        }
+
+        $packageDirs = glob($packagesDir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) ?: [];
+
+        foreach ($packageDirs as $packageDir) {
+            $pattern = $packageDir . DIRECTORY_SEPARATOR . '*' . self::CONFIG_EXTENSION;
+            $files = glob($pattern) ?: [];
+
+            foreach ($files as $file) {
+                $key = basename($file, self::CONFIG_EXTENSION);
+
+                if (isset($this->configs[$key])) {
+                    continue;
+                }
+
+                $data = require $file;
+
+                if (!is_array($data)) {
+                    throw new ConfigException(
+                        title: "Invalid Config File",
+                        message: sprintf("Package config file '%s' must return an array.", $file),
+                        code: 500,
+                        context: ['file' => $file]
+                    );
+                }
+
+                $this->configs[$key] = $data;
+            }
         }
     }
 
