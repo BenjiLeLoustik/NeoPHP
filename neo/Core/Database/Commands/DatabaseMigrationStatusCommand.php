@@ -16,6 +16,7 @@ use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Database\Migration\MigrationSchemaSnapshot;
 use Neo\Core\Database\Migration\Runner\MigrationRunner;
 use Neo\Core\DI\Container;
+use Neo\Core\Package\Interface\PackageInterface;
 
 #[Command(
     name: 'database:migration:status',
@@ -25,7 +26,7 @@ use Neo\Core\DI\Container;
 final class DatabaseMigrationStatusCommand extends AbstractCommand
 {
     public function __construct(
-        private readonly Container $container
+        private Container $container
     ) {}
 
     public function configure(): void
@@ -42,7 +43,7 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
     {
         $project = $input->getOption('project');
         $basePath = ROOT_DIR . "/src/$project";
-        $migrationsPath = "$basePath/Database/Migrations";
+        $migrationsPaths = ["$basePath/Database/Migrations"];
 
         if (!is_dir($basePath)) {
             Output::error("Project '$project' not found.");
@@ -52,6 +53,16 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
         try {
             new ApplicationPaths($this->container)->register($project);
             $this->container->get(DatabaseConnection::class);
+
+            if ($this->container->has('packages')) {
+                /** @var array<int, PackageInterface> $packages */
+                foreach ($this->container->get('packages') as $package) {
+                    $path = $package->getMigrationsPath();
+                    if ($path !== null) {
+                        $migrationsPaths[] = $path;
+                    }
+                }
+            }
 
             if (!DatabaseConnection::isConnected()) {
                 Output::error('Database not connected.');
@@ -63,7 +74,11 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
             $snapshot = new MigrationSchemaSnapshot($db, $introspector);
             $runner = new MigrationRunner($db);
             $applied = $runner->getApplied();
-            $files = $runner->getMigrationFiles($migrationsPath);
+
+            $files = [];
+            foreach ($migrationsPaths as $path) {
+                $files = array_merge($files, $runner->getMigrationFiles($path));
+            }
 
             if (empty($files) && empty($applied)) {
                 Output::warning('No migrations found.');
