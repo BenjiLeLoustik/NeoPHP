@@ -62,7 +62,9 @@ class EventManager
 
         if ($this->container->has('packages')) {
             /** @var array<int, PackageInterface> $packages */
-            foreach ($this->container->get('packages') as $package) {
+            $packages = $this->container->get('packages');
+
+            foreach ($packages as $package) {
                 $path = $package->getListenersPath();
                 if ($path !== null) {
                     $paths[] = $path;
