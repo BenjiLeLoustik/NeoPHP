@@ -1,3 +1,15 @@
+v4.22.0
+- docs: document package assets convention and PackageAssetController (b7ba716)
+- feat: add PackageAssetController to serve package static assets (aea1c5e)
+- feat: add getAssetsPath to PackageInterface and AbstractPackage (a38650a)
+- docs: replace dangling hello-package reference with a full inline example in Package README (849d6f8)
+- build: allow wikimedia/composer-merge-plugin in composer.json (0c891fb)
+- feat: seed composer.local.json from template if missing in ProjectCreateCommand (aa0b720)
+- build: add composer.local.json.dist template (43e9dbc)
+- feat: register new projects in composer.local.json instead of composer.json (b54cf45)
+- chore: ignore composer.local.json (768fb1f)
+- build: add wikimedia/composer-merge-plugin to merge composer.local.json (6cdcb36)
+
 v4.21.0
 - fix: move @var docblock above the assignment instead of the foreach to satisfy PHPStan (4e91110)
 - fix: set default composer (a253d63)
