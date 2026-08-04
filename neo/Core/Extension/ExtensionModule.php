@@ -6,12 +6,15 @@ namespace Neo\Core\Extension;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\Interface\ModuleInterface;
+use Neo\Core\Package\PackageModule;
 
 final class ExtensionModule implements ModuleInterface
 {
     public function dependencies(): array
     {
-        return [];
+        return [
+            PackageModule::class
+        ];
     }
 
     public function register(Container $container): void
