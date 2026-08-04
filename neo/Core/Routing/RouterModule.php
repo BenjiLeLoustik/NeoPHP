@@ -6,6 +6,7 @@ namespace Neo\Core\Routing;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\Interface\ModuleInterface;
+use Neo\Core\Package\PackageModule;
 use Neo\Core\Utils\Config\ConfigModule;
 use Neo\Core\View\ViewModule;
 
@@ -16,6 +17,7 @@ class RouterModule implements ModuleInterface
         return [
             ConfigModule::class,
             ViewModule::class,
+            PackageModule::class
         ];
     }
 
