@@ -1,3 +1,15 @@
+v4.20.8
+- fix: resolve PHPStan errors (4b217de)
+- docs: document ScannerFileManager and getFileScanner in Utils README (1960d60)
+- docs: document ScannerFileManager and FileScanResult in Scanner README (6ed3b84)
+- refactor: use ScannerFileManager in CronScanner::scan (a4a95c0)
+- refactor: use ScannerFileManager in ConsoleManager command discovery (45aec32)
+- refactor: use ScannerFileManager in ExtensionManager::discover (3e24410)
+- refactor: use ScannerFileManager in EventManager::scanListeners (961bbed)
+- refactor: use ScannerFileManager in RouterManager::scanControllers (8a0de60)
+- refactor: use ScannerFileManager in ModuleManager::discover (4e63d34)
+- refactor: rename getScanner to getFileScanner in ScannerControllerExtension PHPDoc (607978d)
+
 v4.20.7
 - fix: use symlink instead of mirror for project path repositories (ec55f18)
 
