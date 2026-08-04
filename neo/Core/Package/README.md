@@ -278,7 +278,349 @@ No further sync step is required — the package is read directly from
 
 ---
 
-## Full Example
+## Full Example: HelloPackage
 
-See `packages/hello-package/` for a complete, working example package
-demonstrating a controller, a view, default configuration, and a migration.
+This is a complete, minimal package demonstrating every discovery domain:
+a controller, a view, default configuration, an entity with its repository,
+a migration, and a cron job.
+
+```
+hello-package/
+├── composer.json
+├── README.md
+├── src/
+│   ├── HelloPackage.php
+│   ├── Controllers/
+│   │   └── HelloController.php
+│   ├── Templates/
+│   │   └── hello.html.twig
+│   └── Crons/
+│       └── GreetingCleanupCron.php
+├── config/
+│   └── hello.config.php
+└── database/
+    ├── Entity/
+    │   └── Greeting.php
+    ├── Repository/
+    │   └── GreetingRepository.php
+    └── Migrations/
+        └── MigrationVersion_Hello_20260101_000000_CreateGreetingsTable.php
+```
+
+### `composer.json`
+
+```json
+{
+    "name": "vendor-name/hello-package",
+    "description": "Example NeoPHP package",
+    "type": "library",
+    "require": {
+        "php": ">=8.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vendor\\HelloPackage\\": "src/",
+            "Vendor\\HelloPackage\\Database\\": "database/"
+        }
+    }
+}
+```
+
+### `src/HelloPackage.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Vendor\HelloPackage;
+
+use Neo\Core\Package\Abstract\AbstractPackage;
+
+final class HelloPackage extends AbstractPackage
+{
+    public function getName(): string
+    {
+        return 'Hello';
+    }
+
+    public function getPath(): string
+    {
+        return dirname(__DIR__);
+    }
+}
+```
+
+### `src/Controllers/HelloController.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Vendor\HelloPackage\Controllers;
+
+use Neo\Core\Controller\AbstractController;
+use Neo\Core\Database\ORM\Persistence\EntityManager;
+use Neo\Core\Http\Request\Request;
+use Neo\Core\Http\Response\Types\Response;
+use Neo\Core\Routing\Attribute\MainRoute;
+use Neo\Core\Routing\Attribute\Route;
+use Vendor\HelloPackage\Database\Entity\Greeting;
+use Vendor\HelloPackage\Database\Repository\GreetingRepository;
+
+#[MainRoute(path: '/hello', name: 'hello')]
+final class HelloController extends AbstractController
+{
+    #[Route(path: '/', name: 'index', methods: ['GET'])]
+    public function index(): Response
+    {
+        /** @var EntityManager $em */
+        $em = $this->container->get(EntityManager::class);
+
+        /** @var GreetingRepository $repository */
+        $repository = $em->getRepository(Greeting::class);
+
+        return $this->render('@Hello/hello.html.twig', [
+            'message' => $this->getConfig()->from('hello')->get('greeting', 'Hello, world!'),
+            'greetings' => $repository->findAllOrdered(),
+        ]);
+    }
+
+    #[Route(path: '/add', name: 'add', methods: ['POST'])]
+    public function add(Request $request): Response
+    {
+        /** @var EntityManager $em */
+        $em = $this->container->get(EntityManager::class);
+
+        /** @var GreetingRepository $repository */
+        $repository = $em->getRepository(Greeting::class);
+
+        $repository->create($request->getPost('message', 'Hello!'));
+
+        return $this->redirect('/hello');
+    }
+}
+```
+
+### `src/Templates/hello.html.twig`
+
+```twig
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello Package</title>
+</head>
+<body>
+    <h1>{{ message }}</h1>
+
+    <ul>
+        {% for greeting in greetings %}
+            <li>{{ greeting.message }} — {{ greeting.createdAt|date('Y-m-d H:i:s') }}</li>
+        {% endfor %}
+    </ul>
+
+    <form method="post" action="/hello/add">
+        <input type="text" name="message" placeholder="New greeting" required>
+        <button type="submit">Add</button>
+    </form>
+</body>
+</html>
+```
+
+### `src/Crons/GreetingCleanupCron.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Vendor\HelloPackage\Crons;
+
+use Neo\Core\Cron\Attribute\Cron;
+use Vendor\HelloPackage\Database\Repository\GreetingRepository;
+
+final class GreetingCleanupCron
+{
+    public function __construct(private readonly GreetingRepository $repository) {}
+
+    #[Cron(
+        expression: '0 0 * * *',
+        description: 'Removes greetings older than 30 days',
+    )]
+    public function handle(): void
+    {
+        $this->repository->deleteOlderThan(30);
+    }
+}
+```
+
+### `config/hello.config.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+return [
+    'greeting' => 'Hello from HelloPackage!',
+];
+```
+
+### `database/Entity/Greeting.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Vendor\HelloPackage\Database\Entity;
+
+use Neo\Core\Database\ORM\Mapping\Attribute\Column;
+use Neo\Core\Database\ORM\Mapping\Attribute\Entity;
+use Neo\Core\Database\ORM\Mapping\Attribute\GeneratedValue;
+use Neo\Core\Database\ORM\Mapping\Attribute\Id;
+use Neo\Core\Database\ORM\Mapping\Attribute\Table;
+use Vendor\HelloPackage\Database\Repository\GreetingRepository;
+
+#[Entity(repositoryClass: GreetingRepository::class)]
+#[Table(name: 'greetings')]
+final class Greeting
+{
+    #[Id]
+    #[GeneratedValue]
+    #[Column(type: 'integer', unsigned: true)]
+    private ?int $id = null;
+
+    #[Column(type: 'string', length: 255)]
+    private string $message;
+
+    #[Column(name: 'created_at', type: 'datetime')]
+    private \DateTime $createdAt;
+
+    public function __construct(string $message)
+    {
+        $this->message = $message;
+        $this->createdAt = new \DateTime();
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getMessage(): string
+    {
+        return $this->message;
+    }
+
+    public function getCreatedAt(): \DateTime
+    {
+        return $this->createdAt;
+    }
+}
+```
+
+### `database/Repository/GreetingRepository.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Vendor\HelloPackage\Database\Repository;
+
+use Neo\Core\Database\ORM\Persistence\EntityRepository;
+use Vendor\HelloPackage\Database\Entity\Greeting;
+
+/**
+ * @extends EntityRepository<Greeting>
+ */
+final class GreetingRepository extends EntityRepository
+{
+    /**
+     * @return list<Greeting>
+     */
+    public function findAllOrdered(): array
+    {
+        return $this->findBy([], orderBy: ['createdAt' => 'DESC']);
+    }
+
+    public function create(string $message): Greeting
+    {
+        $greeting = new Greeting($message);
+
+        $this->getEntityManager()->persist($greeting);
+        $this->getEntityManager()->flush();
+
+        return $greeting;
+    }
+
+    public function deleteOlderThan(int $days): void
+    {
+        $threshold = new \DateTime("-{$days} days");
+
+        foreach ($this->findAll() as $greeting) {
+            if ($greeting->getCreatedAt() < $threshold) {
+                $this->getEntityManager()->remove($greeting);
+            }
+        }
+
+        $this->getEntityManager()->flush();
+    }
+}
+```
+
+### `database/Migrations/MigrationVersion_Hello_20260101_000000_CreateGreetingsTable.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Neo\Core\Database\DatabaseManager;
+use Neo\Core\Database\Migration\Interface\MigrationInterface;
+
+final class MigrationVersion_Hello_20260101_000000_CreateGreetingsTable implements MigrationInterface
+{
+    public function up(DatabaseManager $db): void
+    {
+        $db->execute("
+            CREATE TABLE IF NOT EXISTS `greetings` (
+                `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `message`    VARCHAR(255) NOT NULL,
+                `created_at` DATETIME     NOT NULL,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+    }
+
+    public function down(DatabaseManager $db): void
+    {
+        $db->execute("DROP TABLE IF EXISTS `greetings`");
+    }
+}
+```
+
+### Enabling it in a project
+
+```php
+// src/MyProject/Config/app.config.php
+return [
+    // ...
+    'packages' => [
+        \Vendor\HelloPackage\HelloPackage::class,
+    ],
+];
+```
+
+### Testing it end to end
+
+```bash
+php bin/neo debug:router --project=MyProject
+php bin/neo database:migration:migrate --project=MyProject
+php bin/neo cron:list --project=MyProject
+php bin/neo app:serve MyProject
+# → http://localhost:800X/hello/
+```
