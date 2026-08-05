@@ -1,3 +1,7 @@
+v4.24.1
+- fix: remove deleted project from composer.local.json instead of root composer.json (0e50415)
+- fix: sync projects into composer.local.json instead of root composer.json (d89f1db)
+
 v4.24.0
 - feat: add package:remove command to uninstall packages and detect leftover PackageInterface classes (f3dab88)
 - fix: register newly installed package's PSR-4 mapping on the active autoloader before scanning (c9b3c6e)
