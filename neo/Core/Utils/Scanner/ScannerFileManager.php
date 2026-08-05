@@ -104,6 +104,8 @@ class ScannerFileManager
                 )
             );
 
+        $candidates = [];
+
         foreach ($iterator as $file) {
             if (!$file->isFile() || $file->getExtension() !== $this->extension) {
                 continue;
@@ -135,18 +137,24 @@ class ScannerFileManager
                 continue;
             }
 
-            $declaredBefore = get_declared_classes();
-            require_once $filePath;
+            $candidates[] = [$fqcn, $filePath];
+        }
 
-            if (!class_exists($fqcn) && !interface_exists($fqcn)) {
-                $declaredAfter = get_declared_classes();
-                $new = array_diff($declaredAfter, $declaredBefore);
-                if (empty($new)) {
-                    continue;
-                }
-                $fqcn = array_values($new)[0];
-                if (!class_exists($fqcn) && !interface_exists($fqcn)) {
-                    continue;
+        foreach ($candidates as [$fqcn, $filePath]) {
+            if (!class_exists($fqcn, true) && !interface_exists($fqcn, true)) {
+                $declaredBefore = get_declared_classes();
+                require_once $filePath;
+
+                if (!class_exists($fqcn, false) && !interface_exists($fqcn, false)) {
+                    $declaredAfter = get_declared_classes();
+                    $new = array_diff($declaredAfter, $declaredBefore);
+                    if (empty($new)) {
+                        continue;
+                    }
+                    $fqcn = array_values($new)[0];
+                    if (!class_exists($fqcn, false) && !interface_exists($fqcn, false)) {
+                        continue;
+                    }
                 }
             }
 
