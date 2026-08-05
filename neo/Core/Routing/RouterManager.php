@@ -73,7 +73,10 @@ class RouterManager
             }
         }
 
-        $paths = [$this->controllersPath];
+        $paths = [
+            $this->controllersPath,
+            __DIR__ . '/../Package/Controllers',
+        ];
 
         if ($this->container->has('packages')) {
             /** @var array<int, PackageInterface> $packages */
