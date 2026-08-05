@@ -1,3 +1,7 @@
+v4.25.3
+- fix: register bootstrap error handler in bin/neo for CLI error formatting (d9bfcb6)
+- fix: render plain text errors in CLI instead of HTML in ErrorManager (09b6eb2)
+
 v4.25.2
 - ci: add contents write permission to ide-helper workflow (5d2641c)
 
