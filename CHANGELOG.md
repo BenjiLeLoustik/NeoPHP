@@ -1,3 +1,6 @@
+v4.25.2
+- ci: add contents write permission to ide-helper workflow (5d2641c)
+
 v4.25.1
 - ci: sequence ide-helper after auto-release to avoid concurrent push to main (8a3985b)
 
