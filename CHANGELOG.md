@@ -1,3 +1,6 @@
+v4.27.0
+- feat: scan package paths for profiler collectors using ScannerFileManager (3c7b8ac)
+
 v4.26.1
 - fix: set packages instead of package into app.config.php template (3af661a)
 
