@@ -8,6 +8,8 @@ use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\EventModule;
 use Neo\Core\Http\Response\ResponseModule;
 use Neo\Core\Module\Interface\ModuleInterface;
+use Neo\Core\Package\Interface\PackageInterface;
+use Neo\Core\Package\PackageModule;
 use Neo\Core\Profiler\Interface\CollectorAwareInterface;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Profiler\Listener\ProfilerResponseListener;
@@ -16,6 +18,7 @@ use Neo\Core\Routing\RouterModule;
 use Neo\Core\Security\Auth\AuthModule;
 use Neo\Core\Translation\TranslationModule;
 use Neo\Core\Utils\Config\ConfigModule;
+use Neo\Core\Utils\Scanner\ScannerFileManager;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
@@ -30,7 +33,8 @@ class ProfilerModule implements ModuleInterface
             RouterModule::class,
             AuthModule::class,
             TranslationModule::class,
-            ConfigModule::class
+            ConfigModule::class,
+            PackageModule::class,
         ];
     }
 
@@ -68,16 +72,14 @@ class ProfilerModule implements ModuleInterface
     {
         $coreDir = dirname(__DIR__);
 
-        $iterator = new RegexIterator(
-            new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($coreDir)
-            ),
-            '/^.+Collector\.php$/i',
-            RegexIterator::MATCH
-        );
+        $results = new ScannerFileManager()
+            ->paths($this->collectCollectorPaths($container, $coreDir))
+            ->withFilenameSuffix('Collector.php')
+            ->withExcludedSegment('vendor', '.git', 'node_modules')
+            ->scan();
 
-        foreach ($iterator as $file) {
-            $class = $this->fileToClass($file->getRealPath(), $coreDir);
+        foreach ($results as $result) {
+            $class = $result->getFqcn();
 
             if (str_contains($class, '\\Tests\\') || str_contains($class, '\\Fixture\\')) {
                 continue;
@@ -104,11 +106,21 @@ class ProfilerModule implements ModuleInterface
         }
     }
 
-    private function fileToClass(string $realPath, string $coreDir): string
+    /**
+     * @return list<string>
+     */
+    private function collectCollectorPaths(Container $container, string $coreDir): array
     {
-        $relative = str_replace([$coreDir . DIRECTORY_SEPARATOR, '.php'], ['', ''], $realPath);
-        $relative = str_replace(DIRECTORY_SEPARATOR, '\\', $relative);
+        $paths = [$coreDir];
 
-        return 'Neo\\Core\\' . $relative;
+        if ($container->has('packages')) {
+            /** @var array<int, PackageInterface> $packages */
+            $packages = $container->get('packages');
+            foreach ($packages as $package) {
+                $paths[] = $package->getPath();
+            }
+        }
+
+        return $paths;
     }
 }
