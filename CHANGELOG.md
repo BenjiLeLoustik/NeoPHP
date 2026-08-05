@@ -1,3 +1,8 @@
+v4.24.0
+- feat: add package:remove command to uninstall packages and detect leftover PackageInterface classes (f3dab88)
+- fix: register newly installed package's PSR-4 mapping on the active autoloader before scanning (c9b3c6e)
+- fix: prefer Composer autoload over manual require_once in ScannerFileManager (5c2380b)
+
 v4.23.1
 - fix: add /packages/ to gitignore (9a4de93)
 
