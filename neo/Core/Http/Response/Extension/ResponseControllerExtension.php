@@ -14,6 +14,8 @@ use Neo\Core\Http\Response\ResponseManager;
  * @method \Neo\Core\Http\Response\Types\JsonResponse json(array<string, mixed>|object $data, int $status = 200)
  * @method \Neo\Core\Http\Response\Types\JsonResponse jsonSuccess(array<string, mixed>|object $data = [], int $status = 200)
  * @method \Neo\Core\Http\Response\Types\JsonResponse jsonError(string $message, int $status = 400, array<string, mixed> $extra = [])
+ * @method \Neo\Core\Http\Response\Types\RedirectResponse redirect(string $url, int $status = 302)
+ * @method \Neo\Core\Http\Response\Types\Response make()
  */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]
 class ResponseControllerExtension implements ControllerExtensionInterface
@@ -25,5 +27,7 @@ class ResponseControllerExtension implements ControllerExtensionInterface
         $controller->registerMethod('json', fn(array|object $data, int $status = 200) => $manager->json($data, $status));
         $controller->registerMethod('jsonSuccess', fn(array|object $data = [], int $status = 200) => $manager->jsonSuccess($data, $status));
         $controller->registerMethod('jsonError', fn(string $message, int $status = 400, array $extra = []) => $manager->jsonError($message, $status, $extra));
+        $controller->registerMethod('redirect', fn(string $url, int $status = 302) => $manager->redirect($url, $status));
+        $controller->registerMethod('make', fn() => $manager->make());
     }
 }
