@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Error;
 
+use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
@@ -44,12 +45,23 @@ class ErrorManager
     public static function registerBootstrap(): void
     {
         set_exception_handler(function (\Throwable $e) {
-            if (!headers_sent()) {
-                http_response_code(500);
-            }
             $exception = $e instanceof FrameworkException
                 ? $e
                 : FrameworkException::fromThrowable($e);
+
+            if (PHP_SAPI === 'cli') {
+                fwrite(STDERR, sprintf(
+                    "[%d] %s: %s\n",
+                    $exception->getCode() ?: 500,
+                    $exception->getTitle(),
+                    $exception->getMessage()
+                ));
+                exit(1);
+            }
+
+            if (!headers_sent()) {
+                http_response_code(500);
+            }
             echo self::renderFallbackHtml($exception, self::detectBootstrapEnv());
             exit;
         });
@@ -114,6 +126,11 @@ class ErrorManager
 
         $exception = $e instanceof FrameworkException ? $e : FrameworkException::fromThrowable($e);
 
+        if (PHP_SAPI === 'cli') {
+            $this->renderCli($exception);
+            exit(1);
+        }
+
         $code = $exception->getCode() ?: 500;
         $viewFile = $this->container->get('viewsPath') . "/errors/{$code}.html.twig";
 
@@ -160,8 +177,43 @@ class ErrorManager
 
     private function renderFallback(FrameworkException $exception): void
     {
+        if (PHP_SAPI === 'cli') {
+            $this->renderCli($exception);
+            return;
+        }
+
         $env = $this->getEnv();
         echo $this->injectProfilerToolbar(self::renderFallbackHtml($exception, $env));
+    }
+
+    private function renderCli(FrameworkException $exception): void
+    {
+        $env = $this->getEnv();
+        $code = $exception->getCode() ?: 500;
+
+        Output::error(
+            sprintf('[%d] %s: %s', $code, $exception->getTitle(), $exception->getMessage())
+        );
+
+        if ($env === 'dev') {
+            $file = $exception->getFile();
+            $line = $exception->getLine();
+
+            if ($file !== '') {
+                Output::muted(" at $file:$line");
+            }
+
+            $context = $exception->getContext();
+            if (!empty($context)) {
+                Output::newLine();
+                Output::muted('Context:');
+                print_r($context);
+            }
+
+            Output::newLine();
+            Output::muted('Stack Trace:');
+            echo $exception->getTraceAsString() . "\n";
+        }
     }
 
     private static function renderFallbackHtml(FrameworkException $exception, string $env): string
