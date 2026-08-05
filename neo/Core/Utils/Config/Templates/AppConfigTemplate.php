@@ -46,7 +46,7 @@ return [
         ],
     ],
     
-    'package' => [
+    'packages' => [
         // \Vendor\PackageName\PackageName::class,
     ]
 ];
