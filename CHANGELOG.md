@@ -1,3 +1,6 @@
+v4.23.1
+- fix: add /packages/ to gitignore (9a4de93)
+
 v4.23.0
 - feat: expose RoleConfig from AuthManager for third-party role resolution (7a73995)
 
