@@ -26,3 +26,5 @@ tailwind.config.js
 /var/
 **/.phpunit.result.cache
 **/.phpunit.cache/
+
+/packages/
