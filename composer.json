@@ -59,7 +59,8 @@
         },
         "exclude-from-classmap": [
             "/src/*/Database/Migrations/",
-            "/src/*/Storage/"
+            "/src/*/Storage/",
+            "/.ide-helper/"
         ]
     },
     "minimum-stability": "dev",
