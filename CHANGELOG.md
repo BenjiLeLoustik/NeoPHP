@@ -1,3 +1,6 @@
+v4.23.0
+- feat: expose RoleConfig from AuthManager for third-party role resolution (7a73995)
+
 v4.22.1
 - docs: fix reduce text (1e46ee8)
 
