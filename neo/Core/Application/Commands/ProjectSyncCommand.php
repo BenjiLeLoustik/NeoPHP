@@ -12,7 +12,7 @@ use Neo\Core\Console\Output\Output;
 
 #[Command(
     name: 'project:sync',
-    description: 'Sync root composer.json with all projects in ./src/',
+    description: 'Sync composer.local.json with all projects in ./src/',
     category: 'Project'
 )]
 final class ProjectSyncCommand extends AbstractCommand
@@ -30,11 +30,15 @@ final class ProjectSyncCommand extends AbstractCommand
     {
         $runComposer = (bool) $input->getOption('run-composer');
         $srcDir = ROOT_DIR . '/src/';
-        $rootComposerPath = ROOT_DIR . '/composer.json';
+        $localComposerPath = ROOT_DIR . '/composer.local.json';
+        $distPath = ROOT_DIR . '/composer.local.json.dist';
 
-        if (!file_exists($rootComposerPath)) {
-            Output::error("Root composer.json not found.");
-            return ExitCode::FAILURE;
+        if (!file_exists($localComposerPath)) {
+            $seed = file_exists($distPath)
+                ? file_get_contents($distPath)
+                : json_encode(['repositories' => [], 'require' => []], JSON_PRETTY_PRINT);
+
+            file_put_contents($localComposerPath, $seed);
         }
 
         $projects = array_filter(
@@ -51,7 +55,7 @@ final class ProjectSyncCommand extends AbstractCommand
         $skipped = 0;
 
         foreach ($projects as $projectDir) {
-            if ($this->registerInRootComposer($rootComposerPath, basename($projectDir))) {
+            if ($this->registerInLocalComposer($localComposerPath, basename($projectDir))) {
                 $synced++;
             } else {
                 $skipped++;
@@ -69,12 +73,20 @@ final class ProjectSyncCommand extends AbstractCommand
         return ExitCode::SUCCESS;
     }
 
-    private function registerInRootComposer(string $path, string $name): bool
+    private function registerInLocalComposer(string $path, string $name): bool
     {
         $data = json_decode(file_get_contents($path), true);
+
+        if (!is_array($data)) {
+            $data = ['repositories' => [], 'require' => []];
+        }
+
+        $data['repositories'] ??= [];
+        $data['require'] ??= [];
+
         $repoUrl = 'src/' . $name;
 
-        $exists = array_filter($data['repositories'] ?? [], fn($r) => ($r['url'] ?? '') === $repoUrl);
+        $exists = array_filter($data['repositories'], fn($r) => ($r['url'] ?? '') === $repoUrl);
         if (!empty($exists)) return false;
 
         $data['repositories'][] = [
@@ -83,8 +95,6 @@ final class ProjectSyncCommand extends AbstractCommand
             'options' => ['symlink' => true]
         ];
         $data['require'][strtolower($name) . '/app'] = '@dev';
-        $data['minimum-stability'] = 'dev';
-        $data['prefer-stable'] = true;
 
         file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
         return true;
