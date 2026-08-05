@@ -1,3 +1,8 @@
+v4.25.0
+- chore: add generated IDE helper stub for AbstractController autocomplete (c5f4d40)
+- chore: exclude .ide-helper from Composer classmap (770f768)
+- feat: add make:ide-helper command to generate AbstractController IDE stub (b08c321)
+
 v4.24.1
 - fix: remove deleted project from composer.local.json instead of root composer.json (0e50415)
 - fix: sync projects into composer.local.json instead of root composer.json (d89f1db)
