@@ -6,8 +6,11 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Neo\App;
 use Neo\Core\Console\ConsoleManager;
 use Neo\Core\DI\Container;
+use Neo\Core\Error\ErrorManager;
 
 define('ROOT_DIR', dirname(__DIR__) . '/');
+
+ErrorManager::registerBootstrap();
 
 global $argv;
 
