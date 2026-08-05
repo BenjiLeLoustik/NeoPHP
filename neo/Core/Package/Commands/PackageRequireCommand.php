@@ -15,6 +15,7 @@ use Neo\Core\Console\Commands\ComposerRequireCommand;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Package\Interface\PackageInterface;
+use Neo\Core\Package\PackageManager;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
 
 #[Command(
@@ -103,6 +104,7 @@ class PackageRequireCommand extends AbstractCommand
 
         foreach ($packageClasses as $class) {
             Output::success("Found: $class");
+            $this->copyPackageConfig($class, $projectName);
         }
 
         Output::newLine();
@@ -116,6 +118,24 @@ class PackageRequireCommand extends AbstractCommand
         Output::newLine();
 
         return ExitCode::SUCCESS;
+    }
+
+    private function copyPackageConfig(string $packageClass, string $projectName): void
+    {
+        /** @var PackageInterface $instance */
+        $instance = new $packageClass();
+
+        $configPath = $instance->getConfigPath();
+
+        if ($configPath === null) {
+            return;
+        }
+
+        $appPath = ROOT_DIR . '/src/' . $projectName;
+
+        PackageManager::copyConfigDefaults($configPath, $appPath, $instance->getName());
+
+        Output::muted("  Config copied to Config/Packages/{$instance->getName()}/");
     }
 
     /**
@@ -143,6 +163,8 @@ class PackageRequireCommand extends AbstractCommand
             return [];
         }
 
+        $this->refreshAutoloaderFor($resolvedPath);
+
         $results = new ScannerFileManager()
             ->paths([$resolvedPath])
             ->withExcludedSegment('vendor', '.git', 'node_modules')
@@ -165,5 +187,40 @@ class PackageRequireCommand extends AbstractCommand
         }
 
         return $classes;
+    }
+
+    private function refreshAutoloaderFor(string $packagePath): void
+    {
+        $packageComposerJson = $packagePath . '/composer.json';
+
+        if (!file_exists($packageComposerJson)) {
+            return;
+        }
+
+        $data = json_decode((string) file_get_contents($packageComposerJson), true);
+        $psr4 = $data['autoload']['psr-4'] ?? [];
+
+        if (!is_array($psr4) || $psr4 === []) {
+            return;
+        }
+
+        $loaders = \Composer\Autoload\ClassLoader::getRegisteredLoaders();
+        $loader = array_values($loaders)[0] ?? null;
+
+        if ($loader === null) {
+            return;
+        }
+
+        foreach ($psr4 as $prefix => $path) {
+            if (!is_string($prefix) || !is_string($path)) {
+                continue;
+            }
+
+            $absolutePath = rtrim($packagePath, '/\\') . '/' . ltrim($path, '/\\');
+
+            if (is_dir($absolutePath)) {
+                $loader->addPsr4($prefix, $absolutePath);
+            }
+        }
     }
 }
