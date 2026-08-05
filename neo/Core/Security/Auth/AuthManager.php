@@ -21,6 +21,8 @@ class AuthManager
 
     private ?GuardInterface $guard = null;
 
+    private ?RoleConfig $roleConfig = null;
+
     /** @var array<string, mixed> */
     private array $config;
 
@@ -100,6 +102,11 @@ class AuthManager
         return $this->guard->hasRole($role);
     }
 
+    public function getRoleConfig(): ?RoleConfig
+    {
+        return $this->roleConfig;
+    }
+
     /**
      * @throws AuthException
      */
@@ -129,6 +136,7 @@ class AuthManager
         $role = is_array($this->config['role'] ?? null) ? $this->config['role'] : [];
 
         $roleConfig = RoleConfig::fromArray($role);
+        $this->roleConfig = $roleConfig;
 
         $em = $this->container->get(EntityManager::class);
 
