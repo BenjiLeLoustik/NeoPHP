@@ -45,26 +45,26 @@ final class ProjectDeleteCommand extends AbstractCommand
             Fs::deleteDir($buildDir);
         }
 
-        $composerPath = ROOT_DIR . 'composer.json';
-        if (file_exists($composerPath)) {
-            $composer = json_decode(file_get_contents($composerPath), true);
-            if ($composer !== null) {
+        $localComposerPath = ROOT_DIR . '/composer.local.json';
+        if (file_exists($localComposerPath)) {
+            $data = json_decode(file_get_contents($localComposerPath), true);
+            if (is_array($data)) {
                 $projectComposerPath = ROOT_DIR . "src/$project/composer.json";
                 $packageName = file_exists($projectComposerPath)
                     ? (json_decode(file_get_contents($projectComposerPath), true)['name'] ?? null)
                     : null;
 
-                if ($packageName && isset($composer['require'][$packageName])) {
-                    unset($composer['require'][$packageName]);
+                if ($packageName && isset($data['require'][$packageName])) {
+                    unset($data['require'][$packageName]);
                 }
 
                 $repoUrl = "src/$project";
-                $composer['repositories'] = array_values(array_filter(
-                    $composer['repositories'] ?? [],
+                $data['repositories'] = array_values(array_filter(
+                    $data['repositories'] ?? [],
                     fn($r) => trim($r['url'] ?? '', '/') !== trim($repoUrl, '/')
                 ));
 
-                file_put_contents($composerPath, json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+                file_put_contents($localComposerPath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
             } else {
                 $errors++;
             }
