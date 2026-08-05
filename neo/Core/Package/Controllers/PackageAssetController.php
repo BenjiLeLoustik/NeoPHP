@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\Package\Controllers;
 
 use Neo\Core\Controller\AbstractController;
@@ -9,7 +11,7 @@ use Neo\Core\Routing\Attribute\MainRoute;
 use Neo\Core\Routing\Attribute\Route;
 
 #[MainRoute(path: '/packages-assets', name: 'packages.assets')]
-class PackageAssetController extends AbstractController
+final class PackageAssetController extends AbstractController
 {
     #[Route(path: '/{package}/{path}', name: 'file', methods: ['GET'], requirements: ['path' => '.+'])]
     public function serve(string $package, string $path): Response
@@ -17,31 +19,48 @@ class PackageAssetController extends AbstractController
         $assetsPath = $this->findPackageAssetsPath($package);
 
         if ($assetsPath === null) {
-            return $this->response()->setStatusCode(404);
+            return $this->make()->setStatusCode(404);
         }
 
         $realBase = realpath($assetsPath);
         $target = realpath($assetsPath . '/' . $path);
 
         if ($realBase === false || $target === false || !str_starts_with($target, $realBase . DIRECTORY_SEPARATOR)) {
-            return $this->response()->setStatusCode(404);
+            return $this->make()->setStatusCode(404);
         }
 
         if (!is_file($target)) {
-            return $this->response()->setStatusCode(404);
+            return $this->make()->setStatusCode(404);
         }
 
-        $mimeType = mime_content_type($target) ?: 'application/octet-stream';
         $content = file_get_contents($target);
 
         if ($content === false) {
-            return $this->response()->setStatusCode(500);
+            return $this->make()->setStatusCode(500);
         }
 
-        return $this->response()
-            ->setHeader('Content-Type', $mimeType)
+        return $this->make()
+            ->setHeader('Content-Type', $this->detectMimeType($target))
             ->setHeader('Cache-Control', 'public, max-age=86400')
             ->setContent($content);
+    }
+
+    private function detectMimeType(string $path): string
+    {
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return match ($extension) {
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'svg' => 'image/svg+xml',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'woff' => 'font/woff',
+            'woff2' => 'font/woff2',
+            'ico' => 'image/x-icon',
+            default => mime_content_type($path) ?: 'application/octet-stream',
+        };
     }
 
     private function findPackageAssetsPath(string $packageName): ?string
