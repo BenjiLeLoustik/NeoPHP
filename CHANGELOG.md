@@ -1,3 +1,6 @@
+v4.26.1
+- fix: set packages instead of package into app.config.php template (3af661a)
+
 v4.26.0
 - fix: scan Core Package Controllers path in RouterManager so PackageAssetController is discovered (e3c8c9e)
 - fix: register redirect() and make() methods in ResponseControllerExtension (0a803eb)
