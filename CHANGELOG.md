@@ -1,3 +1,6 @@
+v4.25.1
+- ci: sequence ide-helper after auto-release to avoid concurrent push to main (8a3985b)
+
 v4.25.0
 - chore: add generated IDE helper stub for AbstractController autocomplete (c5f4d40)
 - chore: exclude .ide-helper from Composer classmap (770f768)
