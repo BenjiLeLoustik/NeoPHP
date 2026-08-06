@@ -1,3 +1,7 @@
+v4.28.0
+- feat: register package translation paths in PackageModule (a1752e4)
+- feat: add getTranslationsPath to PackageInterface and AbstractPackage (f91c6ca)
+
 v4.27.0
 - feat: scan package paths for profiler collectors using ScannerFileManager (3c7b8ac)
 
