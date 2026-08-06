@@ -28,5 +28,7 @@ interface PackageInterface
 
     public function getAssetsPath(): ?string;
 
+    public function getTranslationsPath(): ?string;
+
     public function register(Container $container): void;
 }

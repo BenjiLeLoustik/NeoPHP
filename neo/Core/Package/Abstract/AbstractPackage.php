@@ -58,6 +58,11 @@ class AbstractPackage implements PackageInterface
         return $this->resolve('src/Assets');
     }
 
+    public function getTranslationsPath(): ?string
+    {
+        return $this->resolve('src/Translations');
+    }
+
     public function register(Container $container): void
     {}
 
