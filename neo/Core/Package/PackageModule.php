@@ -5,6 +5,7 @@ namespace Neo\Core\Package;
 use Neo\Core\DI\Container;
 use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Package\Interface\PackageInterface;
+use Neo\Core\Translation\Registry\TranslationRegistry;
 use Neo\Core\Utils\Config\ConfigModule;
 
 class PackageModule implements ModuleInterface
@@ -43,6 +44,11 @@ class PackageModule implements ModuleInterface
                         $container->get('appPath'),
                         $package->getName()
                     );
+                }
+
+                $translationsPath = $package->getTranslationsPath();
+                if ($translationsPath !== null) {
+                    TranslationRegistry::registerPath($translationsPath);
                 }
 
                 $packages[] = $package;
