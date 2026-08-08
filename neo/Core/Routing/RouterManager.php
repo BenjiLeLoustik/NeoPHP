@@ -9,7 +9,6 @@ use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Package\Interface\PackageInterface;
-use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Routing\Attribute\MainRoute as MainRouteAttribute;
 use Neo\Core\Routing\Attribute\Route as RouteAttribute;
 use Neo\Core\Routing\Collection\RouteCollection;
@@ -236,11 +235,6 @@ class RouterManager
         try {
             $controller = $this->container->get($routeInfo['controller']);
             $method = $routeInfo['action'];
-
-            if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
-                $rc = ProfilerManager::getInstance()->getCollector('router');
-                $rc?->setMatchedRoute($routeInfo['controller'], $method, $params);
-            }
 
             $middlewareHandler = $this->container->get(MiddlewareManager::class);
             $middlewareResponse = $middlewareHandler->run($routeInfo['controller'], $method);
