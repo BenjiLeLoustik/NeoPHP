@@ -75,6 +75,7 @@ class RouterManager
         $paths = [
             $this->controllersPath,
             __DIR__ . '/../Package/Controllers',
+            __DIR__ . '/../Profiler/Controllers',
         ];
 
         if ($this->container->has('packages')) {
