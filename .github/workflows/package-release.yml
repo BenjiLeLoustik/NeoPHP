@@ -1,0 +1,90 @@
+name: Package Release
+
+on:
+  workflow_call:
+    inputs:
+      php-version:
+        type: string
+        default: '8.5'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ inputs.php-version }}
+
+      - name: Validate composer.json
+        run: composer validate --no-check-publish
+
+      - name: Determine next version
+        id: version
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
+          
+          BUMP="patch"
+          if echo "$COMMITS" | grep -qE "^feat(\(.+\))?:"; then BUMP="minor"; fi
+          if echo "$COMMITS" | gref -qE "BREAKING CHANGE|^[a-z]+(\(.+\))?!:"; then BUMP="major"; fi
+          
+          VERSION=${LAST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR+1)); MINOR = 0; PATCH = 0 ;;
+            minor) MINOR=$((MINOR+1)); PATCH = 0 ;;
+            patch) PATCH=$((PATCH+1)) ;;
+          esac
+          
+          NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Bumping $LAST_TAG -> $NEW_VERSION ($BUMP)"
+
+      - name: Skip if no relevant commits
+        if: steps.version.outputs.version == ''
+        run: echo "Nothing to release." && exit 0
+
+      - name: Update CHANGELOG.md
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          RANGE=$([ -n "$LAST_TAG" ] && echo "${LAST_TAG}..HEAD" || echo "HEAD")
+          
+          {
+            echo "## ${{ steps.version.outputs.version }} — $(date +%Y-%m-%d)"
+            echo ""
+            git log $RANGE --pretty=format:"- %s"
+            echo ""
+            echo ""
+            [ -f CHANGELOG.md ] && cat CHANGELOG.md
+          } > CHANGELOG.tmp.md
+          mv CHANGELOG.tmp.md CHANGELOG.md
+
+      - name: Commit changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "chore(release): ${{ steps.version.outputs.version }} [skip ci]" || echo "Nothing to commit"
+          git push
+          
+      - name: Tag release
+        run: |
+          git tag ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          generate_release_notes: true
