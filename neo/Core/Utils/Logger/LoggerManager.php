@@ -6,7 +6,6 @@ namespace Neo\Core\Utils\Logger;
 use DateTime;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Profiler\ProfilerManager;
 use ZipArchive;
 
 class LoggerManager
@@ -94,11 +93,6 @@ class LoggerManager
 
         $filePath = $this->getLogFilePath();
         $entry = $this->formatMessage($level, $message, $context, $origin);
-
-        if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
-            $lc = ProfilerManager::getInstance()->getCollector('logs');
-            $lc?->record($level, $message, $context, $origin);
-        }
 
         file_put_contents($filePath, $entry . PHP_EOL, FILE_APPEND | LOCK_EX);
     }

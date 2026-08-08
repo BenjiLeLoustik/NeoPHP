@@ -5,10 +5,8 @@ namespace Neo\Core\Utils\Notification;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
-use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Utils\Config\Exception\ConfigException;
 use Neo\Core\Utils\Notification\Channel\ChannelInterface;
-use Neo\Core\Utils\Notification\Collector\NotificationCollector;
 use Neo\Core\Utils\Notification\Enum\NotificationEnum;
 use Neo\Core\Utils\Notification\Exception\ChannelException;
 use Neo\Core\Utils\Notification\Exception\NotificationException;
@@ -122,16 +120,7 @@ class NotificationManager
         } catch (ChannelException $e) {
             $error = $e->getMessage();
             throw $e;
-        } finally {
-            $this->recordToProfiler(
-                channelClass: $this->channelClass,
-                template: $this->template,
-                status: $result,
-                durationMs: (microtime(true) - $start) * 1000,
-                error: $error,
-            );
-            $this->reset();
-        }
+        } finally {}
 
         return $result;
     }
@@ -200,28 +189,6 @@ class NotificationManager
                 previous: $e,
             );
         }
-    }
-
-    /**
-     * @param class-string<ChannelInterface> $channelClass
-     */
-    private function recordToProfiler(
-        string $channelClass,
-        string $template,
-        NotificationEnum $status,
-        float $durationMs,
-        ?string $error,
-    ): void {
-        if (!defined('NEO_PROFILER_ENABLED') || !NEO_PROFILER_ENABLED) {
-            return;
-        }
-
-        $collector = ProfilerManager::getInstance()->getCollector('mail');
-        if (!$collector instanceof NotificationCollector) {
-            return;
-        }
-
-        $collector->record($channelClass, $template, $status, $durationMs, $error);
     }
 
     /**

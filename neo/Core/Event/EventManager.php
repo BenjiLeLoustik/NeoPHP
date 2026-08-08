@@ -11,7 +11,6 @@ use Neo\Core\Event\Interface\EventInterface;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
 use Neo\Core\Event\Listener\ListenerRegistration;
 use Neo\Core\Package\Interface\PackageInterface;
-use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
 
@@ -169,9 +168,6 @@ class EventManager
     {
         $eventClass = get_class($event);
         $listeners = $this->listeners[$eventClass] ?? [];
-        $called = [];
-
-        $t0 = microtime(true);
 
         foreach ($listeners as $meta) {
             if ($event->isPropagationStopped()) {
@@ -191,13 +187,6 @@ class EventManager
             }
 
             $listener->$method($event);
-            $called[] = $meta->getClass();
-        }
-
-        if (defined('NEO_PROFILER_ENABLED') && NEO_PROFILER_ENABLED) {
-            $ms = (microtime(true) - $t0) * 1000;
-            $ec = ProfilerManager::getInstance()->getCollector('events');
-            $ec?->record($eventClass, $called, $ms);
         }
 
         return $event;

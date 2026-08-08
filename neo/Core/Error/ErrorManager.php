@@ -8,8 +8,6 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Event\ExceptionEvent;
-use Neo\Core\Profiler\ProfilerManager;
-use Neo\Core\Profiler\Toolbar\Toolbar;
 
 class ErrorManager
 {
@@ -150,7 +148,7 @@ class ErrorManager
                         ? $exception->getContext()
                         : [],
                 ]);
-                echo $this->injectProfilerToolbar($html);
+                echo $html;
             } catch (\Throwable) {
                 $this->renderFallback($exception);
             }
@@ -183,7 +181,7 @@ class ErrorManager
         }
 
         $env = $this->getEnv();
-        echo $this->injectProfilerToolbar(self::renderFallbackHtml($exception, $env));
+        echo self::renderFallbackHtml($exception, $env);
     }
 
     private function renderCli(FrameworkException $exception): void
@@ -368,27 +366,5 @@ class ErrorManager
     </body>
     </html>
     HTML;
-    }
-
-    private function injectProfilerToolbar(string $html): string
-    {
-        if (!defined('NEO_PROFILER_ENABLED') || !NEO_PROFILER_ENABLED) {
-            return $html;
-        }
-
-        try {
-            $toolbar = new Toolbar(
-                ProfilerManager::getInstance()
-            );
-            $rendered = $toolbar->render();
-
-            if (str_contains($html, '</body>')) {
-                return str_replace('</body>', $rendered . '</body>', $html);
-            }
-
-            return $html . $rendered;
-        } catch (\Throwable) {
-            return $html;
-        }
     }
 }
