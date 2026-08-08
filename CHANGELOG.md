@@ -1,3 +1,6 @@
+v4.28.1
+- ci: add reusable package-release workflow for automatic versioning and tagging (4bd8b79)
+
 v4.28.0
 - feat: register package translation paths in PackageModule (a1752e4)
 - feat: add getTranslationsPath to PackageInterface and AbstractPackage (f91c6ca)
