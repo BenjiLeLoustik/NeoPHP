@@ -1,3 +1,6 @@
+v4.28.2
+- fix: handle repositories with no existing tags in package-release workflow (afcf1e5)
+
 v4.28.1
 - ci: add reusable package-release workflow for automatic versioning and tagging (4bd8b79)
 
