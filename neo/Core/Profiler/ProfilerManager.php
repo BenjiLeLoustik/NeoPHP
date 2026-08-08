@@ -35,7 +35,8 @@ final class ProfilerManager
 
     public static function reset(): void
     {
-        unset(self::$instance);
+        self::$instance = new self();
+        self::$token = bin2hex(random_bytes(6));
     }
 
     public static function getToken(): string
