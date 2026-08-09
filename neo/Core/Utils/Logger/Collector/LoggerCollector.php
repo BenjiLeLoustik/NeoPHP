@@ -95,12 +95,12 @@ final class LoggerCollector implements CollectorInterface
                         'type' => 'log-list',
                         'section' => null,
                         'rows' => array_map(
-                            static fn (array $r) => [
+                            fn (array $r) => [
                                 'time' => date('H:i:s', (int) $r['time']) . '.' . str_pad((string) round(($r['time'] - (int) $r['time']) * 1000), 3, '0', STR_PAD_LEFT),
                                 'channel' => $r['channel'],
                                 'origin' => $r['origin'],
                                 'message' => $r['message'],
-                                'context' => $r['context'] !== [] ? json_encode($r['context'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : '',
+                                'context' => $this->formatContext($r['context']),
                             ],
                             $records
                         ),
@@ -135,5 +135,39 @@ final class LoggerCollector implements CollectorInterface
         }
 
         return $count > 0 ? (string) $count : null;
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function formatContext(array $context): string
+    {
+        if ($context === []) {
+            return '';
+        }
+
+        if (count($context) === 1 && isset($context['trace']) && is_string($context['trace'])) {
+            return $context['trace'];
+        }
+
+        $lines = [];
+
+        foreach ($context as $key => $value) {
+            if ($key === 'trace' && is_string($value)) {
+                $lines[] = $key . ':';
+                $lines[] = $value;
+                continue;
+            }
+
+            $formatted = match (true) {
+                is_string($value) => $value,
+                is_scalar($value) || $value === null => var_export($value, true),
+                default => json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            };
+
+            $lines[] = $key . ': ' . $formatted;
+        }
+
+        return implode("\n", $lines);
     }
 }
