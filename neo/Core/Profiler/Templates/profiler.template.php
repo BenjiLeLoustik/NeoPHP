@@ -75,7 +75,6 @@
         }
 
         .header {
-            flex: 0 0 auto;
             background: <?= $statusGradient ?>;
             padding: 1.65rem 2.25rem;
         }
@@ -150,11 +149,11 @@
             flex: 1 1 auto;
             min-width: 0;
             overflow-y: auto;
-            padding: 2.5rem 3.25rem 5rem;
         }
 
         .main-inner {
             width: 100%;
+            padding: 2.5rem 3.25rem 5rem;
         }
 
         .empty-state {
@@ -173,25 +172,25 @@
     <span>Neo<span class="brand-accent">Profiler</span></span>
 </div>
 
-<header class="header">
-    <div class="header-top">
-        <span class="method-badge"><?= htmlspecialchars($method) ?></span>
-        <span class="path"><?= htmlspecialchars($path) ?></span>
-    </div>
-    <div class="header-meta">
-        <span class="status-pill"><?= $statusCode ?> <?= htmlspecialchars($statusLabel) ?></span>
-        <span>IP <strong><?= htmlspecialchars($ip) ?></strong></span>
-        <span>Profiled <strong><?= htmlspecialchars($timestamp) ?></strong></span>
-        <span>Token <strong><?= htmlspecialchars($token) ?></strong></span>
-    </div>
-</header>
-
 <div class="body">
     <aside class="sidebar">
         <nav><?= $navHtml ?></nav>
     </aside>
 
     <main class="main">
+        <header class="header">
+            <div class="header-top">
+                <span class="method-badge"><?= htmlspecialchars($method) ?></span>
+                <span class="path"><?= htmlspecialchars($path) ?></span>
+            </div>
+            <div class="header-meta">
+                <span class="status-pill"><?= $statusCode ?> <?= htmlspecialchars($statusLabel) ?></span>
+                <span>IP <strong><?= htmlspecialchars($ip) ?></strong></span>
+                <span>Profiled <strong><?= htmlspecialchars($timestamp) ?></strong></span>
+                <span>Token <strong><?= htmlspecialchars($token) ?></strong></span>
+            </div>
+        </header>
+
         <div class="main-inner">
             <?= $sectionsHtml ?>
         </div>
