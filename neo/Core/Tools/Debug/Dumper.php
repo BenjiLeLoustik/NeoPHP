@@ -29,14 +29,18 @@ final class Dumper
     /**
      * @param list<mixed> $vars
      */
-    public function render(array $vars): string
+    public function render(array $vars, bool $includeCaller = true): string
     {
         $this->idCounter = 0;
         $this->nodeCount = 0;
         $this->visitedObjects = [];
 
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4);
-        $caller = $this->resolveCaller($trace);
+        $caller = null;
+
+        if ($includeCaller) {
+            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4);
+            $caller = $this->resolveCaller($trace);
+        }
 
         $blocks = '';
         foreach ($vars as $var) {
