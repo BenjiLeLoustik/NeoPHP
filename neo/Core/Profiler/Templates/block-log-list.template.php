@@ -2,7 +2,7 @@
 /**
  * @var array{
  *     section?: string|null,
- *     rows: list<array{time: string, channel: string, origin: string, message: string, context: string}>
+ *     rows: list<array{time: string, channel: string, origin: string, message: string, context: string|array{raw: true, html: string}}>
  * } $block
  */
 ?>
@@ -100,6 +100,10 @@
     .log-entry-context.is-open {
         display: block;
     }
+
+    .log-entry-context.has-raw-content {
+        white-space: normal;
+    }
 </style>
 
 <?php if (($block['section'] ?? null) !== null): ?>
@@ -111,12 +115,17 @@
 <?php else: ?>
     <div class="log-list">
         <div class="log-list-header">
-            <span>Time</span>
-            <span>Message</span>
+            <span><?= htmlspecialchars($block['timeLabel'] ?? 'Time') ?></span>
+            <span><?= htmlspecialchars($block['messageLabel'] ?? 'Message') ?></span>
         </div>
 
         <?php foreach ($block['rows'] as $i => $row): ?>
-            <?php $contextId = 'log-ctx-' . substr(md5($row['time'] . $i . $row['message']), 0, 10); ?>
+            <?php
+            $context = $row['context'];
+            $isRaw = is_array($context) && ($context['raw'] ?? false);
+            $hasContext = $isRaw ? true : ($context !== '');
+            $contextId = 'log-ctx-' . substr(md5($row['time'] . $i . $row['message']), 0, 10);
+            ?>
             <div class="log-entry">
                 <div class="log-entry-time"><?= htmlspecialchars($row['time']) ?></div>
                 <div>
@@ -126,13 +135,17 @@
                         <?php if ($row['origin'] !== ''): ?>
                             <span class="log-entry-tag"><?= htmlspecialchars($row['origin']) ?></span>
                         <?php endif; ?>
-                        <?php if ($row['context'] !== ''): ?>
+                        <?php if ($hasContext): ?>
                             <button type="button" class="log-entry-toggle" data-context-toggle="<?= htmlspecialchars($contextId) ?>">Show context</button>
                         <?php endif; ?>
                     </div>
                 </div>
-                <?php if ($row['context'] !== ''): ?>
-                    <pre class="log-entry-context" id="<?= htmlspecialchars($contextId) ?>"><?= htmlspecialchars($row['context']) ?></pre>
+                <?php if ($hasContext): ?>
+                    <?php if ($isRaw): ?>
+                        <div class="log-entry-context has-raw-content" id="<?= htmlspecialchars($contextId) ?>"><?= $context['html'] ?></div>
+                    <?php else: ?>
+                        <pre class="log-entry-context" id="<?= htmlspecialchars($contextId) ?>"><?= htmlspecialchars($context) ?></pre>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         <?php endforeach; ?>

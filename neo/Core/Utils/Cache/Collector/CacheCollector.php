@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Neo\Core\Utils\Cache\Collector;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Tools\Debug\Dumper;
 use Neo\Core\Utils\Cache\CacheManager;
 
 final class CacheCollector implements CollectorInterface
@@ -82,22 +83,43 @@ final class CacheCollector implements CollectorInterface
             ],
             'blocks' => [
                 [
-                    'type' => 'table',
+                    'type' => 'log-list',
                     'section' => null,
-                    'columns' => ['Action', 'Key', 'Hit', 'Value', 'TTL', 'Duration'],
+                    'timeLabel' => 'Duration',
+                    'messageLabel' => 'Key',
                     'rows' => array_map(
-                        static fn (array $op) => [
-                            $op['action'],
-                            $op['key'],
-                            $op['hit'] === null ? '—' : ($op['hit'] ? 'Yes' : 'No'),
-                            $op['value'] ?? '—',
-                            $op['ttl'] !== null ? $op['ttl'] . 's' : '—',
-                            $op['duration'] . ' ms',
+                        fn (array $op) => [
+                            'time' => $op['duration'] . ' ms',
+                            'channel' => $op['action'],
+                            'origin' => $op['hit'] === null ? '' : ($op['hit'] ? 'HIT' : 'MISS'),
+                            'message' => $op['key'] . ($op['ttl'] !== null ? ' (TTL: ' . $op['ttl'] . 's)' : ''),
+                            'context' => $this->renderContext($op['value']),
                         ],
                         $data['operations']
                     ),
                 ],
             ],
+        ];
+    }
+
+    /**
+     * @return string|array{raw: true, html: string}
+     */
+    private function renderContext(?string $value): string|array
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        $decoded = json_decode($value, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            return $value;
+        }
+
+        return [
+            'raw' => true,
+            'html' => new Dumper()->render([$decoded]),
         ];
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Neo\Core\Utils\Logger\Collector;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Tools\Debug\Dumper;
 use Neo\Core\Utils\Logger\LoggerManager;
 
 final class LoggerCollector implements CollectorInterface
@@ -136,7 +137,7 @@ final class LoggerCollector implements CollectorInterface
     /**
      * @param array<string, mixed> $context
      */
-    private function formatContext(array $context): string
+    private function formatContext(array $context): string|array
     {
         if ($context === []) {
             return '';
@@ -146,15 +147,24 @@ final class LoggerCollector implements CollectorInterface
             return $context['trace'];
         }
 
+        $hasComplexValue = false;
+        foreach ($context as $value) {
+            if (!is_scalar($value) && $value !== null) {
+                $hasComplexValue = true;
+                break;
+            }
+        }
+
+        if ($hasComplexValue) {
+            return [
+                'raw' => true,
+                'html' => new Dumper()->render([$context]),
+            ];
+        }
+
         $lines = [];
 
         foreach ($context as $key => $value) {
-            if ($key === 'trace' && is_string($value)) {
-                $lines[] = $key . ':';
-                $lines[] = $value;
-                continue;
-            }
-
             $formatted = match (true) {
                 is_string($value) => $value,
                 is_scalar($value) || $value === null => var_export($value, true),

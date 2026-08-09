@@ -1,5 +1,5 @@
 <?php
-/** @var array{section?: string|null, columns: list<string>, rows: list<list<string>>} $block */
+/** @var array{section?: string|null, columns: list<string>, rows: list<list<mixed>>} $block */
 ?>
     <style>
         .data-table-wrap {
@@ -75,7 +75,13 @@
             <?php foreach ($block['rows'] as $row): ?>
                 <tr>
                     <?php foreach ($row as $cell): ?>
-                        <td><?= htmlspecialchars((string) $cell) ?></td>
+                        <td>
+                            <?php if (is_array($cell) && ($cell['raw'] ?? false)): ?>
+                                <?= $cell['html'] ?>
+                            <?php else: ?>
+                                <?= htmlspecialchars((string) $cell) ?>
+                            <?php endif; ?>
+                        </td>
                     <?php endforeach; ?>
                 </tr>
             <?php endforeach; ?>
