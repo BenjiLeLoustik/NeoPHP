@@ -139,7 +139,7 @@
         }
 
         .sidebar {
-            flex: 0 0 264px;
+            flex: 0 0 300px;
             background: var(--bg-subtle);
             border-right: 1px solid var(--border);
             overflow-y: auto;
