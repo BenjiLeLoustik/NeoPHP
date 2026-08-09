@@ -16,6 +16,9 @@ class ValidatorManager
     /** @var array<class-string, ConstraintValidatorInterface> */
     private array $validators = [];
 
+    /** @var list<array{model: class-string, field: string, constraint: class-string, value: string, passed: bool, message: string|null, duration: float}> */
+    private array $log = [];
+
     public function __construct(
         private Container $container,
     ) {
@@ -75,10 +78,24 @@ class ValidatorManager
                 continue;
             }
 
+            $start = microtime(true);
             $context = new ValidationContext($field, $model, $form);
             $this->resolveValidator($constraint->validatedBy())->validate($value, $constraint, $context);
+            $duration = round((microtime(true) - $start) * 1000, 2);
 
-            foreach ($context->getViolations() as $message) {
+            $violations = $context->getViolations();
+
+            $this->log[] = [
+                'model' => $model::class,
+                'field' => $field,
+                'constraint' => $constraint::class,
+                'value' => $this->stringifyValue($value),
+                'passed' => $violations === [],
+                'message' => $violations !== [] ? implode(' ', $violations) : null,
+                'duration' => $duration,
+            ];
+
+            foreach ($violations as $message) {
                 $errors[$field][] = $message;
             }
 
@@ -108,5 +125,25 @@ class ValidatorManager
     private function resolveValidator(string $class): ConstraintValidatorInterface
     {
         return $this->validators[$class] ??= $this->container->get($class);
+    }
+
+    private function stringifyValue(mixed $value): string
+    {
+        return match (true) {
+            $value === null => 'null',
+            is_bool($value) => $value ? 'true' : 'false',
+            is_scalar($value) => (string) $value,
+            is_array($value) => json_encode($value, JSON_UNESCAPED_UNICODE) ?: '[]',
+            is_object($value) => $value::class,
+            default => (string) $value,
+        };
+    }
+
+    /**
+     * @return list<array{model: class-string, field: string, constraint: class-string, value: string, passed: bool, message: string|null, duration: float}>
+     */
+    public function getValidationLog(): array
+    {
+        return $this->log;
     }
 }
