@@ -23,6 +23,16 @@ class EventManager
     private Container $container;
 
     /**
+     * @var list<array{
+     *     event: class-string,
+     *     listeners: list<array{class: class-string, method: string, priority: int, duration: float}>,
+     *     stoppedEarly: bool,
+     *     totalDuration: float
+     * }>
+     */
+    private array $dispatchLog = [];
+
+    /**
      * @throws \ReflectionException
      * @throws ContainerException
      * @throws EventException
@@ -169,8 +179,14 @@ class EventManager
         $eventClass = get_class($event);
         $listeners = $this->listeners[$eventClass] ?? [];
 
+        $dispatchStart = microtime(true);
+        $calledListeners = [];
+        $stoppedEarly = false;
+        $stoppedBy = null;
+
         foreach ($listeners as $meta) {
             if ($event->isPropagationStopped()) {
+                $stoppedEarly = true;
                 break;
             }
 
@@ -186,8 +202,31 @@ class EventManager
                 );
             }
 
+            $listenerStart = microtime(true);
             $listener->$method($event);
+
+            $causedStop = $event->isPropagationStopped();
+
+            if ($causedStop) {
+                $stoppedBy = $meta->getClass() . '::' . $method . '()';
+            }
+
+            $calledListeners[] = [
+                'class' => $meta->getClass(),
+                'method' => $method,
+                'priority' => $meta->getPriority(),
+                'duration' => round((microtime(true) - $listenerStart) * 1000, 2),
+                'stoppedPropagation' => $causedStop,
+            ];
         }
+
+        $this->dispatchLog[] = [
+            'event' => $eventClass,
+            'listeners' => $calledListeners,
+            'stoppedEarly' => $stoppedEarly || $stoppedBy !== null,
+            'stoppedBy' => $stoppedBy,
+            'totalDuration' => round((microtime(true) - $dispatchStart) * 1000, 2),
+        ];
 
         return $event;
     }
@@ -247,5 +286,19 @@ class EventManager
             return $this->listeners[$eventClass] ?? [];
         }
         return $this->listeners;
+    }
+
+    /**
+     * @return list<array{
+     *     event: class-string,
+     *     listeners: list<array{class: class-string, method: string, priority: int, duration: float, stoppedPropagation: bool}>,
+     *     stoppedEarly: bool,
+     *     stoppedBy: string|null,
+     *     totalDuration: float
+     * }>
+     */
+    public function getDispatchLog(): array
+    {
+        return $this->dispatchLog;
     }
 }
