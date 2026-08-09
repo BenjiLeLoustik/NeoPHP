@@ -92,16 +92,15 @@ final class LoggerCollector implements CollectorInterface
                 'badgeType' => in_array($level, self::ERROR_LEVELS, true) ? 'alert' : 'neutral',
                 'blocks' => [
                     [
-                        'type' => 'table',
+                        'type' => 'log-list',
                         'section' => null,
-                        'columns' => ['Time', 'Channel', 'Origin', 'Message', 'Context'],
                         'rows' => array_map(
                             static fn (array $r) => [
-                                date('H:i:s', (int) $r['time']) . '.' . str_pad((string) round(($r['time'] - (int) $r['time']) * 1000), 3, '0', STR_PAD_LEFT),
-                                $r['channel'],
-                                $r['origin'],
-                                $r['message'],
-                                $r['context'] !== [] ? json_encode($r['context'], JSON_UNESCAPED_UNICODE) : '',
+                                'time' => date('H:i:s', (int) $r['time']) . '.' . str_pad((string) round(($r['time'] - (int) $r['time']) * 1000), 3, '0', STR_PAD_LEFT),
+                                'channel' => $r['channel'],
+                                'origin' => $r['origin'],
+                                'message' => $r['message'],
+                                'context' => $r['context'] !== [] ? json_encode($r['context'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : '',
                             ],
                             $records
                         ),
