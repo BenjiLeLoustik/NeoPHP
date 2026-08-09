@@ -9,6 +9,9 @@ use Neo\Core\Http\Response\Types\Response;
 
 class HttpClientManager implements HttpClientInterface
 {
+    /** @var list<array{method: string, url: string, requestHeaders: list<string>, requestBody: string|null, statusCode: int|null, responseHeaders: array<string, list<string>>, duration: float, error: string|null}> */
+    private static array $requests = [];
+
     /**
      * @param array<string, mixed> $defaultOptions
      */
@@ -41,6 +44,7 @@ class HttpClientManager implements HttpClientInterface
         $responseHeaders = [];
 
         $ch = curl_init();
+        $start = microtime(true);
 
         curl_setopt_array($ch, [
             CURLOPT_CUSTOMREQUEST => $method,
@@ -76,9 +80,21 @@ class HttpClientManager implements HttpClientInterface
         }
 
         $content = curl_exec($ch);
+        $duration = round((microtime(true) - $start) * 1000, 2);
 
         if ($content === false) {
             $message = curl_error($ch);
+
+            self::$requests[] = [
+                'method' => $method,
+                'url' => $url,
+                'requestHeaders' => $headers,
+                'requestBody' => $body,
+                'statusCode' => null,
+                'responseHeaders' => [],
+                'duration' => $duration,
+                'error' => $message,
+            ];
 
             throw new HttpClientException(
                 title: 'HTTP Transport Error',
@@ -88,6 +104,17 @@ class HttpClientManager implements HttpClientInterface
         }
 
         $statusCode = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+        self::$requests[] = [
+            'method' => $method,
+            'url' => $url,
+            'requestHeaders' => $headers,
+            'requestBody' => $body,
+            'statusCode' => $statusCode,
+            'responseHeaders' => $responseHeaders,
+            'duration' => $duration,
+            'error' => null,
+        ];
 
         $response = new Response()
             ->setStatusCode($statusCode)
@@ -183,5 +210,13 @@ class HttpClientManager implements HttpClientInterface
     private function basicAuth(string|array $auth): string
     {
         return is_array($auth) ? implode(':', $auth) : $auth;
+    }
+
+    /**
+     * @return list<array{method: string, url: string, requestHeaders: list<string>, requestBody: string|null, statusCode: int|null, responseHeaders: array<string, list<string>>, duration: float, error: string|null}>
+     */
+    public static function getRequests(): array
+    {
+        return self::$requests;
     }
 }
