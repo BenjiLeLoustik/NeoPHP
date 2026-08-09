@@ -10,6 +10,9 @@ final class FormFactory
 {
     private readonly PropertyAccessor $accessor;
 
+    /** @var list<FormBuilder> */
+    private static array $builders = [];
+
     public function __construct(
         private readonly ValidatorManager $validator,
         private readonly ?CsrfManager $csrf = null,
@@ -20,11 +23,23 @@ final class FormFactory
 
     public function create(string $name = 'form'): FormBuilder
     {
-        return new FormBuilder($name, $this->accessor, $this->validator, $this->csrf, null);
+        $builder = new FormBuilder($name, $this->accessor, $this->validator, $this->csrf, null);
+        self::$builders[] = $builder;
+        return $builder;
     }
 
     public function createFor(object $entity, string $name = 'form'): FormBuilder
     {
-        return new FormBuilder($name, $this->accessor, $this->validator, $this->csrf, $entity);
+        $builder = new FormBuilder($name, $this->accessor, $this->validator, $this->csrf, $entity);
+        self::$builders[] = $builder;
+        return $builder;
+    }
+
+    /**
+     * @return list<FormBuilder>
+     */
+    public static function getBuilders(): array
+    {
+        return self::$builders;
     }
 }

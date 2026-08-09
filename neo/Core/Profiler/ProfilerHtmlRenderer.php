@@ -58,6 +58,9 @@ final class ProfilerHtmlRenderer
         $packageEntries = [];
         $packagesOwnInfo = null;
 
+        /** @var array<string, array<string, array{profiler: array|null}>> $namedGroups */
+        $namedGroups = [];
+
         foreach ($collectors as $key => $info) {
             if (!($info['in_profiler'] ?? false) || $info['profiler'] === null) {
                 continue;
@@ -65,6 +68,13 @@ final class ProfilerHtmlRenderer
 
             if ($key === 'packages') {
                 $packagesOwnInfo = $info;
+                continue;
+            }
+
+            $group = $info['profiler']['group'] ?? null;
+
+            if ($group !== null) {
+                $namedGroups[$group][$key] = $info;
                 continue;
             }
 
@@ -96,6 +106,13 @@ final class ProfilerHtmlRenderer
             $first = false;
         }
 
+        foreach ($namedGroups as $groupTitle => $entries) {
+            [$groupNav, $groupSections, $first] = $this->buildNamedGroup($groupTitle, $entries, $first);
+
+            $navHtml .= $groupNav;
+            $sectionsHtml .= $groupSections;
+        }
+
         if ($packagesOwnInfo !== null || $packageEntries !== []) {
             [$groupNav, $groupSections, $first] = $this->buildPackagesGroup(
                 $packagesOwnInfo['profiler'] ?? null,
@@ -109,6 +126,43 @@ final class ProfilerHtmlRenderer
         }
 
         return [$navHtml, $sectionsHtml];
+    }
+
+    /**
+     * @param array<string, array{profiler: array|null}> $entries
+     * @return array{0: string, 1: string, 2: bool}
+     */
+    private function buildNamedGroup(string $title, array $entries, bool $first): array
+    {
+        $childrenNav = '';
+        $childrenSections = '';
+
+        foreach ($entries as $key => $info) {
+            $item = $this->prepareItem($info['profiler'], [], null);
+
+            $childrenNav .= $this->renderTemplate($this->templatesDir() . '/profiler-nav-item.template.php', [
+                'key' => $key,
+                'item' => $item,
+                'active' => $first,
+            ]);
+
+            $childrenSections .= $this->renderTemplate($this->templatesDir() . '/profiler-item.template.php', [
+                'key' => $key,
+                'item' => $item,
+                'active' => $first,
+            ]);
+
+            $first = false;
+        }
+
+        $navHtml = $this->renderTemplate($this->templatesDir() . '/profiler-nav-group.template.php', [
+            'title' => $title,
+            'headerHtml' => null,
+            'childrenHtml' => $childrenNav,
+            'hasChildren' => $childrenNav !== '',
+        ]);
+
+        return [$navHtml, $childrenSections, $first];
     }
 
     /**
@@ -162,6 +216,7 @@ final class ProfilerHtmlRenderer
         }
 
         $navHtml = $this->renderTemplate($this->templatesDir() . '/profiler-nav-group.template.php', [
+            'title' => 'Packages',
             'headerHtml' => $headerHtml,
             'childrenHtml' => $childrenNav,
             'hasChildren' => $childrenNav !== '',

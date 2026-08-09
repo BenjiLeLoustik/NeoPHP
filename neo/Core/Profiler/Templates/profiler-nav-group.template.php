@@ -1,5 +1,6 @@
 <?php
 /**
+ * @var string $title
  * @var string|null $headerHtml
  * @var string $childrenHtml
  * @var bool $hasChildren
@@ -58,11 +59,11 @@
         <?php if ($headerHtml !== null): ?>
             <?= $headerHtml ?>
         <?php else: ?>
-            <div class="nav-group-title">Packages</div>
+            <div class="nav-group-title"><?= htmlspecialchars($title) ?></div>
         <?php endif; ?>
 
         <?php if ($hasChildren): ?>
-            <button type="button" class="nav-group-toggle" aria-label="Toggle packages list">▾</button>
+            <button type="button" class="nav-group-toggle" aria-label="Toggle <?= htmlspecialchars($title) ?> list">▾</button>
         <?php endif; ?>
     </div>
 
