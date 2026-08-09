@@ -9,8 +9,6 @@
  * @var string $statusLabel
  * @var string $statusSolid
  * @var string $statusGradient
- * @var float $duration
- * @var float $memory
  * @var string $navHtml
  * @var string $sectionsHtml
  */
@@ -124,7 +122,7 @@
         }
 
         .sidebar {
-            flex: 0 0 216px;
+            flex: 0 0 232px;
             background: var(--bg-subtle);
             border-right: 1px solid var(--border);
             overflow-y: auto;
@@ -135,6 +133,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex: 1 1 auto;
             width: 100%;
             padding: 0.5rem 0.85rem;
             margin-bottom: 0.1rem;
@@ -161,9 +160,7 @@
             box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--border);
         }
 
-        .nav-badge {
-            background: #fee2e2;
-            color: #991b1b;
+        .nav-badge, .panel-badge, .tab-badge {
             font-size: 0.65rem;
             font-weight: 700;
             padding: 0.05rem 0.4rem;
@@ -172,14 +169,55 @@
 
         .panel-badge {
             display: inline-block;
-            background: #fee2e2;
-            color: #991b1b;
-            font-size: 0.65rem;
-            font-weight: 700;
             padding: 0.1rem 0.5rem;
-            border-radius: 999px;
             vertical-align: middle;
             margin-left: 0.5rem;
+        }
+
+        .nav-group {
+            margin-bottom: 0.1rem;
+        }
+
+        .nav-group-header {
+            display: flex;
+            align-items: stretch;
+            gap: 0.15rem;
+        }
+
+        .nav-group-title {
+            flex: 1 1 auto;
+            padding: 0.5rem 0.85rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .nav-group-toggle {
+            background: none;
+            border: none;
+            color: var(--text-faint);
+            cursor: pointer;
+            padding: 0 0.5rem;
+            font-size: 0.7rem;
+            transition: transform 0.12s;
+        }
+
+        .nav-group-toggle.is-open {
+            transform: rotate(180deg);
+        }
+
+        .nav-group-children {
+            display: none;
+            padding-left: 0.6rem;
+            border-left: 1px solid var(--border);
+            margin-left: 0.85rem;
+        }
+
+        .nav-group-children.is-open {
+            display: block;
+        }
+
+        .nav-group-children .nav-item {
+            font-size: 0.78rem;
         }
 
         .main {
@@ -193,10 +231,11 @@
             width: 100%;
         }
 
-        .metrics {
+        .panel-metrics {
             display: flex;
             gap: 0.75rem;
-            margin-bottom: 2.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 2.25rem;
         }
 
         .metric {
@@ -317,6 +356,51 @@
             border-radius: var(--radius);
             margin: 0;
         }
+
+        .tabs {
+            margin-bottom: 1.5rem;
+        }
+
+        .tabs-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.25rem;
+        }
+
+        .tab-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.5rem 0.2rem;
+            margin-bottom: -1px;
+            font-family: inherit;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .tab-item:hover {
+            color: var(--text);
+        }
+
+        .tab-item.is-active {
+            color: var(--text);
+            font-weight: 600;
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.is-active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -340,17 +424,6 @@
 
     <main class="main">
         <div class="main-inner">
-            <div class="metrics">
-                <div class="metric">
-                    <div class="metric-label">Total time</div>
-                    <div class="metric-value"><?= $duration ?><small>ms</small></div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">Peak memory</div>
-                    <div class="metric-value"><?= $memory ?><small>MB</small></div>
-                </div>
-            </div>
-
             <?= $sectionsHtml ?>
         </div>
     </main>
@@ -369,14 +442,51 @@
             });
 
             btn.classList.add('is-active');
-            document.querySelector('.panel[data-section="' + target + '"]').classList.add('is-active');
+            var panel = document.querySelector('.panel[data-section="' + target + '"]');
+            if (panel) panel.classList.add('is-active');
+        });
+    });
+
+    document.querySelectorAll('.nav-group-toggle').forEach(function (toggle) {
+        toggle.addEventListener('click', function () {
+            var children = toggle.closest('.nav-group').querySelector('.nav-group-children');
+            children.classList.toggle('is-open');
+            toggle.classList.toggle('is-open');
+        });
+    });
+
+    document.querySelectorAll('.tab-item').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            var group = tab.dataset.tabgroup;
+            var target = tab.dataset.tabTarget;
+
+            document.querySelectorAll('.tab-item[data-tabgroup="' + group + '"]').forEach(function (t) {
+                t.classList.remove('is-active');
+            });
+            document.querySelectorAll('.tab-panel').forEach(function (p) {
+                if (p.dataset.tabPanel && p.dataset.tabPanel.startsWith(group + '-')) {
+                    p.classList.remove('is-active');
+                }
+            });
+
+            tab.classList.add('is-active');
+            var panel = document.querySelector('.tab-panel[data-tab-panel="' + target + '"]');
+            if (panel) panel.classList.add('is-active');
         });
     });
 
     var hash = window.location.hash.replace('#', '');
     if (hash) {
         var target = document.querySelector('.nav-item[data-target="' + hash + '"]');
-        if (target) target.click();
+        if (target) {
+            var group = target.closest('.nav-group-children');
+            if (group) {
+                group.classList.add('is-open');
+                var toggle = group.closest('.nav-group').querySelector('.nav-group-toggle');
+                if (toggle) toggle.classList.add('is-open');
+            }
+            target.click();
+        }
     }
 </script>
 </body>

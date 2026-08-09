@@ -72,9 +72,11 @@ final class ProfilerModule implements ModuleInterface
     private function registerCollectors(Container $container, ProfilerManager $profiler): void
     {
         $coreDir = dirname(__DIR__);
+        $targets = $this->buildScanTargets($container, $coreDir);
+        $paths = array_map(static fn (array $t) => $t['path'], $targets);
 
         $results = new ScannerFileManager()
-            ->paths($this->collectCollectorPaths($container, $coreDir))
+            ->paths($paths)
             ->withFilenameSuffix('Collector.php')
             ->withExcludedSegment('vendor', '.git', 'node_modules')
             ->scan();
@@ -98,27 +100,48 @@ final class ProfilerModule implements ModuleInterface
 
             /** @var CollectorInterface $collector */
             $collector = $container->get($class);
+            $packageName = $this->resolvePackageForFile($ref->getFileName() ?: '', $targets);
 
-            $profiler->addCollector($collector);
+            $profiler->addCollector($collector, $packageName);
         }
     }
 
     /**
-     * @return list<string>
+     * @return list<array{path: string, package: string|null}>
      */
-    private function collectCollectorPaths(Container $container, string $coreDir): array
+    private function buildScanTargets(Container $container, string $coreDir): array
     {
-        $paths = [$coreDir];
+        $targets = [['path' => $coreDir, 'package' => null]];
 
         if ($container->has('packages')) {
             /** @var array<int, PackageInterface> $packages */
             $packages = $container->get('packages');
 
             foreach ($packages as $package) {
-                $paths[] = $package->getPath();
+                $targets[] = ['path' => $package->getPath(), 'package' => $package->getName()];
             }
         }
 
-        return $paths;
+        return $targets;
+    }
+
+    /**
+     * @param list<array{path: string, package: string|null}> $targets
+     */
+    private function resolvePackageForFile(string $file, array $targets): ?string
+    {
+        $best = null;
+        $bestLength = -1;
+
+        foreach ($targets as $target) {
+            $prefix = rtrim($target['path'], '/\\');
+
+            if ($prefix !== '' && str_starts_with($file, $prefix) && strlen($prefix) > $bestLength) {
+                $best = $target['package'];
+                $bestLength = strlen($prefix);
+            }
+        }
+
+        return $best;
     }
 }

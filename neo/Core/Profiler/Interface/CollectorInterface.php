@@ -23,7 +23,14 @@ interface CollectorInterface
     public function toolbarData(): array;
 
     /**
-     * @return array{title: string, badge: string|null, blocks: list<array<string, mixed>>}
+     * @return array{
+     *     title: string,
+     *     badge: string|null,
+     *     badgeType?: 'neutral'|'alert',
+     *     metrics?: list<array{label: string, value: string, unit?: string}>,
+     *     blocks: list<array<string, mixed>>
+     * }
+     *
      */
     public function profilerData(): array;
 }

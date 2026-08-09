@@ -7,18 +7,16 @@ use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
 use Neo\Core\Http\Response\Types\JsonResponse;
 use Neo\Core\Http\Response\Types\RedirectResponse;
+use Neo\Core\Profiler\Interface\StatusAwareCollectorInterface;
 use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 
 final class ProfilerResponseListener implements EventSubscriberInterface
 {
-    /** Chance (1 in N) of running cleanup on any given save. */
     private const int CLEANUP_CHANCE = 20;
 
-    /** Maximum number of profiles to keep. */
     private const int MAX_PROFILES = 100;
 
-    /** Maximum age of a profile, in seconds. */
     private const int MAX_AGE_SECONDS = 86400;
 
     public function __construct(
@@ -57,10 +55,17 @@ final class ProfilerResponseListener implements EventSubscriberInterface
 
         $statusCode = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : null;
 
+        foreach ($this->profiler->getCollectors() as $collector) {
+            if ($collector instanceof StatusAwareCollectorInterface) {
+                $collector->setStatusCode($statusCode);
+            }
+        }
+
         $this->saveProfile($statusCode, $path);
 
         $content = $response->getContent();
-        $toolbarHtml = $this->toolbar->render();
+
+        $toolbarHtml = $this->toolbar->render($statusCode);
 
         $content = str_contains($content, '</body>')
             ? str_replace('</body>', $toolbarHtml . '</body>', $content)
