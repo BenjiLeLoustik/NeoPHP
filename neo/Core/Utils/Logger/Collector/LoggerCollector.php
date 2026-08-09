@@ -136,6 +136,7 @@ final class LoggerCollector implements CollectorInterface
 
     /**
      * @param array<string, mixed> $context
+     * @return string|array{raw: true, html: string}
      */
     private function formatContext(array $context): string|array
     {

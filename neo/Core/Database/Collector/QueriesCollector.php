@@ -124,13 +124,4 @@ final class QueriesCollector implements CollectorInterface
         return ['raw' => true, 'html' => $html];
     }
 
-    private function stringify(mixed $value): string
-    {
-        return match (true) {
-            $value === null => 'null',
-            is_bool($value) => $value ? 'true' : 'false',
-            is_scalar($value) => (string) $value,
-            default => json_encode($value, JSON_UNESCAPED_UNICODE) ?: '',
-        };
-    }
 }

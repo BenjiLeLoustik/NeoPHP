@@ -23,6 +23,9 @@ class ErrorManager
         $this->container = $container;
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     private static function safeContextDump(array $context): string
     {
         try {
@@ -260,34 +263,6 @@ class ErrorManager
         \Neo\Core\Profiler\ProfilerCleaner::clean($storageDir);
 
         return $data;
-    }
-
-    private function saveErrorProfile(ProfilerManager $profiler, int $statusCode): void
-    {
-        try {
-            $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-            $path = $_SERVER['REQUEST_URI'] ?? '/';
-            $ip = $_SERVER['REMOTE_ADDR'] ?? '—';
-
-            $scheme = ($_SERVER['HTTPS'] ?? 'off') !== 'off' ? 'https' : 'http';
-            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-            $fullUrl = $scheme . '://' . $host . $path;
-
-            $data = $profiler->export($statusCode, $method, $fullUrl, $ip);
-
-            $storageDir = $this->container->get('storagePath') . '/var/cache/profiler';
-
-            if (!is_dir($storageDir)) {
-                mkdir($storageDir, 0777, true);
-            }
-
-            file_put_contents(
-                $storageDir . '/' . $data['token'] . '.json',
-                json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
-            );
-
-            ProfilerCleaner::clean($storageDir);
-        } catch (\Throwable) {}
     }
 
     private function renderCli(FrameworkException $exception): void

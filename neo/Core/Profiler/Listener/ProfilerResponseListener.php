@@ -42,7 +42,7 @@ final class ProfilerResponseListener implements EventSubscriberInterface
             return;
         }
 
-        $statusCode = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : null;
+        $statusCode = $response->getStatusCode();
 
         foreach ($this->profiler->getCollectors() as $collector) {
             if ($collector instanceof StatusAwareCollectorInterface) {
