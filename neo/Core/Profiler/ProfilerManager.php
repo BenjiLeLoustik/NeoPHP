@@ -14,6 +14,9 @@ final class ProfilerManager
     /** @var array<string, CollectorInterface> */
     private array $collectors = [];
 
+    /** @var array<string, string|null> */
+    private array $collectorPackages = [];
+
     private float $startTime;
     private int $startMemory;
 
@@ -44,9 +47,11 @@ final class ProfilerManager
         return self::$token;
     }
 
-    public function addCollector(CollectorInterface $collector): void
+    public function addCollector(CollectorInterface $collector, ?string $packageName = null): void
     {
-        $this->collectors[$collector->getName()] = $collector;
+        $name = $collector->getName();
+        $this->collectors[$name] = $collector;
+        $this->collectorPackages[$name] = $packageName;
     }
 
     /**
@@ -60,6 +65,11 @@ final class ProfilerManager
     public function getCollector(string $name): ?CollectorInterface
     {
         return $this->collectors[$name] ?? null;
+    }
+
+    public function getCollectorPackage(string $name): ?string
+    {
+        return $this->collectorPackages[$name] ?? null;
     }
 
     public function getTotalDuration(): float
@@ -81,6 +91,7 @@ final class ProfilerManager
 
         foreach ($this->collectors as $name => $collector) {
             $collectorsExport[$name] = [
+                'package' => $this->collectorPackages[$name] ?? null,
                 'in_toolbar' => $collector->inToolbar(),
                 'in_profiler' => $collector->inProfiler(),
                 'toolbar' => $collector->inToolbar() ? $collector->toolbarData() : null,

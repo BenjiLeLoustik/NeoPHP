@@ -7,11 +7,13 @@ use Neo\Core\Profiler\ProfilerManager;
 
 final class Toolbar
 {
+    private const string DEFAULT_BADGE_COLOR = '#e2e8f0';
+
     public function __construct(private readonly ProfilerManager $profiler)
     {
     }
 
-    public function render(): string
+    public function render(?int $statusCode = null): string
     {
         $collectors = $this->profiler->getCollectors();
         $token = ProfilerManager::getToken();
@@ -25,9 +27,12 @@ final class Toolbar
                 continue;
             }
 
+            $item = $collector->toolbarData();
+            $item['badgeColor'] = $this->resolveBadgeColor($item, $statusCode);
+
             $chipsHtml .= $this->renderTemplate(
                 __DIR__ . '/../Templates/toolbar-item.template.php',
-                ['item' => $collector->toolbarData()]
+                ['item' => $item]
             );
         }
 
@@ -40,6 +45,25 @@ final class Toolbar
                 'token' => $token,
             ]
         );
+    }
+
+    /**
+     * @param array{label: string, value: string, badge: string|null, badgeStatus?: bool} $item
+     */
+    private function resolveBadgeColor(array $item, ?int $statusCode): string
+    {
+        $isStatusBadge = $item['badgeStatus'] ?? false;
+
+        if (!$isStatusBadge || $statusCode === null) {
+            return self::DEFAULT_BADGE_COLOR;
+        }
+
+        return match (true) {
+            $statusCode >= 500 => '#dc2626',
+            $statusCode >= 400 => '#ea580c',
+            $statusCode >= 300 => '#2563eb',
+            default => '#059669',
+        };
     }
 
     /**
