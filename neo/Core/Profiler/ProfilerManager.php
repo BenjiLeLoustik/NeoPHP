@@ -19,6 +19,8 @@ final class ProfilerManager
 
     private float $startTime;
     private int $startMemory;
+    private bool $collectorsRegistered = false;
+    private ?\Throwable $bootError = null;
 
     private function __construct()
     {
@@ -52,6 +54,31 @@ final class ProfilerManager
         $name = $collector->getName();
         $this->collectors[$name] = $collector;
         $this->collectorPackages[$name] = $packageName;
+    }
+
+    public function markCollectorsRegistered(): void
+    {
+        $this->collectorsRegistered = true;
+    }
+
+    public function areCollectorsRegistered(): bool
+    {
+        return $this->collectorsRegistered;
+    }
+
+    public function setBootError(\Throwable $e): void
+    {
+        $this->bootError = $e;
+    }
+
+    public function getBootError(): ?\Throwable
+    {
+        return $this->bootError;
+    }
+
+    public function hasBootError(): bool
+    {
+        return $this->bootError !== null;
     }
 
     /**

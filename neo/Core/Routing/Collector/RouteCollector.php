@@ -6,7 +6,6 @@ namespace Neo\Core\Routing\Collector;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Profiler\Interface\StatusAwareCollectorInterface;
-use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Routing\RouterManager;
 
 final class RouteCollector implements CollectorInterface, StatusAwareCollectorInterface
@@ -15,7 +14,6 @@ final class RouteCollector implements CollectorInterface, StatusAwareCollectorIn
 
     public function __construct(
         private readonly RouterManager $router,
-        private readonly ProfilerManager $profiler,
     ) {
     }
 
@@ -39,8 +37,9 @@ final class RouteCollector implements CollectorInterface, StatusAwareCollectorIn
                 'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
                 'controller' => null,
                 'action' => null,
-                'path' => null,
+                'path' => $_SERVER['REQUEST_URI'] ?? null,
                 'requirements' => [],
+                'resolved' => false,
             ];
         }
 
@@ -53,6 +52,7 @@ final class RouteCollector implements CollectorInterface, StatusAwareCollectorIn
             'action' => $details['action'] ?? null,
             'path' => $details['path'] ?? null,
             'requirements' => $details['requirements'] ?? [],
+            'resolved' => true,
         ];
     }
 
@@ -72,7 +72,7 @@ final class RouteCollector implements CollectorInterface, StatusAwareCollectorIn
 
         return [
             'label' => $data['method'],
-            'value' => $data['name'] !== null ? '@' . $data['name'] : 'n/a',
+            'value' => $data['resolved'] ? '@' . $data['name'] : 'Not routed',
             'badge' => $this->statusCode !== null ? (string) $this->statusCode : null,
             'badgeType' => 'alert',
             'badgeStatus' => true,
@@ -83,6 +83,21 @@ final class RouteCollector implements CollectorInterface, StatusAwareCollectorIn
     {
         $data = $this->collect();
 
+        $rows = $data['resolved']
+            ? [
+                ['label' => 'Route name', 'value' => $data['name']],
+                ['label' => 'HTTP method', 'value' => $data['method']],
+                ['label' => 'Status code', 'value' => $this->statusCode !== null ? (string) $this->statusCode : 'n/a'],
+                ['label' => 'Controller', 'value' => $data['controller'] ?? 'n/a'],
+                ['label' => 'Action', 'value' => $data['action'] ?? 'n/a'],
+                ['label' => 'Path pattern', 'value' => $data['path'] ?? 'n/a'],
+            ]
+            : [
+                ['label' => 'Status', 'value' => 'Request never reached the router — the application crashed earlier during module bootstrap.'],
+                ['label' => 'HTTP method', 'value' => $data['method']],
+                ['label' => 'Requested path', 'value' => $data['path'] ?? 'n/a'],
+            ];
+
         return [
             'title' => 'Route',
             'badge' => $this->statusCode !== null && $this->statusCode >= 400 ? (string) $this->statusCode : null,
@@ -91,14 +106,7 @@ final class RouteCollector implements CollectorInterface, StatusAwareCollectorIn
                 [
                     'type' => 'kv',
                     'section' => null,
-                    'rows' => [
-                        ['label' => 'Route name', 'value' => $data['name'] ?? 'n/a'],
-                        ['label' => 'HTTP method', 'value' => $data['method']],
-                        ['label' => 'Status code', 'value' => $this->statusCode !== null ? (string) $this->statusCode : 'n/a'],
-                        ['label' => 'Controller', 'value' => $data['controller'] ?? 'n/a'],
-                        ['label' => 'Action', 'value' => $data['action'] ?? 'n/a'],
-                        ['label' => 'Path pattern', 'value' => $data['path'] ?? 'n/a'],
-                    ],
+                    'rows' => $rows,
                 ],
                 [
                     'type' => 'table',
