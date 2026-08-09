@@ -18,7 +18,7 @@ class ResponseModule implements ModuleInterface
     public function register(Container $container): void
     {
         $container->set(Response::class, fn() => new Response());
-        $container->set(ResponseManager::class, fn() => new ResponseManager());
+        $container->set(ResponseManager::class, fn(Container $c) => new ResponseManager($c));
     }
 
     /**
