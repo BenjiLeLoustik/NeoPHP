@@ -7,6 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Response\Types\Response;
+use Neo\Core\Profiler\TimelineRecorder;
 use Neo\Core\Routing\Attribute\Maintenance;
 use Neo\Core\Routing\Attribute\RateLimit;
 use Neo\Core\Routing\Exception\RouteNotFoundException;
@@ -124,7 +125,8 @@ class MiddlewareManager
         bool $result,
         string $message,
         ?string $errorClass,
-    ): void {
+    ): void
+    {
         $this->log[] = [
             'class' => $middlewareClass,
             'scope' => $meta->isClass() ? 'class' : 'method',
@@ -137,6 +139,10 @@ class MiddlewareManager
             'errorClass' => $errorClass,
             'duration' => round((microtime(true) - $start) * 1000, 2),
         ];
+
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record('middleware', $middlewareClass, $start);
+        }
     }
 
     /**
@@ -202,14 +208,15 @@ class MiddlewareManager
      * @throws RouteNotFoundException
      */
     private function handleFailure(
-        string  $message,
-        string  $onError,
+        string $message,
+        string $onError,
         ?string $redirect,
         Response $response,
-        mixed   $flash,
-        mixed   $router,
-        bool    $isClassMiddleware
-    ): ?Response {
+        mixed $flash,
+        mixed $router,
+        bool $isClassMiddleware
+    ): ?Response
+    {
         if ($redirect !== null) {
             if ($message !== '') {
                 $flash->add('warning', $message);
@@ -310,7 +317,7 @@ class MiddlewareManager
             }
         }
 
-        usort($all, static fn (MiddlewareMeta $a, MiddlewareMeta $b): int => $b->getPriority() <=> $a->getPriority());
+        usort($all, static fn(MiddlewareMeta $a, MiddlewareMeta $b): int => $b->getPriority() <=> $a->getPriority());
 
         return $this->middlewareCache[$cacheKey] = $all;
     }

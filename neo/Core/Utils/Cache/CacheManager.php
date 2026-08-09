@@ -5,6 +5,7 @@ namespace Neo\Core\Utils\Cache;
 
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Profiler\TimelineRecorder;
 use Neo\Core\Utils\Cache\Driver\ArrayDriver;
 use Neo\Core\Utils\Cache\Driver\FileDriver;
 use Neo\Core\Utils\Cache\Driver\Interface\CacheDriverInterface;
@@ -68,6 +69,10 @@ class CacheManager
             'duration' => round((microtime(true) - $start) * 1000, 2),
         ];
 
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record('cache', $this->driverName . ':' . $key, $start);
+        }
+
         return $value;
     }
 
@@ -87,6 +92,10 @@ class CacheManager
             'ttl' => $ttl,
             'duration' => round((microtime(true) - $start) * 1000, 2),
         ];
+
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record('cache', $this->driverName . ':' . $key, $start);
+        }
     }
 
     /**
@@ -105,6 +114,10 @@ class CacheManager
             'ttl' => null,
             'duration' => round((microtime(true) - $start) * 1000, 2),
         ];
+
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record('cache', $this->driverName . ':' . $key, $start);
+        }
     }
 
     /**
@@ -131,6 +144,10 @@ class CacheManager
             'ttl' => null,
             'duration' => round((microtime(true) - $start) * 1000, 2),
         ];
+
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record('cache', $this->driverName . ':' . $key, $start);
+        }
 
         return $hit;
     }

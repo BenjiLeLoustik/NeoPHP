@@ -7,6 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\Module\Exception\ModuleException;
 use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Profiler\ProfilerManager;
+use Neo\Core\Profiler\TimelineRecorder;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
 use ReflectionException;
 
@@ -64,6 +65,8 @@ class ModuleManager
 
         foreach ($ordered as $moduleClass) {
             try {
+                $moduleStart = microtime(true);
+
                 /** @var ModuleInterface $module */
                 $module = new $moduleClass();
 
@@ -84,6 +87,10 @@ class ModuleManager
                 $initResults[$moduleClass] = $result;
 
                 $this->container->set($ownAlias . '.manager', $result);
+
+                if (class_exists(TimelineRecorder::class)) {
+                    TimelineRecorder::record('boot', $moduleClass, $moduleStart);
+                }
             } catch (\Throwable $e) {
                 $this->recordBootError($moduleClass, $e);
                 throw $e;

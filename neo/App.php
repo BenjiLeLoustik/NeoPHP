@@ -16,6 +16,7 @@ use Neo\Core\Http\Request\Request;
 use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Module\Exception\ModuleException;
 use Neo\Core\Module\ModuleManager;
+use Neo\Core\Profiler\TimelineRecorder;
 use Neo\Core\Routing\RouterManager;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -33,6 +34,8 @@ class App
      */
     public function __construct()
     {
+        $bootstrapStart = microtime(true);
+
         $this->container = new Container();
         $this->container->set(Container::class, fn() => $this->container);
 
@@ -43,21 +46,35 @@ class App
             : Request::fromGlobals()
         );
 
+        $detectStart = microtime(true);
         new ApplicationDetector($this->container)->detect();
-        new ApplicationPaths($this->container)->register();
+        $this->recordTimeline('bootstrap', 'ApplicationDetector::detect()', $detectStart);
 
+        $pathsStart = microtime(true);
+        new ApplicationPaths($this->container)->register();
+        $this->recordTimeline('bootstrap', 'ApplicationPaths::register()', $pathsStart);
+
+        $discoverStart = microtime(true);
         $moduleManager = new ModuleManager($this->container)
             ->discover(__DIR__ . '/Core')
             ->discover($this->container->get('appPath'));
+        $this->recordTimeline('bootstrap', 'ModuleManager::discover()', $discoverStart);
 
         $moduleManager->boot();
 
         $viewManager = $this->container->get(\Neo\Core\View\ViewManager::class);
-        $extensions = $this->container->get(\Neo\Core\Extension\ExtensionManager::class)->getViewExtensions();
 
+        $extScanStart = microtime(true);
+        $extensions = $this->container->get(\Neo\Core\Extension\ExtensionManager::class)->getViewExtensions();
+        $this->recordTimeline('bootstrap', 'ExtensionManager::getViewExtensions()', $extScanStart);
+
+        $extApplyStart = microtime(true);
         foreach ($extensions as $extension) {
             $viewManager->addExtension($extension);
         }
+        $this->recordTimeline('bootstrap', 'Apply Twig extensions', $extApplyStart);
+
+        $this->recordTimeline('bootstrap', 'App::__construct() total', $bootstrapStart);
     }
 
     /**
@@ -109,5 +126,12 @@ class App
     public function getContainer(): Container
     {
         return $this->container;
+    }
+
+    private function recordTimeline(string $category, string $label, float $start): void
+    {
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record($category, $label, $start);
+        }
     }
 }

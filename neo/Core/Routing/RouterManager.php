@@ -9,6 +9,7 @@ use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Package\Interface\PackageInterface;
+use Neo\Core\Profiler\TimelineRecorder;
 use Neo\Core\Routing\Attribute\MainRoute as MainRouteAttribute;
 use Neo\Core\Routing\Attribute\Route as RouteAttribute;
 use Neo\Core\Routing\Collection\RouteCollection;
@@ -61,6 +62,8 @@ class RouterManager
      */
     private function scanControllers(): void
     {
+        $scanStart = microtime(true);
+
         $cacheFile = $this->container->get('storagePath') . '/var/cache/router/routes.json';
 
         if (!$this->isDebug() && file_exists($cacheFile)) {
@@ -107,6 +110,10 @@ class RouterManager
                 $cacheFile,
                 json_encode($this->routes->toArray(), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
             );
+        }
+
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record('router', 'RouterManager::scanControllers()', $scanStart);
         }
     }
 
@@ -171,6 +178,8 @@ class RouterManager
         $path = '/' . trim($request->getPath(), '/');
         $routes = $this->routes->all();
 
+        $routingStart = microtime(true);
+
         $pathExists = false;
 
         foreach ($routes as $httpMethod => $methodRoutes) {
@@ -179,6 +188,10 @@ class RouterManager
                 if ($this->match($routePath, $path, $params, $info['requirements'] ?? [])) {
                     if ($httpMethod === $method) {
                         $this->currentRouteName = $info['name'];
+
+                        if (class_exists(TimelineRecorder::class)) {
+                            TimelineRecorder::record('router', $path, $routingStart);
+                        }
                         return $this->invokeHandler($info, $params);
                     }
                     $pathExists = true;
@@ -275,7 +288,14 @@ class RouterManager
                 );
             }
 
-            return $refMethod->invokeArgs($controller, $resolved);
+            $controllerStart = microtime(true);
+            $result = $refMethod->invokeArgs($controller, $resolved);
+
+            if (class_exists(TimelineRecorder::class)) {
+                TimelineRecorder::record('controller', $routeInfo['controller'] . '::' . $method, $controllerStart);
+            }
+
+            return $result;
 
         } catch (Throwable $e) {
             if ($e instanceof RouterException || $e instanceof RouteNotFoundException) throw $e;

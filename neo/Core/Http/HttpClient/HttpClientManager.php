@@ -6,6 +6,7 @@ namespace Neo\Core\Http\HttpClient;
 use Neo\Core\Http\HttpClient\Exception\HttpClientException;
 use Neo\Core\Http\HttpClient\Interface\HttpClientInterface;
 use Neo\Core\Http\Response\Types\Response;
+use Neo\Core\Profiler\TimelineRecorder;
 
 class HttpClientManager implements HttpClientInterface
 {
@@ -96,6 +97,10 @@ class HttpClientManager implements HttpClientInterface
                 'error' => $message,
             ];
 
+            if (class_exists(TimelineRecorder::class)) {
+                TimelineRecorder::record('http', $method . ' ' . $url, $start);
+            }
+
             throw new HttpClientException(
                 title: 'HTTP Transport Error',
                 message: sprintf("Request '%s %s' failed: %s.", $method, $url, $message),
@@ -115,6 +120,10 @@ class HttpClientManager implements HttpClientInterface
             'duration' => $duration,
             'error' => null,
         ];
+
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record('http', $method . ' ' . $url, $start);
+        }
 
         $response = new Response()
             ->setStatusCode($statusCode)

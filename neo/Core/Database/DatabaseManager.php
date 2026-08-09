@@ -5,6 +5,7 @@ namespace Neo\Core\Database;
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Profiler\TimelineRecorder;
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -137,6 +138,10 @@ class DatabaseManager
             'time' => $start,
             'error' => $error,
         ];
+
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record('database', substr($sql, 0, 80), $start);
+        }
     }
 
     /**

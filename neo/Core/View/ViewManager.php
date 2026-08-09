@@ -6,6 +6,7 @@ namespace Neo\Core\View;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Package\Interface\PackageInterface;
+use Neo\Core\Profiler\TimelineRecorder;
 use Neo\Core\View\Exception\ViewException;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 use Twig\Environment;
@@ -173,6 +174,10 @@ class ViewManager
             'duration' => round((microtime(true) - $start) * 1000, 2),
             'error' => $error,
         ];
+
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record('view', $template, $start);
+        }
     }
 
     /**
