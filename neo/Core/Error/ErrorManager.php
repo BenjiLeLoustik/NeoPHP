@@ -198,15 +198,14 @@ class ErrorManager
         }
 
         try {
-            $profiler = ProfilerManager::getInstance();
+            $profiler = \Neo\Core\Profiler\ProfilerManager::getInstance();
 
-            ProfilerModule::ensureCollectorsRegistered($this->container, $profiler);
+            \Neo\Core\Profiler\ProfilerModule::ensureCollectorsRegistered($this->container, $profiler);
 
-            $toolbar = new Toolbar($profiler);
+            $data = $this->saveErrorProfileAndGetData($profiler, $statusCode);
 
-            $this->saveErrorProfile($profiler, $statusCode);
-
-            $toolbarHtml = $toolbar->render($statusCode);
+            $toolbar = new \Neo\Core\Profiler\Toolbar\Toolbar($profiler);
+            $toolbarHtml = $toolbar->renderFromExport($data['collectors'], $statusCode);
 
             return str_contains($html, '</body>')
                 ? str_replace('</body>', $toolbarHtml . '</body>', $html)
@@ -214,6 +213,37 @@ class ErrorManager
         } catch (\Throwable) {
             return $html;
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function saveErrorProfileAndGetData(\Neo\Core\Profiler\ProfilerManager $profiler, int $statusCode): array
+    {
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $path = $_SERVER['REQUEST_URI'] ?? '/';
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '—';
+
+        $scheme = ($_SERVER['HTTPS'] ?? 'off') !== 'off' ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $fullUrl = $scheme . '://' . $host . $path;
+
+        $data = $profiler->export($statusCode, $method, $fullUrl, $ip);
+
+        $storageDir = $this->container->get('storagePath') . '/var/cache/profiler';
+
+        if (!is_dir($storageDir)) {
+            mkdir($storageDir, 0777, true);
+        }
+
+        file_put_contents(
+            $storageDir . '/' . $data['token'] . '.json',
+            json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
+        );
+
+        \Neo\Core\Profiler\ProfilerCleaner::clean($storageDir);
+
+        return $data;
     }
 
     private function saveErrorProfile(ProfilerManager $profiler, int $statusCode): void

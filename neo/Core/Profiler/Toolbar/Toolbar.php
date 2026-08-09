@@ -13,21 +13,23 @@ final class Toolbar
     {
     }
 
-    public function render(?int $statusCode = null): string
+    /**
+     * @param array<string, array{toolbar: array{label: string, value: string, badge: string|null, badgeType?: string, badgeStatus?: bool}|null, in_toolbar: bool}> $exportedCollectors
+     */
+    public function renderFromExport(array $exportedCollectors, ?int $statusCode = null): string
     {
-        $collectors = $this->profiler->getCollectors();
         $token = ProfilerManager::getToken();
         $duration = $this->profiler->getTotalDuration();
         $memory = $this->formatBytes($this->profiler->getPeakMemory());
 
         $chipsHtml = '';
 
-        foreach ($collectors as $collector) {
-            if (!$collector->inToolbar()) {
+        foreach ($exportedCollectors as $info) {
+            if (!($info['in_toolbar'] ?? false) || $info['toolbar'] === null) {
                 continue;
             }
 
-            $item = $collector->toolbarData();
+            $item = $info['toolbar'];
             $item['badgeColor'] = $this->resolveBadgeColor($item, $statusCode);
 
             $chipsHtml .= $this->renderTemplate(
@@ -77,7 +79,6 @@ final class Toolbar
 
         return '#dc2626';
     }
-
 
     /**
      * @param array<string, mixed> $__vars

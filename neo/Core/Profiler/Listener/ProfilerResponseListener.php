@@ -42,7 +42,7 @@ final class ProfilerResponseListener implements EventSubscriberInterface
             return;
         }
 
-        $statusCode = $response->getStatusCode();
+        $statusCode = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : null;
 
         foreach ($this->profiler->getCollectors() as $collector) {
             if ($collector instanceof StatusAwareCollectorInterface) {
@@ -54,7 +54,7 @@ final class ProfilerResponseListener implements EventSubscriberInterface
             }
         }
 
-        $this->saveProfile($statusCode, $path);
+        $data = $this->buildAndSaveProfile($statusCode, $path);
 
         if ($response instanceof RedirectResponse || $response instanceof JsonResponse) {
             TimelineRecorder::record('response', 'ProfilerResponseListener::onResponse()', $onResponseStart);
@@ -69,7 +69,7 @@ final class ProfilerResponseListener implements EventSubscriberInterface
         }
 
         $content = $response->getContent();
-        $toolbarHtml = $this->toolbar->render($statusCode);
+        $toolbarHtml = $this->toolbar->renderFromExport($data['collectors'], $statusCode);
 
         $content = str_contains($content, '</body>')
             ? str_replace('</body>', $toolbarHtml . '</body>', $content)
@@ -81,7 +81,10 @@ final class ProfilerResponseListener implements EventSubscriberInterface
         TimelineRecorder::record('response', 'ProfilerResponseListener::onResponse()', $onResponseStart);
     }
 
-    private function saveProfile(?int $statusCode, string $path): void
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildAndSaveProfile(?int $statusCode, string $path): array
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $ip = $_SERVER['REMOTE_ADDR'] ?? '—';
@@ -102,5 +105,7 @@ final class ProfilerResponseListener implements EventSubscriberInterface
         );
 
         ProfilerCleaner::clean($this->storageDir);
+
+        return $data;
     }
 }
