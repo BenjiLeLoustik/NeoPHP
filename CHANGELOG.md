@@ -1,3 +1,10 @@
+v4.30.0
+- docs: add README for dumper (a61711b)
+- feat: route dump() output to a new Profiler "Dumps" tab instead of printing inline (492ed84)
+- fix: harden and polish Dumper — recursion/memory safety, brace alignment, DateTime rendering, object identity (#id), collapsible long strings; also fix unguarded print_r() OOM in ErrorManager (8316888)
+- feat: add dd()/dump() debug helpers with dark-themed collapsible variable dumps, disabled outside dev (133b5dc)
+- feat: wire up dd()/dump() debug helpers and the translate() helper via explicit requires in index.php (8da2afd)
+
 v4.29.1
 - fix: eliminate toolbar/profile data mismatch by computing collector export once and reusing it for both (a13c5d3)
 
