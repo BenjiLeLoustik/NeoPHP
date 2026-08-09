@@ -52,19 +52,29 @@ final class Toolbar
      */
     private function resolveBadgeColor(array $item, ?int $statusCode): string
     {
-        $isStatusBadge = $item['badgeStatus'] ?? false;
+        $badgeType = $item['badgeType'] ?? 'neutral';
 
-        if (!$isStatusBadge || $statusCode === null) {
-            return self::DEFAULT_BADGE_COLOR;
+        if ($badgeType === 'alert') {
+            return $this->statusAwareAlertColor($item, $statusCode);
         }
 
-        return match (true) {
-            $statusCode >= 500 => '#dc2626',
-            $statusCode >= 400 => '#ea580c',
-            $statusCode >= 300 => '#2563eb',
-            default => '#059669',
-        };
+        return self::DEFAULT_BADGE_COLOR;
     }
+
+    private function statusAwareAlertColor(array $item, ?int $statusCode): string
+    {
+        if (($item['badgeStatus'] ?? false) && $statusCode !== null) {
+            return match (true) {
+                $statusCode >= 500 => '#dc2626',
+                $statusCode >= 400 => '#ea580c',
+                $statusCode >= 300 => '#2563eb',
+                default => '#059669',
+            };
+        }
+
+        return '#dc2626';
+    }
+
 
     /**
      * @param array<string, mixed> $vars

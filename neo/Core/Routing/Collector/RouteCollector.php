@@ -74,6 +74,7 @@ final class RouteCollector implements CollectorInterface, StatusAwareCollectorIn
             'label' => $data['method'],
             'value' => $data['name'] !== null ? '@' . $data['name'] : 'n/a',
             'badge' => $this->statusCode !== null ? (string) $this->statusCode : null,
+            'badgeType' => 'alert',
             'badgeStatus' => true,
         ];
     }
