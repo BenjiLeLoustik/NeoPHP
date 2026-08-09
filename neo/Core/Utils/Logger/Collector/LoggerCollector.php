@@ -37,7 +37,7 @@ final class LoggerCollector implements CollectorInterface
 
     public function inToolbar(): bool
     {
-        return true;
+        return false;
     }
 
     public function inProfiler(): bool
@@ -47,15 +47,7 @@ final class LoggerCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
-        $data = $this->collect();
-        $errorCount = $this->errorBadge($data['byLevel']);
-
-        return [
-            'label' => 'Logs',
-            'value' => '',
-            'badge' => $errorCount,
-            'badgeType' => 'alert',
-        ];
+        return [];
     }
 
     public function profilerData(): array

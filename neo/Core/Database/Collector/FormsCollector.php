@@ -46,7 +46,7 @@ final class FormsCollector implements CollectorInterface
 
     public function inToolbar(): bool
     {
-        return true;
+        return false;
     }
 
     public function inProfiler(): bool
@@ -56,14 +56,7 @@ final class FormsCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
-        $data = $this->collect();
-
-        return [
-            'label' => 'Forms',
-            'value' => '',
-            'badge' => $data['invalidCount'] > 0 ? (string) $data['invalidCount'] : null,
-            'badgeType' => 'alert',
-        ];
+        return [];
     }
 
     public function profilerData(): array
