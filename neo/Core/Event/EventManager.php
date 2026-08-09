@@ -11,6 +11,7 @@ use Neo\Core\Event\Interface\EventInterface;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
 use Neo\Core\Event\Listener\ListenerRegistration;
 use Neo\Core\Package\Interface\PackageInterface;
+use Neo\Core\Profiler\TimelineRecorder;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
 
@@ -227,6 +228,10 @@ class EventManager
             'stoppedBy' => $stoppedBy,
             'totalDuration' => round((microtime(true) - $dispatchStart) * 1000, 2),
         ];
+
+        if (class_exists(TimelineRecorder::class)) {
+            TimelineRecorder::record('event', $eventClass, $dispatchStart);
+        }
 
         return $event;
     }

@@ -11,6 +11,7 @@ use Neo\Core\Profiler\Interface\ResponseAwareCollectorInterface;
 use Neo\Core\Profiler\Interface\StatusAwareCollectorInterface;
 use Neo\Core\Profiler\ProfilerCleaner;
 use Neo\Core\Profiler\ProfilerManager;
+use Neo\Core\Profiler\TimelineRecorder;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 
 final class ProfilerResponseListener implements EventSubscriberInterface
@@ -32,6 +33,8 @@ final class ProfilerResponseListener implements EventSubscriberInterface
 
     public function onResponse(ResponseEvent $event): void
     {
+        $onResponseStart = microtime(true);
+
         $response = $event->getResponse();
         $path = $_SERVER['REQUEST_URI'] ?? '/';
 
@@ -46,7 +49,7 @@ final class ProfilerResponseListener implements EventSubscriberInterface
                 $collector->setStatusCode($statusCode);
             }
 
-            if ($collector instanceof ResponseAwareCollectorInterface) {
+            if ($collector instanceof \Neo\Core\Profiler\Interface\ResponseAwareCollectorInterface) {
                 $collector->setResponse($response);
             }
         }
@@ -54,12 +57,14 @@ final class ProfilerResponseListener implements EventSubscriberInterface
         $this->saveProfile($statusCode, $path);
 
         if ($response instanceof RedirectResponse || $response instanceof JsonResponse) {
+            TimelineRecorder::record('response', 'ProfilerResponseListener::onResponse()', $onResponseStart);
             return;
         }
 
         $contentType = $response->getHeaders()['Content-Type'] ?? 'text/html';
 
         if (!str_contains($contentType, 'text/html')) {
+            TimelineRecorder::record('response', 'ProfilerResponseListener::onResponse()', $onResponseStart);
             return;
         }
 
@@ -72,6 +77,8 @@ final class ProfilerResponseListener implements EventSubscriberInterface
 
         $response->setContent($content);
         $event->setResponse($response);
+
+        TimelineRecorder::record('response', 'ProfilerResponseListener::onResponse()', $onResponseStart);
     }
 
     private function saveProfile(?int $statusCode, string $path): void
