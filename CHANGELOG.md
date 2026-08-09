@@ -1,3 +1,12 @@
+v4.31.0
+- fix: resolve PHPStan level 6 errors (8cc94b5)
+- feat: add NotificationCollector with success/failed/partial/skipped tabs, track sends in NotificationManager (d8de5c4)
+- feat: render complex values through Dumper across profiler collectors instead of raw/compressed JSON (3fec1a1)
+- fix: make $this->make() reuse the container's Response singleton instead of creating a new instance, fixing missing headers/content-type in the profiler (bf08272)
+- fix: prevent memory exhaustion in Dumper on circular references and oversized object graphs (daa76c6)
+- feat: pass real variable values (not just names) from views to the profiler, rendered via Dumper on-demand (f5503fe)
+- feat: render array/object values in profiler tables and log contexts through Dumper instead of raw/compressed JSON (e4846a1)
+
 v4.30.0
 - docs: add README for dumper (a61711b)
 - feat: route dump() output to a new Profiler "Dumps" tab instead of printing inline (492ed84)
