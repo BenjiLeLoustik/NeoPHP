@@ -48,11 +48,13 @@ final class LoggerCollector implements CollectorInterface
     public function toolbarData(): array
     {
         $data = $this->collect();
+        $errorCount = $this->errorBadge($data['byLevel']);
 
         return [
             'label' => 'Logs',
-            'value' => (string) $data['total'],
-            'badge' => $this->errorBadge($data['byLevel']),
+            'value' => '',
+            'badge' => $errorCount,
+            'badgeType' => 'alert',
         ];
     }
 
