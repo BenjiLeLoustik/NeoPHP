@@ -1,3 +1,6 @@
+v4.29.1
+- fix: eliminate toolbar/profile data mismatch by computing collector export once and reusing it for both (a13c5d3)
+
 v4.29.0
 - fix: fix phpstan errors (9d084b8)
 - feat: scan appPath for collectors, so app-level collectors get auto-registered like core and package ones (1f60a43)
