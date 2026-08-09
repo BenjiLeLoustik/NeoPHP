@@ -48,7 +48,11 @@ final class MiddlewareCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
-        return [];
+        return [
+            'label' => 'Middleware',
+            'value' => '',
+            'badge' => null,
+        ];
     }
 
     public function profilerData(): array
@@ -137,7 +141,7 @@ final class MiddlewareCollector implements CollectorInterface
     }
 
     /**
-     * @param array{params: array<string, mixed>, priority: int, redirect: string|null, message: string, errorClass: string|null} $m
+     * @param array{class: class-string, params: array<string, mixed>, priority: int, redirect: string|null, message: string, errorClass: string|null} $m
      */
     private function formatContext(array $m): string
     {

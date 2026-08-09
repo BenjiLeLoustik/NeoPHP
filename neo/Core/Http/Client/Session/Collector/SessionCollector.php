@@ -47,7 +47,11 @@ final class SessionCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
-        return [];
+        return [
+            'label' => 'Session',
+            'value' => '',
+            'badge' => null,
+        ];
     }
 
     public function profilerData(): array

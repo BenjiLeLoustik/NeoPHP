@@ -40,6 +40,20 @@ class MiddlewareManager
     /** @var array<string, list<MiddlewareMeta>> */
     private array $middlewareCache = [];
 
+    /**
+     * @var list<array{
+     *     class: class-string,
+     *     scope: 'class'|'method',
+     *     params: array<string, mixed>,
+     *     priority: int,
+     *     onError: string,
+     *     redirect: string|null,
+     *     passed: bool,
+     *     message: string,
+     *     errorClass: string|null,
+     *     duration: float
+     * }>
+     */
     private array $log = [];
 
     private bool $maintenanceTriggered = false;

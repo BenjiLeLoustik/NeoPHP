@@ -46,7 +46,11 @@ final class AssetCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
-        return [];
+        return [
+            'label' => 'Assets',
+            'value' => '',
+            'badge' => null,
+        ];
     }
 
     public function profilerData(): array

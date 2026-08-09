@@ -41,10 +41,10 @@ final class ResponseCollector implements CollectorInterface, ResponseAwareCollec
 
         return [
             'available' => true,
-            'statusCode' => method_exists($this->response, 'getStatusCode') ? $this->response->getStatusCode() : null,
+            'statusCode' => $this->response->getStatusCode(),
             'headers' => $headers,
             'contentType' => $headers['Content-Type'] ?? null,
-            'contentLength' => is_string($content) ? strlen($content) : 0,
+            'contentLength' => strlen($content),
         ];
     }
 

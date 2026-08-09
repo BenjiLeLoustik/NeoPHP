@@ -122,6 +122,9 @@ final class RouteCollector implements CollectorInterface, StatusAwareCollectorIn
         ];
     }
 
+    /**
+     * @return array{method: string, controller: string, action: string, path: string, requirements: array<string, string>}|null
+     */
     private function findRouteDetails(string $name): ?array
     {
         foreach ($this->router->getRoutes()->all() as $method => $methodRoutes) {

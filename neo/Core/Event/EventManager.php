@@ -23,14 +23,7 @@ class EventManager
     private array $listeners = [];
     private Container $container;
 
-    /**
-     * @var list<array{
-     *     event: class-string,
-     *     listeners: list<array{class: class-string, method: string, priority: int, duration: float}>,
-     *     stoppedEarly: bool,
-     *     totalDuration: float
-     * }>
-     */
+    /** @var list<array{event: class-string, listeners: list<array{class: class-string, method: string, priority: int, duration: float, stoppedPropagation: bool}>, stoppedEarly: bool, stoppedBy: string|null, totalDuration: float}> */
     private array $dispatchLog = [];
 
     /**
@@ -192,7 +185,6 @@ class EventManager
             }
 
             $listener = $meta->getInstance() ?? $this->container->get($meta->getClass());
-
             $method = $meta->resolveMethodName();
 
             if (!method_exists($listener, $method)) {
@@ -206,7 +198,7 @@ class EventManager
             $listenerStart = microtime(true);
             $listener->$method($event);
 
-            $causedStop = $event->isPropagationStopped();
+            $causedStop = $this->checkStillStopped($event);
 
             if ($causedStop) {
                 $stoppedBy = $meta->getClass() . '::' . $method . '()';
@@ -234,6 +226,11 @@ class EventManager
         }
 
         return $event;
+    }
+
+    private function checkStillStopped(EventInterface $event): bool
+    {
+        return $event->isPropagationStopped();
     }
 
     public function addListener(

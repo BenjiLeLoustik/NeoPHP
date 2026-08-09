@@ -15,7 +15,7 @@ class DatabaseManager
     private PDO $pdo;
     private ?string $connection;
 
-    /** @var list<array{sql: string, params: array<string|int, mixed>, duration: float, connection: string|null, time: float}> */
+    /** @var list<array{sql: string, params: array<string|int, mixed>, duration: float, connection: string|null, time: float, error: string|null}> */
     private static array $queries = [];
 
     public function __construct(?string $connection = null)

@@ -120,7 +120,9 @@ class NotificationManager
         } catch (ChannelException $e) {
             $error = $e->getMessage();
             throw $e;
-        } finally {}
+        } finally {
+            $this->reset();
+        }
 
         return $result;
     }

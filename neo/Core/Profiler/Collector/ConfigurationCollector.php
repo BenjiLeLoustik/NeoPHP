@@ -180,7 +180,7 @@ final class ConfigurationCollector implements CollectorInterface
     }
 
     /**
-     * @return list<string>
+     * @return list<array{name: string, version: string}>
      */
     private function composerPackages(): array
     {

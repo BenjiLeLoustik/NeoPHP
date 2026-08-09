@@ -6,6 +6,9 @@ namespace Neo\Core\Profiler;
 
 final class ProfilerHtmlRenderer
 {
+    /**
+     * @param array<string, mixed> $data
+     */
     public function render(array $data, string $token): string
     {
         $statusCode = (int) ($data['status_code'] ?? 200);
@@ -44,7 +47,7 @@ final class ProfilerHtmlRenderer
     }
 
     /**
-     * @param array<string, array{package: string|null, in_profiler: bool, profiler: array|null}> $collectors
+     * @param array<string, array{package: string|null, in_profiler: bool, profiler: array<string, mixed>|null}> $collectors
      * @param list<array{label: string, value: string, unit?: string}> $routeMetrics
      * @return array{0: string, 1: string}
      */
@@ -58,7 +61,7 @@ final class ProfilerHtmlRenderer
         $packageEntries = [];
         $packagesOwnInfo = null;
 
-        /** @var array<string, array<string, array{profiler: array|null}>> $namedGroups */
+        /** @var array<string, array<string, array{profiler: array<string, mixed>|null}>> $namedGroups */
         $namedGroups = [];
 
         foreach ($collectors as $key => $info) {
@@ -129,7 +132,7 @@ final class ProfilerHtmlRenderer
     }
 
     /**
-     * @param array<string, array{profiler: array|null}> $entries
+     * @param array<string, array{profiler: array<string, mixed>|null}> $entries
      * @return array{0: string, 1: string, 2: bool}
      */
     private function buildNamedGroup(string $title, array $entries, bool $first): array
@@ -166,7 +169,8 @@ final class ProfilerHtmlRenderer
     }
 
     /**
-     * @param array<string, array<string, array{profiler: array|null}>> $packageEntries
+     * @param array<string, mixed>|null $packagesItemRaw
+     * @param array<string, array<string, array{profiler: array<string, mixed>|null}>> $packageEntries
      * @return array{0: string, 1: string, 2: bool}
      */
     private function buildPackagesGroup(?array $packagesItemRaw, bool $hasOwnPanel, array $packageEntries, bool $first): array
@@ -226,8 +230,9 @@ final class ProfilerHtmlRenderer
     }
 
     /**
-     * @param array{title: string, badge: string|null, badgeType?: string, metrics?: array, blocks?: array} $profilerData
+     * @param array<string, mixed> $profilerData
      * @param list<array{label: string, value: string, unit?: string}> $extraMetrics
+     * @return array{title: string, badge: string|null, badgeType: string, metricsHtml: string, blocksHtml: string}
      */
     private function prepareItem(array $profilerData, array $extraMetrics, ?string $packageName): array
     {
@@ -278,7 +283,7 @@ final class ProfilerHtmlRenderer
     }
 
     /**
-     * @param array{section?: ?string, tabs: list<array{label: string, badge?: ?string, badgeType?: string, blocks: array}>} $block
+     * @param array{section?: string|null, tabs: list<array{label: string, badge?: string|null, badgeType?: string, blocks: list<array<string, mixed>>}>} $block
      */
     private function renderTabsBlock(array $block): string
     {
@@ -314,7 +319,7 @@ final class ProfilerHtmlRenderer
     }
 
     /**
-     * @param array<string, mixed> $vars
+     * @param array<string, mixed> $__vars
      */
     private function renderTemplate(string $__templatePath, array $__vars): string
     {
