@@ -6,7 +6,6 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Translation\Domain\TranslationDomain;
 use Neo\Core\Translation\Exception\TranslationException;
-use Neo\Core\Translation\Interface\TranslationCollectorInterface;
 use Neo\Core\Translation\Interface\TranslatorInterface;
 use Neo\Core\Translation\Loader\TranslationLoader;
 use Neo\Core\Translation\Locale\LocaleManager;
@@ -20,7 +19,9 @@ class TranslationManager implements TranslatorInterface
     private TranslationWriter $writer;
     private bool $autoWrite;
     private bool $enabled;
-    private ?TranslationCollectorInterface $collector = null;
+
+    /** @var list<array{key: string, result: string, found: bool, domain: string}> */
+    private static array $records = [];
 
     /**
      * @throws ContainerException
@@ -54,7 +55,12 @@ class TranslationManager implements TranslatorInterface
         $found = array_key_exists($text, $translations);
         $result = $found ? $translations[$text] : $text;
 
-        $this->collector?->record($text, $result, $found, $domain);
+        self::$records[] = [
+            'key' => $text,
+            'result' => $result,
+            'found' => $found,
+            'domain' => $domain,
+        ];
 
         if (!$found && $this->autoWrite) {
             $this->writer->ensure($this->locale, $text, $domain);
@@ -127,8 +133,11 @@ class TranslationManager implements TranslatorInterface
         return $this->enabled;
     }
 
-    public function setCollector(TranslationCollectorInterface $collector): void
+    /**
+     * @return list<array{key: string, result: string, found: bool, domain: string}>
+     */
+    public function getRecords(): array
     {
-        $this->collector = $collector;
+        return self::$records;
     }
 }
