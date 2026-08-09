@@ -162,6 +162,10 @@ final class ProfilerModule implements ModuleInterface
     {
         $targets = [['path' => $coreDir, 'package' => null]];
 
+        if ($container->has('appPath')) {
+            $targets[] = ['path' => $container->get('appPath'), 'package' => null];
+        }
+
         if ($container->has('packages')) {
             /** @var array<int, PackageInterface> $packages */
             $packages = $container->get('packages');
