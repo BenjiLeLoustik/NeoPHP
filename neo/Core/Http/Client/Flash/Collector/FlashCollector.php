@@ -41,9 +41,11 @@ final class FlashCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
+        $data = $this->collect();
+
         return [
             'label' => 'Flash',
-            'value' => '',
+            'value' => (string) count($data['messages']),
             'badge' => null,
         ];
     }
@@ -72,6 +74,49 @@ final class FlashCollector implements CollectorInterface
             ];
         }
 
+        $byType = [];
+        foreach ($data['messages'] as $message) {
+            $byType[$message['type']][] = $message;
+        }
+
+        $tabs = [
+            [
+                'label' => 'All',
+                'badge' => (string) count($data['messages']),
+                'badgeType' => 'neutral',
+                'blocks' => [
+                    [
+                        'type' => 'table',
+                        'section' => null,
+                        'columns' => ['Type', 'Message'],
+                        'rows' => array_map(
+                            static fn (array $m) => [$m['type'], $m['message']],
+                            $data['messages']
+                        ),
+                    ],
+                ],
+            ],
+        ];
+
+        foreach ($byType as $type => $messages) {
+            $tabs[] = [
+                'label' => ucfirst($type),
+                'badge' => (string) count($messages),
+                'badgeType' => $this->badgeTypeFor($type),
+                'blocks' => [
+                    [
+                        'type' => 'table',
+                        'section' => null,
+                        'columns' => ['Message'],
+                        'rows' => array_map(
+                            static fn (array $m) => [$m['message']],
+                            $messages
+                        ),
+                    ],
+                ],
+            ];
+        }
+
         return [
             'title' => 'Flash',
             'group' => 'Http',
@@ -80,16 +125,13 @@ final class FlashCollector implements CollectorInterface
                 ['label' => 'Pending', 'value' => (string) count($data['messages'])],
             ],
             'blocks' => [
-                [
-                    'type' => 'table',
-                    'section' => null,
-                    'columns' => ['Type', 'Message'],
-                    'rows' => array_map(
-                        static fn (array $m) => [$m['type'], $m['message']],
-                        $data['messages']
-                    ),
-                ],
+                ['type' => 'tabs', 'section' => null, 'tabs' => $tabs],
             ],
         ];
+    }
+
+    private function badgeTypeFor(string $type): string
+    {
+        return in_array($type, ['error', 'warning'], true) ? 'alert' : 'neutral';
     }
 }

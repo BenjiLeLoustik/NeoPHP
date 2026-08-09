@@ -113,7 +113,7 @@ final class ViewCollector implements CollectorInterface
         }
 
         if ($r['error'] !== null) {
-            $html = new Dumper()->render([$r['params']]);
+            $html = new Dumper()->render([$r['params']], false);
             return [
                 'raw' => true,
                 'html' => '<div style="color:#dc2626;font-family:var(--mono);font-size:0.8rem;margin-bottom:0.5rem;">Error: '
@@ -123,7 +123,7 @@ final class ViewCollector implements CollectorInterface
 
         return [
             'raw' => true,
-            'html' => new Dumper()->render([$r['params']]),
+            'html' => new Dumper()->render([$r['params']], false),
         ];
     }
 }

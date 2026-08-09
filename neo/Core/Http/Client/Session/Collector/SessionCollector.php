@@ -7,11 +7,10 @@ namespace Neo\Core\Http\Client\Session\Collector;
 use Neo\Core\DI\Container;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Tools\Debug\Dumper;
 
 final class SessionCollector implements CollectorInterface
 {
-    private const array MASKED_KEYS = ['password', 'secret', 'token'];
-
     public function __construct(private readonly Container $container)
     {
     }
@@ -47,9 +46,11 @@ final class SessionCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
+        $data = $this->collect();
+
         return [
             'label' => 'Session',
-            'value' => '',
+            'value' => (string) $data['count'],
             'badge' => null,
         ];
     }
@@ -70,15 +71,47 @@ final class SessionCollector implements CollectorInterface
             ],
         ];
 
-        if ($data['count'] > 0) {
+        $simple = [];
+        $complex = [];
+
+        foreach ($data['data'] as $key => $value) {
+            if (is_array($value) || is_object($value)) {
+                $complex[$key] = $value;
+                continue;
+            }
+
+            $simple[$key] = $value;
+        }
+
+        if ($simple !== []) {
             $blocks[] = [
                 'type' => 'table',
                 'section' => 'Attributes',
                 'columns' => ['Key', 'Value'],
                 'rows' => array_map(
-                    fn (string $key, mixed $value) => [$key, $this->formatValue($key, $value)],
-                    array_keys($data['data']),
-                    array_values($data['data'])
+                    fn (string $key, mixed $value) => [$key, $this->formatScalar($value)],
+                    array_keys($simple),
+                    array_values($simple)
+                ),
+            ];
+        }
+
+        if ($complex !== []) {
+            $blocks[] = [
+                'type' => 'log-list',
+                'section' => 'Complex attributes',
+                'timeLabel' => 'Type',
+                'messageLabel' => 'Key',
+                'rows' => array_map(
+                    fn (string $key, mixed $value) => [
+                        'time' => is_array($value) ? 'array' : 'object',
+                        'channel' => 'session',
+                        'origin' => '',
+                        'message' => $key,
+                        'context' => ['raw' => true, 'html' => new Dumper()->render([$value], false)],
+                    ],
+                    array_keys($complex),
+                    array_values($complex)
                 ),
             ];
         }
@@ -94,32 +127,12 @@ final class SessionCollector implements CollectorInterface
         ];
     }
 
-    private function formatValue(string $key, mixed $value): string
+    private function formatScalar(mixed $value): string
     {
-        if ($this->isMasked($key)) {
-            return '••••••••';
-        }
-
         return match (true) {
             $value === null => 'null',
             is_bool($value) => $value ? 'true' : 'false',
-            is_scalar($value) => (string) $value,
-            is_array($value) => json_encode($value, JSON_UNESCAPED_UNICODE) ?: '[]',
-            is_object($value) => $value::class,
             default => (string) $value,
         };
-    }
-
-    private function isMasked(string $key): bool
-    {
-        $lower = strtolower($key);
-
-        foreach (self::MASKED_KEYS as $masked) {
-            if (str_contains($lower, $masked)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

@@ -36,7 +36,7 @@ final class EventsCollector implements CollectorInterface
 
     public function inToolbar(): bool
     {
-        return true;
+        return false;
     }
 
     public function inProfiler(): bool

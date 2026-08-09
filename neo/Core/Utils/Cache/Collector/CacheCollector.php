@@ -119,7 +119,7 @@ final class CacheCollector implements CollectorInterface
 
         return [
             'raw' => true,
-            'html' => new Dumper()->render([$decoded]),
+            'html' => new Dumper()->render([$decoded], false),
         ];
     }
 }

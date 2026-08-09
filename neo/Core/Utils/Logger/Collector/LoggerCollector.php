@@ -158,7 +158,7 @@ final class LoggerCollector implements CollectorInterface
         if ($hasComplexValue) {
             return [
                 'raw' => true,
-                'html' => new Dumper()->render([$context]),
+                'html' => new Dumper()->render([$context], false),
             ];
         }
 

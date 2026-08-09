@@ -6,6 +6,7 @@ namespace Neo\Core\Validator\Collector;
 
 use Neo\Core\DI\Container;
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Tools\Debug\Dumper;
 use Neo\Core\Validator\ValidatorManager;
 
 final class ValidatorCollector implements CollectorInterface
@@ -86,21 +87,46 @@ final class ValidatorCollector implements CollectorInterface
             ],
             'blocks' => [
                 [
-                    'type' => 'table',
+                    'type' => 'log-list',
                     'section' => null,
-                    'columns' => ['Model', 'Field', 'Constraint', 'Value', 'Result'],
+                    'messageLabel' => 'Field',
                     'rows' => array_map(
-                        static fn (array $c) => [
-                            $c['model'],
-                            $c['field'],
-                            $c['constraint'],
-                            $c['value'],
-                            $c['passed'] ? 'Passed' : 'Failed: ' . $c['message'],
+                        fn (array $c) => [
+                            'time' => $this->shortClass($c['constraint']),
+                            'channel' => $this->shortClass($c['model']),
+                            'origin' => $c['passed'] ? 'PASS' : 'FAIL',
+                            'message' => $c['field'],
+                            'context' => $this->formatContext($c),
                         ],
                         $data['checks']
                     ),
                 ],
             ],
         ];
+    }
+
+    /**
+     * @param array{model: class-string, field: string, constraint: class-string, value: string, passed: bool, message: string|null} $c
+     * @return array{raw: true, html: string}
+     */
+    private function formatContext(array $c): array
+    {
+        $html = new Dumper()->render([[
+            'model' => $c['model'],
+            'field' => $c['field'],
+            'constraint' => $c['constraint'],
+            'value' => $c['value'],
+            'result' => $c['passed'] ? 'Passed' : 'Failed',
+            'message' => $c['message'],
+        ]]);
+
+        return ['raw' => true, 'html' => $html];
+    }
+
+    private function shortClass(string $fqcn): string
+    {
+        $pos = strrpos($fqcn, '\\');
+
+        return $pos === false ? $fqcn : substr($fqcn, $pos + 1);
     }
 }

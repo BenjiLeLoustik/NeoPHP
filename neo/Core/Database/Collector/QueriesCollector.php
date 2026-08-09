@@ -6,6 +6,7 @@ namespace Neo\Core\Database\Collector;
 
 use Neo\Core\Database\DatabaseManager;
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Tools\Debug\Dumper;
 
 final class QueriesCollector implements CollectorInterface
 {
@@ -89,13 +90,14 @@ final class QueriesCollector implements CollectorInterface
                 [
                     'type' => 'log-list',
                     'section' => null,
+                    'messageLabel' => 'SQL',
                     'rows' => array_map(
                         fn (array $q) => [
                             'time' => number_format($q['duration'], 2) . ' ms',
                             'channel' => $q['connection'] ?? 'default',
                             'origin' => $q['error'] !== null ? 'ERROR' : '',
                             'message' => $q['sql'],
-                            'context' => $this->formatParams($q['params']) . ($q['error'] !== null ? "\n\nError: " . $q['error'] : ''),
+                            'context' => $this->formatParams($q['params'], $q['error']),
                         ],
                         $data['queries']
                     ),
@@ -106,20 +108,20 @@ final class QueriesCollector implements CollectorInterface
 
     /**
      * @param array<string|int, mixed> $params
+     * @return array{raw: true, html: string}
      */
-    private function formatParams(array $params): string
+    private function formatParams(array $params, ?string $error): array
     {
-        if ($params === []) {
-            return '';
+        $html = $params !== []
+            ? new Dumper()->render([$params], false)
+            : '<p class="empty-state">No parameters.</p>';
+
+        if ($error !== null) {
+            $html .= '<div style="color:#dc2626;font-family:var(--mono);font-size:0.8rem;margin-top:0.5rem;">Error: '
+                . htmlspecialchars($error, ENT_QUOTES, 'UTF-8') . '</div>';
         }
 
-        $lines = [];
-
-        foreach ($params as $key => $value) {
-            $lines[] = $key . ': ' . $this->stringify($value);
-        }
-
-        return implode("\n", $lines);
+        return ['raw' => true, 'html' => $html];
     }
 
     private function stringify(mixed $value): string

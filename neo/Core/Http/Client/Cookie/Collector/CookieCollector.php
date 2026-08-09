@@ -10,8 +10,6 @@ use Neo\Core\Profiler\Interface\CollectorInterface;
 
 final class CookieCollector implements CollectorInterface
 {
-    private const array MASKED_NAMES = ['password', 'secret', 'token', 'session'];
-
     public function __construct(private readonly Container $container)
     {
     }
@@ -45,9 +43,11 @@ final class CookieCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
+        $data = $this->collect();
+
         return [
-            'label' => 'Cookie',
-            'value' => '',
+            'label' => 'Cookies',
+            'value' => (string) $data['count'],
             'badge' => null,
         ];
     }
@@ -69,25 +69,12 @@ final class CookieCollector implements CollectorInterface
                     'section' => null,
                     'columns' => ['Name', 'Value'],
                     'rows' => array_map(
-                        fn (string $name, string $value) => [$name, $this->maskIfSensitive($name, $value)],
+                        static fn (string $name, string $value) => [$name, $value],
                         array_keys($data['data']),
                         array_values($data['data'])
                     ),
                 ],
             ],
         ];
-    }
-
-    private function maskIfSensitive(string $name, string $value): string
-    {
-        $lower = strtolower($name);
-
-        foreach (self::MASKED_NAMES as $masked) {
-            if (str_contains($lower, $masked)) {
-                return '••••••••';
-            }
-        }
-
-        return $value;
     }
 }

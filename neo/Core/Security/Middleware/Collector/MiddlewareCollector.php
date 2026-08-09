@@ -7,6 +7,7 @@ namespace Neo\Core\Security\Middleware\Collector;
 use Neo\Core\DI\Container;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Security\Middleware\MiddlewareManager;
+use Neo\Core\Tools\Debug\Dumper;
 use Neo\Core\Utils\Cache\CacheManager;
 
 final class MiddlewareCollector implements CollectorInterface
@@ -142,36 +143,38 @@ final class MiddlewareCollector implements CollectorInterface
 
     /**
      * @param array{class: class-string, params: array<string, mixed>, priority: int, redirect: string|null, message: string, errorClass: string|null} $m
+     * @return array{raw: true, html: string}
      */
-    private function formatContext(array $m): string
+    private function formatContext(array $m): array
     {
-        $lines = [];
-
-        if ($m['params'] !== []) {
-            $lines[] = 'params: ' . json_encode($m['params'], JSON_UNESCAPED_UNICODE);
-        }
-
-        $lines[] = 'priority: ' . $m['priority'];
+        $meta = [];
+        $meta[] = 'priority: ' . $m['priority'];
 
         if ($m['redirect'] !== null) {
-            $lines[] = 'redirect: ' . $m['redirect'];
+            $meta[] = 'redirect: ' . $m['redirect'];
         }
 
         if ($m['message'] !== '') {
-            $lines[] = 'message: ' . $m['message'];
+            $meta[] = 'message: ' . $m['message'];
         }
 
         if ($m['errorClass'] !== null) {
-            $lines[] = 'exception: ' . $m['errorClass'];
+            $meta[] = 'exception: ' . $m['errorClass'];
         }
 
         $rateLimitInfo = $this->rateLimitInfo($m);
         if ($rateLimitInfo !== null) {
-            $lines[] = '';
-            $lines[] = $rateLimitInfo;
+            $meta[] = $rateLimitInfo;
         }
 
-        return implode("\n", $lines);
+        $html = $m['params'] !== []
+            ? new Dumper()->render([$m['params']], false)
+            : '<p class="empty-state">No params.</p>';
+
+        $html .= '<div style="color:var(--text-faint);font-family:var(--mono);font-size:0.76rem;margin-top:0.6rem;white-space:pre-wrap;">'
+            . htmlspecialchars(implode("\n", $meta), ENT_QUOTES, 'UTF-8') . '</div>';
+
+        return ['raw' => true, 'html' => $html];
     }
 
     /**

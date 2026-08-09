@@ -6,6 +6,7 @@ namespace Neo\Core\Database\Collector;
 
 use Neo\Core\Database\Form\FormFactory;
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Tools\Debug\Dumper;
 
 final class FormsCollector implements CollectorInterface
 {
@@ -122,14 +123,9 @@ final class FormsCollector implements CollectorInterface
                         'rows' => $errorRows,
                     ],
                     [
-                        'type' => 'table',
+                        'type' => 'raw-html',
                         'section' => 'Submitted data',
-                        'columns' => ['Field', 'Value'],
-                        'rows' => array_map(
-                            fn (string $k, mixed $v) => [$k, $this->stringify($v)],
-                            array_keys($form['data']),
-                            array_values($form['data'])
-                        ),
+                        'html' => new Dumper()->render([$form['data']], false),
                     ],
                 ],
             ];
@@ -149,15 +145,5 @@ final class FormsCollector implements CollectorInterface
                 ['type' => 'tabs', 'section' => null, 'tabs' => $tabs],
             ],
         ];
-    }
-
-    private function stringify(mixed $value): string
-    {
-        return match (true) {
-            $value === null => 'null',
-            is_bool($value) => $value ? 'true' : 'false',
-            is_scalar($value) => (string) $value,
-            default => json_encode($value, JSON_UNESCAPED_UNICODE) ?: '',
-        };
     }
 }

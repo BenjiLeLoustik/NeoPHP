@@ -6,11 +6,10 @@ namespace Neo\Core\Http\Request\Collector;
 
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Tools\Debug\Dumper;
 
 final class RequestCollector implements CollectorInterface
 {
-    private const array MASKED_HEADERS = ['authorization', 'cookie', 'x-api-key'];
-
     public function __construct(private readonly Request $request)
     {
     }
@@ -75,101 +74,38 @@ final class RequestCollector implements CollectorInterface
                     ],
                 ],
                 [
-                    'type' => 'table',
+                    'type' => 'raw-html',
                     'section' => 'Headers',
-                    'columns' => ['Name', 'Value'],
-                    'rows' => $this->maskedHeaderRows($data['headers']),
+                    'html' => $this->dumpOrEmpty($data['headers']),
                 ],
                 [
-                    'type' => 'table',
+                    'type' => 'raw-html',
                     'section' => 'Query parameters',
-                    'columns' => ['Name', 'Value'],
-                    'rows' => $this->flatRows($data['query']),
+                    'html' => $this->dumpOrEmpty($data['query']),
                 ],
                 [
-                    'type' => 'table',
+                    'type' => 'raw-html',
                     'section' => 'Body',
-                    'columns' => ['Name', 'Value'],
-                    'rows' => $this->flatRows($data['body']),
+                    'html' => $this->dumpOrEmpty($data['body']),
                 ],
                 [
-                    'type' => 'table',
+                    'type' => 'raw-html',
                     'section' => 'Files',
-                    'columns' => ['Field', 'Filename', 'Size', 'Type'],
-                    'rows' => $this->fileRows($data['files']),
+                    'html' => $this->dumpOrEmpty($data['files']),
                 ],
             ],
         ];
     }
 
     /**
-     * @param array<string, string> $headers
-     * @return list<list<string>>
+     * @param array<array-key, mixed> $data
      */
-    private function maskedHeaderRows(array $headers): array
+    private function dumpOrEmpty(array $data): string
     {
-        $rows = [];
-
-        foreach ($headers as $name => $value) {
-            $isSensitive = in_array(strtolower($name), self::MASKED_HEADERS, true);
-            $rows[] = [$name, $isSensitive ? '••••••••' : $value];
+        if ($data === []) {
+            return '<p class="empty-state">No data.</p>';
         }
 
-        return $rows;
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     * @return list<list<string>>
-     */
-    private function flatRows(array $data): array
-    {
-        $rows = [];
-
-        foreach ($data as $key => $value) {
-            $rows[] = [(string) $key, $this->stringify($value)];
-        }
-
-        return $rows;
-    }
-
-    /**
-     * @param array<string, array<string, mixed>> $files
-     * @return list<list<string>>
-     */
-    private function fileRows(array $files): array
-    {
-        $rows = [];
-
-        foreach ($files as $field => $file) {
-            $rows[] = [
-                $field,
-                (string) ($file['name'] ?? 'n/a'),
-                isset($file['size']) ? $this->formatBytes((int) $file['size']) : 'n/a',
-                (string) ($file['type'] ?? 'n/a'),
-            ];
-        }
-
-        return $rows;
-    }
-
-    private function formatBytes(int $bytes): string
-    {
-        if ($bytes >= 1024 * 1024) {
-            return round($bytes / 1024 / 1024, 2) . ' MB';
-        }
-
-        return round($bytes / 1024, 1) . ' KB';
-    }
-
-    private function stringify(mixed $value): string
-    {
-        return match (true) {
-            $value === null => 'null',
-            is_bool($value) => $value ? 'true' : 'false',
-            is_scalar($value) => (string) $value,
-            is_array($value) => json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '[]',
-            default => (string) $value,
-        };
+        return new Dumper()->render([$data], false);
     }
 }
