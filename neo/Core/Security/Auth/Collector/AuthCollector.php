@@ -115,6 +115,7 @@ final class AuthCollector implements CollectorInterface
             return [
                 'title' => 'Auth',
                 'badge' => null,
+                'group' => 'Security',
                 'blocks' => [
                     [
                         'type' => 'kv',
@@ -158,6 +159,7 @@ final class AuthCollector implements CollectorInterface
         return [
             'title' => 'Auth',
             'badge' => null,
+            'group' => 'Security',
             'metrics' => [
                 ['label' => 'Guard', 'value' => strtoupper($data['guard'])],
                 ['label' => 'Authenticated', 'value' => $data['authenticated'] ? 'Yes' : 'No'],
