@@ -57,6 +57,23 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        .brand-bar {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 0.7rem 2.25rem;
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .brand-bar .brand-accent {
+            color: var(--accent);
+        }
+
         .header {
             flex: 0 0 auto;
             background: <?= $statusGradient ?>;
@@ -152,6 +169,10 @@
     </style>
 </head>
 <body>
+<div class="brand-bar">
+    <span>Neo<span class="brand-accent">Profiler</span></span>
+</div>
+
 <header class="header">
     <div class="header-top">
         <span class="method-badge"><?= htmlspecialchars($method) ?></span>
