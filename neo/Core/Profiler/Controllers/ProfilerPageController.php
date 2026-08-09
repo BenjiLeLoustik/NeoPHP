@@ -29,12 +29,12 @@ final class ProfilerPageController extends AbstractController
         $statusCode = (int) ($data['status_code'] ?? 200);
         $statusMeta = $this->statusMeta($statusCode);
 
-        $globalMetrics = [
+        $routeMetrics = [
             ['label' => 'Duration', 'value' => (string) ($data['duration'] ?? 0), 'unit' => 'ms'],
             ['label' => 'Peak memory', 'value' => (string) round(($data['memory'] ?? 0) / 1024 / 1024, 2), 'unit' => 'MB'],
         ];
 
-        [$navHtml, $sectionsHtml] = $this->buildNavAndSections($data['collectors'] ?? [], $globalMetrics);
+        [$navHtml, $sectionsHtml] = $this->buildNavAndSections($data['collectors'] ?? [], $routeMetrics);
 
         $html = $this->renderTemplate(__DIR__ . '/../Templates/profiler.template.php', [
             'token' => $token,
@@ -55,10 +55,10 @@ final class ProfilerPageController extends AbstractController
 
     /**
      * @param array<string, array{package: string|null, in_profiler: bool, profiler: array|null}> $collectors
-     * @param list<array{label: string, value: string, unit?: string}> $globalMetrics
+     * @param list<array{label: string, value: string, unit?: string}> $routeMetrics
      * @return array{0: string, 1: string}
      */
-    private function buildNavAndSections(array $collectors, array $globalMetrics): array
+    private function buildNavAndSections(array $collectors, array $routeMetrics): array
     {
         $navHtml = '';
         $sectionsHtml = '';
@@ -89,7 +89,7 @@ final class ProfilerPageController extends AbstractController
         }
 
         foreach ($coreEntries as $key => $info) {
-            $item = $this->prepareItem($info['profiler'], $globalMetrics, null);
+            $item = $this->prepareItem($info['profiler'], $key === 'route' ? $routeMetrics : [], null);
 
             $navHtml .= $this->renderTemplate(__DIR__ . '/../Templates/profiler-nav-item.template.php', [
                 'key' => $key,
@@ -111,7 +111,6 @@ final class ProfilerPageController extends AbstractController
                 $packagesOwnInfo['profiler'] ?? null,
                 $packagesOwnInfo !== null,
                 $packageEntries,
-                $globalMetrics,
                 $first
             );
 
@@ -124,17 +123,16 @@ final class ProfilerPageController extends AbstractController
 
     /**
      * @param array<string, array<string, array{profiler: array|null}>> $packageEntries
-     * @param list<array{label: string, value: string, unit?: string}> $globalMetrics
      * @return array{0: string, 1: string, 2: bool}
      */
-    private function buildPackagesGroup(?array $packagesItemRaw, bool $hasOwnPanel, array $packageEntries, array $globalMetrics, bool $first): array
+    private function buildPackagesGroup(?array $packagesItemRaw, bool $hasOwnPanel, array $packageEntries, bool $first): array
     {
         $childrenNav = '';
         $childrenSections = '';
 
         foreach ($packageEntries as $packageName => $entries) {
             foreach ($entries as $key => $info) {
-                $item = $this->prepareItem($info['profiler'], $globalMetrics, $packageName);
+                $item = $this->prepareItem($info['profiler'], [], $packageName);
 
                 $childrenNav .= $this->renderTemplate(__DIR__ . '/../Templates/profiler-nav-item.template.php', [
                     'key' => $key,
@@ -156,7 +154,7 @@ final class ProfilerPageController extends AbstractController
         $ownSectionHtml = '';
 
         if ($hasOwnPanel && $packagesItemRaw !== null) {
-            $item = $this->prepareItem($packagesItemRaw, $globalMetrics, null);
+            $item = $this->prepareItem($packagesItemRaw, [], null);
 
             $headerHtml = $this->renderTemplate(__DIR__ . '/../Templates/profiler-nav-item.template.php', [
                 'key' => 'packages',
@@ -184,12 +182,11 @@ final class ProfilerPageController extends AbstractController
 
     /**
      * @param array{title: string, badge: string|null, badgeType?: string, metrics?: array, blocks?: array} $profilerData
-     * @param list<array{label: string, value: string, unit?: string}> $globalMetrics
-     * @return array{title: string, badge: string|null, badgeType: string, metricsHtml: string, blocksHtml: string}
+     * @param list<array{label: string, value: string, unit?: string}> $extraMetrics
      */
-    private function prepareItem(array $profilerData, array $globalMetrics, ?string $packageName): array
+    private function prepareItem(array $profilerData, array $extraMetrics, ?string $packageName): array
     {
-        $metrics = array_merge($globalMetrics, $profilerData['metrics'] ?? []);
+        $metrics = array_merge($extraMetrics, $profilerData['metrics'] ?? []);
 
         return [
             'title' => $packageName ?? $profilerData['title'],
