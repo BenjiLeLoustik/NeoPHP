@@ -22,7 +22,7 @@ class ViewManager
     protected Container $container;
     private Environment $twig;
 
-    /** @var list<array{template: string, params: list<string>, duration: float, error: string|null}> */
+    /** @var list<array{template: string, params: array<string, mixed>, duration: float, error: string|null}> */
     private static array $renders = [];
 
     /**
@@ -170,18 +170,14 @@ class ViewManager
     {
         self::$renders[] = [
             'template' => $template,
-            'params' => array_keys($params),
+            'params' => $params,
             'duration' => round((microtime(true) - $start) * 1000, 2),
             'error' => $error,
         ];
-
-        if (class_exists(TimelineRecorder::class)) {
-            TimelineRecorder::record('view', $template, $start);
-        }
     }
 
     /**
-     * @return list<array{template: string, params: list<string>, duration: float, error: string|null}>
+     * @return list<array{template: string, params: array<string, mixed>, duration: float, error: string|null}>
      */
     public static function getRenders(): array
     {

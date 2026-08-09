@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Neo\Core\View\Collector;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Neo\Core\Tools\Debug\Dumper;
 use Neo\Core\View\ViewManager;
 
 final class ViewCollector implements CollectorInterface
@@ -84,6 +85,8 @@ final class ViewCollector implements CollectorInterface
                 [
                     'type' => 'log-list',
                     'section' => null,
+                    'timeLabel' => 'Duration',
+                    'messageLabel' => 'Template',
                     'rows' => array_map(
                         fn (array $r) => [
                             'time' => number_format($r['duration'], 2) . ' ms',
@@ -100,21 +103,27 @@ final class ViewCollector implements CollectorInterface
     }
 
     /**
-     * @param array{params: list<string>, error: string|null} $r
+     * @param array{params: array<string, mixed>, error: string|null} $r
+     * @return string|array{raw: true, html: string}
      */
-    private function formatContext(array $r): string
+    private function formatContext(array $r): string|array
     {
-        $lines = [];
-
-        if ($r['params'] !== []) {
-            $lines[] = 'Variables passed: ' . implode(', ', $r['params']);
+        if ($r['params'] === [] && $r['error'] === null) {
+            return '';
         }
 
         if ($r['error'] !== null) {
-            $lines[] = '';
-            $lines[] = 'Error: ' . $r['error'];
+            $html = new Dumper()->render([$r['params']]);
+            return [
+                'raw' => true,
+                'html' => '<div style="color:#dc2626;font-family:var(--mono);font-size:0.8rem;margin-bottom:0.5rem;">Error: '
+                    . htmlspecialchars($r['error'], ENT_QUOTES, 'UTF-8') . '</div>' . $html,
+            ];
         }
 
-        return implode("\n", $lines);
+        return [
+            'raw' => true,
+            'html' => new Dumper()->render([$r['params']]),
+        ];
     }
 }
