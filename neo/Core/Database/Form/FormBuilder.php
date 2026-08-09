@@ -18,11 +18,11 @@ final class FormBuilder
     private ?Form $builtForm = null;
 
     public function __construct(
-        private readonly string $name,
-        private readonly PropertyAccessor $accessor,
-        private readonly ValidatorManager $validator,
-        private readonly ?CsrfManager $csrf = null,
-        private readonly ?object $entity = null,
+        private string $name,
+        private PropertyAccessor $accessor,
+        private ValidatorManager $validator,
+        private ?CsrfManager $csrf = null,
+        private ?object $entity = null,
     ) {
     }
 
@@ -31,7 +31,11 @@ final class FormBuilder
      */
     public function add(string $name, string $type = 'text', array $options = []): self
     {
-        $this->definitions[$name] = ['type' => $type, 'options' => $options];
+        $this->definitions[$name] = [
+            'type' => $type,
+            'options' => $options
+        ];
+
         return $this;
     }
 
@@ -107,6 +111,9 @@ final class FormBuilder
 
     private function humanize(string $name): string
     {
-        return ucfirst(strtolower(trim((string) preg_replace('/(?<!^)[A-Z]/', ' $0', $name))));
+        return (string)preg_replace('/(?<!^)[A-Z]/', ' $0', $name)
+                |> trim(...)
+                |> strtolower(...)
+                |> ucfirst(...);
     }
 }

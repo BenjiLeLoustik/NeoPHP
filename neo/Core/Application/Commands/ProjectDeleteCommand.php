@@ -50,8 +50,12 @@ final class ProjectDeleteCommand extends AbstractCommand
             $data = json_decode(file_get_contents($localComposerPath), true);
             if (is_array($data)) {
                 $projectComposerPath = ROOT_DIR . "src/$project/composer.json";
+
                 $packageName = file_exists($projectComposerPath)
-                    ? (json_decode(file_get_contents($projectComposerPath), true)['name'] ?? null)
+                    ? ($projectComposerPath
+                        |> file_get_contents(...)
+                        |> (fn (string $c): mixed => json_decode($c, true))
+                )['name'] ?? null
                     : null;
 
                 if ($packageName && isset($data['require'][$packageName])) {

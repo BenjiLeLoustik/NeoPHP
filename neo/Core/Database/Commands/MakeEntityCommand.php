@@ -25,9 +25,9 @@ final class MakeEntityCommand extends AbstractCommand
     ];
 
     private const array RELATION_TYPES = [
-        'onetoone'   => 'OneToOne',
-        'manytoone'  => 'ManyToOne',
-        'onetomany'  => 'OneToMany',
+        'onetoone' => 'OneToOne',
+        'manytoone' => 'ManyToOne',
+        'onetomany' => 'OneToMany',
         'manytomany' => 'ManyToMany',
     ];
 
@@ -115,7 +115,12 @@ final class MakeEntityCommand extends AbstractCommand
             } else {
                 file_put_contents(
                     $repositoryPath,
-                    $this->renderRepository("Neo\\Src\\$project\\Database\\Repository", $repositoryName, $namespace, $entity)
+                    $this->renderRepository(
+                        "Neo\\Src\\$project\\Database\\Repository",
+                        $repositoryName,
+                        $namespace,
+                        $entity
+                    )
                 );
                 Output::success("Repository '$repositoryName' generated at $repositoryPath");
             }
@@ -135,20 +140,27 @@ final class MakeEntityCommand extends AbstractCommand
 
         while (true) {
             Output::newLine();
-            $name = trim(Input::ask('New property name (press <return> to stop adding fields)'));
+
+            $name = 'New property name (press <return> to stop adding fields)'
+                    |> Input::ask(...)
+                    |> trim(...);
+
             if ($name === '') {
                 break;
             }
-            $name = lcfirst(Fs::pascalCase($name));
+
+            $name = $name
+                    |> Fs::pascalCase(...)
+                    |> lcfirst(...);
 
             $type = $this->askType();
 
             $fields[] = match ($type) {
-                'OneToOne'   => $this->askOneToOne($name),
-                'ManyToOne'  => $this->askManyToOne($name),
-                'OneToMany'  => $this->askOneToMany($name),
+                'OneToOne' => $this->askOneToOne($name),
+                'ManyToOne' => $this->askManyToOne($name),
+                'OneToMany' => $this->askOneToMany($name),
                 'ManyToMany' => $this->askManyToMany($name),
-                default      => $this->askScalar($name, $type),
+                default => $this->askScalar($name, $type),
             };
         }
 
@@ -209,7 +221,13 @@ final class MakeEntityCommand extends AbstractCommand
         Output::newLine();
         $nullable = $this->askBool('Can this field be null in the database (nullable)', false);
 
-        return ['kind' => 'scalar', 'name' => $name, 'type' => $type, 'nullable' => $nullable, 'length' => $length];
+        return [
+            'kind' => 'scalar',
+            'name' => $name,
+            'type' => $type,
+            'nullable' => $nullable,
+            'length' => $length
+        ];
     }
 
     /**
@@ -223,9 +241,17 @@ final class MakeEntityCommand extends AbstractCommand
         $nullable = $this->askBool("Is the '$name' relation nullable", true);
 
         Output::newLine();
-        $inversedBy = $this->askOptionalField(sprintf('Field name on %s that maps back (press <return> to skip):', $target));
+        $inversedBy = $this->askOptionalField(
+            sprintf('Field name on %s that maps back (press <return> to skip):', $target)
+        );
 
-        return ['kind' => 'manyToOne', 'name' => $name, 'target' => $target, 'nullable' => $nullable, 'inversedBy' => $inversedBy];
+        return [
+            'kind' => 'manyToOne',
+            'name' => $name,
+            'target' => $target,
+            'nullable' => $nullable,
+            'inversedBy' => $inversedBy
+        ];
     }
 
     /**
@@ -236,9 +262,16 @@ final class MakeEntityCommand extends AbstractCommand
         $target = $this->askTarget();
 
         Output::newLine();
-        $mappedBy = $this->askRequiredField(sprintf('Field on %s that owns the relation (the ManyToOne side):', $target));
+        $mappedBy = $this->askRequiredField(
+            sprintf('Field on %s that owns the relation (the ManyToOne side):', $target)
+        );
 
-        return ['kind' => 'oneToMany', 'name' => $name, 'target' => $target, 'mappedBy' => $mappedBy];
+        return [
+            'kind' => 'oneToMany',
+            'name' => $name,
+            'target' => $target,
+            'mappedBy' => $mappedBy
+        ];
     }
 
     /**
@@ -256,15 +289,35 @@ final class MakeEntityCommand extends AbstractCommand
             $nullable = $this->askBool("Is the '$name' relation nullable", true);
 
             Output::newLine();
-            $inversedBy = $this->askOptionalField(sprintf('Field name on %s that maps back (press <return> to skip):', $target));
+            $inversedBy = $this->askOptionalField(
+                sprintf('Field name on %s that maps back (press <return> to skip):', $target)
+            );
 
-            return ['kind' => 'oneToOne', 'name' => $name, 'target' => $target, 'owning' => true, 'nullable' => $nullable, 'inversedBy' => $inversedBy, 'mappedBy' => null];
+            return [
+                'kind' => 'oneToOne',
+                'name' => $name,
+                'target' => $target,
+                'owning' => true,
+                'nullable' => $nullable,
+                'inversedBy' => $inversedBy,
+                'mappedBy' => null
+            ];
         }
 
         Output::newLine();
-        $mappedBy = $this->askRequiredField(sprintf('Field on %s that owns the relation:', $target));
+        $mappedBy = $this->askRequiredField(
+            sprintf('Field on %s that owns the relation:', $target)
+        );
 
-        return ['kind' => 'oneToOne', 'name' => $name, 'target' => $target, 'owning' => false, 'nullable' => true, 'inversedBy' => null, 'mappedBy' => $mappedBy];
+        return [
+            'kind' => 'oneToOne',
+            'name' => $name,
+            'target' => $target,
+            'owning' => false,
+            'nullable' => true,
+            'inversedBy' => null,
+            'mappedBy' => $mappedBy
+        ];
     }
 
     /**
@@ -279,18 +332,38 @@ final class MakeEntityCommand extends AbstractCommand
 
         if ($owning) {
             Output::newLine();
-            $inversedBy = $this->askOptionalField(sprintf('Field name on %s that maps back (press <return> to skip):', $target));
+            $inversedBy = $this->askOptionalField(
+                sprintf('Field name on %s that maps back (press <return> to skip):', $target)
+            );
 
             Output::newLine();
             $joinTable = $this->askOptionalRaw('Join table name (press <return> for the default):');
 
-            return ['kind' => 'manyToMany', 'name' => $name, 'target' => $target, 'owning' => true, 'inversedBy' => $inversedBy, 'mappedBy' => null, 'joinTable' => $joinTable];
+            return [
+                'kind' => 'manyToMany',
+                'name' => $name,
+                'target' => $target,
+                'owning' => true,
+                'inversedBy' => $inversedBy,
+                'mappedBy' => null,
+                'joinTable' => $joinTable
+            ];
         }
 
         Output::newLine();
-        $mappedBy = $this->askRequiredField(sprintf('Field on %s that owns the relation:', $target));
+        $mappedBy = $this->askRequiredField(
+            sprintf('Field on %s that owns the relation:', $target)
+        );
 
-        return ['kind' => 'manyToMany', 'name' => $name, 'target' => $target, 'owning' => false, 'inversedBy' => null, 'mappedBy' => $mappedBy, 'joinTable' => null];
+        return [
+            'kind' => 'manyToMany',
+            'name' => $name,
+            'target' => $target,
+            'owning' => false,
+            'inversedBy' => null,
+            'mappedBy' => $mappedBy,
+            'joinTable' => null
+        ];
     }
 
     private function askTarget(): string
@@ -301,7 +374,9 @@ final class MakeEntityCommand extends AbstractCommand
 
     private function askWithDefault(string $question, string $default): string
     {
-        $answer = trim(Input::ask($question));
+        $answer = $question
+                |> Input::ask(...)
+                |> trim(...);
 
         return $answer === '' ? $default : $answer;
     }
@@ -309,7 +384,9 @@ final class MakeEntityCommand extends AbstractCommand
     private function askBool(string $label, bool $default): bool
     {
         $def = $default ? 'yes' : 'no';
-        $answer = strtolower($this->askWithDefault(sprintf('%s (yes/no) [%s]:', $label, $def), $def));
+        $answer = sprintf('%s (yes/no) [%s]:', $label, $def)
+                |> (fn($x) => $this->askWithDefault($x, $def))
+                |> strtolower(...);
 
         return in_array($answer, ['y', 'yes', '1', 'true', 'o', 'oui'], true);
     }
@@ -317,7 +394,10 @@ final class MakeEntityCommand extends AbstractCommand
     private function askRequiredRaw(string $question): string
     {
         while (true) {
-            $answer = trim(Input::ask($question));
+            $answer = $question
+                    |> Input::ask(...)
+                    |> trim(...);
+
             if ($answer !== '') {
                 return $answer;
             }
@@ -327,12 +407,17 @@ final class MakeEntityCommand extends AbstractCommand
 
     private function askRequiredField(string $question): string
     {
-        return lcfirst(Fs::pascalCase($this->askRequiredRaw($question)));
+        return $question
+                |> $this->askRequiredRaw(...)
+                |> Fs::pascalCase(...)
+                |> lcfirst(...);
     }
 
     private function askOptionalRaw(string $question): ?string
     {
-        $answer = trim(Input::ask($question));
+        $answer = $question
+                |> Input::ask(...)
+                |> trim(...);
 
         return $answer === '' ? null : $answer;
     }
@@ -341,14 +426,21 @@ final class MakeEntityCommand extends AbstractCommand
     {
         $raw = $this->askOptionalRaw($question);
 
-        return $raw === null ? null : lcfirst(Fs::pascalCase($raw));
+        return $raw === null
+            ? null
+            : ($raw |> Fs::pascalCase(...) |> lcfirst(...));
     }
 
     /**
      * @param list<array<string, mixed>> $fields
      */
-    private function render(string $namespace, string $entity, array $fields, ?string $repositoryName = null, ?string $repositoryFqcn = null): string
-    {
+    private function render(
+        string $namespace,
+        string $entity,
+        array $fields,
+        ?string $repositoryName = null,
+        ?string $repositoryFqcn = null
+    ): string {
         $uses = [
             'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\Column;',
             'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\Entity;',
@@ -362,8 +454,13 @@ final class MakeEntityCommand extends AbstractCommand
         }
 
         $needs = [
-            'ManyToOne' => false, 'OneToMany' => false, 'OneToOne' => false,
-            'ManyToMany' => false, 'JoinColumn' => false, 'JoinTable' => false, 'Collection' => false,
+            'ManyToOne' => false,
+            'OneToMany' => false,
+            'OneToOne' => false,
+            'ManyToMany' => false,
+            'JoinColumn' => false,
+            'JoinTable' => false,
+            'Collection' => false,
         ];
 
         $props = [];
@@ -418,12 +515,12 @@ final class MakeEntityCommand extends AbstractCommand
         }
 
         $attributeMap = [
-            'ManyToOne'  => 'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\ManyToOne;',
-            'OneToMany'  => 'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\OneToMany;',
-            'OneToOne'   => 'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\OneToOne;',
+            'ManyToOne' => 'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\ManyToOne;',
+            'OneToMany' => 'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\OneToMany;',
+            'OneToOne' => 'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\OneToOne;',
             'ManyToMany' => 'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\ManyToMany;',
             'JoinColumn' => 'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\JoinColumn;',
-            'JoinTable'  => 'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\JoinTable;',
+            'JoinTable' => 'use Neo\\Core\\Database\\ORM\\Mapping\\Attribute\\JoinTable;',
             'Collection' => 'use Neo\\Core\\Database\\ORM\\Collection\\Collection;',
         ];
         foreach ($attributeMap as $key => $useLine) {
@@ -467,8 +564,12 @@ $methodsBlock
 PHP;
     }
 
-    private function renderRepository(string $repositoryNamespace, string $repositoryName, string $entityNamespace, string $entity): string
-    {
+    private function renderRepository(
+        string $repositoryNamespace,
+        string $repositoryName,
+        string $entityNamespace,
+        string $entity
+    ): string {
         return <<<PHP
 <?php
 declare(strict_types=1);
@@ -680,8 +781,13 @@ PHP;
 
     private function foreignKeyColumn(string $property): string
     {
-        $snake = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $property));
-        $snake = trim((string) preg_replace('/_+/', '_', $snake), '_');
+        $snake = $property
+                |> (fn (string $p): string => (string) preg_replace('/(?<!^)[A-Z]/', '_$0', $p))
+                |> strtolower(...);
+
+        $snake = $snake
+                |> (fn (string $s): string => (string) preg_replace('/_+/', '_', $s))
+                |> (fn (string $s): string => trim($s, '_'));
 
         if (str_ends_with($snake, '_id')) {
             return $snake;
@@ -695,12 +801,16 @@ PHP;
 
     private function tableName(string $entity): string
     {
-        $snake = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $entity));
+        $snake = $entity
+                |> (fn (string $e): string => (string) preg_replace('/(?<!^)[A-Z]/', '_$0', $e))
+                |> strtolower(...);
+
         return $snake . 's';
     }
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR) ?: []);
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

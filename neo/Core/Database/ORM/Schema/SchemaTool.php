@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM\Schema;
 
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Mapping\ClassMetaData;
 use Neo\Core\Database\ORM\Persistence\EntityManager;
 use Neo\Core\Database\ORM\Type\TypeRegistry;
@@ -14,7 +15,7 @@ use Neo\Core\Database\ORM\Type\TypeRegistry;
 final class SchemaTool
 {
     public function __construct(
-        private readonly EntityManager $em,
+        private EntityManager $em,
     ) {
     }
 
@@ -108,6 +109,7 @@ final class SchemaTool
 
     /**
      * @return list<ColumnDef>
+     * @throws DatabaseException
      */
     private function buildColumns(ClassMetaData $metadata): array
     {

@@ -12,9 +12,9 @@ use Throwable;
 class CronRunner
 {
     public function __construct(
-        private readonly Container $container
-    )
-    {}
+        private Container $container
+    ) {
+    }
 
     /**
      * @param list<array{expression: string, timezone: string, lock: bool, class: class-string, method: string}> $jobs
@@ -82,7 +82,9 @@ class CronRunner
      */
     private function isDue(string $expression, string $timezone): bool
     {
-        $parts = explode(' ', trim($expression));
+        $parts = $expression
+                |> trim(...)
+                |> (fn (string $s): array => explode(' ', $s));
 
         if (count($parts) !== 5) {
             throw new CronException(
@@ -119,7 +121,9 @@ class CronRunner
         }
 
         if (str_contains($part, ',')) {
-            return in_array($current, array_map('intval', explode(',', $part)), true);
+            return explode(',', $part)
+                    |> (fn($x) => array_map('intval', $x))
+                    |> (fn($x) => in_array($current, $x, true));
         }
 
         return (int) $part === $current;

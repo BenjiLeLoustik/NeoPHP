@@ -113,8 +113,10 @@ PHP;
 
     private function normalizeServiceName(string $input): string
     {
-        $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
-        $input = str_replace(' ', '', ucwords($input));
+        $input = $input
+                |> (fn (string $s): string => preg_replace('/[^a-zA-Z0-9]+/', ' ', $s) ?? '')
+                |> ucwords(...)
+                |> (fn (string $s): string => str_replace(' ', '', $s));
 
         return str_ends_with($input, 'Service') ? $input : $input . 'Service';
     }

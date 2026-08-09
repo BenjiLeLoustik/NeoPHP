@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database\ORM\Persistence;
 
 use Neo\Core\Database\DatabaseManager;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Mapping\ClassMetaData;
 use Neo\Core\Database\ORM\Mapping\MetadataFactory;
 use Neo\Core\Database\ORM\Platform\AbstractPlatform;
@@ -45,11 +46,17 @@ final class EntityManager implements EntityManagerInterface
         $this->unitOfWork->remove($entity);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function flush(): void
     {
         $this->unitOfWork->commit();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function find(string $className, mixed $id): ?object
     {
         $metadata = $this->getClassMetadata($className);

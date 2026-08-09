@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Error;
 
+use ErrorException;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
@@ -92,7 +93,7 @@ class ErrorManager
             if (!(error_reporting() & $errno)) {
                 return true;
             }
-            throw new \ErrorException($errstr, $errno, $errno, $errfile, $errline);
+            throw new ErrorException($errstr, $errno, $errno, $errfile, $errline);
         });
     }
 
@@ -112,6 +113,7 @@ class ErrorManager
 
     /**
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function handleException(\Throwable $e): never
     {
@@ -185,6 +187,7 @@ class ErrorManager
 
     /**
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function handleError(int $errno, string $errstr, string $errfile, int $errline): bool
     {
@@ -193,7 +196,7 @@ class ErrorManager
         }
 
         $this->handleException(FrameworkException::fromThrowable(
-            new \ErrorException($errstr, $errno, $errno, $errfile, $errline)
+            new ErrorException($errstr, $errno, $errno, $errfile, $errline)
         ));
     }
 
@@ -217,13 +220,13 @@ class ErrorManager
         }
 
         try {
-            $profiler = \Neo\Core\Profiler\ProfilerManager::getInstance();
+            $profiler = ProfilerManager::getInstance();
 
-            \Neo\Core\Profiler\ProfilerModule::ensureCollectorsRegistered($this->container, $profiler);
+            ProfilerModule::ensureCollectorsRegistered($this->container, $profiler);
 
             $data = $this->saveErrorProfileAndGetData($profiler, $statusCode);
 
-            $toolbar = new \Neo\Core\Profiler\Toolbar\Toolbar($profiler);
+            $toolbar = new Toolbar($profiler);
             $toolbarHtml = $toolbar->renderFromExport($data['collectors'], $statusCode);
 
             return str_contains($html, '</body>')
@@ -235,9 +238,14 @@ class ErrorManager
     }
 
     /**
+     * @param ProfilerManager $profiler
+     * @param int $statusCode
      * @return array<string, mixed>
+     * @throws ContainerException
+     * @throws \JsonException
+     * @throws \ReflectionException
      */
-    private function saveErrorProfileAndGetData(\Neo\Core\Profiler\ProfilerManager $profiler, int $statusCode): array
+    private function saveErrorProfileAndGetData(ProfilerManager $profiler, int $statusCode): array
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $path = $_SERVER['REQUEST_URI'] ?? '/';
@@ -260,7 +268,7 @@ class ErrorManager
             json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
         );
 
-        \Neo\Core\Profiler\ProfilerCleaner::clean($storageDir);
+        ProfilerCleaner::clean($storageDir);
 
         return $data;
     }

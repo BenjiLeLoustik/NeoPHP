@@ -15,15 +15,31 @@ class DatabaseManager
     private PDO $pdo;
     private ?string $connection;
 
-    /** @var list<array{sql: string, params: array<string|int, mixed>, duration: float, connection: string|null, time: float, error: string|null}> */
+    /**
+     * @var list<array{
+     *     sql: string,
+     *     params: array<string|int, mixed>,
+     *     duration: float,
+     *     connection: string|null,
+     *     time: float,
+     *     error: string|null
+     * }>
+     */
     private static array $queries = [];
 
+    /**
+     * @throws DatabaseException
+     */
     public function __construct(?string $connection = null)
     {
         $this->connection = $connection;
         $this->pdo = DatabaseConnection::getPdo($connection);
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws ContainerException
+     */
     public static function on(string $connection): self
     {
         DatabaseConnection::connectTo($connection);
@@ -37,6 +53,7 @@ class DatabaseManager
 
     /**
      * @param array<string|int, mixed> $params
+     * @throws DatabaseException
      */
     public function query(string $sql, array $params = []): PDOStatement
     {
@@ -70,6 +87,7 @@ class DatabaseManager
     /**
      * @param array<string|int, mixed> $params
      * @return array<string, mixed>|null
+     * @throws DatabaseException
      */
     public function fetch(string $sql, array $params = []): ?array
     {
@@ -82,6 +100,7 @@ class DatabaseManager
     /**
      * @param array<string|int, mixed> $params
      * @return list<array<string, mixed>>
+     * @throws DatabaseException
      */
     public function fetchAll(string $sql, array $params = []): array
     {
@@ -90,6 +109,7 @@ class DatabaseManager
 
     /**
      * @param array<string|int, mixed> $params
+     * @throws DatabaseException
      */
     public function execute(string $sql, array $params = []): bool
     {

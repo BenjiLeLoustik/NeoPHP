@@ -9,6 +9,7 @@ use Neo\Core\Database\Access\Introspector\Metadata\ForeignKeyMetadata;
 use Neo\Core\Database\Access\Introspector\Metadata\IndexMetadata;
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use PDO;
 use PDOException;
 
@@ -20,6 +21,10 @@ class DatabaseIntrospector
 
     private string $prefix;
 
+    /**
+     * @throws DatabaseException
+     * @throws ContainerException
+     */
     public function __construct(Container $container, ?string $connection = null)
     {
         $this->connection = $connection;
@@ -31,6 +36,10 @@ class DatabaseIntrospector
             ->get("connections.{$connectionName}.prefix") ?? '';
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws ContainerException
+     */
     public static function on(Container $container, string $connection): self
     {
         DatabaseConnection::connectTo($connection);
@@ -39,6 +48,7 @@ class DatabaseIntrospector
 
     /**
      * @return list<string>
+     * @throws DatabaseException
      */
     public function getTables(): array
     {
@@ -55,14 +65,19 @@ class DatabaseIntrospector
 
             $tables = [];
             while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
-                $tableName = $row[0];
+                $tableName = array_first($row);
                 if ($this->prefix === '' || str_starts_with($tableName, $this->prefix)) {
                     $tables[] = $tableName;
                 }
             }
 
             $internal = ['neo_migrations', 'neo_schema_snapshots'];
-            return array_values(array_filter($tables, fn($t) => !in_array($t, $internal, true)));
+            $tables
+                |> (fn (array $t): array => array_filter($t, fn ($x) => !in_array($x, $internal, true)))
+                |> array_values(...);
+
+            return $tables;
+
         } catch (PDOException $e) {
             throw new DatabaseException(
                 title: 'Database Introspection Error',
@@ -75,6 +90,7 @@ class DatabaseIntrospector
 
     /**
      * @return list<ColumnMetadata>
+     * @throws DatabaseException
      */
     public function getColumns(string $table): array
     {
@@ -107,6 +123,7 @@ class DatabaseIntrospector
 
     /**
      * @return list<ForeignKeyMetadata>
+     * @throws DatabaseException
      */
     public function getForeignKeys(string $table): array
     {
@@ -157,6 +174,7 @@ class DatabaseIntrospector
 
     /**
      * @return list<IndexMetadata>
+     * @throws DatabaseException
      */
     public function getIndexes(string $table): array
     {
@@ -171,7 +189,11 @@ class DatabaseIntrospector
                 if ($name === 'PRIMARY') {
                     continue;
                 }
-                $grouped[$name] ??= ['unique' => ((int) $row['Non_unique']) === 0, 'columns' => []];
+                $grouped[$name] ??= [
+                    'unique' => ((int) $row['Non_unique']) === 0,
+                    'columns' => []
+                ];
+
                 $grouped[$name]['columns'][(int) $row['Seq_in_index']] = $row['Column_name'];
             }
 

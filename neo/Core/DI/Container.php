@@ -12,6 +12,7 @@ use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunctionAbstract;
+use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
 
@@ -56,6 +57,7 @@ class Container implements ContainerInterface
 
     /**
      * @throws ContainerException
+     * @throws ReflectionException
      */
     public function get(string $id): mixed
     {
@@ -157,7 +159,7 @@ class Container implements ContainerInterface
 
                 $instance = $ref->newInstanceWithoutConstructor();
 
-                $parentConstructor = new \ReflectionMethod(
+                $parentConstructor = new ReflectionMethod(
                     AbstractController::class,
                     '__construct'
                 );
@@ -166,9 +168,7 @@ class Container implements ContainerInterface
                 foreach ($constructor->getParameters() as $param) {
                     $type = $param->getType();
 
-                    if ($type instanceof ReflectionNamedType
-                        && $type->getName() === self::class
-                    ) {
+                    if ($type instanceof ReflectionNamedType && $type->getName() === self::class) {
                         continue;
                     }
 
@@ -238,6 +238,7 @@ class Container implements ContainerInterface
 
     /**
      * @throws ContainerException
+     * @throws ReflectionException
      */
     private function resolveParameter(ReflectionParameter $param): mixed
     {
@@ -282,12 +283,12 @@ class Container implements ContainerInterface
     public function call(callable $callable, array $extraParams = []): mixed
     {
         if (is_array($callable)) {
-            $ref = new \ReflectionMethod($callable[0], $callable[1]);
+            $ref = new ReflectionMethod($callable[0], $callable[1]);
         } elseif (is_string($callable) && str_contains($callable, '::')) {
             [$class, $method] = explode('::', $callable);
-            $ref = new \ReflectionMethod($class, $method);
+            $ref = new ReflectionMethod($class, $method);
         } else {
-            $ref = new \ReflectionFunction(\Closure::fromCallable($callable));
+            $ref = new \ReflectionFunction($callable(...));
         }
 
         $params = $this->resolveParameters($ref, $extraParams);
@@ -326,13 +327,16 @@ class Container implements ContainerInterface
     }
 
     /**
+     * @param string $tag
      * @return list<mixed>
+     * @throws ContainerException
+     * @throws ReflectionException
      */
     public function tagged(string $tag): array
     {
         $ids = $this->tags[$tag] ?? [];
         return array_map(
-            /** @throws ContainerException */
+            /** @throws ContainerException|ReflectionException */
             fn(string $id) => $this->get($id), $ids
         );
     }

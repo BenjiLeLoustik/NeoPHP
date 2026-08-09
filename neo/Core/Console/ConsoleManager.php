@@ -49,6 +49,7 @@ class ConsoleManager
 
     /**
      * @return list<class-string>
+     * @throws ContainerException
      */
     private function scanCommandClasses(): array
     {
@@ -80,10 +81,10 @@ class ConsoleManager
      */
     private static function filterCommandClasses(array $results): array
     {
-        return array_values(array_filter(
-            array_map(static fn($r) => $r->getFqcn(), $results),
-            static fn(string $fqcn) => is_subclass_of($fqcn, AbstractCommand::class)
-        ));
+        return $results
+                |> (fn (array $r): array => array_map(static fn ($x) => $x->getFqcn(), $r))
+                |> (fn (array $r): array => array_filter($r, static fn (string $fqcn) => is_subclass_of($fqcn, AbstractCommand::class)))
+                |> array_values(...);
     }
 
     /**
@@ -101,7 +102,7 @@ class ConsoleManager
                 continue;
             }
 
-            $row = $results[0];
+            $row = array_first($results);
             $reflection = $row->getReflection();
 
             if (!$reflection instanceof ReflectionClass || $reflection->isAbstract()) {
@@ -119,7 +120,9 @@ class ConsoleManager
         return null;
     }
 
-    /** @throws ReflectionException */
+    /** @throws ReflectionException
+     * @throws ContainerException
+     */
     private function loadCommands(): void
     {
         foreach ($this->scanCommandClasses() as $class) {
@@ -132,7 +135,7 @@ class ConsoleManager
                 continue;
             }
 
-            $row = $results[0];
+            $row = array_first($results);
             $refClass = $row->getReflection();
 
             if (!$refClass instanceof ReflectionClass || $refClass->isAbstract()) {
@@ -167,7 +170,7 @@ class ConsoleManager
         array_shift($argv);
         $this->loadCommands();
 
-        $commandName = $argv[0] ?? null;
+        $commandName = array_first($argv);
 
         if ($commandName === null) {
             $this->showHelp();

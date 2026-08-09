@@ -186,7 +186,7 @@ final class Input
             . $hint
             . \Neo\Core\Console\Output\Output::colorize(' : ', 'cyan');
 
-        $answer = trim(fgets(STDIN));
+        $answer = STDIN |> fgets(...) |> trim(...);
 
         return $answer !== '' ? $answer : ($default ?? '');
     }
@@ -201,7 +201,7 @@ final class Input
             . $hint
             . Output::colorize(' : ', 'cyan');
 
-        $answer = strtolower(trim(fgets(STDIN)));
+        $answer = STDIN |> fgets(...) |> trim(...) |> strtolower(...);
 
         if ($answer === '') {
             return $default;
@@ -230,7 +230,7 @@ final class Input
         }
 
         echo Output::colorize('  › ', 'cyan');
-        $answer = trim(fgets(STDIN));
+        $answer = STDIN |> fgets(...) |> trim(...);
 
         if ($answer === '' && $default !== null) {
             return $default;
@@ -264,7 +264,7 @@ final class Input
         }
 
         echo Output::colorize('  › ', 'cyan');
-        $answer = trim(fgets(STDIN));
+        $answer = STDIN |> fgets(...) |> trim(...);
 
         if ($answer === '') {
             return [];
@@ -293,7 +293,7 @@ final class Input
         }
 
         system('stty -echo');
-        $value = trim(fgets(STDIN));
+        $value = STDIN |> fgets(...) |> trim(...);
         system('stty echo');
         echo "\n";
 
@@ -316,7 +316,7 @@ final class Input
 
         echo Output::colorize('  › ', 'cyan');
 
-        $answer = trim(fgets(STDIN));
+        $answer = STDIN |> fgets(...) |> trim(...);
 
         if ($answer === '') {
             return $default ?? '';

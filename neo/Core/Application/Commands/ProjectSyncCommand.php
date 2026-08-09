@@ -41,10 +41,8 @@ final class ProjectSyncCommand extends AbstractCommand
             file_put_contents($localComposerPath, $seed);
         }
 
-        $projects = array_filter(
-            glob($srcDir . '*', GLOB_ONLYDIR),
-            fn(string $dir) => file_exists($dir . '/composer.json')
-        );
+        $projects = glob($srcDir . '*', GLOB_ONLYDIR)
+                |> (fn (array $dirs): array => array_filter($dirs, fn (string $dir) => file_exists($dir . '/composer.json')));
 
         if (empty($projects)) {
             Output::warning('No projects found.');
@@ -75,7 +73,9 @@ final class ProjectSyncCommand extends AbstractCommand
 
     private function registerInLocalComposer(string $path, string $name): bool
     {
-        $data = json_decode(file_get_contents($path), true);
+        $data = $path
+                |> file_get_contents(...)
+                |> (fn (string $c): mixed => json_decode($c, true));
 
         if (!is_array($data)) {
             $data = ['repositories' => [], 'require' => []];
@@ -86,8 +86,12 @@ final class ProjectSyncCommand extends AbstractCommand
 
         $repoUrl = 'src/' . $name;
 
-        $exists = array_filter($data['repositories'], fn($r) => ($r['url'] ?? '') === $repoUrl);
-        if (!empty($exists)) return false;
+        $exists = $data['repositories']
+                |> (fn (array $r): array => array_filter($r, fn ($x) => ($x['url'] ?? '') === $repoUrl));
+
+        if (!empty($exists)) {
+            return false;
+        }
 
         $data['repositories'][] = [
             'type' => 'path',
@@ -96,7 +100,10 @@ final class ProjectSyncCommand extends AbstractCommand
         ];
         $data['require'][strtolower($name) . '/app'] = '@dev';
 
-        file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+        $content = $data
+                |> (fn (array $d): string => json_encode($d, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+
+        file_put_contents($path, $content);
         return true;
     }
 }

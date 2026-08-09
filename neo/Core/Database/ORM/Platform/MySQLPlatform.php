@@ -51,32 +51,29 @@ final class MySQLPlatform extends AbstractPlatform
 
     public function canonicalizeType(string $sqlType): string
     {
-        $t = strtolower(trim($sqlType));
-
-        $t = (string) preg_replace('/\s+/', ' ', $t);
-
-        $t = (string) preg_replace_callback(
-            '/\b(tinyint|smallint|mediumint|int|integer|bigint)\((\d+)\)/',
-            static function (array $m): string {
-                if ($m[1] === 'tinyint' && $m[2] === '1') {
-                    return 'tinyint(1)';
-                }
-                return $m[1] === 'integer' ? 'int' : $m[1];
-            },
-            $t
-        );
-
-        $t = (string) preg_replace('/\binteger\b/', 'int', $t);
+        $t = $sqlType
+                |> trim(...)
+                |> strtolower(...)
+                |> (fn (string $s): string => (string) preg_replace('/\s+/', ' ', $s))
+                |> (fn (string $s): string => (string) preg_replace_callback(
+                    '/\b(tinyint|smallint|mediumint|int|integer|bigint)\((\d+)\)/',
+                    static function (array $m): string {
+                        if ($m[1] === 'tinyint' && $m[2] === '1') {
+                            return 'tinyint(1)';
+                        }
+                        return $m[1] === 'integer' ? 'int' : $m[1];
+                    },
+                    $s
+                ))
+                |> (fn (string $s): string => (string) preg_replace('/\binteger\b/', 'int', $s));
 
         if ($t === 'bool' || $t === 'boolean') {
             $t = 'tinyint(1)';
         }
 
-        $t = str_replace('double precision', 'double', $t);
-
-        $t = (string) preg_replace('/,\s+/', ',', $t);
-
-        return $t;
+        return $t
+                |> (fn (string $s): string => str_replace('double precision', 'double', $s))
+                |> (fn (string $s): string => (string) preg_replace('/,\s+/', ',', $s));
     }
 
     /**

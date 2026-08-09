@@ -95,7 +95,13 @@ class ApplicationDetector
         $cacheFile = $rootDir . self::CACHE_FILE;
 
         $configFiles = glob($rootDir . '/src/*/Config/app.config.php');
-        $signature = md5(implode('|', $configFiles) . '|' . implode('|', array_map('filemtime', $configFiles)));
+        $signature = md5(
+            implode('|', $configFiles) . '|' . (
+                $configFiles
+                    |> (fn (array $f): array => array_map(filemtime(...), $f))
+                    |> (fn (array $t): string => implode('|', $t))
+            )
+        );
 
         if (file_exists($cacheFile)) {
             $cached = json_decode(file_get_contents($cacheFile) ?: '', true);

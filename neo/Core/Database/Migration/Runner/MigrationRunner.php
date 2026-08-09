@@ -5,7 +5,9 @@ namespace Neo\Core\Database\Migration\Runner;
 
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\DatabaseManager;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Migration\MigrationSchemaSnapshot;
+use Neo\Core\DI\Exception\ContainerException;
 
 final class MigrationRunner
 {
@@ -18,15 +20,18 @@ final class MigrationRunner
         $this->ensureTable();
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function ensureTable(): void
     {
         $this->db->execute(sprintf("
             CREATE TABLE IF NOT EXISTS `%s` (
-                `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
-                `connection` VARCHAR(50)  NOT NULL DEFAULT 'default',
-                `migration`  VARCHAR(255) NOT NULL,
-                `batch`      INT UNSIGNED NOT NULL,
-                `applied_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `connection` VARCHAR(50) NOT NULL DEFAULT 'default',
+                `migration` VARCHAR(255) NOT NULL,
+                `batch` INT UNSIGNED NOT NULL,
+                `applied_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `uq_migration` (`connection`, `migration`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -85,9 +90,9 @@ final class MigrationRunner
         $applied = $this->getApplied();
         $files = $this->getMigrationFiles($migrationsPath, $recursive);
 
-        return array_values(array_filter(
-            $files, fn(string $f) => !isset($applied[basename($f, '.php')])
-        ));
+        $files
+            |> (fn (array $f): array => array_filter($f, fn (string $x) => !isset($applied[basename($x, '.php')])))
+            |> array_values(...);
     }
 
     /**
@@ -112,7 +117,10 @@ final class MigrationRunner
 
     /**
      * @param list<string> $searchPaths
+     * @param MigrationSchemaSnapshot|null $snapshot
      * @return list<string>
+     * @throws DatabaseException
+     * @throws ContainerException
      */
     public function rollback(array $searchPaths, ?MigrationSchemaSnapshot $snapshot = null): array
     {
@@ -138,7 +146,13 @@ final class MigrationRunner
     }
 
     /**
+     * @param string $path
+     * @param string|null $connection
+     * @param bool $dryRun
+     * @param MigrationSchemaSnapshot|null $snapshot
      * @return list<string>
+     * @throws ContainerException
+     * @throws DatabaseException
      */
     private function runForPath(
         string $path,
@@ -203,7 +217,9 @@ final class MigrationRunner
 
     /**
      * @param list<string> $searchPaths
+     * @param DatabaseManager $db
      * @return list<string>
+     * @throws DatabaseException
      */
     private function rollbackForPaths(array $searchPaths, DatabaseManager $db): array
     {

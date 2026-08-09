@@ -20,9 +20,13 @@ use Neo\Core\Database\Exception\DatabaseException;
 final class MigrationGenerator
 {
     public function __construct(
-        private readonly DatabaseIntrospector $introspector
-    ) {}
+        private DatabaseIntrospector $introspector
+    ) {
+    }
 
+    /**
+     * @throws DatabaseException
+     */
     public function generate(string $migrationsPath, string $name): string
     {
         $tables = $this->introspector->getTables();
@@ -43,11 +47,15 @@ final class MigrationGenerator
             $downLines[] = $this->guardedDropTable($table);
         }
 
+        $downContent = $downLines
+                |> array_reverse(...)
+                |> (fn (array $l): string => implode("\n", $l));
+
         return $this->writeFile(
             $migrationsPath,
             $name,
             implode("\n\n", $upLines),
-            implode("\n", array_reverse($downLines)),
+            $downContent,
             usesHelpers: true
         );
     }
@@ -99,11 +107,15 @@ final class MigrationGenerator
             }
         }
 
+        $downContent = $downLines
+                |> array_reverse(...)
+                |> (fn (array $l): string => implode("\n", $l));
+
         return $this->writeFile(
             $migrationsPath,
             $name,
             implode("\n\n", $upLines),
-            implode("\n", array_reverse($downLines)),
+            $downContent,
             usesHelpers: true
         );
     }
@@ -299,7 +311,9 @@ PHP;
                 : " DEFAULT '{$col['default']}'";
         }
 
-        $extra = trim((string) preg_replace('/DEFAULT_GENERATED/i', '', (string) $col['extra']));
+        $extra = (string) $col['extra']
+                |> (fn (string $e): string => (string) preg_replace('/DEFAULT_GENERATED/i', '', $e))
+                |> trim(...);
 
         if (strcasecmp($extra, 'auto_increment') === 0) {
             $def .= ' AUTO_INCREMENT';

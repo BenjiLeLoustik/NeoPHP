@@ -12,10 +12,11 @@ use Neo\Core\View\Interface\TwigExtensionInterface;
 #[Extension(type: ExtensionTypeEnum::VIEW)]
 final class FormTwigExtension implements TwigExtensionInterface
 {
-    private readonly FormRenderer $renderer;
+    private FormRenderer $renderer;
 
-    public function __construct(?FormRenderer $renderer = null)
-    {
+    public function __construct(
+        ?FormRenderer $renderer = null
+    ) {
         $this->renderer = $renderer ?? new FormRenderer();
     }
 

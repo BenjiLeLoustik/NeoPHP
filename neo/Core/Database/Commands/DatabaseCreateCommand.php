@@ -98,6 +98,7 @@ final class DatabaseCreateCommand extends AbstractCommand
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

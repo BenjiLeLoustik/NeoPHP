@@ -11,6 +11,7 @@ use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
+use Neo\Core\Package\Interface\PackageInterface;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
 
 #[Command(
@@ -20,16 +21,21 @@ use Neo\Core\Utils\Scanner\ScannerFileManager;
 )]
 final class MakeIdeHelperCommand extends AbstractCommand
 {
-    public function __construct(private readonly Container $container) {}
+    public function __construct(
+        private Container $container
+    ) {
+    }
 
     public function do(Input $input, Output $output): ExitCode
     {
         $basePath = realpath(__DIR__ . '/../../../../');
 
-        $scanPaths = [$basePath . '/neo', $basePath . '/src'];
+        $scanPaths = [
+            $basePath . '/neo', $basePath . '/src'
+        ];
 
         if ($this->container->has('packages')) {
-            /** @var array<int, \Neo\Core\Package\Interface\PackageInterface> $packages */
+            /** @var array<int, PackageInterface> $packages */
             $packages = $this->container->get('packages');
             foreach ($packages as $package) {
                 $scanPaths[] = $package->getPath();

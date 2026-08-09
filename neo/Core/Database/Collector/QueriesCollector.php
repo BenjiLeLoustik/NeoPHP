@@ -19,8 +19,13 @@ final class QueriesCollector implements CollectorInterface
     {
         $queries = DatabaseManager::getQueries();
 
-        $totalDuration = array_sum(array_map(static fn (array $q) => $q['duration'], $queries));
-        $errorCount = count(array_filter($queries, static fn (array $q) => $q['error'] !== null));
+        $totalDuration = $queries
+                |> (fn (array $q): array => array_map(static fn (array $x) => $x['duration'], $q))
+                |> array_sum(...);
+
+        $errorCount = $queries
+                |> (fn (array $q): array => array_filter($q, static fn (array $x) => $x['error'] !== null))
+                |> count(...);
 
         return [
             'total' => count($queries),
@@ -121,7 +126,10 @@ final class QueriesCollector implements CollectorInterface
                 . htmlspecialchars($error, ENT_QUOTES, 'UTF-8') . '</div>';
         }
 
-        return ['raw' => true, 'html' => $html];
+        return [
+            'raw' => true,
+            'html' => $html
+        ];
     }
 
 }

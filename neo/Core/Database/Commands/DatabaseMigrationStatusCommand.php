@@ -27,7 +27,8 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
 {
     public function __construct(
         private Container $container
-    ) {}
+    ) {
+    }
 
     public function configure(): void
     {
@@ -43,7 +44,9 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
     {
         $project = $input->getOption('project');
         $basePath = ROOT_DIR . "/src/$project";
-        $migrationsPaths = ["$basePath/Database/Migrations"];
+        $migrationsPaths = [
+            "$basePath/Database/Migrations"
+        ];
 
         if (!is_dir($basePath)) {
             Output::error("Project '$project' not found.");
@@ -89,7 +92,8 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
 
             Output::title("Migration status — $project");
 
-            $knownFiles = array_map(fn($f) => basename($f, '.php'), $files);
+            $knownFiles = $files
+                    |> (fn (array $f): array => array_map(fn (string $x) => basename($x, '.php'), $f));
 
             foreach ($applied as $name => $row) {
                 $inFiles = in_array($name, $knownFiles, true);
@@ -110,7 +114,13 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
 
             Output::newLine();
             $appliedCount = count($applied);
-            $pendingCount = count($files) - count(array_filter($files, fn($f) => isset($applied[basename($f, '.php')])));
+
+            $pendingCount = count($files) - (
+                    $files
+                        |> (fn (array $f): array => array_filter($f, fn (string $x) => isset($applied[basename($x, '.php')])))
+                        |> count(...)
+                );
+
             Output::muted("  $appliedCount applied · $pendingCount pending");
 
             $lastSchema = $snapshot->getLastSchema();
@@ -129,6 +139,7 @@ final class DatabaseMigrationStatusCommand extends AbstractCommand
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

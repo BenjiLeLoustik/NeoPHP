@@ -6,6 +6,7 @@ namespace Neo\Core\Asset\Collector;
 
 use Neo\Core\Asset\AssetManager;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 
 final class AssetCollector implements CollectorInterface
@@ -19,13 +20,18 @@ final class AssetCollector implements CollectorInterface
         return 'assets';
     }
 
+    /**
+     * @throws ContainerException
+     */
     public function collect(): array
     {
         /** @var AssetManager $assets */
         $assets = $this->container->get(AssetManager::class);
         $log = $assets->getAssetLog();
 
-        $compiledCount = count(array_filter($log, static fn (array $a) => $a['compiled']));
+        $compiledCount = $log
+                |> (fn (array $l): array => array_filter($l, static fn (array $a) => $a['compiled']))
+                |> count(...);
 
         return [
             'total' => count($log),

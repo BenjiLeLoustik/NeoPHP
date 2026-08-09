@@ -20,10 +20,10 @@ final class Form
     private bool $submitted = false;
 
     public function __construct(
-        private readonly string $name,
-        private readonly PropertyAccessor $accessor,
-        private readonly ValidatorManager $validator,
-        private readonly ?CsrfManager $csrf = null,
+        private string $name,
+        private PropertyAccessor $accessor,
+        private ValidatorManager $validator,
+        private ?CsrfManager $csrf = null,
         private ?object $entity = null,
     ) {}
 
@@ -158,13 +158,7 @@ final class Form
             return false;
         }
 
-        foreach ($this->fields as $field) {
-            if ($field->hasErrors()) {
-                return false;
-            }
-        }
-
-        return true;
+        return !array_any($this->fields, fn ($field) => $field->hasErrors());
     }
 
     /**
@@ -186,11 +180,7 @@ final class Form
      */
     public function getData(): array
     {
-        $data = [];
-        foreach ($this->fields as $name => $field) {
-            $data[$name] = $field->getValue();
-        }
-        return $data;
+        return array_map(fn ($field) => $field->getValue(), $this->fields);
     }
 
     private function mapToEntity(): void

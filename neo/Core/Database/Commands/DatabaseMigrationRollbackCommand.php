@@ -50,7 +50,9 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
         $force = (bool) $input->getOption('force');
 
         $basePath = ROOT_DIR . "/src/$project";
-        $migrationsPaths = ["$basePath/Database/Migrations"];
+        $migrationsPaths = [
+            "$basePath/Database/Migrations"
+        ];
 
         if (!is_dir($basePath)) {
             Output::error("Project '$project' not found.");
@@ -133,6 +135,7 @@ final class DatabaseMigrationRollbackCommand extends AbstractCommand
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

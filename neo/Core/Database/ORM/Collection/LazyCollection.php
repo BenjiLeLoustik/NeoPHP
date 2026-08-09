@@ -19,7 +19,7 @@ final class LazyCollection extends Collection
      * @param Closure(): array<TKey, TValue> $loader
      */
     public function __construct(
-        private readonly Closure $loader,
+        private Closure $loader,
     ) {
         parent::__construct([]);
     }

@@ -43,6 +43,9 @@ final class TypeRegistry
         self::$types[$type->getName()] = $type;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public static function get(string $name): Type
     {
         self::boot();

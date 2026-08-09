@@ -84,7 +84,7 @@ class Collection implements Countable, IteratorAggregate, ArrayAccess
     public function first(): mixed
     {
         $this->initialize();
-        return $this->elements[array_key_first($this->elements) ?? 0] ?? null;
+        return array_first($this->elements);
     }
 
     public function isEmpty(): bool
@@ -133,7 +133,5 @@ class Collection implements Countable, IteratorAggregate, ArrayAccess
         unset($this->elements[$offset]);
     }
 
-    protected function initialize(): void
-    {
-    }
+    protected function initialize(): void {}
 }

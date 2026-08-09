@@ -13,14 +13,20 @@ use Neo\Core\Console\Output\Output;
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
 use Neo\Core\Database\Access\Introspector\DatabaseIntrospector;
 use Neo\Core\Database\DatabaseManager;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Migration\Generator\MigrationGenerator;
 use Neo\Core\Database\Migration\MigrationSchemaSnapshot;
 use Neo\Core\Database\Migration\SchemaDiffer;
+use Neo\Core\Database\ORM\Mapping\Attribute\Entity;
 use Neo\Core\Database\ORM\Persistence\EntityManager;
 use Neo\Core\Database\ORM\Platform\AbstractPlatform;
 use Neo\Core\Database\ORM\Schema\SchemaTool;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
+use ReflectionException;
 
 #[Command(
     name: 'database:orm:diff',
@@ -65,6 +71,12 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
         );
     }
 
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     * @throws DatabaseException
+     * @throws ContainerException
+     */
     public function do(Input $input, Output $output): ExitCode
     {
         $project = $input->getOption('project');
@@ -151,6 +163,7 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
 
     /**
      * @return list<class-string>
+     * @throws ReflectionException
      */
     private function discoverEntities(string $entityDir, string $project): array
     {
@@ -167,8 +180,15 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
             }
 
             $path = str_replace('\\', '/', $file->getPathname());
-            $relative = ltrim(substr($path, strlen($normalizedDir)), '/');
-            $classPath = str_replace('/', '\\', substr($relative, 0, -4));
+            $relative = $normalizedDir
+                    |> strlen(...)
+                    |> (fn($x) => substr($path, $x))
+                    |> (fn($x) => ltrim($x, '/'));
+
+            $classPath = $relative
+                    |> (fn (string $r): string => substr($r, 0, -4))
+                    |> (fn (string $s): string => str_replace('/', '\\', $s));
+
             $fqcn = "Neo\\Src\\$project\\Database\\Entity\\$classPath";
 
             if (!class_exists($fqcn)) {
@@ -178,9 +198,7 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
                 continue;
             }
 
-            if ((new ReflectionClass($fqcn))->getAttributes(
-                    \Neo\Core\Database\ORM\Mapping\Attribute\Entity::class
-                ) !== []) {
+            if (new ReflectionClass($fqcn)->getAttributes(Entity::class) !== []) {
                 $classes[] = $fqcn;
             }
         }

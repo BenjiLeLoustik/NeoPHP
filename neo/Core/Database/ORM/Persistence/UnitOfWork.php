@@ -51,9 +51,13 @@ final class UnitOfWork
     private ?PDO $pdo = null;
 
     public function __construct(
-        private readonly EntityManager $em,
-    ) {}
+        private EntityManager $em,
+    ) {
+    }
 
+    /**
+     * @throws DatabaseException
+     */
     public function persist(object $entity): void
     {
         $visited = [];
@@ -62,6 +66,7 @@ final class UnitOfWork
 
     /**
      * @param array<int, bool> $visited
+     * @throws DatabaseException
      */
     private function doPersist(object $entity, array &$visited): void
     {
@@ -151,6 +156,7 @@ final class UnitOfWork
 
     /**
      * @param array<int, bool> $visited
+     * @throws DatabaseException
      */
     private function cascadePersist(ClassMetaData $metadata, object $entity, array &$visited): void
     {
@@ -185,6 +191,10 @@ final class UnitOfWork
         }
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws Throwable
+     */
     public function commit(): void
     {
         $this->computeChangeSets();
@@ -245,6 +255,9 @@ final class UnitOfWork
         $this->entityChangeSets = [];
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function executeInsert(EntityPersister $persister, string $className, object $entity, int $oid): void
     {
         $metadata = $this->em->getClassMetadata($className);
@@ -369,12 +382,7 @@ final class UnitOfWork
      */
     private function hasCollectionChanges(array $candidates): bool
     {
-        foreach ($candidates as $c) {
-            if ($this->collectionDiffers($c['entity'], $c['field'])) {
-                return true;
-            }
-        }
-        return false;
+        return array_any($candidates, fn (array $c) => $this->collectionDiffers($c['entity'], $c['field']));
     }
 
     private function collectionDiffers(object $entity, string $field): bool
@@ -383,10 +391,11 @@ final class UnitOfWork
         $collection = $this->readAssociation($metadata, $entity, $field);
         $snapshot = $this->collectionSnapshots[spl_object_id($entity) . ':' . $field] ?? null;
 
-        foreach ($this->toIterable($collection) as $target) {
-            if (is_object($target) && $this->extractId($target) === null) {
-                return true;
-            }
+        $items = iterator_to_array($this->toIterable($collection));
+        $hasUnpersistedTarget = array_any($items, fn ($target) => is_object($target) && $this->extractId($target) === null);
+
+        if ($hasUnpersistedTarget) {
+            return true;
         }
 
         $current = $this->targetIdMap($this->toIterable($collection));
@@ -397,16 +406,13 @@ final class UnitOfWork
         if (count($current) !== count($snapshot)) {
             return true;
         }
-        foreach ($current as $hash => $_) {
-            if (!isset($snapshot[$hash])) {
-                return true;
-            }
-        }
-        return false;
+
+        return array_any(array_keys($current), fn ($hash) => !isset($snapshot[$hash]));
     }
 
     /**
      * @param list<array{entity: object, field: string, assoc: array<string, mixed>}> $candidates
+     * @throws DatabaseException
      */
     private function executeManyToManyUpdates(array $candidates): void
     {
@@ -455,6 +461,9 @@ final class UnitOfWork
         }
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function clearOwningManyToMany(object $entity): void
     {
         $metadata = $this->em->getClassMetadata($entity::class);
@@ -501,6 +510,7 @@ final class UnitOfWork
     /**
      * @param iterable<mixed> $targets
      * @return array<string, mixed>
+     * @throws DatabaseException
      */
     private function targetIdMapStrict(iterable $targets, string $targetEntity): array
     {
@@ -750,6 +760,9 @@ final class UnitOfWork
         return is_scalar($id) ? (string) $id : serialize($id);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function pdo(): PDO
     {
         return $this->pdo ??= DatabaseConnection::getPdo(null);

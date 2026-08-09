@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Pagination;
 
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+
 /**
  * @template T
- * @implements \IteratorAggregate<int, T>
+ * @implements IteratorAggregate<int, T>
  */
-class Paginator implements \IteratorAggregate, \Countable
+class Paginator implements IteratorAggregate, Countable
 {
     /**
      * @param list<T> $items
@@ -113,10 +117,10 @@ class Paginator implements \IteratorAggregate, \Countable
     }
 
     /**
-     * @return \ArrayIterator<int, T>
+     * @return ArrayIterator<int, T>
      */
-    public function getIterator(): \ArrayIterator
+    public function getIterator(): ArrayIterator
     {
-        return new \ArrayIterator($this->items);
+        return new ArrayIterator($this->items);
     }
 }

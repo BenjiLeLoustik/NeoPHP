@@ -21,6 +21,9 @@ final class TimeType extends Type
         return 'time';
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?DateTime
     {
         if ($value === null || $value instanceof DateTime) {

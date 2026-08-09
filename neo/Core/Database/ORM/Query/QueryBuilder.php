@@ -57,8 +57,13 @@ final class QueryBuilder
         return $this;
     }
 
-    public function join(string $table, string $first, string $operator, string $second, string $type = 'INNER'): self
-    {
+    public function join(
+        string $table,
+        string $first,
+        string $operator,
+        string $second,
+        string $type = 'INNER'
+    ): self {
         $this->joins[] = compact('table', 'first', 'operator', 'second', 'type');
         return $this;
     }
@@ -101,7 +106,7 @@ final class QueryBuilder
             return $this;
         }
         $this->wheres[] = ['type' => 'in', 'column' => $column, 'count' => count($values), 'boolean' => $boolean];
-        foreach (array_values($values) as $value) {
+        foreach ($values as $value) {
             $this->bindings[] = $value;
         }
         return $this;
@@ -187,17 +192,23 @@ final class QueryBuilder
 
     /**
      * @param array<string, mixed> $data
+     * @throws DatabaseException
      */
     public function insert(array $data): bool
     {
-        $columns = implode(', ', array_map($this->quote(...), array_keys($data)));
+        $columns = array_keys($data)
+                |> (fn (array $k): array => array_map($this->quote(...), $k))
+                |> (fn (array $k): string => implode(', ', $k));
+
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
         $sql = sprintf('INSERT INTO %s (%s) VALUES (%s)', $this->quote($this->table), $columns, $placeholders);
+
         return $this->db->execute($sql, array_values($data));
     }
 
     /**
      * @param array<string, mixed> $data
+     * @throws DatabaseException
      */
     public function insertGetId(array $data): string
     {
@@ -207,6 +218,7 @@ final class QueryBuilder
 
     /**
      * @param array<string, mixed> $data
+     * @throws DatabaseException
      */
     public function update(array $data): bool
     {
@@ -217,10 +229,18 @@ final class QueryBuilder
             $values[] = $value;
         }
         [$whereSql, $whereBindings] = $this->compileWheres();
-        $sql = sprintf('UPDATE %s SET %s%s', $this->quote($this->table), implode(', ', $sets), $whereSql);
+        $sql = sprintf(
+            'UPDATE %s SET %s%s',
+            $this->quote($this->table),
+            implode(', ', $sets),
+            $whereSql
+        );
         return $this->db->execute($sql, [...$values, ...$whereBindings]);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function delete(): bool
     {
         [$whereSql, $whereBindings] = $this->compileWheres();
@@ -302,7 +322,9 @@ final class QueryBuilder
     private function quote(string $identifier): string
     {
         if (str_contains($identifier, '.')) {
-            return implode('.', array_map($this->quote(...), explode('.', $identifier)));
+            return explode('.', $identifier)
+                    |> (fn($x) => array_map($this->quote(...), $x))
+                    |> (fn($x) => implode('.', $x));
         }
         if ($identifier === '*') {
             return '*';

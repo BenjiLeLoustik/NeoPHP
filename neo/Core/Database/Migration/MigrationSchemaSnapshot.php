@@ -13,9 +13,9 @@ final class MigrationSchemaSnapshot
     private const string TABLE = 'neo_schema_snapshots';
 
     public function __construct(
-        private readonly DatabaseManager $db,
-        private readonly DatabaseIntrospector $introspector,
-        private readonly string $connection = 'default',
+        private DatabaseManager $db,
+        private DatabaseIntrospector $introspector,
+        private string $connection = 'default',
     ) {
         $this->ensureTable();
     }
@@ -24,16 +24,19 @@ final class MigrationSchemaSnapshot
     {
         $this->db->execute(sprintf("
             CREATE TABLE IF NOT EXISTS `%s` (
-                `id`          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-                `connection`  VARCHAR(50)  NOT NULL DEFAULT 'default',
-                `schema_hash` VARCHAR(64)  NOT NULL,
-                `schema_dump` LONGTEXT     NOT NULL,
-                `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `connection` VARCHAR(50) NOT NULL DEFAULT 'default',
+                `schema_hash` VARCHAR(64) NOT NULL,
+                `schema_dump` LONGTEXT NOT NULL,
+                `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ", self::TABLE));
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function take(): void
     {
         $dump = $this->buildDump();
@@ -95,6 +98,7 @@ final class MigrationSchemaSnapshot
      *     key: string,
      *     extra: string
      * }>>
+     * @throws DatabaseException
      */
     private function buildDumpArray(): array
     {
@@ -117,6 +121,9 @@ final class MigrationSchemaSnapshot
         return $dump;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function buildDump(): string
     {
         return json_encode(

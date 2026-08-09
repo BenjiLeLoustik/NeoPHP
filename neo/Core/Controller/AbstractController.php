@@ -6,6 +6,7 @@ namespace Neo\Core\Controller;
 use Closure;
 use Neo\Core\Controller\Exception\AbstractControllerException;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Extension\ExtensionManager;
 
 abstract class AbstractController
@@ -21,6 +22,9 @@ abstract class AbstractController
     /** @var array<string, mixed> */
     private array $propertyCache = [];
 
+    /**
+     * @throws ContainerException
+     */
     public function __construct(?Container $container = null)
     {
         if ($container === null) return;

@@ -60,7 +60,9 @@ final class MakeCronCommand extends AbstractCommand
     public function do(Input $input, Output $output): ExitCode
     {
         $cron = $input->getArgument('cron') ?? Input::ask('Cron name ?');
-        if (!$cron) return ExitCode::INVALID;
+        if (!$cron) {
+            return ExitCode::INVALID;
+        }
 
         $project = $input->getOption('project');
         $expression = $input->getOption('expression') ?? Input::autocomplete('Cron expression ?', self::COMMON_EXPRESSIONS, '* * * * *');
@@ -109,12 +111,17 @@ PHP;
 
     private function normalizeCronName(string $input): string
     {
-        $input = str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)));
+        $input = $input
+                |> (fn (string $s): string => preg_replace('/[^a-zA-Z0-9]+/', ' ', $s) ?? '')
+                |> ucwords(...)
+                |> (fn (string $s): string => str_replace(' ', '', $s));
+
         return str_ends_with($input, 'Cron') ? $input : $input . 'Cron';
     }
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

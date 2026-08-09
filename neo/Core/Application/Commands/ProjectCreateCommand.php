@@ -503,7 +503,9 @@ JS;
             $access = $config['access'] ?? null;
 
             if ($access && str_contains($access, ':')) {
-                $used[] = (int) explode(':', $access)[1];
+                $used[] = (int) ($access
+                        |> (fn (string $s): array => explode(':', $s))
+                        |> array_last(...));
             }
         }
 

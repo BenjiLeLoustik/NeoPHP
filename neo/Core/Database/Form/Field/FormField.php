@@ -17,13 +17,14 @@ final class FormField
      * @param array<string, mixed> $options
      */
     public function __construct(
-        private readonly string $name,
-        private readonly FieldType $type,
-        private readonly string $label,
-        private readonly array $constraints = [],
-        private readonly array $options = [],
-        private readonly bool $mapped = true,
-    ) {}
+        private string $name,
+        private FieldType $type,
+        private string $label,
+        private array $constraints = [],
+        private array $options = [],
+        private bool $mapped = true,
+    ) {
+    }
 
     public function getName(): string
     {

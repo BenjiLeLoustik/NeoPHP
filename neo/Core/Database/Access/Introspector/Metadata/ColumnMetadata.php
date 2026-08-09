@@ -46,7 +46,14 @@ class ColumnMetadata
     }
 
     /**
-     * @return array{name: string, type: string, nullable: bool, default: string|null, key: string, extra: string}
+     * @return array{
+     *     name: string,
+     *     type: string,
+     *     nullable: bool,
+     *     default: string|null,
+     *     key: string,
+     *     extra: string
+     * }
      */
     public function toArray(): array
     {

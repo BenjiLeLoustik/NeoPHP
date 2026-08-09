@@ -8,6 +8,7 @@ use Neo\Core\Asset\Compiler\JsCompiler;
 use Neo\Core\Asset\Compiler\LessCompiler;
 use Neo\Core\Asset\Exception\AssetException;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -30,6 +31,7 @@ class AssetManager
      * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
      * @throws AssetException
+     * @throws ContainerException
      */
     public function __construct(Container $container)
     {

@@ -61,10 +61,11 @@ final class Fs
 
     public static function pascalCase(string $string): string
     {
-        $string = self::stripAccents($string);
-        $string = str_replace(['-', ' '], '_', $string);
-        $string = preg_replace('/[^A-Za-z0-9_]+/', '', $string);
-        $string = trim($string, '_');
+        $string = $string
+                |> self::stripAccents(...)
+                |> (fn (string $s): string => str_replace(['-', ' '], '_', $s))
+                |> (fn (string $s): string => preg_replace('/[^A-Za-z0-9_]+/', '', $s) ?? '')
+                |> (fn (string $s): string => trim($s, '_'));
 
         if ($string === '') {
             return '';
@@ -74,10 +75,10 @@ final class Fs
             return mb_strtoupper(mb_substr($string, 0, 1)) . mb_substr($string, 1);
         }
 
-        $parts = array_filter(explode('_', $string), fn($p) => $p !== '');
+        $parts = array_filter(explode('_', $string), fn ($p) => $p !== '');
 
         $parts = array_map(
-            fn($part) => mb_strtoupper(mb_substr($part, 0, 1)) . mb_substr($part, 1),
+            fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)) . mb_substr($part, 1),
             $parts
         );
 

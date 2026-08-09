@@ -122,7 +122,7 @@ abstract class AbstractCommand implements CommandInterface
         }
 
         /** @var Command $attribute */
-        $attribute = $results[0]->getAttribute();
+        $attribute = array_first($results)->getAttribute();
 
         return $attribute;
     }

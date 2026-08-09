@@ -12,8 +12,12 @@ final class FormRenderer
     /**
      * @param array<string, string> $attributes
      */
-    public function render(Form $form, string $action = '', string $method = 'POST', array $attributes = []): string
-    {
+    public function render(
+        Form $form,
+        string $action = '',
+        string $method = 'POST',
+        array $attributes = []
+    ): string {
         $html = $this->start($form, $action, $method, $attributes);
 
         foreach ($form->getFields() as $field) {
@@ -28,8 +32,12 @@ final class FormRenderer
     /**
      * @param array<string, string> $attributes
      */
-    public function start(Form $form, string $action = '', string $method = 'POST', array $attributes = []): string
-    {
+    public function start(
+        Form $form,
+        string $action = '',
+        string $method = 'POST',
+        array $attributes = []
+    ): string {
         $attr = $this->attributes(array_merge([
             'action' => $action,
             'method' => strtoupper($method) === 'GET' ? 'GET' : 'POST',
@@ -185,9 +193,9 @@ HTML;
 
         if ($value instanceof DateTimeInterface) {
             return match ($field->getType()) {
-                FieldType::Date     => $value->format('Y-m-d'),
+                FieldType::Date => $value->format('Y-m-d'),
                 FieldType::DateTime => $value->format('Y-m-d\TH:i'),
-                default             => $value->format('Y-m-d H:i:s'),
+                default => $value->format('Y-m-d H:i:s'),
             };
         }
 

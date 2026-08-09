@@ -163,7 +163,11 @@ final class SchemaDiffer
         foreach ($tableChanges as $table => $changes) {
             foreach ($changes['added'] as $col) {
                 if (empty($col['nullable']) && $col['default'] === null && !$this->isAutoIncrementPrimary($col)) {
-                    $risks[] = ['table' => $table, 'column' => $col['name'], 'context' => 'added'];
+                    $risks[] = [
+                        'table' => $table,
+                        'column' => $col['name'],
+                        'context' => 'added'
+                    ];
                 }
             }
 
@@ -172,7 +176,11 @@ final class SchemaDiffer
                 $after = $change['after'];
 
                 if (!empty($before['nullable']) && empty($after['nullable']) && $after['default'] === null) {
-                    $risks[] = ['table' => $table, 'column' => $after['name'], 'context' => 'modified'];
+                    $risks[] = [
+                        'table' => $table,
+                        'column' => $after['name'],
+                        'context' => 'modified'
+                    ];
                 }
             }
         }
@@ -228,7 +236,10 @@ final class SchemaDiffer
      */
     private function isAutoIncrementPrimary(array $col): bool
     {
-        return ($col['key'] ?? '') === 'PRI'
-            && str_contains(strtolower((string) ($col['extra'] ?? '')), 'auto_increment');
+        $isAutoIncrement = (string) ($col['extra'] ?? '')
+                |> strtolower(...)
+                |> (fn (string $s): bool => str_contains($s, 'auto_increment'));
+
+        return ($col['key'] ?? '') === 'PRI' && $isAutoIncrement;
     }
 }

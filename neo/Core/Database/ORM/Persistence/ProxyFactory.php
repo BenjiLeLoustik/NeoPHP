@@ -3,12 +3,18 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM\Persistence;
 
+use ReflectionException;
+
 final class ProxyFactory
 {
     public function __construct(
         private readonly EntityManager $em,
-    ) {}
+    ) {
+    }
 
+    /**
+     * @throws ReflectionException
+     */
     public function getProxy(string $className, mixed $id): object
     {
         $metadata = $this->em->getClassMetadata($className);

@@ -138,15 +138,21 @@ PHP;
 
     private function normalizeCommandName(string $input): string
     {
-        $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input);
-        $input = str_replace(' ', '', ucwords($input));
+        $input = $input
+                |> (fn (string $s): string => preg_replace('/[^a-zA-Z0-9]+/', ' ', $s) ?? '')
+                |> ucwords(...)
+                |> (fn (string $s): string => str_replace(' ', '', $s));
+
         return str_ends_with($input, 'Command') ? $input : $input . 'Command';
     }
 
     private function guessCommandName(string $className): string
     {
-        $name = preg_replace('/Command$/', '', $className);
-        $name = preg_replace('/([A-Z])/', ':$1', lcfirst($name));
-        return strtolower(ltrim($name, ':'));
+        return $className
+                |> (fn (string $s): string => preg_replace('/Command$/', '', $s) ?? '')
+                |> lcfirst(...)
+                |> (fn (string $s): string => preg_replace('/([A-Z])/', ':$1', $s) ?? '')
+                |> (fn (string $s): string => ltrim($s, ':'))
+                |> strtolower(...);
     }
 }

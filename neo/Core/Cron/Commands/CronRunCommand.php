@@ -27,9 +27,9 @@ use Psr\Container\NotFoundExceptionInterface;
 final class CronRunCommand extends AbstractCommand
 {
     public function __construct(
-        private readonly Container $container
-    ) {}
-
+        private Container $container
+    ) {
+    }
     public function configure(): void
     {
         $this->addOption(
@@ -89,6 +89,7 @@ final class CronRunCommand extends AbstractCommand
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

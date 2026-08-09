@@ -11,8 +11,12 @@ use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\Database\Access\Connection\DatabaseConnection;
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\Seeder\SeedManager;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 #[Command(
     name: 'database:run:seed',
@@ -22,7 +26,7 @@ use Neo\Core\DI\Container;
 final class DatabaseRunSeedCommand extends AbstractCommand
 {
     public function __construct(
-        private readonly Container $container,
+        private Container $container,
     ) {}
 
     public function configure(): void
@@ -57,6 +61,12 @@ final class DatabaseRunSeedCommand extends AbstractCommand
         );
     }
 
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     * @throws DatabaseException
+     * @throws ContainerException
+     */
     public function do(Input $input, Output $output): ExitCode
     {
         $project = $input->getOption('project');
@@ -96,7 +106,14 @@ final class DatabaseRunSeedCommand extends AbstractCommand
 
         Output::title("Seeders — $project");
         foreach ($seeders as $seeder) {
-            Output::muted(sprintf('  · [%d] %s (%s)', $seeder['order'], $this->shortName($seeder['class']), $seeder['group']));
+            Output::muted(
+                sprintf(
+                    '  · [%d] %s (%s)',
+                    $seeder['order'],
+                    $this->shortName($seeder['class']),
+                    $seeder['group']
+                )
+            );
         }
 
         if ($dryRun) {
@@ -119,7 +136,7 @@ final class DatabaseRunSeedCommand extends AbstractCommand
     private function shortName(string $fqcn): string
     {
         $parts = explode('\\', $fqcn);
-        return end($parts);
+        return array_last($parts);
     }
 
     /**
@@ -127,6 +144,7 @@ final class DatabaseRunSeedCommand extends AbstractCommand
      */
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR) ?: []);
+        return (glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR) ?: [])
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM\Persistence;
 
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Collection\LazyCollection;
 use Neo\Core\Database\ORM\Mapping\ClassMetaData;
 use Neo\Core\Database\ORM\Type\TypeRegistry;
@@ -10,12 +11,17 @@ use Neo\Core\Database\ORM\Type\TypeRegistry;
 final class ObjectHydrator
 {
     public function __construct(
-        private readonly EntityManager $em,
+        private EntityManager $em,
     ) {
     }
 
     /**
+     * @param ClassMetaData $metadata
      * @param array<string, mixed> $row
+     * @param object|null $into
+     * @return object
+     * @throws DatabaseException
+     * @throws \ReflectionException
      */
     public function hydrate(ClassMetaData $metadata, array $row, ?object $into = null): object
     {
@@ -87,8 +93,13 @@ final class ObjectHydrator
     /**
      * @param array<string, mixed> $assoc
      */
-    private function writeToManyField(ClassMetaData $metadata, object $entity, string $field, array $assoc, mixed $ownerId): void
-    {
+    private function writeToManyField(
+        ClassMetaData $metadata,
+        object $entity,
+        string $field,
+        array $assoc,
+        mixed $ownerId
+    ): void {
         $em = $this->em;
         $loader = static function () use ($em, $entity, $field, $assoc, $ownerId): array {
             $items = $em->getUnitOfWork()
@@ -104,17 +115,14 @@ final class ObjectHydrator
 
         try {
             $metadata->setFieldValue($entity, $field, new LazyCollection($loader));
-        } catch (\TypeError) {
-
-        }
+        } catch (\TypeError) {}
     }
 
     private function writeField(ClassMetaData $metadata, object $entity, string $field, mixed $value): void
     {
         try {
             $metadata->setFieldValue($entity, $field, $value);
-        } catch (\TypeError) {
-        }
+        } catch (\TypeError) {}
     }
 
     private function castTargetId(string $targetEntity, mixed $value): mixed

@@ -12,7 +12,10 @@ use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\Cron\Scanner\CronScanner;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Package\Interface\PackageInterface;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 #[Command(
     name: 'cron:list',
@@ -23,7 +26,8 @@ final class CronListCommand extends AbstractCommand
 {
     public function __construct(
         private readonly Container $container
-    ) {}
+    ) {
+    }
 
     public function configure(): void
     {
@@ -35,6 +39,12 @@ final class CronListCommand extends AbstractCommand
         );
     }
 
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws \ReflectionException
+     * @throws ContainerExceptionInterface
+     * @throws ContainerException
+     */
     public function do(Input $input, Output $output): ExitCode
     {
         $project = $input->getOption('project');
@@ -46,7 +56,9 @@ final class CronListCommand extends AbstractCommand
 
         new ApplicationPaths($this->container)->register($project);
 
-        $paths = [$this->container->get('cronsPath')];
+        $paths = [
+            $this->container->get('cronsPath')
+        ];
 
         if ($this->container->has('packages')) {
             /** @var array<int, PackageInterface> $packages */
@@ -83,6 +95,7 @@ final class CronListCommand extends AbstractCommand
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

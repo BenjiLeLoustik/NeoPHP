@@ -47,8 +47,13 @@ final readonly class PaginationViewExtension implements TwigExtensionInterface
     /**
      * @param Paginator<mixed> $paginator
      */
-    private function render(Paginator $paginator, ?string $baseUrl, string $prevLabel, string $nextLabel, string $gapLabel): string
-    {
+    private function render(
+        Paginator $paginator,
+        ?string $baseUrl,
+        string $prevLabel,
+        string $nextLabel,
+        string $gapLabel
+    ): string {
         $baseUrl ??= $this->request->getPath();
 
         if ($paginator->getTotalPages() <= 1) {

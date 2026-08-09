@@ -12,12 +12,15 @@ final class EntityPersister
     private ObjectHydrator $hydrator;
 
     public function __construct(
-        private readonly EntityManager $em,
-        private readonly ClassMetaData $metadata,
+        private EntityManager $em,
+        private ClassMetaData $metadata,
     ) {
         $this->hydrator = new ObjectHydrator($em);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function insert(object $entity): ?string
     {
         $platform = $this->em->getPlatform();
@@ -43,8 +46,15 @@ final class EntityPersister
             $values[] = $target !== null ? $this->referencedValue($target, $jc['referencedColumnName']) : null;
         }
 
-        $cols = implode(', ', array_map($platform->quoteIdentifier(...), $columns));
-        $placeholders = implode(', ', array_fill(0, count($columns), '?'));
+        $cols = $columns
+                |> (fn (array $c): array => array_map($platform->quoteIdentifier(...), $c))
+                |> (fn (array $c): string => implode(', ', $c));
+
+        $placeholders = $columns
+                |> count(...)
+                |> (fn($x) => array_fill(0, $x, '?'))
+                |> (fn($x) => implode(', ', $x));
+
         $sql = sprintf(
             'INSERT INTO %s (%s) VALUES (%s)',
             $platform->quoteIdentifier($this->metadata->table),
@@ -61,6 +71,7 @@ final class EntityPersister
 
     /**
      * @param array<string, array{mixed, mixed}> $changeSet
+     * @throws DatabaseException
      */
     public function update(object $entity, array $changeSet): void
     {
@@ -108,6 +119,9 @@ final class EntityPersister
         $this->em->getDatabase()->query($sql, $values);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function delete(object $entity): void
     {
         $platform = $this->em->getPlatform();
@@ -122,6 +136,7 @@ final class EntityPersister
 
     /**
      * @param array<string, mixed> $criteria
+     * @throws DatabaseException
      */
     public function loadById(array $criteria, ?object $into = null): ?object
     {
@@ -140,6 +155,9 @@ final class EntityPersister
         return $this->hydrator->hydrate($this->metadata, $row, $into);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public function loadInto(object $entity, mixed $id): void
     {
         $this->loadById([$this->metadata->getSingleIdColumnName() => $id], $entity);
@@ -340,7 +358,11 @@ final class EntityPersister
         $targetColumn = $platform->quoteIdentifier($joinTable['inverseJoinColumns'][0]['name']);
 
         if ($removedIds !== []) {
-            $placeholders = implode(', ', array_fill(0, count($removedIds), '?'));
+            $placeholders = $removedIds
+                    |> count(...)
+                    |> (fn($x) => array_fill(0, $x, '?'))
+                    |> (fn($x) => implode(', ', $x));
+
             $this->em->getDatabase()->query(
                 sprintf('DELETE FROM %s WHERE %s = ? AND %s IN (%s)', $pivot, $ownerColumn, $targetColumn, $placeholders),
                 [$ownerId, ...array_values($removedIds)]
@@ -357,6 +379,7 @@ final class EntityPersister
 
     /**
      * @param array<string, mixed> $assoc
+     * @throws DatabaseException
      */
     public function clearManyToMany(array $assoc, mixed $ownerId): void
     {

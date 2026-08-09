@@ -14,8 +14,8 @@ final class FormFactory
     private static array $builders = [];
 
     public function __construct(
-        private readonly ValidatorManager $validator,
-        private readonly ?CsrfManager $csrf = null,
+        private ValidatorManager $validator,
+        private ?CsrfManager $csrf = null,
         ?PropertyAccessor $accessor = null,
     ) {
         $this->accessor = $accessor ?? new PropertyAccessor();

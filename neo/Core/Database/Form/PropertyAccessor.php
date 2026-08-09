@@ -73,6 +73,9 @@ final class PropertyAccessor
         };
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     private function toDateTime(mixed $value, bool $nullable): ?DateTime
     {
         if ($value instanceof DateTime) {

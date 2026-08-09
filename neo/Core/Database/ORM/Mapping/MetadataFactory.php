@@ -36,6 +36,10 @@ final class MetadataFactory
         return $this->loaded[$className] = $this->build($className);
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws DatabaseException
+     */
     private function build(string $className): ClassMetaData
     {
         if (!class_exists($className)) {
@@ -64,11 +68,17 @@ final class MetadataFactory
 
         foreach ($refl->getAttributes(Index::class) as $attr) {
             $idx = $attr->newInstance();
-            $metadata->indexes[] = ['name' => $idx->name, 'columns' => $idx->columns];
+            $metadata->indexes[] = [
+                'name' => $idx->name,
+                'columns' => $idx->columns
+            ];
         }
         foreach ($refl->getAttributes(UniqueConstraint::class) as $attr) {
             $uc = $attr->newInstance();
-            $metadata->uniqueConstraints[] = ['name' => $uc->name, 'columns' => $uc->columns];
+            $metadata->uniqueConstraints[] = [
+                'name' => $uc->name,
+                'columns' => $uc->columns
+            ];
         }
 
         foreach ($refl->getProperties() as $prop) {
@@ -145,12 +155,12 @@ final class MetadataFactory
     }
 
     private function mapAssociation(
-        ClassMetaData      $metadata,
+        ClassMetaData $metadata,
         ReflectionProperty $prop,
-        ?ManyToOne         $manyToOne,
-        ?OneToMany         $oneToMany,
-        ?OneToOne          $oneToOne,
-        ?ManyToMany        $manyToMany,
+        ?ManyToOne $manyToOne,
+        ?OneToMany $oneToMany,
+        ?OneToOne $oneToOne,
+        ?ManyToMany $manyToMany,
     ): void {
         $field = $prop->getName();
 
@@ -231,7 +241,14 @@ final class MetadataFactory
     }
 
     /**
-     * @return list<array{name: string, referencedColumnName: string, nullable: bool, unique: bool, onDelete: string|null, onUpdate: string|null}>
+     * @return list<array{
+     *     name: string,
+     *     referencedColumnName: string,
+     *     nullable: bool,
+     *     unique: bool,
+     *     onDelete: string|null,
+     *     onUpdate: string|null
+     * }>
      */
     private function readJoinColumns(ReflectionProperty $prop, string $field): array
     {
@@ -271,11 +288,16 @@ final class MetadataFactory
     }
 
     /**
-     * @return array{name: string, joinColumns: list<array<string, mixed>>, inverseJoinColumns: list<array<string, mixed>>}
+     * @return array{
+     *     name: string,
+     *     joinColumns: list<array<string, mixed>>,
+     *     inverseJoinColumns: list<array<string, mixed>>
+     * }
+     * @throws \ReflectionException
      */
     private function buildJoinTable(?JoinTable $jt, string $ownerTable, string $targetEntity, string $field): array
     {
-        $targetShort = strtolower((new ReflectionClass($targetEntity))->getShortName());
+        $targetShort = strtolower(new ReflectionClass($targetEntity)->getShortName());
 
         /** @phpstan-ignore nullsafe.neverNull */
         $name = $jt?->name ?? ($ownerTable . '_' . $targetShort);
@@ -313,8 +335,8 @@ final class MetadataFactory
      */
     private function firstAttribute(ReflectionClass|ReflectionProperty $target, string $attributeClass): ?object
     {
-        $attrs = $target->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF);
-        return $attrs === [] ? null : $attrs[0]->newInstance();
+        return array_first($target->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF))
+            ?->newInstance();
     }
 
     /**
@@ -328,7 +350,10 @@ final class MetadataFactory
         }
 
         $short = $refl->getShortName();
-        $snake = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $short));
+        $snake = $short
+                |> (fn (string $s): string => (string) preg_replace('/(?<!^)[A-Z]/', '_$0', $s))
+                |> strtolower(...);
+
         return $snake . 's';
     }
 

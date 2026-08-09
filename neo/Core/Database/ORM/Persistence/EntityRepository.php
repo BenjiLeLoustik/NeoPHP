@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\ORM\Persistence;
 
+use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Mapping\ClassMetaData;
 use Neo\Core\Database\Pagination\Paginator;
 
@@ -14,14 +15,15 @@ class EntityRepository
     protected ClassMetaData $metadata;
 
     public function __construct(
-        protected readonly EntityManager $em,
-        protected readonly string $className,
+        protected EntityManager $em,
+        protected string $className,
     ) {
         $this->metadata = $em->getClassMetadata($className);
     }
 
     /**
      * @return TEntity|null
+     * @throws DatabaseException
      */
     public function find(mixed $id): ?object
     {

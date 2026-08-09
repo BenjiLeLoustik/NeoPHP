@@ -34,8 +34,13 @@ final class FormsCollector implements CollectorInterface
             ];
         }
 
-        $submittedCount = count(array_filter($forms, static fn (array $f) => $f['submitted']));
-        $invalidCount = count(array_filter($forms, static fn (array $f) => $f['submitted'] && $f['valid'] === false));
+        $submittedCount = $forms
+                |> (fn (array $f): array => array_filter($f, static fn (array $x) => $x['submitted']))
+                |> count(...);
+
+        $invalidCount = $forms
+                |> (fn (array $f): array => array_filter($f, static fn (array $x) => $x['submitted'] && $x['valid'] === false))
+                |> count(...);
 
         return [
             'total' => count($forms),

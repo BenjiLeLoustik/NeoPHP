@@ -8,9 +8,9 @@ use Attribute;
 final class Cron
 {
     public function __construct(
-        public readonly string $expression,
-        public readonly string $description,
-        public readonly string $timezone = 'UTC',
-        public readonly bool $lock = false,
+        public string $expression,
+        public string $description,
+        public string $timezone = 'UTC',
+        public bool $lock = false,
     ){}
 }

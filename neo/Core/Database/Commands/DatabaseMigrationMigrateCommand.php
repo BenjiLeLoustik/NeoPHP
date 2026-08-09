@@ -25,7 +25,8 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
 {
     public function __construct(
         private Container $container
-    ) {}
+    ) {
+    }
 
     public function configure(): void
     {
@@ -124,6 +125,7 @@ final class DatabaseMigrationMigrateCommand extends AbstractCommand
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

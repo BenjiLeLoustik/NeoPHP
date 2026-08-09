@@ -4,6 +4,7 @@ namespace Neo\Core\Database\Access\Connection;
 
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use PDO;
 use PDOException;
 
@@ -57,6 +58,10 @@ class DatabaseConnection
         return str_contains($message, '1049') || stripos($message, 'unknown database') !== false;
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws ContainerException
+     */
     public static function connectTo(string $name): PDO
     {
         if (isset(self::$connections[$name])) {
@@ -117,6 +122,9 @@ class DatabaseConnection
         return $pdo;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     public static function getPdo(?string $name = null): PDO
     {
         $name ??= self::$defaultName;

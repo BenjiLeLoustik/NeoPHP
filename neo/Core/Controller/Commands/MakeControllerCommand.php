@@ -134,18 +134,28 @@ PHP;
 
     private function buildRoutePath(?string $directory, string $controller): string
     {
-        $base = lcfirst(preg_replace('/Controller$/', '', $controller));
+        $base = $controller
+                |> (fn (string $c): string => preg_replace('/Controller$/', '', $c) ?? '')
+                |> lcfirst(...);
         return $directory ? strtolower(trim($directory . '/' . $base, '/')) : $base;
     }
 
     private function normalizeControllerName(string $input): string
     {
-        $input = str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)));
-        return preg_replace('/Controller$/i', '', $input) . 'Controller';
+        $input = $input
+                |> (fn (string $s): string => preg_replace('/[^a-zA-Z0-9]+/', ' ', $s) ?? '')
+                |> ucwords(...)
+                |> (fn (string $s): string => str_replace(' ', '', $s));
+
+        return (
+            $input
+                |> (fn (string $s): string => preg_replace('/Controller$/i', '', $s) ?? '')
+            ) . 'Controller';
     }
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

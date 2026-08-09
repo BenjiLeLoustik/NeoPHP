@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Database\ORM\Mapping;
 
 use ReflectionClass;
+use ReflectionException;
 use ReflectionProperty;
 
 /**
@@ -54,6 +55,9 @@ final class ClassMetaData
     /** @var array<string, ReflectionProperty> */
     private array $reflProps = [];
 
+    /**
+     * @throws ReflectionException
+     */
     public function __construct(
         public readonly string $name,
     ) {
@@ -155,11 +159,17 @@ final class ClassMetaData
         return $prop->isInitialized($entity) ? $prop->getValue($entity) : null;
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function newInstance(): object
     {
         return $this->reflClass->newInstanceWithoutConstructor();
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function getReflProperty(string $fieldName): ReflectionProperty
     {
         if (!isset($this->reflProps[$fieldName])) {
