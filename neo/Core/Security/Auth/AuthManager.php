@@ -181,4 +181,19 @@ class AuthManager
             );
         }
     }
+
+    public function isEnabled(): bool
+    {
+        return $this->guard !== null;
+    }
+
+    public function getGuardType(): string
+    {
+        return $this->config['guard'] ?? 'session';
+    }
+
+    public function getIdentifierField(): string
+    {
+        return $this->config['identifier'] ?? 'email';
+    }
 }
