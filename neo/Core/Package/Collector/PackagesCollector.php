@@ -22,6 +22,9 @@ final class PackagesCollector implements CollectorInterface
         return 'packages';
     }
 
+    /**
+     * @return list<array{name: string, composerName: string, version: string, description: string, source: string}>
+     */
     public function collect(): array
     {
         if (!$this->container->has('packages')) {

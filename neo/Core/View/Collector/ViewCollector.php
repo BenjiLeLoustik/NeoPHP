@@ -41,7 +41,11 @@ final class ViewCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
-        return [];
+        return [
+            'label' => 'Views',
+            'value' => '',
+            'badge' => null,
+        ];
     }
 
     public function profilerData(): array

@@ -41,7 +41,11 @@ final class FlashCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
-        return [];
+        return [
+            'label' => 'Flash',
+            'value' => '',
+            'badge' => null,
+        ];
     }
 
     public function profilerData(): array

@@ -56,7 +56,11 @@ final class FormsCollector implements CollectorInterface
 
     public function toolbarData(): array
     {
-        return [];
+        return [
+            'label' => 'Forms',
+            'value' => '',
+            'badge' => null,
+        ];
     }
 
     public function profilerData(): array

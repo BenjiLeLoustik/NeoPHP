@@ -9,7 +9,7 @@ interface CollectorInterface
     public function getName(): string;
 
     /**
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public function collect(): array;
 

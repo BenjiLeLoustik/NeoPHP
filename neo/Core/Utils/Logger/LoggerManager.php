@@ -21,6 +21,7 @@ class LoggerManager
 
     protected string $currentChannel = 'app';
 
+    /** @var list<array{level: string, channel: string, message: string, context: array<string, mixed>, origin: string, time: float}> */
     private static array $records = [];
 
     private const array LEVELS = [

@@ -118,43 +118,6 @@ final class ProfilerModule implements ModuleInterface
         $profiler->markCollectorsRegistered();
     }
 
-    private function registerCollectors(Container $container, ProfilerManager $profiler): void
-    {
-        $coreDir = dirname(__DIR__);
-        $targets = $this->buildScanTargets($container, $coreDir);
-        $paths = array_map(static fn (array $t) => $t['path'], $targets);
-
-        $results = new ScannerFileManager()
-            ->paths($paths)
-            ->withFilenameSuffix('Collector.php')
-            ->withExcludedSegment('vendor', '.git', 'node_modules')
-            ->scan();
-
-        foreach ($results as $result) {
-            $class = $result->getFqcn();
-
-            if (str_contains($class, '\\Tests\\') || str_contains($class, '\\Fixture\\')) {
-                continue;
-            }
-
-            if (!class_exists($class)) {
-                continue;
-            }
-
-            $ref = new ReflectionClass($class);
-
-            if ($ref->isAbstract() || $ref->isInterface() || !$ref->implementsInterface(CollectorInterface::class)) {
-                continue;
-            }
-
-            /** @var CollectorInterface $collector */
-            $collector = $container->get($class);
-            $packageName = $this->resolvePackageForFile($ref->getFileName() ?: '', $targets);
-
-            $profiler->addCollector($collector, $packageName);
-        }
-    }
-
     /**
      * @return list<array{path: string, package: string|null}>
      */

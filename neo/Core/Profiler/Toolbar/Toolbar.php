@@ -61,6 +61,9 @@ final class Toolbar
         return self::DEFAULT_BADGE_COLOR;
     }
 
+    /**
+     * @param array{label: string, value: string, badge: string|null, badgeStatus?: bool} $item
+     */
     private function statusAwareAlertColor(array $item, ?int $statusCode): string
     {
         if (($item['badgeStatus'] ?? false) && $statusCode !== null) {
@@ -77,7 +80,7 @@ final class Toolbar
 
 
     /**
-     * @param array<string, mixed> $vars
+     * @param array<string, mixed> $__vars
      */
     private function renderTemplate(string $__templatePath, array $__vars): string
     {

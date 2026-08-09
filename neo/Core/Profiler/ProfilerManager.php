@@ -18,14 +18,12 @@ final class ProfilerManager
     private array $collectorPackages = [];
 
     private float $startTime;
-    private int $startMemory;
     private bool $collectorsRegistered = false;
     private ?\Throwable $bootError = null;
 
     private function __construct()
     {
         $this->startTime = microtime(true);
-        $this->startMemory = memory_get_usage(true);
     }
 
     public static function getInstance(): self
