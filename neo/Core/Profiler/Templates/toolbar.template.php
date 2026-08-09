@@ -72,36 +72,6 @@
         flex: 1;
     }
 
-    .n-chip {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 0 12px;
-        white-space: nowrap;
-        border-right: 1px solid #f3f4f6;
-    }
-
-    .n-label {
-        color: #9ca3af;
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-    }
-
-    .n-value {
-        color: #111827;
-        font-weight: 600;
-    }
-
-    .n-badge {
-        background: #fee2e2;
-        color: #991b1b;
-        font-size: 0.65rem;
-        font-weight: 700;
-        padding: 0.05rem 0.4rem;
-        border-radius: 999px;
-    }
-
     #neo-bar .n-metrics {
         display: flex;
         align-items: center;
