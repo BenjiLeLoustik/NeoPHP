@@ -39,6 +39,10 @@ class MiddlewareManager
     /** @var array<string, list<MiddlewareMeta>> */
     private array $middlewareCache = [];
 
+    private array $log = [];
+
+    private bool $maintenanceTriggered = false;
+
     public function __construct(Container $container)
     {
         $this->container = $container;
@@ -56,6 +60,7 @@ class MiddlewareManager
 
         $maintenanceResponse = $this->checkMaintenance($controller, $method);
         if ($maintenanceResponse !== null) {
+            $this->maintenanceTriggered = true;
             return $maintenanceResponse;
         }
 
@@ -72,9 +77,11 @@ class MiddlewareManager
             $redirect = $meta->getRedirect();
             $isClassMiddleware = $meta->isClass();
             $result = false;
+            $start = microtime(true);
 
             if (!class_exists($middlewareClass)) {
                 $this->recordError($middlewareClass, $message, $onError);
+                $this->recordLog($middlewareClass, $meta, $start, false, $message, 'class_not_found');
                 return $this->handleFailure($message, $onError, $redirect, $response, $flash, $router, $isClassMiddleware);
             }
 
@@ -84,17 +91,22 @@ class MiddlewareManager
 
             if (!$middleware instanceof MiddlewareInterface) {
                 $this->recordError($middlewareClass, 'Middleware must implement MiddlewareInterface', $onError);
+                $this->recordLog($middlewareClass, $meta, $start, false, 'Middleware must implement MiddlewareInterface', 'invalid_interface');
                 return $this->handleFailure($message, $onError, $redirect, $response, $flash, $router, $isClassMiddleware);
             }
+
+            $errorDuringHandle = null;
 
             try {
                 $result = $middleware->handle() === true;
             } catch (Throwable $e) {
                 $message = $e->getMessage();
+                $errorDuringHandle = $e::class;
                 $result = false;
             }
 
             $this->executed[$middlewareClass][] = $result;
+            $this->recordLog($middlewareClass, $meta, $start, $result, $message, $errorDuringHandle);
 
             if (!$result) {
                 $this->recordError($middlewareClass, $message, $onError);
@@ -103,6 +115,52 @@ class MiddlewareManager
         }
 
         return null;
+    }
+
+    private function recordLog(
+        string $middlewareClass,
+        MiddlewareMeta $meta,
+        float $start,
+        bool $result,
+        string $message,
+        ?string $errorClass,
+    ): void {
+        $this->log[] = [
+            'class' => $middlewareClass,
+            'scope' => $meta->isClass() ? 'class' : 'method',
+            'params' => $meta->getParams(),
+            'priority' => $meta->getPriority(),
+            'onError' => $meta->getOnError(),
+            'redirect' => $meta->getRedirect(),
+            'passed' => $result,
+            'message' => $message,
+            'errorClass' => $errorClass,
+            'duration' => round((microtime(true) - $start) * 1000, 2),
+        ];
+    }
+
+    /**
+     * @return list<array{
+     *     class: class-string,
+     *     scope: 'class'|'method',
+     *     params: array<string, mixed>,
+     *     priority: int,
+     *     onError: string,
+     *     redirect: string|null,
+     *     passed: bool,
+     *     message: string,
+     *     errorClass: string|null,
+     *     duration: float
+     * }>
+     */
+    public function getExecutionLog(): array
+    {
+        return $this->log;
+    }
+
+    public function wasMaintenanceTriggered(): bool
+    {
+        return $this->maintenanceTriggered;
     }
 
     /**
