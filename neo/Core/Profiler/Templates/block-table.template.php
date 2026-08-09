@@ -2,34 +2,56 @@
 /** @var array{section?: string|null, columns: list<string>, rows: list<list<string>>} $block */
 ?>
     <style>
-        .panel-body table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.83rem;
+        .data-table-wrap {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow-x: auto;
             margin-bottom: 1.5rem;
         }
 
-        .panel-body th {
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.83rem;
+        }
+
+        .data-table thead th {
             text-align: left;
-            padding: 0.65rem 0.8rem;
+            padding: 0.7rem 1rem;
+            background: var(--bg-muted);
             border-bottom: 1px solid var(--border);
             color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.68rem;
+            font-weight: 700;
+            font-size: 0.66rem;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
             white-space: nowrap;
         }
 
-        .panel-body td {
-            padding: 0.65rem 0.8rem;
+        .data-table tbody td {
+            padding: 0.7rem 1rem;
             border-bottom: 1px solid var(--bg-muted);
             overflow-wrap: anywhere;
             vertical-align: top;
+            color: var(--text);
         }
 
-        .panel-body tbody tr:hover td {
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr:nth-child(even) td {
             background: var(--bg-subtle);
+        }
+
+        .data-table tbody tr:hover td {
+            background: var(--bg-muted);
+        }
+
+        .data-table tbody td:first-child {
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
         }
     </style>
 
@@ -40,22 +62,24 @@
 <?php if ($block['rows'] === []): ?>
     <p class="empty-state">No data.</p>
 <?php else: ?>
-    <table>
-        <thead>
-        <tr>
-            <?php foreach ($block['columns'] as $col): ?>
-                <th><?= htmlspecialchars($col) ?></th>
-            <?php endforeach; ?>
-        </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($block['rows'] as $row): ?>
+    <div class="data-table-wrap">
+        <table class="data-table">
+            <thead>
             <tr>
-                <?php foreach ($row as $cell): ?>
-                    <td><?= htmlspecialchars((string) $cell) ?></td>
+                <?php foreach ($block['columns'] as $col): ?>
+                    <th><?= htmlspecialchars($col) ?></th>
                 <?php endforeach; ?>
             </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+            <?php foreach ($block['rows'] as $row): ?>
+                <tr>
+                    <?php foreach ($row as $cell): ?>
+                        <td><?= htmlspecialchars((string) $cell) ?></td>
+                    <?php endforeach; ?>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 <?php endif; ?>
