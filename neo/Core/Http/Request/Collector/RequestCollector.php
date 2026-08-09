@@ -61,6 +61,7 @@ final class RequestCollector implements CollectorInterface
         return [
             'title' => 'Request',
             'badge' => null,
+            'group' => 'Http',
             'blocks' => [
                 [
                     'type' => 'kv',

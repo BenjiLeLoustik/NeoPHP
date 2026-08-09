@@ -50,7 +50,8 @@ final class HttpClientCollector implements CollectorInterface
 
         if ($data['total'] === 0) {
             return [
-                'title' => 'HTTP Client',
+                'title' => 'Client',
+                'group' => 'Http',
                 'badge' => null,
                 'metrics' => [
                     ['label' => 'Requests', 'value' => '0'],
@@ -68,7 +69,8 @@ final class HttpClientCollector implements CollectorInterface
         }
 
         return [
-            'title' => 'HTTP Client',
+            'title' => 'Client',
+            'group' => 'Http',
             'badge' => $data['errorCount'] > 0 ? (string) $data['errorCount'] : null,
             'badgeType' => 'alert',
             'metrics' => [

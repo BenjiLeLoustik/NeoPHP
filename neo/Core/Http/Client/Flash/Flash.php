@@ -78,6 +78,14 @@ class Flash
         return $messages;
     }
 
+    /**
+     * @return array<int, array{type: string, message: string}>
+     */
+    public function peek(): array
+    {
+        return $this->session->get($this->flashKey, []);
+    }
+
     public function has(): bool
     {
         return !empty($this->session->get($this->flashKey, []));
