@@ -6,6 +6,9 @@ define('NEO_START_MEMORY', memory_get_usage(true));
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+require_once __DIR__ . '/../neo/Core/Translation/Helper/Translate.php';
+require_once __DIR__ . '/../neo/Core/Tools/Debug/Helper/Debug.php';
+
 use Neo\App;
 use Neo\Core\Error\ErrorManager;
 use Neo\Core\Profiler\StandaloneProfilerRenderer;
