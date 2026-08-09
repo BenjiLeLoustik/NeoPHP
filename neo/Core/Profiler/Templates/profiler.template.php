@@ -74,6 +74,38 @@
             color: var(--accent);
         }
 
+        .header-compact {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            height: 44px;
+            margin-bottom: -44px;
+            background: <?= $statusGradient ?>;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0 2.25rem;
+            opacity: 0;
+            transform: translateY(-6px);
+            pointer-events: none;
+            transition: opacity 0.12s ease, transform 0.12s ease;
+        }
+
+        .header-compact.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .header-compact .method-badge {
+            flex-shrink: 0;
+        }
+
+        .header-compact .path {
+            font-size: 0.85rem;
+        }
+
+        /* Full header — normal flow, not sticky, scrolls away naturally. */
         .header {
             background: <?= $statusGradient ?>;
             padding: 1.65rem 2.25rem;
@@ -149,7 +181,9 @@
             flex: 1 1 auto;
             min-width: 0;
             overflow-y: auto;
+            position: relative;
         }
+
 
         .main-inner {
             width: 100%;
@@ -177,7 +211,12 @@
         <nav><?= $navHtml ?></nav>
     </aside>
 
-    <main class="main">
+    <main class="main" id="main-scroll">
+        <div class="header-compact" id="content-header-compact">
+            <span class="method-badge"><?= htmlspecialchars($method) ?></span>
+            <span class="path"><?= htmlspecialchars($path) ?></span>
+        </div>
+
         <header class="header">
             <div class="header-top">
                 <span class="method-badge"><?= htmlspecialchars($method) ?></span>
@@ -256,6 +295,34 @@
             target.click();
         }
     }
+
+    (function () {
+        var scrollContainer = document.getElementById('main-scroll');
+        var compactBar = document.getElementById('content-header-compact');
+        if (!scrollContainer || !compactBar) return;
+
+        var threshold = 80;
+        var isVisible = false;
+        var ticking = false;
+
+        function update() {
+            var shouldShow = scrollContainer.scrollTop > threshold;
+
+            if (shouldShow !== isVisible) {
+                isVisible = shouldShow;
+                compactBar.classList.toggle('is-visible', isVisible);
+            }
+
+            ticking = false;
+        }
+
+        scrollContainer.addEventListener('scroll', function () {
+            if (!ticking) {
+                window.requestAnimationFrame(update);
+                ticking = true;
+            }
+        });
+    })();
 </script>
 </body>
 </html>
