@@ -9,16 +9,12 @@ use Neo\Core\Http\Response\Types\JsonResponse;
 use Neo\Core\Http\Response\Types\RedirectResponse;
 use Neo\Core\Profiler\Interface\ResponseAwareCollectorInterface;
 use Neo\Core\Profiler\Interface\StatusAwareCollectorInterface;
+use Neo\Core\Profiler\ProfilerCleaner;
 use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Profiler\Toolbar\Toolbar;
 
 final class ProfilerResponseListener implements EventSubscriberInterface
 {
-    private const int CLEANUP_CHANCE = 20;
-
-    private const int MAX_PROFILES = 100;
-
-    private const int MAX_AGE_SECONDS = 86400;
 
     public function __construct(
         private readonly Toolbar $toolbar,
@@ -98,43 +94,6 @@ final class ProfilerResponseListener implements EventSubscriberInterface
             json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
         );
 
-        if (random_int(1, self::CLEANUP_CHANCE) === 1) {
-            $this->cleanup();
-        }
-    }
-
-    private function cleanup(): void
-    {
-        $files = glob($this->storageDir . '/*.json');
-
-        if ($files === false || $files === []) {
-            return;
-        }
-
-        $now = time();
-        $kept = [];
-
-        foreach ($files as $file) {
-            $age = $now - (filemtime($file) ?: 0);
-
-            if ($age > self::MAX_AGE_SECONDS) {
-                unlink($file);
-                continue;
-            }
-
-            $kept[] = $file;
-        }
-
-        if (count($kept) <= self::MAX_PROFILES) {
-            return;
-        }
-
-        usort($kept, static fn (string $a, string $b) => filemtime($a) <=> filemtime($b));
-
-        $toRemove = count($kept) - self::MAX_PROFILES;
-
-        for ($i = 0; $i < $toRemove; $i++) {
-            unlink($kept[$i]);
-        }
+        ProfilerCleaner::clean($this->storageDir);
     }
 }

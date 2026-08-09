@@ -8,6 +8,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Event\ExceptionEvent;
+use Neo\Core\Profiler\ProfilerCleaner;
 use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Profiler\ProfilerModule;
 use Neo\Core\Profiler\Toolbar\Toolbar;
@@ -238,8 +239,9 @@ class ErrorManager
                 $storageDir . '/' . $data['token'] . '.json',
                 json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
             );
-        } catch (\Throwable) {
-        }
+
+            ProfilerCleaner::clean($storageDir);
+        } catch (\Throwable) {}
     }
 
     private function renderCli(FrameworkException $exception): void
