@@ -223,6 +223,7 @@ final class ProfilerPageController extends AbstractController
                 'kv' => $this->renderTemplate(__DIR__ . '/../Templates/block-kv.template.php', ['block' => $block]),
                 'table' => $this->renderTemplate(__DIR__ . '/../Templates/block-table.template.php', ['block' => $block]),
                 'tabs' => $this->renderTabsBlock($block),
+                'log-list' => $this->renderTemplate(__DIR__ . '/../Templates/block-log-list.template.php', ['block' => $block]),
                 default => '',
             };
         }
