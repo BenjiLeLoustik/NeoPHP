@@ -75,6 +75,7 @@ final class ResponseCollector implements CollectorInterface, ResponseAwareCollec
             return [
                 'title' => 'Response',
                 'badge' => null,
+                'group' => 'Http',
                 'blocks' => [
                     [
                         'type' => 'kv',
@@ -89,6 +90,7 @@ final class ResponseCollector implements CollectorInterface, ResponseAwareCollec
 
         return [
             'title' => 'Response',
+            'group' => 'Http',
             'badge' => null,
             'blocks' => [
                 [
