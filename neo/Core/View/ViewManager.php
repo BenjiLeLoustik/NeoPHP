@@ -21,6 +21,9 @@ class ViewManager
     protected Container $container;
     private Environment $twig;
 
+    /** @var list<array{template: string, params: list<string>, duration: float, error: string|null}> */
+    private static array $renders = [];
+
     /**
      * @throws ContainerException
      */
@@ -81,9 +84,14 @@ class ViewManager
      */
     public function render(string $template, array $params = []): string
     {
+        $start = microtime(true);
+
         try {
-            return $this->twig->render($template, $params);
+            $result = $this->twig->render($template, $params);
+            $this->recordRender($template, $params, $start, null);
+            return $result;
         } catch (\Twig\Error\LoaderError $e) {
+            $this->recordRender($template, $params, $start, $e->getMessage());
             throw new ViewException(
                 title: 'Template Not Found',
                 message: sprintf("Template '%s' not found: %s", $template, $e->getMessage()),
@@ -91,6 +99,7 @@ class ViewManager
                 previous: $e
             );
         } catch (\Twig\Error\SyntaxError $e) {
+            $this->recordRender($template, $params, $start, $e->getMessage());
             throw new ViewException(
                 title: 'Template Syntax Error',
                 message: sprintf("Syntax error in template '%s': %s", $template, $e->getMessage()),
@@ -98,6 +107,7 @@ class ViewManager
                 previous: $e
             );
         } catch (\Twig\Error\RuntimeError $e) {
+            $this->recordRender($template, $params, $start, $e->getMessage());
             throw new ViewException(
                 title: 'Template Runtime Error',
                 message: sprintf("Runtime error in template '%s': %s", $template, $e->getMessage()),
@@ -112,9 +122,14 @@ class ViewManager
      */
     public function renderIfExists(string $template, array $params = []): ?string
     {
+        $start = microtime(true);
+
         try {
-            return $this->twig->render($template, $params);
+            $result = $this->twig->render($template, $params);
+            $this->recordRender($template, $params, $start, null);
+            return $result;
         } catch (\Twig\Error\LoaderError $e) {
+            $this->recordRender($template, $params, $start, $e->getMessage());
             return null;
         }
     }
@@ -145,5 +160,26 @@ class ViewManager
                 );
             }
         }
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function recordRender(string $template, array $params, float $start, ?string $error): void
+    {
+        self::$renders[] = [
+            'template' => $template,
+            'params' => array_keys($params),
+            'duration' => round((microtime(true) - $start) * 1000, 2),
+            'error' => $error,
+        ];
+    }
+
+    /**
+     * @return list<array{template: string, params: list<string>, duration: float, error: string|null}>
+     */
+    public static function getRenders(): array
+    {
+        return self::$renders;
     }
 }
