@@ -59,6 +59,7 @@ final class MiddlewareCollector implements CollectorInterface
                 'title' => 'Middleware',
                 'badge' => '!',
                 'badgeType' => 'alert',
+                'group' => 'Security',
                 'blocks' => [
                     [
                         'type' => 'kv',
@@ -75,6 +76,7 @@ final class MiddlewareCollector implements CollectorInterface
             return [
                 'title' => 'Middleware',
                 'badge' => null,
+                'group' => 'Security',
                 'metrics' => [
                     ['label' => 'Executed', 'value' => '0'],
                 ],
@@ -94,6 +96,7 @@ final class MiddlewareCollector implements CollectorInterface
             'title' => 'Middleware',
             'badge' => $data['blockedCount'] > 0 ? (string) $data['blockedCount'] : null,
             'badgeType' => 'alert',
+            'group' => 'Security',
             'metrics' => [
                 ['label' => 'Executed', 'value' => (string) $data['total']],
                 ['label' => 'Blocked', 'value' => (string) $data['blockedCount']],
