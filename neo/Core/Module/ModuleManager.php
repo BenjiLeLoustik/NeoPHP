@@ -6,6 +6,7 @@ namespace Neo\Core\Module;
 use Neo\Core\DI\Container;
 use Neo\Core\Module\Exception\ModuleException;
 use Neo\Core\Module\Interface\ModuleInterface;
+use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
 use ReflectionException;
 
@@ -62,27 +63,44 @@ class ModuleManager
         $initResults = [];
 
         foreach ($ordered as $moduleClass) {
-            /** @var ModuleInterface $module */
-            $module = new $moduleClass();
+            try {
+                /** @var ModuleInterface $module */
+                $module = new $moduleClass();
 
-            $module->register($this->container);
+                $module->register($this->container);
 
-            $ownAlias = $this->deriveAlias($moduleClass);
+                $ownAlias = $this->deriveAlias($moduleClass);
 
-            foreach ($module->dependencies() as $depClass) {
-                if (!array_key_exists($depClass, $initResults)) {
-                    continue;
+                foreach ($module->dependencies() as $depClass) {
+                    if (!array_key_exists($depClass, $initResults)) {
+                        continue;
+                    }
+
+                    $depKey = lcfirst(new \ReflectionClass($depClass)->getShortName());
+                    $this->container->set($ownAlias . '.' . $depKey, $initResults[$depClass]);
                 }
 
-                $depKey = lcfirst(new \ReflectionClass($depClass)->getShortName());
-                $this->container->set($ownAlias . '.' . $depKey, $initResults[$depClass]);
+                $result = $module->init($this->container);
+                $initResults[$moduleClass] = $result;
+
+                $this->container->set($ownAlias . '.manager', $result);
+            } catch (\Throwable $e) {
+                $this->recordBootError($moduleClass, $e);
+                throw $e;
+            }
+        }
+    }
+
+    private function recordBootError(string $moduleClass, \Throwable $e): void
+    {
+        try {
+            if (!class_exists(ProfilerManager::class)) {
+                return;
             }
 
-            $result = $module->init($this->container);
-            $initResults[$moduleClass] = $result;
-
-            $this->container->set($ownAlias . '.manager', $result);
-        }
+            $profiler = ProfilerManager::getInstance();
+            $profiler->setBootError($e);
+        } catch (\Throwable) {}
     }
 
     /**

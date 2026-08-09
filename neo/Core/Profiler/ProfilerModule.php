@@ -55,9 +55,11 @@ final class ProfilerModule implements ModuleInterface
             define('NEO_PROFILER_ENABLED', true);
         }
 
-        $this->registerCollectors($container, $profiler);
+        self::ensureCollectorsRegistered($container, $profiler);
 
         $toolbar = new Toolbar($profiler);
+        $container->set(Toolbar::class, fn() => $toolbar);
+
         $storageDir = $container->get('storagePath') . '/var/cache/profiler';
         $listener = new ProfilerResponseListener($toolbar, $profiler, $storageDir);
 
@@ -67,6 +69,53 @@ final class ProfilerModule implements ModuleInterface
         $dispatcher->addSubscriber($listener);
 
         return $profiler;
+    }
+
+    public static function ensureCollectorsRegistered(Container $container, ProfilerManager $profiler): void
+    {
+        if ($profiler->areCollectorsRegistered()) {
+            return;
+        }
+
+        $coreDir = dirname(__DIR__);
+        $targets = (new self())->buildScanTargets($container, $coreDir);
+        $paths = array_map(static fn (array $t) => $t['path'], $targets);
+
+        $results = new ScannerFileManager()
+            ->paths($paths)
+            ->withFilenameSuffix('Collector.php')
+            ->withExcludedSegment('vendor', '.git', 'node_modules')
+            ->scan();
+
+        foreach ($results as $result) {
+            $class = $result->getFqcn();
+
+            if (str_contains($class, '\\Tests\\') || str_contains($class, '\\Fixture\\')) {
+                continue;
+            }
+
+            if (!class_exists($class)) {
+                continue;
+            }
+
+            $ref = new ReflectionClass($class);
+
+            if ($ref->isAbstract() || $ref->isInterface() || !$ref->implementsInterface(CollectorInterface::class)) {
+                continue;
+            }
+
+            try {
+                /** @var CollectorInterface $collector */
+                $collector = $container->get($class);
+                $packageName = (new self())->resolvePackageForFile($ref->getFileName() ?: '', $targets);
+
+                $profiler->addCollector($collector, $packageName);
+            } catch (\Throwable $ex) {
+                continue;
+            }
+        }
+
+        $profiler->markCollectorsRegistered();
     }
 
     private function registerCollectors(Container $container, ProfilerManager $profiler): void

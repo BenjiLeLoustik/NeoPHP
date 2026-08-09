@@ -8,6 +8,9 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Event\Event\ExceptionEvent;
+use Neo\Core\Profiler\ProfilerManager;
+use Neo\Core\Profiler\ProfilerModule;
+use Neo\Core\Profiler\Toolbar\Toolbar;
 
 class ErrorManager
 {
@@ -43,6 +46,7 @@ class ErrorManager
     public static function registerBootstrap(): void
     {
         set_exception_handler(function (\Throwable $e) {
+
             $exception = $e instanceof FrameworkException
                 ? $e
                 : FrameworkException::fromThrowable($e);
@@ -148,7 +152,7 @@ class ErrorManager
                         ? $exception->getContext()
                         : [],
                 ]);
-                echo $html;
+                echo $this->injectProfilerToolbar($html, $code);
             } catch (\Throwable) {
                 $this->renderFallback($exception);
             }
@@ -181,7 +185,61 @@ class ErrorManager
         }
 
         $env = $this->getEnv();
-        echo self::renderFallbackHtml($exception, $env);
+        $code = $exception->getCode() ?: 500;
+
+        echo $this->injectProfilerToolbar(self::renderFallbackHtml($exception, $env), $code);
+    }
+
+    private function injectProfilerToolbar(string $html, int $statusCode): string
+    {
+        if ($this->getEnv() !== 'dev') {
+            return $html;
+        }
+
+        try {
+            $profiler = ProfilerManager::getInstance();
+
+            ProfilerModule::ensureCollectorsRegistered($this->container, $profiler);
+
+            $toolbar = new Toolbar($profiler);
+
+            $this->saveErrorProfile($profiler, $statusCode);
+
+            $toolbarHtml = $toolbar->render($statusCode);
+
+            return str_contains($html, '</body>')
+                ? str_replace('</body>', $toolbarHtml . '</body>', $html)
+                : $html . $toolbarHtml;
+        } catch (\Throwable) {
+            return $html;
+        }
+    }
+
+    private function saveErrorProfile(ProfilerManager $profiler, int $statusCode): void
+    {
+        try {
+            $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+            $path = $_SERVER['REQUEST_URI'] ?? '/';
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '—';
+
+            $scheme = ($_SERVER['HTTPS'] ?? 'off') !== 'off' ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $fullUrl = $scheme . '://' . $host . $path;
+
+            $data = $profiler->export($statusCode, $method, $fullUrl, $ip);
+
+            $storageDir = $this->container->get('storagePath') . '/var/cache/profiler';
+
+            if (!is_dir($storageDir)) {
+                mkdir($storageDir, 0777, true);
+            }
+
+            file_put_contents(
+                $storageDir . '/' . $data['token'] . '.json',
+                json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
+            );
+        } catch (\Throwable) {
+        }
     }
 
     private function renderCli(FrameworkException $exception): void
