@@ -27,6 +27,7 @@ readonly class ApplicationPaths
 
         $publicPath = $this->resolvePublicPath($basePath);
 
+        $this->container->set('vendorPath', $basePath . '/vendor/');
         $this->container->set('publicPath', $publicPath);
         $this->container->set('buildsPath', $publicPath . '/builds/');
         $this->container->set('srcPath', $basePath . '/src');
