@@ -21,6 +21,8 @@ class LoggerManager
 
     protected string $currentChannel = 'app';
 
+    private static array $records = [];
+
     private const array LEVELS = [
         'DEBUG' => 100,
         'INFO' => 200,
@@ -88,13 +90,29 @@ class LoggerManager
         }
 
         $this->rotateIfNeeded();
-
         $this->archiveOldLogs();
 
         $filePath = $this->getLogFilePath();
         $entry = $this->formatMessage($level, $message, $context, $origin);
 
+        self::$records[] = [
+            'level' => $level,
+            'channel' => $this->currentChannel,
+            'message' => $message,
+            'context' => $context,
+            'origin' => $origin,
+            'time' => microtime(true),
+        ];
+
         file_put_contents($filePath, $entry . PHP_EOL, FILE_APPEND | LOCK_EX);
+    }
+
+    /**
+     * @return list<array{level: string, channel: string, message: string, context: array<string, mixed>, origin: string, time: float}>
+     */
+    public function getRecords(): array
+    {
+        return self::$records;
     }
 
     /**
