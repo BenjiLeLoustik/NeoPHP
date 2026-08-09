@@ -7,6 +7,7 @@ use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
 use Neo\Core\Http\Response\Types\JsonResponse;
 use Neo\Core\Http\Response\Types\RedirectResponse;
+use Neo\Core\Profiler\Interface\ResponseAwareCollectorInterface;
 use Neo\Core\Profiler\Interface\StatusAwareCollectorInterface;
 use Neo\Core\Profiler\ProfilerManager;
 use Neo\Core\Profiler\Toolbar\Toolbar;
@@ -59,12 +60,15 @@ final class ProfilerResponseListener implements EventSubscriberInterface
             if ($collector instanceof StatusAwareCollectorInterface) {
                 $collector->setStatusCode($statusCode);
             }
+
+            if ($collector instanceof ResponseAwareCollectorInterface) {
+                $collector->setResponse($response);
+            }
         }
 
         $this->saveProfile($statusCode, $path);
 
         $content = $response->getContent();
-
         $toolbarHtml = $this->toolbar->render($statusCode);
 
         $content = str_contains($content, '</body>')
