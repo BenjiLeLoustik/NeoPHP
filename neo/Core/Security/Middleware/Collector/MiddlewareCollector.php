@@ -7,6 +7,7 @@ namespace Neo\Core\Security\Middleware\Collector;
 use Neo\Core\DI\Container;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Security\Middleware\MiddlewareManager;
+use Neo\Core\Utils\Cache\CacheManager;
 
 final class MiddlewareCollector implements CollectorInterface
 {
@@ -160,6 +161,42 @@ final class MiddlewareCollector implements CollectorInterface
             $lines[] = 'exception: ' . $m['errorClass'];
         }
 
+        $rateLimitInfo = $this->rateLimitInfo($m);
+        if ($rateLimitInfo !== null) {
+            $lines[] = '';
+            $lines[] = $rateLimitInfo;
+        }
+
         return implode("\n", $lines);
+    }
+
+    /**
+     * @param array{class: class-string, params: array<string, mixed>} $m
+     */
+    private function rateLimitInfo(array $m): ?string
+    {
+        $isRateLimit = str_contains($m['class'], 'RateLimitMiddleware');
+
+        if (!$isRateLimit) {
+            return null;
+        }
+
+        $prefix = str_contains($m['class'], 'AuthRateLimitMiddleware') ? 'auth_rate_limit:' : 'rate_limit:';
+        $maxAttempts = $m['params']['maxAttempts'] ?? null;
+
+        $cacheLog = CacheManager::getLog();
+        $latestSet = null;
+
+        foreach ($cacheLog as $entry) {
+            if ($entry['action'] === 'set' && str_starts_with($entry['key'], $prefix)) {
+                $latestSet = $entry;
+            }
+        }
+
+        if ($latestSet === null || $maxAttempts === null) {
+            return null;
+        }
+
+        return sprintf('rate limit: %s / %s attempts used', $latestSet['value'], $maxAttempts);
     }
 }
