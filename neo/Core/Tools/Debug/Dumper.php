@@ -17,7 +17,14 @@ final class Dumper
         'punct' => '#808080',
     ];
 
+    private const int MAX_DEPTH = 15;
+    private const int MAX_NODES = 2000;
+
     private int $idCounter = 0;
+    private int $nodeCount = 0;
+
+    /** @var array<int, true> */
+    private array $visitedObjects = [];
 
     /**
      * @param list<mixed> $vars
@@ -25,6 +32,8 @@ final class Dumper
     public function render(array $vars): string
     {
         $this->idCounter = 0;
+        $this->nodeCount = 0;
+        $this->visitedObjects = [];
 
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4);
         $caller = $this->resolveCaller($trace);
@@ -55,6 +64,14 @@ final class Dumper
 
     private function renderValue(mixed $value, int $depth): string
     {
+        if (++$this->nodeCount > self::MAX_NODES) {
+            return $this->span('punct', '*OUTPUT TRUNCATED — TOO MANY VALUES*');
+        }
+
+        if ($depth > self::MAX_DEPTH) {
+            return $this->span('punct', '*MAX DEPTH REACHED*');
+        }
+
         return match (true) {
             $value === null => $this->span('null', 'null'),
             is_bool($value) => $this->span('bool', $value ? 'true' : 'false'),
@@ -81,12 +98,36 @@ final class Dumper
         $length = strlen($value);
         $escaped = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 
+        if ($length <= 200) {
+            return sprintf(
+                '<span style="color:%s;white-space:pre-wrap;">"%s"</span><span style="color:%s;font-size:0.75em;"> (%d)</span>',
+                self::COLORS['string'],
+                $escaped,
+                self::COLORS['punct'],
+                $length
+            );
+        }
+
+        $preview = htmlspecialchars(substr($value, 0, 80), ENT_QUOTES, 'UTF-8');
+        $truncated = $length > 5000;
+        $full = $truncated ? substr($value, 0, 5000) : $value;
+        $fullEscaped = htmlspecialchars($full, ENT_QUOTES, 'UTF-8');
+
+        if ($truncated) {
+            $fullEscaped .= '…';
+        }
+
+        $id = 'neo-dd-' . (++$this->idCounter);
+
         return sprintf(
-            '<span style="color:%s;">"%s"</span><span style="color:%s;font-size:0.75em;"> (%d)</span>',
+            '<details id="%s" class="neo-dd-details"><summary><span style="color:%s;">"%s…"</span><span style="color:%s;font-size:0.75em;"> (%d)</span></summary><div class="neo-dd-indent"><span style="color:%s;white-space:pre-wrap;word-break:break-all;">"%s"</span></div></details>',
+            $id,
             self::COLORS['string'],
-            $escaped,
+            $preview,
             self::COLORS['punct'],
-            $length
+            $length,
+            self::COLORS['string'],
+            $fullEscaped
         );
     }
 
@@ -101,11 +142,20 @@ final class Dumper
             return $this->span('punct', 'array:0') . ' ' . $this->punct('[]');
         }
 
+        if ($depth > self::MAX_DEPTH) {
+            return $this->span('punct', 'array:' . $count . ' *MAX DEPTH*');
+        }
+
         $id = 'neo-dd-' . (++$this->idCounter);
         $open = $depth < 1 ? ' open' : '';
 
         $rows = '';
         foreach ($value as $key => $item) {
+            if ($this->nodeCount > self::MAX_NODES) {
+                $rows .= '<div class="neo-dd-row">' . $this->span('punct', '*TRUNCATED*') . '</div>';
+                break;
+            }
+
             $keyHtml = is_int($key)
                 ? $this->span('int', (string) $key)
                 : sprintf('<span style="color:%s;">"%s"</span>', self::COLORS['key'], htmlspecialchars((string) $key, ENT_QUOTES, 'UTF-8'));
@@ -115,12 +165,14 @@ final class Dumper
         }
 
         return sprintf(
-            '<details id="%s" class="neo-dd-details"%s><summary>%s %s</summary><div class="neo-dd-indent">%s</div></details>',
+            '<details id="%s" class="neo-dd-details"%s><summary>%s <span class="neo-dd-brace-closed">%s</span><span class="neo-dd-brace-open">%s</span></summary><div class="neo-dd-indent">%s</div><div class="neo-dd-brace-close-line">%s</div></details>',
             $id,
             $open,
             $this->span('punct', 'array:' . $count),
             $this->punct('[…]'),
-            $rows
+            $this->punct('['),
+            $rows,
+            $this->punct(']')
         );
     }
 
@@ -133,19 +185,38 @@ final class Dumper
             return $this->span('class', $class) . $this->punct('::') . $this->span('int', $case);
         }
 
+        $objectId = spl_object_id($value);
+
+        if ($value instanceof \DateTimeInterface) {
+            return $this->renderDateTime($value, $depth, $objectId);
+        }
+
+        if (isset($this->visitedObjects[$objectId])) {
+            return $this->span('class', $class) . ' ' . $this->objectRef($objectId) . ' ' . $this->punct('{…}');
+        }
+
+        if ($depth > self::MAX_DEPTH) {
+            return $this->span('class', $class) . ' ' . $this->objectRef($objectId) . ' ' . $this->span('punct', '*MAX DEPTH REACHED*');
+        }
+
         $ref = new \ReflectionObject($value);
         $props = $ref->getProperties();
 
         if ($props === []) {
-            return $this->span('class', $class) . ' ' . $this->punct('{}');
+            return $this->span('class', $class) . ' ' . $this->objectRef($objectId) . ' ' . $this->punct('{}');
         }
+
+        $this->visitedObjects[$objectId] = true;
 
         $id = 'neo-dd-' . (++$this->idCounter);
         $open = $depth < 1 ? ' open' : '';
 
         $rows = '';
         foreach ($props as $prop) {
-            $prop->setAccessible(true);
+            if ($this->nodeCount > self::MAX_NODES) {
+                $rows .= '<div class="neo-dd-row">' . $this->span('punct', '*TRUNCATED*') . '</div>';
+                break;
+            }
 
             if (!$prop->isInitialized($value)) {
                 $rows .= '<div class="neo-dd-row"><span class="neo-dd-key">' . $this->renderPropName($prop) . $this->punct(' => ') . '</span>'
@@ -157,14 +228,49 @@ final class Dumper
                 . $this->renderValue($prop->getValue($value), $depth + 1) . '</div>';
         }
 
+        unset($this->visitedObjects[$objectId]);
+
         return sprintf(
-            '<details id="%s" class="neo-dd-details"%s><summary>%s %s</summary><div class="neo-dd-indent">%s</div></details>',
+            '<details id="%s" class="neo-dd-details"%s><summary>%s %s <span class="neo-dd-brace-closed">%s</span><span class="neo-dd-brace-open">%s</span></summary><div class="neo-dd-indent">%s</div><div class="neo-dd-brace-close-line">%s</div></details>',
             $id,
             $open,
             $this->span('class', $class),
+            $this->objectRef($objectId),
             $this->punct('{…}'),
-            $rows
+            $this->punct('{'),
+            $rows,
+            $this->punct('}')
         );
+    }
+
+    private function renderDateTime(\DateTimeInterface $value, int $depth, int $objectId): string
+    {
+        $class = $value::class;
+        $id = 'neo-dd-' . (++$this->idCounter);
+        $open = $depth < 1 ? ' open' : '';
+
+        $rows = '<div class="neo-dd-row"><span class="neo-dd-key">' . $this->punct('date') . $this->punct(': ') . '</span>'
+            . $this->renderString($value->format('Y-m-d H:i:s')) . '</div>';
+
+        $rows .= '<div class="neo-dd-row"><span class="neo-dd-key">' . $this->punct('timezone') . $this->punct(': ') . '</span>'
+            . $this->renderString($value->getTimezone()->getName()) . '</div>';
+
+        return sprintf(
+            '<details id="%s" class="neo-dd-details"%s><summary>%s %s <span class="neo-dd-brace-closed">%s</span><span class="neo-dd-brace-open">%s</span></summary><div class="neo-dd-indent">%s</div><div class="neo-dd-brace-close-line">%s</div></details>',
+            $id,
+            $open,
+            $this->span('class', $class),
+            $this->objectRef($objectId),
+            $this->punct('{…}'),
+            $this->punct('{'),
+            $rows,
+            $this->punct('}')
+        );
+    }
+
+    private function objectRef(int $objectId): string
+    {
+        return sprintf('<span style="color:%s;font-size:0.85em;">#%d</span>', self::COLORS['punct'], $objectId);
     }
 
     private function renderPropName(\ReflectionProperty $prop): string
@@ -213,6 +319,19 @@ final class Dumper
             overflow-x: auto;
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }
+
+        .neo-dd-brace-open {
+            display: none;
+        }
+
+        .neo-dd-details[open] > summary .neo-dd-brace-closed {
+            display: none;
+        }
+
+        .neo-dd-details[open] > summary .neo-dd-brace-open {
+            display: inline;
+        }
+
         .neo-dd-caller {
             color: #6b7280;
             font-size: 11px;
@@ -220,38 +339,56 @@ final class Dumper
             padding-bottom: 0.5rem;
             border-bottom: 1px solid #313244;
         }
+
         .neo-dd-block {
             margin-bottom: 0.5rem;
         }
+
         .neo-dd-block:last-child {
             margin-bottom: 0;
         }
+
         .neo-dd-details summary {
+            display: inline;
             cursor: pointer;
             list-style: none;
         }
+
         .neo-dd-details summary::-webkit-details-marker {
             display: none;
         }
+
         .neo-dd-details summary::before {
             content: "▸";
             display: inline-block;
             width: 1em;
             color: #6b7280;
         }
+
         .neo-dd-details[open] > summary::before {
             content: "▾";
         }
+
         .neo-dd-indent {
             margin-left: 1.4em;
             border-left: 1px solid #313244;
             padding-left: 0.75em;
         }
+
         .neo-dd-row {
             padding: 0.1rem 0;
         }
+        
+        .neo-dd-details {
+            display: inline;
+        }
+
         .neo-dd-key {
             margin-right: 0.1em;
+        }
+        
+        .neo-dd-details > .neo-dd-brace-close-line {
+            display: block;
         }
     </style>
     {$callerHtml}

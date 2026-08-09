@@ -2,8 +2,10 @@
 
 use Neo\Core\DI\ContainerRegistry;
 use Neo\Core\Tools\Debug\Dumper;
+use Neo\Core\Utils\Config\ConfigManager;
 
 if (!function_exists('dump')) {
+
     function dump(mixed ...$vars): void
     {
         if (!isDevEnvironment()) {
@@ -22,6 +24,7 @@ if (!function_exists('dump')) {
 }
 
 if (!function_exists('dd')) {
+
     function dd(mixed ...$vars): void
     {
         if (!isDevEnvironment()) {
@@ -37,9 +40,10 @@ if (!function_exists('isDevEnvironment')) {
     function isDevEnvironment(): bool
     {
         try {
-            $container = ContainerRegistry::get();
-
-            return $container->get('debug.configModule')->from('app')->get('environment') === 'dev';
+            return ContainerRegistry::get()
+                    ->get(ConfigManager::class)
+                    ->from('app')
+                    ->get('environment') === 'dev';
         } catch (\Throwable) {
             return false;
         }

@@ -23,6 +23,22 @@ class ErrorManager
         $this->container = $container;
     }
 
+    private static function safeContextDump(array $context): string
+    {
+        try {
+            $json = json_encode(
+                $context,
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR
+            );
+
+            if ($json !== false) {
+                return htmlspecialchars($json, ENT_QUOTES, 'UTF-8');
+            }
+        } catch (\Throwable) {}
+
+        return htmlspecialchars('[unable to render context safely]', ENT_QUOTES, 'UTF-8');
+    }
+
     public function setEnv(string $env): void
     {
         $this->resolvedEnv = $env;
@@ -387,15 +403,15 @@ class ErrorManager
 
             $contextBlock = '';
             if (!empty($exception->getContext())) {
-                $context = htmlspecialchars(print_r($exception->getContext(), true), ENT_QUOTES, 'UTF-8');
+                $context = self::safeContextDump($exception->getContext());
                 $contextBlock = <<<HTML
-            <div style="border-top:1px solid #e5e7eb;">
-                <div style="padding:0.6rem 1.25rem;background:#f9fafb;border-bottom:1px solid #e5e7eb;">
-                    <span style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9ca3af;">Contexte</span>
-                </div>
-                <pre style="margin:0;padding:1.25rem;font-family:monospace;font-size:0.72rem;line-height:1.7;color:#374151;background:#f9fafb;overflow-x:auto;white-space:pre;">{$context}</pre>
+        <div style="border-top:1px solid #e5e7eb;">
+            <div style="padding:0.6rem 1.25rem;background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+                <span style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9ca3af;">Contexte</span>
             </div>
-            HTML;
+            <pre style="margin:0;padding:1.25rem;font-family:monospace;font-size:0.72rem;line-height:1.7;color:#374151;background:#f9fafb;overflow-x:auto;white-space:pre;">{$context}</pre>
+        </div>
+        HTML;
             }
 
             $devBlock = <<<HTML
