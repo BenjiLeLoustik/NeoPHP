@@ -36,6 +36,9 @@ class NotificationManager
     /** @var array<string, mixed> */
     private array $templateVars = [];
 
+    /** @var list<array{channel: class-string<ChannelInterface>, params: array<string, mixed>, template: string, result: string, duration: float, error: string|null}> */
+    private static array $log = [];
+
     public function __construct(
         private readonly Container $container,
     ) {}
@@ -105,6 +108,10 @@ class NotificationManager
     {
         $this->assertChannelSelected();
 
+        $channelClass = $this->channelClass;
+        $params = $this->params;
+        $template = $this->template;
+
         $body = $this->renderTemplate();
 
         $this->channel
@@ -117,14 +124,22 @@ class NotificationManager
 
         try {
             $result = $this->channel->send();
+            return $result;
         } catch (ChannelException $e) {
             $error = $e->getMessage();
             throw $e;
         } finally {
+            self::$log[] = [
+                'channel' => $channelClass,
+                'params' => $params,
+                'template' => $template,
+                'result' => $result->value,
+                'duration' => round((microtime(true) - $start) * 1000, 2),
+                'error' => $error,
+            ];
+
             $this->reset();
         }
-
-        return $result;
     }
 
     /**
@@ -213,5 +228,13 @@ class NotificationManager
         $this->params = [];
         $this->template = '';
         $this->templateVars = [];
+    }
+
+    /**
+     * @return list<array{channel: class-string<ChannelInterface>, params: array<string, mixed>, template: string, result: string, duration: float, error: string|null}>
+     */
+    public static function getLog(): array
+    {
+        return self::$log;
     }
 }
