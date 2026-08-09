@@ -15,6 +15,8 @@ final class FormBuilder
     /** @var array<string, array{type: string, options: array<string, mixed>}> */
     private array $definitions = [];
 
+    private ?Form $builtForm = null;
+
     public function __construct(
         private readonly string $name,
         private readonly PropertyAccessor $accessor,
@@ -41,6 +43,10 @@ final class FormBuilder
 
     public function getForm(): Form
     {
+        if ($this->builtForm !== null) {
+            return $this->builtForm;
+        }
+
         $form = new Form($this->name, $this->accessor, $this->validator, $this->csrf, $this->entity);
 
         foreach ($this->definitions as $name => $definition) {
@@ -66,7 +72,7 @@ final class FormBuilder
             $form->getField(Form::CSRF_FIELD)?->setValue($form->getCsrfToken());
         }
 
-        return $form;
+        return $this->builtForm = $form;
     }
 
     /**

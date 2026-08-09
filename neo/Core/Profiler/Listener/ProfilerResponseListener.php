@@ -37,17 +37,6 @@ final class ProfilerResponseListener implements EventSubscriberInterface
     public function onResponse(ResponseEvent $event): void
     {
         $response = $event->getResponse();
-
-        if ($response instanceof RedirectResponse || $response instanceof JsonResponse) {
-            return;
-        }
-
-        $contentType = $response->getHeaders()['Content-Type'] ?? 'text/html';
-
-        if (!str_contains($contentType, 'text/html')) {
-            return;
-        }
-
         $path = $_SERVER['REQUEST_URI'] ?? '/';
 
         if (str_starts_with($path, '/_profiler')) {
@@ -67,6 +56,16 @@ final class ProfilerResponseListener implements EventSubscriberInterface
         }
 
         $this->saveProfile($statusCode, $path);
+
+        if ($response instanceof RedirectResponse || $response instanceof JsonResponse) {
+            return;
+        }
+
+        $contentType = $response->getHeaders()['Content-Type'] ?? 'text/html';
+
+        if (!str_contains($contentType, 'text/html')) {
+            return;
+        }
 
         $content = $response->getContent();
         $toolbarHtml = $this->toolbar->render($statusCode);

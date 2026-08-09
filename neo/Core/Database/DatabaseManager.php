@@ -14,6 +14,9 @@ class DatabaseManager
     private PDO $pdo;
     private ?string $connection;
 
+    /** @var list<array{sql: string, params: array<string|int, mixed>, duration: float, connection: string|null, time: float}> */
+    private static array $queries = [];
+
     public function __construct(?string $connection = null)
     {
         $this->connection = $connection;
@@ -36,6 +39,8 @@ class DatabaseManager
      */
     public function query(string $sql, array $params = []): PDOStatement
     {
+        $start = microtime(true);
+
         try {
             $stmt = $this->pdo->prepare($sql);
 
@@ -48,8 +53,10 @@ class DatabaseManager
             }
 
             $stmt->execute($params);
+            $this->recordQuery($sql, $params, $start);
             return $stmt;
         } catch (PDOException $e) {
+            $this->recordQuery($sql, $params, $start, $e->getMessage());
             throw new DatabaseException(
                 title: 'Database Query Error',
                 message: sprintf("Error executing query: %s", $e->getMessage()),
@@ -85,6 +92,8 @@ class DatabaseManager
      */
     public function execute(string $sql, array $params = []): bool
     {
+        $start = microtime(true);
+
         try {
             $stmt = $this->pdo->prepare($sql);
 
@@ -96,8 +105,11 @@ class DatabaseManager
                 );
             }
 
-            return $stmt->execute($params);
+            $result = $stmt->execute($params);
+            $this->recordQuery($sql, $params, $start);
+            return $result;
         } catch (PDOException $e) {
+            $this->recordQuery($sql, $params, $start, $e->getMessage());
             throw new DatabaseException(
                 title: 'Database Execute Error',
                 message: sprintf("Error executing query: %s", $e->getMessage()),
@@ -110,5 +122,28 @@ class DatabaseManager
     public function lastInsertId(): string
     {
         return $this->pdo->lastInsertId();
+    }
+
+    /**
+     * @param array<string|int, mixed> $params
+     */
+    private function recordQuery(string $sql, array $params, float $start, ?string $error = null): void
+    {
+        self::$queries[] = [
+            'sql' => $sql,
+            'params' => $params,
+            'duration' => round((microtime(true) - $start) * 1000, 2),
+            'connection' => $this->connection,
+            'time' => $start,
+            'error' => $error,
+        ];
+    }
+
+    /**
+     * @return list<array{sql: string, params: array<string|int, mixed>, duration: float, connection: string|null, time: float, error: string|null}>
+     */
+    public static function getQueries(): array
+    {
+        return self::$queries;
     }
 }
