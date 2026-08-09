@@ -274,6 +274,7 @@ final class ProfilerHtmlRenderer
                 'table' => $this->renderTemplate($this->templatesDir() . '/block-table.template.php', ['block' => $block]),
                 'log-list' => $this->renderTemplate($this->templatesDir() . '/block-log-list.template.php', ['block' => $block]),
                 'timeline' => $this->renderTemplate($this->templatesDir() . '/block-timeline.template.php', ['block' => $block]),
+                'raw-html' => $this->renderTemplate($this->templatesDir() . '/block-raw-html.template.php', ['block' => $block]),
                 'tabs' => $this->renderTabsBlock($block),
                 default => '',
             };
