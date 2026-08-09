@@ -23,6 +23,9 @@ class AssetManager
     private string $env;
     private string $publicPath;
 
+    /** @var list<array{path: string, resolvedPath: string, compiled: bool, duration: float}> */
+    private array $log = [];
+
     /**
      * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
@@ -100,12 +103,14 @@ class AssetManager
      */
     public function getAssetPath(string $path): string
     {
-        if ($this->env === 'prod') {
-            if (isset($this->manifest[$path])) {
-                return $this->manifest[$path];
-            }
+        $start = microtime(true);
 
-            return '/builds/' . $this->currentApplication . '/assets/' . ltrim($path, '/');
+        if ($this->env === 'prod') {
+            $resolved = $this->manifest[$path]
+                ?? ('/builds/' . $this->currentApplication . '/assets/' . ltrim($path, '/'));
+
+            $this->recordAsset($path, $resolved, false, $start);
+            return $resolved;
         }
 
         $sourceFile = $this->sourcePath . $path;
@@ -121,10 +126,13 @@ class AssetManager
         $currentHash = substr(md5_file($sourceFile), 0, 8);
 
         if (isset($this->manifest[$path]) && str_contains($this->manifest[$path], $currentHash)) {
+            $this->recordAsset($path, $this->manifest[$path], false, $start);
             return $this->manifest[$path];
         }
 
-        return $this->compile($path);
+        $resolved = $this->compile($path);
+        $this->recordAsset($path, $resolved, true, $start);
+        return $resolved;
     }
 
     /**
@@ -197,5 +205,23 @@ class AssetManager
         $this->saveManifest();
 
         return '/' . ltrim($relativePath, '/');
+    }
+
+    private function recordAsset(string $path, string $resolvedPath, bool $compiled, float $start): void
+    {
+        $this->log[] = [
+            'path' => $path,
+            'resolvedPath' => $resolvedPath,
+            'compiled' => $compiled,
+            'duration' => round((microtime(true) - $start) * 1000, 2),
+        ];
+    }
+
+    /**
+     * @return list<array{path: string, resolvedPath: string, compiled: bool, duration: float}>
+     */
+    public function getAssetLog(): array
+    {
+        return $this->log;
     }
 }
