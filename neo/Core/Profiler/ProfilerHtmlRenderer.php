@@ -343,7 +343,7 @@ final class ProfilerHtmlRenderer
                 |> (fn (array $t): array => array_column($t, 'label'))
                 |> (fn (array $l): string => json_encode($l));
 
-        $id = 'tabs-' . substr(md5(($block['section'] ?? '') . $labelsJson), 0, 10);
+        $id = 'tabs-' . ($labelsJson |> md5(...) |> (fn (string $h): string => substr($h, 0, 10)));
 
         $tabs = array_map(
             fn (array $tab) => [

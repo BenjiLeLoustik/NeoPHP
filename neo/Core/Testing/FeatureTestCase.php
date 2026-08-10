@@ -116,7 +116,10 @@ abstract class FeatureTestCase extends PHPUnitTestCase
         ];
 
         foreach ($headers as $name => $value) {
-            $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
+            $key = 'HTTP_' . ($name
+                        |> (fn (string $n): string => str_replace('-', '_', $n))
+                        |> strtoupper(...)
+                );
             $server[$key] = $value;
         }
 

@@ -67,7 +67,7 @@ class HttpClientManager implements HttpClientInterface
                 }
 
                 [$name, $value] = explode(':', $trimmed, 2);
-                $responseHeaders[strtolower(trim($name))][] = trim($value);
+                $responseHeaders[$name |> trim(...) |> strtolower(...)][] = trim($value);
 
                 return $length;
             },

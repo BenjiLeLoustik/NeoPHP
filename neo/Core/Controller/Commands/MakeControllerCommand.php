@@ -137,7 +137,13 @@ PHP;
         $base = $controller
                 |> (fn (string $c): string => preg_replace('/Controller$/', '', $c) ?? '')
                 |> lcfirst(...);
-        return $directory ? strtolower(trim($directory . '/' . $base, '/')) : $base;
+        return $directory
+            ? (
+                ($directory . '/' . $base)
+                    |> (fn (string $s): string => trim($s, '/'))
+                    |> strtolower(...)
+            )
+            : $base;
     }
 
     private function normalizeControllerName(string $input): string

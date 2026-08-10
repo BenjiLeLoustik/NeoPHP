@@ -75,7 +75,8 @@ final class Fs
             return mb_strtoupper(mb_substr($string, 0, 1)) . mb_substr($string, 1);
         }
 
-        $parts = array_filter(explode('_', $string), fn ($p) => $p !== '');
+        $parts = explode('_', $string)
+                |> (fn (array $p): array => array_filter($p, fn ($x) => $x !== ''));
 
         $parts = array_map(
             fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)) . mb_substr($part, 1),

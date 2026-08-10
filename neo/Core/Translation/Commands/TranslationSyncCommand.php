@@ -164,7 +164,9 @@ final class TranslationSyncCommand extends AbstractCommand
             $locales[] = basename($dir);
         }
 
-        return array_values(array_unique($locales));
+        return $locales
+                |> array_unique(...)
+                |> array_values(...);
     }
 
     /**

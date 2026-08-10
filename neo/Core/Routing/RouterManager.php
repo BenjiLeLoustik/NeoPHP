@@ -347,7 +347,11 @@ class RouterManager
 
                     $url = preg_replace('/\/\{[a-zA-Z0-9_]+\?\}/', '', $url);
                     $url = preg_replace('/\{[a-zA-Z0-9_]+\}/', '', $url);
-                    $url = '/' . trim(preg_replace('#/+#', '/', $url), '/');
+                    $url = '/' . (
+                        $url
+                            |> (fn (string $u): string => (string) preg_replace('#/+#', '/', $u))
+                            |> (fn (string $u): string => trim($u, '/'))
+                        );
 
                     return $url;
                 }

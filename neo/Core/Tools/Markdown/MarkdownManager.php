@@ -160,7 +160,9 @@ class MarkdownManager
                 |> (fn($x) => array_filter($x, static fn(string $s): bool => $s !== '' && $s !== '.'))
                 |> array_values(...);
 
-        $walked = rtrim(str_replace('\\', '/', $base), '/');
+        $walked = $base
+                |> (fn (string $b): string => str_replace('\\', '/', $b))
+                |> (fn (string $b): string => rtrim($b, '/'));
 
         foreach ($segments as $segment) {
             $next = $walked . '/' . $segment;
@@ -386,7 +388,12 @@ class MarkdownManager
             return null;
         }
 
-        return is_string($public) ? rtrim(dirname($public), '/') : null;
+        return is_string($public)
+            ? ($public
+                    |> dirname(...)
+                    |> (fn (string $d): string => rtrim($d, '/'))
+            )
+            : null;
     }
 
     private function startsNewBlock(string $line): bool
@@ -417,7 +424,11 @@ class MarkdownManager
         $text = strip_tags($text);
         $text = mb_strtolower(trim($text));
         $text = preg_replace('/[^\p{L}\p{N}\s-]+/u', '', $text) ?? $text;
-        $text = preg_replace('/\s+/', '-', trim($text)) ?? $text;
+
+        $text = ($text
+                |> trim(...)
+                |> (fn (string $t): ?string => preg_replace('/\s+/', '-', $t))
+        ) ?? $text;
 
         return trim($text, '-');
     }

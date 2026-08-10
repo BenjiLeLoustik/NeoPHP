@@ -343,7 +343,10 @@ class ErrorManager
             $traceRows = '';
             $i = 0;
             $maxFrames = 50;
-            $traceLines = array_filter(explode("\n", $exception->getTraceAsString()), fn($l) => trim($l) !== '');
+
+            $traceLines = explode("\n", $exception->getTraceAsString())
+                    |> (fn (array $l): array => array_filter($l, fn ($x) => trim($x) !== ''));
+
             $totalFrames = count($traceLines);
 
             foreach ($traceLines as $traceLine) {

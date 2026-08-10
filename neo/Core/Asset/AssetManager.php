@@ -201,7 +201,10 @@ class AssetManager
         $relativePath = '/builds/'
             . $this->currentApplication
             . '/assets/'
-            . ltrim(str_replace($this->buildPath, '', $targetFile), '/');
+            . ($targetFile
+                    |> (fn (string $f): string => str_replace($this->buildPath, '', $f))
+                    |> (fn (string $f): string => ltrim($f, '/'))
+            );
 
         $this->manifest[$path] = $relativePath;
         $this->saveManifest();

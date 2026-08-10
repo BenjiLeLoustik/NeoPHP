@@ -104,7 +104,10 @@ class ApplicationDetector
         );
 
         if (file_exists($cacheFile)) {
-            $cached = json_decode(file_get_contents($cacheFile) ?: '', true);
+
+            $cached = (file_get_contents($cacheFile) ?: '')
+                    |> (fn (string $c): mixed => json_decode($c, true));
+
             if (is_array($cached) && ($cached['signature'] ?? null) === $signature) {
                 if (isset($cached['map'][$server])) {
                     $this->container->set('application', $cached['map'][$server]);

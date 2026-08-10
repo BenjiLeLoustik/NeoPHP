@@ -32,7 +32,12 @@ $colors = [
 $usedCategories = array_unique(array_column($entries, 'category'));
 $rowHeight = 30;
 $trackWidth = 1400;
-$id = 'wf-' . substr(md5(json_encode(array_column($entries, 'label'))), 0, 8);
+$id = 'wf-' . (
+        array_column($entries, 'label')
+            |> (fn (array $l): string => json_encode($l))
+            |> md5(...)
+            |> (fn (string $h): string => substr($h, 0, 8))
+        );
 ?>
 <style>
     .waterfall {

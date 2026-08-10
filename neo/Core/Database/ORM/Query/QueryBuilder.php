@@ -267,7 +267,11 @@ final class QueryBuilder
         $sql .= $whereSql;
 
         if ($this->groups !== []) {
-            $sql .= ' GROUP BY ' . implode(', ', array_map($this->quote(...), $this->groups));
+            $sql .= ' GROUP BY ' . (
+                $this->groups
+                    |> (fn (array $g): array => array_map($this->quote(...), $g))
+                    |> (fn (array $g): string => implode(', ', $g))
+                );
         }
 
         if ($this->havings !== []) {

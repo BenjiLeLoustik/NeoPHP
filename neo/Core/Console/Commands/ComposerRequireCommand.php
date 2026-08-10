@@ -73,7 +73,9 @@ final class ComposerRequireCommand extends AbstractCommand
             return ExitCode::FAILURE;
         }
 
-        $composer = json_decode(file_get_contents($composerPath), true);
+        $composer = $composerPath
+                |> file_get_contents(...)
+                |> (fn (string $c): mixed => json_decode($c, true));
 
         if (isset($composer['require'][$package])) {
             Output::warning("Package '$package' is already present in '$projectName' ({$composer['require'][$package]}).");

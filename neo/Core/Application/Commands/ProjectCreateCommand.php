@@ -451,7 +451,9 @@ JS;
             file_put_contents($localPath, $seed);
         }
 
-        $data = json_decode(file_get_contents($localPath), true);
+        $data = $localPath
+                |> file_get_contents(...)
+                |> (fn (string $c): mixed => json_decode($c, true));
 
         if (!is_array($data)) {
             $data = ['repositories' => [], 'require' => []];

@@ -171,7 +171,10 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
             new \RecursiveDirectoryIterator($entityDir, \FilesystemIterator::SKIP_DOTS)
         );
 
-        $normalizedDir = rtrim(str_replace('\\', '/', $entityDir), '/');
+        $normalizedDir = $entityDir
+                |> (fn (string $d): string => str_replace('\\', '/', $d))
+                |> (fn (string $d): string => rtrim($d, '/'));
+
         $classes = [];
 
         foreach ($rii as $file) {

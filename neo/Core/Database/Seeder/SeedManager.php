@@ -26,7 +26,10 @@ class SeedManager
             return [];
         }
 
-        $normalizedDir = rtrim(str_replace('\\', '/', $directory), '/');
+        $normalizedDir = $directory
+                |> (fn (string $d): string => str_replace('\\', '/', $d))
+                |> (fn (string $d): string => rtrim($d, '/'));
+
         $seeders = [];
 
         $iterator = new \RecursiveIteratorIterator(
@@ -39,7 +42,11 @@ class SeedManager
             }
 
             $path = str_replace('\\', '/', $file->getPathname());
-            $relative = ltrim(substr($path, strlen($normalizedDir)), '/');
+
+            $relative = $path
+                    |> (fn (string $p): string => substr($p, strlen($normalizedDir)))
+                    |> (fn (string $p): string => ltrim($p, '/'));
+
             $classPath = str_replace('/', '\\', substr($relative, 0, -4));
             $fqcn = $namespace . '\\' . $classPath;
 
@@ -93,14 +100,18 @@ class SeedManager
     public function filterByGroup(array $seeders, ?string $group, bool $includeDev): array
     {
         if ($group !== null) {
-            return array_values(array_filter($seeders, static fn (array $s) => $s['group'] === $group));
+            return $seeders
+                    |> (fn (array $s): array => array_filter($s, static fn (array $x) => $x['group'] === $group))
+                    |> array_values(...);
         }
 
         if ($includeDev) {
             return $seeders;
         }
 
-        return array_values(array_filter($seeders, static fn (array $s) => $s['group'] === 'reference'));
+        return $seeders
+                |> (fn (array $s): array => array_filter($s, static fn (array $x) => $x['group'] === 'reference'))
+                |> array_values(...);
     }
 
     /**

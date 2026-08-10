@@ -124,7 +124,11 @@
             $context = $row['context'];
             $isRaw = is_array($context) && ($context['raw'] ?? false);
             $hasContext = $isRaw ? true : ($context !== '');
-            $contextId = 'log-ctx-' . substr(md5($row['time'] . $i . $row['message']), 0, 10);
+            $contextId = 'log-ctx-' . (
+                    ($row['time'] . $i . $row['message'])
+                        |> md5(...)
+                        |> (fn (string $h): string => substr($h, 0, 10))
+                    );
             ?>
             <div class="log-entry">
                 <div class="log-entry-time"><?= htmlspecialchars($row['time']) ?></div>
