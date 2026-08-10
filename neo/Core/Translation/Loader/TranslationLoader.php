@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\Translation\Loader;
 
 use Neo\Core\Translation\Domain\TranslationDomain;

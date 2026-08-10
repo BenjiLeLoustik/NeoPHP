@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /** @var array{section?: string|null, rows: list<array{label: string, value: string}>} $block */
 ?>
     <style>

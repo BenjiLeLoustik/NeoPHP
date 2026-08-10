@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\Database;
 
 use Neo\Core\Database\Access\Connection\DatabaseConnection;

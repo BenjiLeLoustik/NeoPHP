@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\Tools\Markdown\Extension;
 
 use Neo\Core\Extension\Attribute\Extension;

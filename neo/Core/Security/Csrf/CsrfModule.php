@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\Security\Csrf;
 
 use Neo\Core\DI\Container;

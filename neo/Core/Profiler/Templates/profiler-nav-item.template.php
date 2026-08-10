@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * @var string $key
  * @var array{title: string, badge: string|null, badgeType: string} $item

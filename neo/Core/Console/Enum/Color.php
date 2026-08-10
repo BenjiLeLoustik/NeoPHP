@@ -1,7 +1,8 @@
 <?php
 
-namespace Neo\Core\Console\Enum;
+declare(strict_types=1);
 
+namespace Neo\Core\Console\Enum;
 enum Color: string
 {
     case RESET = "\033[0m";

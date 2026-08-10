@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\Utils\Scanner;
 
 use Neo\Core\DI\Container;

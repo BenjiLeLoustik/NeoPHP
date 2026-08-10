@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\DI;
 
 use Neo\Core\DI\Exception\ContainerException;

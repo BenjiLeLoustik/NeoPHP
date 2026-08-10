@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /** @var array{label: string, value: string, unit?: string} $metric */
 ?>
 <style>

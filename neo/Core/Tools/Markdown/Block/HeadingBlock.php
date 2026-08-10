@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\Tools\Markdown\Block;
 
 class HeadingBlock extends AbstractBlock

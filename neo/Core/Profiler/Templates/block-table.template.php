@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /** @var array{section?: string|null, columns: list<string>, rows: list<list<mixed>>} $block */
 ?>
     <style>

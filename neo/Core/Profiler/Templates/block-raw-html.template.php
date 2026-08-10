@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /** @var array{section?: string|null, html: string} $block */
 ?>
 <?php if (($block['section'] ?? null) !== null): ?>

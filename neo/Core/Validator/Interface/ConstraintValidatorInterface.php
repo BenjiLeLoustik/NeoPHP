@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\Validator\Interface;
 
 use Neo\Core\Validator\Interface\ConstraintInterface;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\Asset;
 
 use Neo\Core\DI\Container;

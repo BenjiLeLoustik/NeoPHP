@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * @var string $id
  * @var array{section?: string|null, tabs: list<array{label: string, badge: string|null, badgeType: string, blocksHtml: string}>} $block

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * @var array{label: string, value: string, badge: string|null, badgeColor: string} $item
  */

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Neo\Core\DI\ContainerRegistry;
 use Neo\Core\Tools\Debug\Dumper;
 use Neo\Core\Tools\Debug\DumpRecorder;

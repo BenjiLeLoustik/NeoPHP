@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\Database\ORM\Type;
 
 use Neo\Core\Database\ORM\Platform\AbstractPlatform;

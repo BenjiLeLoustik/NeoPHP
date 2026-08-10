@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neo\Core\View\Interface;
 
 interface TwigExtensionInterface
