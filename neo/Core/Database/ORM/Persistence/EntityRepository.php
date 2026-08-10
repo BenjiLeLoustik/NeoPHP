@@ -56,7 +56,7 @@ class EntityRepository
     public function findOneBy(array $criteria, array $orderBy = []): ?object
     {
         $result = $this->persister()->loadAll($this->toColumns($criteria), $orderBy, 1);
-        return $result[0] ?? null;
+        return array_first($result);
     }
 
     /**
@@ -114,7 +114,7 @@ class EntityRepository
                 && ($this->metadata->associationMappings[$field]['type'] & ClassMetaData::TO_ONE)
                 && $this->metadata->associationMappings[$field]['isOwningSide']
             ) {
-                $jc = $this->metadata->associationMappings[$field]['joinColumns'][0];
+                $jc = array_first($this->metadata->associationMappings[$field]['joinColumns']);
                 $columns[$jc['name']] = is_object($value)
                     ? $this->em->getClassMetadata($value::class)->getIdentifierValue($value)
                     : $value;

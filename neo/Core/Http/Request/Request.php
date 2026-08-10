@@ -346,7 +346,7 @@ class Request
 
             foreach ($ipHeaders as $header) {
                 if (!empty($this->server[$header])) {
-                    $ip = trim(explode(',', $this->server[$header])[0]);
+                    $ip = trim(array_first(explode(',', $this->server[$header])));
                     if (
                         filter_var(
                             $ip,

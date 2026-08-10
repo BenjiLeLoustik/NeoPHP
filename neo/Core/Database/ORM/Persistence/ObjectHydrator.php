@@ -61,7 +61,7 @@ final class ObjectHydrator
 
         foreach ($metadata->associationMappings as $field => $assoc) {
             if ($assoc['isOwningSide'] && ($assoc['type'] & ClassMetaData::TO_ONE)) {
-                $jc = $assoc['joinColumns'][0] ?? null;
+                $jc = array_first($assoc['joinColumns']);
                 $refValue = $jc !== null ? ($row[$jc['name']] ?? null) : null;
 
                 if ($refValue !== null) {

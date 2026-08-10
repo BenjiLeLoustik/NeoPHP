@@ -40,7 +40,7 @@ final class EntityPersister
         }
 
         foreach ($this->owningToOneAssociations() as $field => $assoc) {
-            $jc = $assoc['joinColumns'][0];
+            $jc = array_first($assoc['joinColumns']);
             $target = $this->metadata->getFieldValue($entity, $field);
             $columns[] = $jc['name'];
             $values[] = $target !== null ? $this->referencedValue($target, $jc['referencedColumnName']) : null;
@@ -96,7 +96,7 @@ final class EntityPersister
                 if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetaData::TO_ONE)) {
                     continue;
                 }
-                $jc = $assoc['joinColumns'][0];
+                $jc = array_first($assoc['joinColumns']);
                 $sets[] = $platform->quoteIdentifier($jc['name']) . ' = ?';
                 $values[] = $new !== null ? $this->referencedValue($new, $jc['referencedColumnName']) : null;
             }

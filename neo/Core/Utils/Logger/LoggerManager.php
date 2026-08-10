@@ -312,7 +312,7 @@ class LoggerManager
         $ext = $this->config['archive']['extension'] ?? 'zip';
 
         $parts = explode('-', $date);
-        $year = $parts[0] ?? date('Y');
+        $year = array_first($parts) ?? date('Y');
         $month = $parts[1] ?? date('m');
 
         $archivePath = "{$this->archiveDirectory}/{$year}/{$month}";

@@ -277,7 +277,7 @@ class EventManager
     {
         foreach ($subscriber::getSubscribedEvents() as $eventClass => $methodOrTuple) {
             [$method, $priority] = is_array($methodOrTuple)
-                ? [$methodOrTuple[0], $methodOrTuple[1] ?? 0]
+                ? [array_first($methodOrTuple), $methodOrTuple[1] ?? 0]
                 : [$methodOrTuple, 0];
 
             $this->addListener($eventClass, get_class($subscriber), $priority, $method);

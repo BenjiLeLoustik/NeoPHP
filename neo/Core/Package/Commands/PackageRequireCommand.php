@@ -206,7 +206,7 @@ class PackageRequireCommand extends AbstractCommand
         }
 
         $loaders = ClassLoader::getRegisteredLoaders();
-        $loader = array_values($loaders)[0] ?? null;
+        $loader = array_first(array_values($loaders));
 
         if ($loader === null) {
             return;

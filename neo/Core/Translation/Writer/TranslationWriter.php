@@ -9,7 +9,10 @@ use Neo\Core\Translation\Registry\TranslationRegistry;
 
 final class TranslationWriter
 {
-    public function __construct(private TranslationLoader $loader) {}
+    public function __construct(
+        private TranslationLoader $loader
+    ) {
+    }
 
     /**
      * @throws TranslationException
@@ -17,7 +20,7 @@ final class TranslationWriter
     public function ensure(string $locale, string $key, ?string $domain = null): void
     {
         $domain = TranslationDomain::normalize($domain);
-        $path = TranslationRegistry::getPaths()[0] ?? null;
+        $path = array_first(TranslationRegistry::getPaths());
 
         if ($path === null) {
             return;

@@ -332,9 +332,9 @@ final class QueryBuilder
         return '`' . str_replace('`', '``', $identifier) . '`';
     }
 
-    private function stripAlias(string $column): string
+    private function stripAlias(string $column): ?string
     {
         $parts = explode('.', $column);
-        return end($parts);
+        return array_last($parts);
     }
 }

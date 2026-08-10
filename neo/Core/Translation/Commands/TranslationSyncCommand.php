@@ -367,7 +367,7 @@ final class TranslationSyncCommand extends AbstractCommand
         $key = null;
 
         if ($keyInArgs) {
-            $keyExpr = $named['text'] ?? $named['key'] ?? ($positional[0] ?? null);
+            $keyExpr = $named['text'] ?? $named['key'] ?? (array_first($positional));
             $key = $this->extractLiteralString($keyExpr);
             $domainPositionalIndex = 2;
         } else {

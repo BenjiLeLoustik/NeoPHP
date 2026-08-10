@@ -110,8 +110,8 @@ final class SchemaDiffer
             }
 
             $candidates[] = [
-                'from' => $droppedTables[0],
-                'to' => $createSignatures[$signature][0],
+                'from' => array_first($droppedTables),
+                'to' => array_first($createSignatures[$signature]),
             ];
         }
 
@@ -143,8 +143,8 @@ final class SchemaDiffer
             }
 
             $candidates[] = [
-                'from' => $names[0],
-                'to' => $addedBySignature[$signature][0],
+                'from' => array_first($names),
+                'to' => array_first($addedBySignature[$signature]),
             ];
         }
 
