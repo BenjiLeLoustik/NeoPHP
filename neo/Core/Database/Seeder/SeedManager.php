@@ -47,7 +47,10 @@ class SeedManager
                     |> (fn (string $p): string => substr($p, strlen($normalizedDir)))
                     |> (fn (string $p): string => ltrim($p, '/'));
 
-            $classPath = str_replace('/', '\\', substr($relative, 0, -4));
+            $classPath = $relative
+                    |> (fn (string $r): string => substr($r, 0, -4))
+                    |> (fn (string $s): string => str_replace('/', '\\', $s));
+
             $fqcn = $namespace . '\\' . $classPath;
 
             if (!class_exists($fqcn)) {
