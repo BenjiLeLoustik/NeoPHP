@@ -1,3 +1,15 @@
+v4.31.1
+- fix: remove command to scan php8.5 codebase (defa3dc)
+- docs: add explanatory comments to intentionally empty catch blocks across the codebase (e05f08f)
+- fix: remove trailing whitespace (97536a5)
+- fix: add missing declare strict type (8df3ccf)
+- fix: add missing declare strict type (31041dc)
+- fix: use pipe operator from PHP8.5 (2774388)
+- fix: use pipe operator from PHP8.5 (9b944c2)
+- fix: use array_first and array_last from PHP8.5 (0387605)
+- refactor: modernize PHP code and update documentation (97f1d37)
+- refactor: modernize PHP code and update documentation (704fd0f)
+
 v4.31.0
 - fix: resolve PHPStan level 6 errors (8cc94b5)
 - feat: add NotificationCollector with success/failed/partial/skipped tabs, track sends in NotificationManager (d8de5c4)
