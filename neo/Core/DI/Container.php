@@ -180,7 +180,10 @@ class Container implements ContainerInterface
                     try {
                         $prop = $ref->getProperty($name);
                         $prop->setValue($instance, $value);
-                    } catch (ReflectionException) {}
+                    } catch (ReflectionException) {
+                        // Constructor parameter has no matching property of the same name
+                        // Nothing to inject, skip it.
+                    }
                 }
 
                 return $instance;

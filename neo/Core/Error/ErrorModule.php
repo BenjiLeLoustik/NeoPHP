@@ -43,7 +43,10 @@ class ErrorModule implements ModuleInterface
                 ->from('app')
                 ->get('environment') ?? 'prod';
             $errorHandler->setEnv($env);
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+            // Config not resolvable yet at this point in boot
+            // ErrorManager falls back to resolving env lazily on first use.
+        }
 
         return $errorHandler;
     }

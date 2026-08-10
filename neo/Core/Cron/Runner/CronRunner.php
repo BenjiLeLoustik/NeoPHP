@@ -135,7 +135,9 @@ class CronRunner
     {
         try {
             $this->container->get('cron.loggerModule')->$level($message, [], 'Cron');
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+            // Logger unavailable — the console output below is the fallback, don't let this break the cron run.
+        }
 
         match ($level) {
             'info' => Output::info($message),

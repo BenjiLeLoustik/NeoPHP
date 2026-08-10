@@ -115,14 +115,20 @@ final class ObjectHydrator
 
         try {
             $metadata->setFieldValue($entity, $field, new LazyCollection($loader));
-        } catch (\TypeError) {}
+        } catch (\TypeError) {
+            // Property type doesn't accept a LazyCollection
+            // (e.g. non-typed or incompatible declared type) — skip silently.
+        }
     }
 
     private function writeField(ClassMetaData $metadata, object $entity, string $field, mixed $value): void
     {
         try {
             $metadata->setFieldValue($entity, $field, $value);
-        } catch (\TypeError) {}
+        } catch (\TypeError) {
+            // Hydrated value's type doesn't match the property's declared type
+            // Skip rather than fail the whole hydration.
+        }
     }
 
     private function castTargetId(string $targetEntity, mixed $value): mixed

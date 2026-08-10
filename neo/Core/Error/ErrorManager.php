@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Neo\Core\Error;
@@ -38,7 +39,10 @@ class ErrorManager
             if ($json !== false) {
                 return htmlspecialchars($json, ENT_QUOTES, 'UTF-8');
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+            // json_encode itself is unlikely to throw, but this must never crash the error page
+            // Fall through to the plain-text fallback below.
+        }
 
         return htmlspecialchars('[unable to render context safely]', ENT_QUOTES, 'UTF-8');
     }
@@ -146,7 +150,10 @@ class ErrorManager
                 $e instanceof FrameworkException ? $e : FrameworkException::fromThrowable($e)
             );
             $dispatcher->dispatch($exceptionEvent);
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+            // Event dispatch is best effort here
+            // A broken listener must not prevent the actual error page from rendering.
+        }
 
         $exception = $e instanceof FrameworkException ? $e : FrameworkException::fromThrowable($e);
 

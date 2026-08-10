@@ -107,7 +107,9 @@ class ModuleManager
 
             $profiler = ProfilerManager::getInstance();
             $profiler->setBootError($e);
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+            // Never let profiler instrumentation mask the real boot error.
+        }
     }
 
     /**
