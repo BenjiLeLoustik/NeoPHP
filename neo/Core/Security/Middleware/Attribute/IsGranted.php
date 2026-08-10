@@ -16,5 +16,6 @@ class IsGranted
         public string $message = '',
         public string $onError = 'block',
         public ?string $redirect = null,
-    ) {}
+    ) {
+    }
 }

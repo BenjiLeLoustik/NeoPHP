@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Profiler\Listener;
 
+use JsonException;
 use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\Interface\EventSubscriberInterface;
 use Neo\Core\Http\Response\Types\JsonResponse;
@@ -18,9 +19,9 @@ final class ProfilerResponseListener implements EventSubscriberInterface
 {
 
     public function __construct(
-        private readonly Toolbar $toolbar,
-        private readonly ProfilerManager $profiler,
-        private readonly string $storageDir,
+        private Toolbar $toolbar,
+        private ProfilerManager $profiler,
+        private string $storageDir,
     ) {
     }
 
@@ -49,7 +50,7 @@ final class ProfilerResponseListener implements EventSubscriberInterface
                 $collector->setStatusCode($statusCode);
             }
 
-            if ($collector instanceof \Neo\Core\Profiler\Interface\ResponseAwareCollectorInterface) {
+            if ($collector instanceof ResponseAwareCollectorInterface) {
                 $collector->setResponse($response);
             }
         }
@@ -83,6 +84,7 @@ final class ProfilerResponseListener implements EventSubscriberInterface
 
     /**
      * @return array<string, mixed>
+     * @throws JsonException
      */
     private function buildAndSaveProfile(?int $statusCode, string $path): array
     {

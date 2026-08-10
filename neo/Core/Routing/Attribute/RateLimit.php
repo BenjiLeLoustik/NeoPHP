@@ -8,17 +8,10 @@ use Attribute;
 #[Attribute(Attribute::TARGET_METHOD | Attribute::TARGET_CLASS)]
 class RateLimit
 {
-    public int $maxAttempts;
-    public int $decaySeconds;
-    public string $message;
-
     public function __construct(
-        int $maxAttempts = 60,
-        int $decaySeconds = 60,
-        string $message = 'Too many requests; please try again in a few moments.',
+        public int $maxAttempts = 60,
+        public int $decaySeconds = 60,
+        public string $message = 'Too many requests; please try again in a few moments.',
     ) {
-        $this->maxAttempts = $maxAttempts;
-        $this->decaySeconds = $decaySeconds;
-        $this->message = $message;
     }
 }

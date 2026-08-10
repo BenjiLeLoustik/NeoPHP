@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Neo\Core\Security\Middleware\Collector;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Security\Middleware\MiddlewareManager;
 use Neo\Core\Tools\Debug\Dumper;
@@ -12,8 +13,9 @@ use Neo\Core\Utils\Cache\CacheManager;
 
 final class MiddlewareCollector implements CollectorInterface
 {
-    public function __construct(private readonly Container $container)
-    {
+    public function __construct(
+        private Container $container
+    ) {
     }
 
     public function getName(): string
@@ -21,13 +23,19 @@ final class MiddlewareCollector implements CollectorInterface
         return 'middleware';
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     public function collect(): array
     {
         /** @var MiddlewareManager $middleware */
         $middleware = $this->container->get(MiddlewareManager::class);
 
         $log = $middleware->getExecutionLog();
-        $blockedCount = count(array_filter($log, static fn (array $m) => !$m['passed']));
+        $blockedCount = $log
+                |> (fn (array $l): array => array_filter($l, static fn (array $m) => !$m['passed']))
+                |> count(...);
 
         return [
             'total' => count($log),
@@ -142,7 +150,14 @@ final class MiddlewareCollector implements CollectorInterface
     }
 
     /**
-     * @param array{class: class-string, params: array<string, mixed>, priority: int, redirect: string|null, message: string, errorClass: string|null} $m
+     * @param array{
+     *     class: class-string,
+     *     params: array<string, mixed>,
+     *     priority: int,
+     *     redirect: string|null,
+     *     message: string,
+     *     errorClass: string|null
+     * } $m
      * @return array{raw: true, html: string}
      */
     private function formatContext(array $m): array
@@ -188,7 +203,10 @@ final class MiddlewareCollector implements CollectorInterface
             return null;
         }
 
-        $prefix = str_contains($m['class'], 'AuthRateLimitMiddleware') ? 'auth_rate_limit:' : 'rate_limit:';
+        $prefix = str_contains($m['class'], 'AuthRateLimitMiddleware')
+            ? 'auth_rate_limit:'
+            : 'rate_limit:';
+
         $maxAttempts = $m['params']['maxAttempts'] ?? null;
 
         $cacheLog = CacheManager::getLog();

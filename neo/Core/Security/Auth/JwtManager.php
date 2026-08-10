@@ -34,18 +34,19 @@ final class JwtManager
      */
     public function generate(array $payload = []): string
     {
-        $header = $this->base64UrlEncode(json_encode([
-            'typ' => 'JWT',
-            'alg' => $this->algorithm,
-        ]));
+        $header = ['typ' => 'JWT', 'alg' => $this->algorithm]
+                |> (fn (array $h): string => json_encode($h))
+                |> $this->base64UrlEncode(...);
 
         $payload['iat'] = time();
         $payload['exp'] = time() + $this->expiration;
 
-        $payload = $this->base64UrlEncode(json_encode($payload));
-        $signature = $this->base64UrlEncode(
-            hash_hmac('sha256', "$header.$payload", $this->secret, true)
-        );
+        $payload = $payload
+                |> (fn (array $p): string => json_encode($p))
+                |> $this->base64UrlEncode(...);
+
+        $signature = hash_hmac('sha256', "$header.$payload", $this->secret, true)
+                |> $this->base64UrlEncode(...);
 
         return "$header.$payload.$signature";
     }
@@ -112,11 +113,16 @@ final class JwtManager
 
     private function base64UrlEncode(string $data): string
     {
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+        return $data
+                |> base64_encode(...)
+                |> (fn($x) => strtr($x, '+/', '-_'))
+                |> (fn($x) => rtrim($x, '='));
     }
 
     private function base64UrlDecode(string $data): string
     {
-        return base64_decode(strtr($data, '-_', '+/'));
+        return $data
+                |> (fn (string $d): string => strtr($d, '-_', '+/'))
+                |> base64_decode(...);
     }
 }

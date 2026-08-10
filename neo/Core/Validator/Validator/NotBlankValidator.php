@@ -12,9 +12,9 @@ final class NotBlankValidator implements ConstraintValidatorInterface
     public function validate(mixed $value, ConstraintInterface $constraint, ValidationContext $context): void
     {
         $ok = match (true) {
-            is_array($value)  => $value !== [],
+            is_array($value) => $value !== [],
             is_string($value) => trim($value) !== '',
-            default           => $value !== null,
+            default => $value !== null,
         };
 
         if (!$ok) {

@@ -26,6 +26,7 @@ class Cookie
 
     /**
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function __construct(Container $container)
     {

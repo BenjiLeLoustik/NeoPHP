@@ -23,8 +23,9 @@ class MarkdownManager
      */
     private array $cache = [];
 
-    public function __construct(Container $container)
-    {
+    public function __construct(
+        Container $container
+    ) {
         $this->container = $container;
     }
 
@@ -65,10 +66,13 @@ class MarkdownManager
     public function getAllMarkdown(array $paths, array $filenames = ['README.md', 'readme.md']): array
     {
         $docs = [];
-        $wanted = array_map('strtolower', $filenames);
+        $wanted = $filenames
+                |> (fn (array $f): array => array_map(strtolower(...), $f));
 
         foreach ($paths as $path) {
-            $root = rtrim(str_replace('\\', '/', $path), '/');
+            $root = $path
+                    |> (fn (string $p): string => str_replace('\\', '/', $p))
+                    |> (fn (string $p): string => rtrim($p, '/'));
 
             if (!is_dir($root)) {
                 continue;
@@ -81,7 +85,9 @@ class MarkdownManager
 
             /** @var \SplFileInfo $item */
             foreach ($iterator as $item) {
-                if (!$item->isFile() || !in_array(strtolower($item->getFilename()), $wanted, true)) {
+                $filenameLower = $item->getFilename() |> strtolower(...);
+
+                if (!$item->isFile() || !in_array($filenameLower, $wanted, true)) {
                     continue;
                 }
 
@@ -89,14 +95,21 @@ class MarkdownManager
                 $blocks = $this->blocks($file);
 
                 $parentName = basename(dirname($file));
+                $relative = $root
+                        |> strlen(...)
+                        |> (fn ($x) => substr($file, $x))
+                        |> (fn ($x) => ltrim($x, '/'));
+
+                $slug = $this->slug(
+                    in_array($parentName, ['.', '..', ''], true)
+                        ? basename($file, '.md')
+                        : $parentName
+                );
+
                 $docs[] = [
                     'path' => $file,
-                    'relative' => ltrim(substr($file, strlen($root)), '/'),
-                    'slug' => $this->slug(
-                        in_array($parentName, ['.', '..', ''], true)
-                            ? basename($file, '.md')
-                            : $parentName
-                    ),
+                    'relative' => $relative,
+                    'slug' => $slug,
                     'title' => $this->extractTitle($blocks) ?? $parentName,
                     'description' => $this->extractDescription($blocks),
                     'blocks' => $blocks,
@@ -104,7 +117,10 @@ class MarkdownManager
             }
         }
 
-        usort($docs, static fn (array $a, array $b): int => strcmp($a['relative'], $b['relative']));
+        usort(
+            $docs,
+            static fn (array $a, array $b): int => strcmp($a['relative'], $b['relative'])
+        );
 
         return $docs;
     }
@@ -139,10 +155,10 @@ class MarkdownManager
 
     private function diagnosePath(string $base, string $relative): string
     {
-        $segments = array_values(array_filter(
-            explode('/', str_replace('\\', '/', $relative)),
-            static fn (string $s): bool => $s !== '' && $s !== '.'
-        ));
+        $segments = str_replace('\\', '/', $relative)
+                |> (fn($x) => explode('/', $x))
+                |> (fn($x) => array_filter($x, static fn(string $s): bool => $s !== '' && $s !== '.'))
+                |> array_values(...);
 
         $walked = rtrim(str_replace('\\', '/', $base), '/');
 
@@ -158,7 +174,7 @@ class MarkdownManager
                     : [];
 
                 return sprintf(
-                    "Blocage sur '%s' : '%s' introuvable ici. Contenu de '%s' : [%s].",
+                    "Blockage on '%s': '%s' not found here. Content of '%s': [%s].",
                     $next,
                     $segment,
                     $walked,
@@ -169,7 +185,7 @@ class MarkdownManager
             $walked = $next;
         }
 
-        return sprintf("Le chemin existe jusqu'à '%s' (est-ce bien un fichier ?).", $walked);
+        return sprintf("The path exists up to '%s' (is it actually a file?).", $walked);
     }
 
     private function looksLikePath(string $input): bool
@@ -390,7 +406,9 @@ class MarkdownManager
         $line = trim($line);
         $line = preg_replace('/^\||\|$/', '', $line) ?? $line;
 
-        return array_map('trim', explode('|', $line));
+        return $line
+                |> (fn (string $l): array => explode('|', $l))
+                |> (fn (array $p): array => array_map(trim(...), $p));
     }
 
     private function slug(string $text): string

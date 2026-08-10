@@ -37,6 +37,8 @@ class RouterManager
 
     /**
      * @throws ContainerException
+     * @throws ReflectionException
+     * @throws JsonException
      */
     public function __construct(Container $container)
     {
@@ -49,6 +51,7 @@ class RouterManager
 
     /**
      * @throws ContainerException
+     * @throws ReflectionException
      */
     private function isDebug(): bool
     {
@@ -117,6 +120,11 @@ class RouterManager
         }
     }
 
+    /**
+     * @throws ReflectionException
+     * @throws ContainerException
+     * @throws RouterException
+     */
     private function processControllerClass(string $fqcn): void
     {
         if (!class_exists($fqcn)) {
@@ -156,10 +164,16 @@ class RouterManager
 
             foreach ($route->methods as $httpMethod) {
                 if ($this->isDebug() && $this->routes->has($httpMethod, $path)) {
-                    trigger_error(
-                        "Route conflict: [{$httpMethod}] {$path} is already defined. "
-                        . "Overwritten by {$fqcn}::{$action}.",
-                        E_USER_WARNING
+                    throw new RouterException(
+                        title: 'Route Conflict',
+                        message: sprintf(
+                            "Route conflict: [%s] %s is already defined. Overwritten by %s::%s.",
+                            $httpMethod,
+                            $path,
+                            $fqcn,
+                            $action
+                        ),
+                        code: 500
                     );
                 }
 
@@ -282,7 +296,12 @@ class RouterManager
 
                 throw new RouterException(
                     title: "Injection Error",
-                    message: sprintf("Cannot inject parameter '$%s' into %s::%s.", $name, $routeInfo['controller'], $method),
+                    message: sprintf(
+                        "Cannot inject parameter '$%s' into %s::%s.",
+                        $name,
+                        $routeInfo['controller'],
+                        $method
+                    ),
                     code: 500,
                     context: ['controller' => $routeInfo['controller'], 'method' => $method]
                 );

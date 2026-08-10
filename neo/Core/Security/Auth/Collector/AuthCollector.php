@@ -16,8 +16,9 @@ final class AuthCollector implements CollectorInterface
 
     private readonly PropertyAccessor $accessor;
 
-    public function __construct(private readonly AuthManager $auth)
-    {
+    public function __construct(
+        private AuthManager $auth
+    ) {
         $this->accessor = new PropertyAccessor();
     }
 

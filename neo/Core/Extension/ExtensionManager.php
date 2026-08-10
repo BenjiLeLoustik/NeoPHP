@@ -6,12 +6,14 @@ namespace Neo\Core\Extension;
 use Neo\Core\Controller\AbstractController;
 use Neo\Core\Controller\Interface\ControllerExtensionInterface;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Package\Interface\PackageInterface;
 use Neo\Core\Utils\Scanner\ScannerAttributeManager;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
 use Neo\Core\View\Interface\TwigExtensionInterface;
+use ReflectionException;
 
 final class ExtensionManager
 {
@@ -25,6 +27,7 @@ final class ExtensionManager
 
     /**
      * @return list<ControllerExtensionInterface>
+     * @throws ReflectionException
      */
     public function getControllerExtensions(): array
     {
@@ -33,12 +36,16 @@ final class ExtensionManager
 
     /**
      * @return list<TwigExtensionInterface>
+     * @throws ReflectionException
      */
     public function getViewExtensions(): array
     {
         return $this->viewExtensions ??= $this->discover(ExtensionTypeEnum::VIEW);
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function applyToController(AbstractController $controller): void
     {
         foreach ($this->getControllerExtensions() as $extension) {
@@ -48,7 +55,8 @@ final class ExtensionManager
 
     /**
      * @return list<object>
-     * @throws \ReflectionException
+     * @throws ReflectionException
+     * @throws ContainerException
      */
     private function discover(ExtensionTypeEnum $type): array
     {

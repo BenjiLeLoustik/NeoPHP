@@ -10,7 +10,8 @@ class VonageDriver implements DriverInterface
      */
     public function __construct(
         private array $config
-    ) {}
+    ) {
+    }
 
     public function send(string $to, string $body): void
     {

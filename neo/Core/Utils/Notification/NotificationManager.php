@@ -36,7 +36,15 @@ class NotificationManager
     /** @var array<string, mixed> */
     private array $templateVars = [];
 
-    /** @var list<array{channel: class-string<ChannelInterface>, params: array<string, mixed>, template: string, result: string, duration: float, error: string|null}> */
+    /** @var list<array{
+     *     channel: class-string<ChannelInterface>,
+     *     params: array<string, mixed>,
+     *     template: string,
+     *     result: string,
+     *     duration: float,
+     *     error: string|null
+     * }>
+     */
     private static array $log = [];
 
     public function __construct(
@@ -186,6 +194,7 @@ class NotificationManager
     /**
      * @throws NotificationException
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     private function renderTemplate(): string
     {
@@ -231,7 +240,14 @@ class NotificationManager
     }
 
     /**
-     * @return list<array{channel: class-string<ChannelInterface>, params: array<string, mixed>, template: string, result: string, duration: float, error: string|null}>
+     * @return list<array{
+     *     channel: class-string<ChannelInterface>,
+     *     params: array<string, mixed>,
+     *     template: string,
+     *     result: string,
+     *     duration: float,
+     *     error: string|null
+     * }>
      */
     public static function getLog(): array
     {

@@ -11,7 +11,10 @@ final class DumpRecorder
 
     public static function record(string $html, ?string $caller): void
     {
-        self::$dumps[] = ['html' => $html, 'caller' => $caller];
+        self::$dumps[] = [
+            'html' => $html,
+            'caller' => $caller
+        ];
     }
 
     /**

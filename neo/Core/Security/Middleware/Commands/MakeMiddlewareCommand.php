@@ -105,12 +105,18 @@ PHP;
 
     private function normalizeMiddlewareName(string $input): string
     {
-        $input = str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)));
-        return str_ends_with($input, 'Middleware') ? $input : $input . 'Middleware';
+        $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)
+                |> ucwords(...)
+                |> (fn($x) => str_replace(' ', '', $x));
+
+        return str_ends_with($input, 'Middleware')
+            ? $input
+            : $input . 'Middleware';
     }
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

@@ -46,15 +46,17 @@ final class ScannerAttributeManager
         return $this;
     }
 
-    public function onMethods(int $flags = ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_PROTECTED | ReflectionMethod::IS_PRIVATE): static
-    {
+    public function onMethods(
+        int $flags = ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_PROTECTED | ReflectionMethod::IS_PRIVATE
+    ): static {
         $this->scanMethods = true;
         $this->methodFlags = $flags;
         return $this;
     }
 
-    public function onProperties(int $flags = ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED | ReflectionProperty::IS_PRIVATE): static
-    {
+    public function onProperties(
+        int $flags = ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED | ReflectionProperty::IS_PRIVATE
+    ): static {
         $this->scanProperties = true;
         $this->propertyFlags = $flags;
         return $this;

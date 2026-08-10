@@ -5,7 +5,12 @@ namespace Neo\Core\Routing\Collection;
 
 class RouteCollection
 {
-    /** @var array<string, array<string, array{name: string, controller: string, action: string, requirements: array<string, string>}>> */
+    /** @var array<string, array<string, array{
+     *     name: string,
+     *     controller: string,
+     *     action: string,
+     *     requirements: array<string, string>
+     * }>> */
     private array $routes = [];
 
     /**
@@ -35,7 +40,12 @@ class RouteCollection
     }
 
     /**
-     * @return array<string, array<string, array{name: string, controller: string, action: string, requirements: array<string, string>}>>
+     * @return array<string, array<string, array{
+     *     name: string,
+     *     controller: string,
+     *     action: string,
+     *     requirements: array<string, string>
+     * }>>
      */
     public function all(): array
     {
@@ -43,7 +53,12 @@ class RouteCollection
     }
 
     /**
-     * @return array<string, array<string, array{name: string, controller: string, action: string, requirements: array<string, string>}>>
+     * @return array<string, array<string, array{
+     *     name: string,
+     *     controller: string,
+     *     action: string,
+     *     requirements: array<string, string>
+     * }>>
      */
     public function toArray(): array
     {
@@ -51,7 +66,12 @@ class RouteCollection
     }
 
     /**
-     * @param array<string, array<string, array{name: string, controller: string, action: string, requirements: array<string, string>}>> $data
+     * @param array<string, array<string, array{
+     *     name: string,
+     *     controller: string,
+     *     action: string,
+     *     requirements: array<string, string>
+     * }>> $data
      */
     public static function fromArray(array $data): self
     {

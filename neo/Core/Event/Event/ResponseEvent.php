@@ -10,7 +10,8 @@ class ResponseEvent extends AbstractEvent
 {
     public function __construct(
         private Response $response
-    ) {}
+    ) {
+    }
 
     public function getResponse(): Response
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Neo\Core\Http\Client\Flash\Collector;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\Flash\Flash;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 
@@ -19,6 +20,10 @@ final class FlashCollector implements CollectorInterface
         return 'flash';
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     public function collect(): array
     {
         /** @var Flash $flash */

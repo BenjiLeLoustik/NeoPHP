@@ -21,8 +21,14 @@ final class Length extends AbstractConstraint
         }
 
         if ($message !== '') {
-            $message = str_replace('{%min%}', $this->min !== null ? (string) $this->min : '∞', $message);
-            $message = str_replace('{%max%}', $this->max !== null ? (string) $this->max : '∞', $message);
+            $message = str_replace('{%min%}', $this->min !== null
+                ? (string) $this->min
+                : '∞', $message
+            );
+            $message = str_replace('{%max%}', $this->max !== null
+                ? (string) $this->max
+                : '∞', $message
+            );
         }
 
         parent::__construct($message);

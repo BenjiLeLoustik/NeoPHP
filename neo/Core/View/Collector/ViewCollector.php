@@ -19,8 +19,13 @@ final class ViewCollector implements CollectorInterface
     {
         $renders = ViewManager::getRenders();
 
-        $totalDuration = array_sum(array_map(static fn (array $r) => $r['duration'], $renders));
-        $errorCount = count(array_filter($renders, static fn (array $r) => $r['error'] !== null));
+        $totalDuration = $renders
+                |> (fn (array $r): array => array_map(static fn (array $x) => $x['duration'], $r))
+                |> array_sum(...);
+
+        $errorCount = $renders
+                |> (fn (array $r): array => array_filter($r, static fn (array $x) => $x['error'] !== null))
+                |> count(...);
 
         return [
             'total' => count($renders),

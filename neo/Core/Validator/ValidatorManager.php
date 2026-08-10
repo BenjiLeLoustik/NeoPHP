@@ -16,7 +16,16 @@ class ValidatorManager
     /** @var array<class-string, ConstraintValidatorInterface> */
     private array $validators = [];
 
-    /** @var list<array{model: class-string, field: string, constraint: class-string, value: string, passed: bool, message: string|null, duration: float}> */
+    /** @var list<array{
+     *     model: class-string,
+     *     field: string,
+     *     constraint: class-string,
+     *     value: string,
+     *     passed: bool,
+     *     message: string|null,
+     *     duration: float
+     * }>
+     */
     private array $log = [];
 
     public function __construct(
@@ -55,7 +64,14 @@ class ValidatorManager
                     continue;
                 }
 
-                $this->runField($field, $formField->getValue(), $form->getAddedConstraints($field), $model, $form, $errors);
+                $this->runField(
+                    $field,
+                    $formField->getValue(),
+                    $form->getAddedConstraints($field),
+                    $model,
+                    $form,
+                    $errors
+                );
             }
         }
 
@@ -66,8 +82,14 @@ class ValidatorManager
      * @param list<ConstraintInterface> $constraints
      * @param array<string, list<string>> $errors
      */
-    private function runField(string $field, mixed $value, array $constraints, object $model, ?Form $form, array &$errors): void
-    {
+    private function runField(
+        string $field,
+        mixed $value,
+        array $constraints,
+        object $model,
+        ?Form $form,
+        array &$errors
+    ): void {
         $isEmpty = $value === null || $value === '';
 
         foreach ($constraints as $constraint) {

@@ -16,5 +16,6 @@ readonly class TestMethodContext
         public string $httpMethod = 'GET',
         public array $dataset = [],
         public bool $skip = false,
-    ) {}
+    ) {
+    }
 }

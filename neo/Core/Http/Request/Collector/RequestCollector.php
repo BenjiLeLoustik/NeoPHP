@@ -10,8 +10,9 @@ use Neo\Core\Tools\Debug\Dumper;
 
 final class RequestCollector implements CollectorInterface
 {
-    public function __construct(private readonly Request $request)
-    {
+    public function __construct(
+        private Request $request
+    ) {
     }
 
     public function getName(): string

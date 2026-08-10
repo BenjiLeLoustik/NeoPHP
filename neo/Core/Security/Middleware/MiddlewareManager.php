@@ -58,8 +58,9 @@ class MiddlewareManager
 
     private bool $maintenanceTriggered = false;
 
-    public function __construct(Container $container)
-    {
+    public function __construct(
+        Container $container
+    ) {
         $this->container = $container;
     }
 
@@ -435,7 +436,7 @@ class MiddlewareManager
 
             if (!empty($classResults)) {
                 /** @var Maintenance $attribute */
-                $attribute = $classResults[0]->getAttribute();
+                $attribute = array_first($classResults)->getAttribute();
                 $maintenance = $attribute;
             }
         }

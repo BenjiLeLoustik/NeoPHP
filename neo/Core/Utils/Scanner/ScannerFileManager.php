@@ -151,7 +151,7 @@ class ScannerFileManager
                     if (empty($new)) {
                         continue;
                     }
-                    $fqcn = array_values($new)[0];
+                    $fqcn = array_first(array_values($new));
                     if (!class_exists($fqcn, false) && !interface_exists($fqcn, false)) {
                         continue;
                     }

@@ -60,7 +60,10 @@ final class TranslationSyncCommand extends AbstractCommand
             return ExitCode::SUCCESS;
         }
 
-        $totalKeys = array_sum(array_map('count', $keysByDomain));
+        $totalKeys = $keysByDomain
+                |> (fn (array $k): array => array_map(count(...), $k))
+                |> array_sum(...);
+
         Output::info("$totalKeys key(s) found across " . count($keysByDomain) . ' domain(s).');
 
         $locales = $this->discoverLocales($project, $path);
@@ -140,7 +143,10 @@ final class TranslationSyncCommand extends AbstractCommand
             $availableLocales = $config['translation']['available_locales'] ?? null;
 
             if (is_array($availableLocales) && !empty($availableLocales)) {
-                return array_values(array_map('strval', array_keys($availableLocales)));
+                return $availableLocales
+                        |> array_keys(...)
+                        |> (fn($x) => array_map('strval', $x))
+                        |> array_values(...);
             }
         }
 
@@ -237,7 +243,9 @@ final class TranslationSyncCommand extends AbstractCommand
         }
 
         foreach ($keysByDomain as $domain => $keys) {
-            $keysByDomain[$domain] = array_values(array_unique($keys));
+            $keysByDomain[$domain] = $keys
+                    |> array_unique(...)
+                    |> array_values(...);
         }
 
         return $keysByDomain;

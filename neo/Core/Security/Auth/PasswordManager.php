@@ -29,7 +29,8 @@ final class PasswordManager
      */
     public function generate(int $length = 12): string
     {
-        return bin2hex(random_bytes($length));
+        return random_bytes($length)
+                |> bin2hex(...);
     }
 
     /**

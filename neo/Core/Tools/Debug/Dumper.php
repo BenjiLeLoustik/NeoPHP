@@ -185,7 +185,10 @@ final class Dumper
         $class = $value::class;
 
         if ($value instanceof \UnitEnum) {
-            $case = $value instanceof \BackedEnum ? $value->name . ' = ' . var_export($value->value, true) : $value->name;
+            $case = $value instanceof \BackedEnum
+                ? $value->name . ' = ' . var_export($value->value, true)
+                : $value->name;
+
             return $this->span('class', $class) . $this->punct('::') . $this->span('int', $case);
         }
 
@@ -274,7 +277,11 @@ final class Dumper
 
     private function objectRef(int $objectId): string
     {
-        return sprintf('<span style="color:%s;font-size:0.85em;">#%d</span>', self::COLORS['punct'], $objectId);
+        return sprintf(
+            '<span style="color:%s;font-size:0.85em;">#%d</span>',
+            self::COLORS['punct'],
+            $objectId
+        );
     }
 
     private function renderPropName(\ReflectionProperty $prop): string
@@ -294,12 +301,20 @@ final class Dumper
 
     private function span(string $type, string $text): string
     {
-        return sprintf('<span style="color:%s;">%s</span>', self::COLORS[$type] ?? '#d4d4d4', htmlspecialchars($text, ENT_QUOTES, 'UTF-8'));
+        return sprintf(
+            '<span style="color:%s;">%s</span>',
+                self::COLORS[$type] ?? '#d4d4d4',
+            htmlspecialchars($text, ENT_QUOTES, 'UTF-8')
+        );
     }
 
     private function punct(string $text): string
     {
-        return sprintf('<span style="color:%s;">%s</span>', self::COLORS['punct'], htmlspecialchars($text, ENT_QUOTES, 'UTF-8'));
+        return sprintf(
+            '<span style="color:%s;">%s</span>',
+            self::COLORS['punct'],
+            htmlspecialchars($text, ENT_QUOTES, 'UTF-8')
+        );
     }
 
     private function wrap(string $blocks, ?string $caller): string

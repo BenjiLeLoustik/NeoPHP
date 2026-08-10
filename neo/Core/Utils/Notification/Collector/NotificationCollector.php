@@ -18,7 +18,9 @@ final class NotificationCollector implements CollectorInterface
     public function collect(): array
     {
         $log = NotificationManager::getLog();
-        $failedCount = count(array_filter($log, static fn (array $n) => $n['result'] === 'failed' || $n['error'] !== null));
+        $failedCount = $log
+                |> (fn (array $l): array => array_filter($l, static fn (array $n) => $n['result'] === 'failed' || $n['error'] !== null))
+                |> count(...);
 
         return [
             'total' => count($log),

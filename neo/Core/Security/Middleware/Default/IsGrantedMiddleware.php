@@ -18,6 +18,7 @@ class IsGrantedMiddleware implements MiddlewareInterface
     /**
      * @param array<int, string> $roles
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function __construct(Container $container, array $roles = [])
     {
@@ -27,12 +28,6 @@ class IsGrantedMiddleware implements MiddlewareInterface
 
     public function handle(): bool
     {
-        foreach ($this->roles as $role) {
-            if ($this->auth->hasRole($role)) {
-                return true;
-            }
-        }
-
-        return empty($this->roles);
+        return $this->roles === [] || array_any($this->roles, fn ($role) => $this->auth->hasRole($role));
     }
 }

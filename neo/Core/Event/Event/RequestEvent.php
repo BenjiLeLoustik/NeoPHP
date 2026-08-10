@@ -9,8 +9,9 @@ use Neo\Core\Http\Request\Request;
 class RequestEvent extends AbstractEvent
 {
     public function __construct(
-        private readonly Request $request
-    ) {}
+        private Request $request
+    ) {
+    }
 
     public function getRequest(): Request
     {

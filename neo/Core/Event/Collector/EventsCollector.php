@@ -22,10 +22,9 @@ final class EventsCollector implements CollectorInterface
     {
         $log = $this->eventManager->getDispatchLog();
 
-        $totalListenersCalled = array_sum(array_map(
-            static fn (array $entry) => count($entry['listeners']),
-            $log
-        ));
+        $totalListenersCalled = $log
+                |> (fn (array $l): array => array_map(static fn (array $entry) => count($entry['listeners']), $l))
+                |> array_sum(...);
 
         return [
             'total' => count($log),

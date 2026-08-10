@@ -13,7 +13,7 @@ final class RouteCollector implements CollectorInterface, StatusAwareCollectorIn
     private ?int $statusCode = null;
 
     public function __construct(
-        private readonly RouterManager $router,
+        private RouterManager $router,
     ) {
     }
 

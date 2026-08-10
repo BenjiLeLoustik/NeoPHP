@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Neo\Core\Http\Client\Cookie\Collector;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 
 final class CookieCollector implements CollectorInterface
 {
-    public function __construct(private readonly Container $container)
-    {
+    public function __construct(
+        private Container $container
+    ) {
     }
 
     public function getName(): string
@@ -19,6 +21,10 @@ final class CookieCollector implements CollectorInterface
         return 'cookies';
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     public function collect(): array
     {
         /** @var Cookie $cookie */
@@ -41,6 +47,10 @@ final class CookieCollector implements CollectorInterface
         return true;
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     public function toolbarData(): array
     {
         $data = $this->collect();

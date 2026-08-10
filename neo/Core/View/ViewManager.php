@@ -10,6 +10,9 @@ use Neo\Core\Profiler\TimelineRecorder;
 use Neo\Core\View\Exception\ViewException;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use Twig\Extension\CoreExtension;
 use Twig\Extension\DebugExtension;
 use Twig\Extra\Intl\IntlExtension;
@@ -27,6 +30,8 @@ class ViewManager
 
     /**
      * @throws ContainerException
+     * @throws \ReflectionException
+     * @throws LoaderError
      */
     public function __construct(Container $container)
     {
@@ -91,7 +96,7 @@ class ViewManager
             $result = $this->twig->render($template, $params);
             $this->recordRender($template, $params, $start, null);
             return $result;
-        } catch (\Twig\Error\LoaderError $e) {
+        } catch (LoaderError $e) {
             $this->recordRender($template, $params, $start, $e->getMessage());
             throw new ViewException(
                 title: 'Template Not Found',
@@ -99,7 +104,7 @@ class ViewManager
                 code: 404,
                 previous: $e
             );
-        } catch (\Twig\Error\SyntaxError $e) {
+        } catch (SyntaxError $e) {
             $this->recordRender($template, $params, $start, $e->getMessage());
             throw new ViewException(
                 title: 'Template Syntax Error',
@@ -107,7 +112,7 @@ class ViewManager
                 code: 500,
                 previous: $e
             );
-        } catch (\Twig\Error\RuntimeError $e) {
+        } catch (RuntimeError $e) {
             $this->recordRender($template, $params, $start, $e->getMessage());
             throw new ViewException(
                 title: 'Template Runtime Error',
@@ -119,7 +124,11 @@ class ViewManager
     }
 
     /**
+     * @param string $template
      * @param array<string, mixed> $params
+     * @return string|null
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function renderIfExists(string $template, array $params = []): ?string
     {
@@ -129,7 +138,7 @@ class ViewManager
             $result = $this->twig->render($template, $params);
             $this->recordRender($template, $params, $start, null);
             return $result;
-        } catch (\Twig\Error\LoaderError $e) {
+        } catch (LoaderError $e) {
             $this->recordRender($template, $params, $start, $e->getMessage());
             return null;
         }

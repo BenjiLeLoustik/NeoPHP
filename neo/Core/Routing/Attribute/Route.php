@@ -8,29 +8,16 @@ use Attribute;
 #[Attribute(Attribute::TARGET_METHOD)]
 class Route
 {
-    public string $path;
-
-    public string $name;
-
-    /** @var array<int, string> */
-    public array $methods;
-
-    /** @var array<string, string> */
-    public array $requirements;
 
     /**
      * @param array<int, string> $methods
      * @param array<string, string> $requirements
      */
     public function __construct(
-        string $path,
-        string $name = '',
-        array $methods = ['GET'],
-        array $requirements = []
+        public string $path,
+        public string $name = '',
+        public array $methods = ['GET'],
+        public array $requirements = []
     ) {
-        $this->path = $path;
-        $this->name = $name;
-        $this->methods = $methods;
-        $this->requirements = $requirements;
     }
 }

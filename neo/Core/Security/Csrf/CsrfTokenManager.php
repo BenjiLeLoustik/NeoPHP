@@ -30,7 +30,8 @@ class CsrfTokenManager
      */
     public function generateToken(string $id, int $expiry = 3600): CsrfToken
     {
-        $value = bin2hex(random_bytes(32));
+        $value = random_bytes(32) |> bin2hex(...);
+
         $token = new CsrfToken($id, $value, $expiry);
         if (PHP_SAPI !== 'cli') {
             $_SESSION[self::SESSION_KEY][$id] = $token;
@@ -40,15 +41,23 @@ class CsrfTokenManager
 
     public function getToken(string $id): ?CsrfToken
     {
-        if (PHP_SAPI === 'cli') return null;
+        if (PHP_SAPI === 'cli') {
+            return null;
+        }
+
         return $_SESSION[self::SESSION_KEY][$id] ?? null;
     }
 
     public function validateToken(string $id, string $value, bool $invalidate = true): bool
     {
-        if (PHP_SAPI === 'cli') return false;
+        if (PHP_SAPI === 'cli') {
+            return false;
+        }
+
         $token = $this->getToken($id);
-        if (!$token) return false;
+        if (!$token) {
+            return false;
+        }
 
         if ($token->isExpired()) {
             unset($_SESSION[self::SESSION_KEY][$id]);

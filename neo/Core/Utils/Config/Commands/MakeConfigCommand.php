@@ -45,7 +45,9 @@ final class MakeConfigCommand extends AbstractCommand
     public function do(Input $input, Output $output): ExitCode
     {
         $configName = strtolower($input->getArgument('configName') ?? Input::ask('Config file name ?'));
-        if (!$configName) return ExitCode::INVALID;
+        if (!$configName) {
+            return ExitCode::INVALID;
+        }
 
         $project = $input->getOption('project');
         $force = (bool) $input->getOption('force');
@@ -84,7 +86,10 @@ final class MakeConfigCommand extends AbstractCommand
         $flat = [];
         while (true) {
             $key = Input::ask('Key name (empty to finish)', '');
-            if ($key === '') break;
+            if ($key === '') {
+                break;
+            }
+
             $flat[$key] = Input::ask("Value for '$key'", '');
         }
         return $this->expandDotKeys($flat);
@@ -128,7 +133,10 @@ final class MakeConfigCommand extends AbstractCommand
         $lines = [];
 
         foreach ($entries as $key => $value) {
-            $val = is_array($value) ? $this->buildArray($value, $depth + 1) : $this->formatValue((string)$value);
+            $val = is_array($value)
+                ? $this->buildArray($value, $depth + 1)
+                : $this->formatValue((string)$value);
+
             $lines[] = "{$indent}'" . addslashes((string)$key) . "' => {$val},";
         }
         return "[\n" . implode("\n", $lines) . "\n{$indentClose}]";
@@ -136,13 +144,22 @@ final class MakeConfigCommand extends AbstractCommand
 
     private function formatValue(string $v): string
     {
-        if ($v === '') return "''";
-        if (in_array(strtolower($v), ['true', 'false'], true)) return strtolower($v);
-        return is_numeric($v) ? $v : "'" . addslashes($v) . "'";
+        if ($v === '') {
+            return "''";
+        }
+
+        if (in_array(strtolower($v), ['true', 'false'], true)) {
+            return strtolower($v);
+        }
+
+        return is_numeric($v)
+            ? $v
+            : "'" . addslashes($v) . "'";
     }
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

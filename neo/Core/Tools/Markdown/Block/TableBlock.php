@@ -9,8 +9,8 @@ class TableBlock extends AbstractBlock
      * @param list<list<string>> $rows
      */
     public function __construct(
-        public readonly array $header,
-        public readonly array $rows,
+        public array $header,
+        public array $rows,
     ) {
         parent::__construct('table');
     }

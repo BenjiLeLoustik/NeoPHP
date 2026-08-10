@@ -184,6 +184,8 @@ class UploadedFile
 
     public function getExtension(): string
     {
-        return strtolower(pathinfo($this->file['name'], PATHINFO_EXTENSION));
+        return $this->file['name']
+                |> (fn (string $n): string => pathinfo($n, PATHINFO_EXTENSION))
+                |> strtolower(...);
     }
 }

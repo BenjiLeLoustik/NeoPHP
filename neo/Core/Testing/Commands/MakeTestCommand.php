@@ -74,7 +74,7 @@ final class MakeTestCommand extends AbstractCommand
         }
 
         $testName = $this->normalizeTestName($testName);
-        (new TestScaffolder())->ensure($basePath, $project);
+        new TestScaffolder()->ensure($basePath, $project);
 
         $this->generateTest($basePath, $project, $testName, $type, $force);
 
@@ -111,12 +111,16 @@ final class MakeTestCommand extends AbstractCommand
 
     private function normalizeTestName(string $input): string
     {
-        $input = str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)));
+        $input = preg_replace('/[^a-zA-Z0-9]+/', ' ', $input)
+                |> ucwords(...)
+                |> (fn($x) => str_replace(' ', '', $x));
+
         return str_ends_with($input, 'Test') ? $input : $input . 'Test';
     }
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

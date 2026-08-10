@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Testing\Generator;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Testing\Context\TestClassContext;
 use Neo\Core\Testing\Enum\TestType;
@@ -22,8 +23,12 @@ class TestGenerator
     private string $testsPath;
     private string $testNamespace;
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     public function __construct(
-        private readonly Container $container
+        private Container $container
     ) {
         $this->appName = $this->container->get('application');
         $this->srcPath = $this->container->get('srcPath') . '/' . $this->appName;

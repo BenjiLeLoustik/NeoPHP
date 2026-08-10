@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Neo\Core\Http\Client\Session\Collector;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Tools\Debug\Dumper;
+use ReflectionException;
 
 final class SessionCollector implements CollectorInterface
 {
@@ -20,6 +22,10 @@ final class SessionCollector implements CollectorInterface
         return 'session';
     }
 
+    /**
+     * @throws ReflectionException
+     * @throws ContainerException
+     */
     public function collect(): array
     {
         /** @var Session $session */

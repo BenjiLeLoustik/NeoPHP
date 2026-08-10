@@ -8,8 +8,8 @@ class ListBlock extends AbstractBlock
      * @param list<string> $items
      */
     public function __construct(
-        public readonly bool $ordered,
-        public readonly array $items,
+        public bool $ordered,
+        public array $items,
     ) {
         parent::__construct('list');
     }

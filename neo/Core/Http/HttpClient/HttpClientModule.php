@@ -7,6 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\HttpClient\Interface\HttpClientInterface;
 use Neo\Core\Module\Interface\ModuleInterface;
+use ReflectionException;
 
 final class HttpClientModule implements ModuleInterface
 {
@@ -27,6 +28,7 @@ final class HttpClientModule implements ModuleInterface
 
     /**
      * @throws ContainerException
+     * @throws ReflectionException
      */
     public function init(Container $container): object
     {

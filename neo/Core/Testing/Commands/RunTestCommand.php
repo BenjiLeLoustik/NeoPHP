@@ -81,7 +81,9 @@ final class RunTestCommand extends AbstractCommand
             '--testdox'
         ];
 
-        if ($filter) array_push($cmd, '--filter', escapeshellarg($filter));
+        if ($filter) {
+            array_push($cmd, '--filter', escapeshellarg($filter));
+        }
 
         Output::title("Running test: $testName");
         passthru(implode(' ', $cmd), $exitCode);
@@ -106,6 +108,7 @@ final class RunTestCommand extends AbstractCommand
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

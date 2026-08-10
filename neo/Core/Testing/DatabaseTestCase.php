@@ -20,6 +20,7 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
     /**
      * @throws DatabaseException
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     protected function setUp(): void
     {
@@ -64,7 +65,10 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
     protected function insertFixture(string $table, array $data): int|string
     {
         $columns = implode(', ', array_keys($data));
-        $placeholders = implode(', ', array_map(fn($k) => ":$k", array_keys($data)));
+        $placeholders = $data
+                |> array_keys(...)
+                |> (fn($x) => array_map(fn($k) => ":$k", $x))
+                |> (fn($x) => implode(', ', $x));
 
         $stmt = $this->pdo->prepare("INSERT INTO $table ($columns) VALUES ($placeholders)");
         $stmt->execute($data);
@@ -92,7 +96,11 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
      */
     protected function assertDatabaseHas(string $table, array $data): void
     {
-        $conditions = implode(' AND ', array_map(fn($k) => "$k = :$k", array_keys($data)));
+        $conditions = $data
+                |> array_keys(...)
+                |> (fn($x) => array_map(fn($k) => "$k = :$k", $x))
+                |> (fn($x) => implode(' AND ', $x));
+
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM $table WHERE $conditions");
         $stmt->execute($data);
         $count = (int) $stmt->fetchColumn();
@@ -109,7 +117,11 @@ abstract class DatabaseTestCase extends PHPUnitTestCase
      */
     protected function assertDatabaseMissing(string $table, array $data): void
     {
-        $conditions = implode(' AND ', array_map(fn($k) => "$k = :$k", array_keys($data)));
+        $conditions = $data
+                |> array_keys(...)
+                |> (fn($x) => array_map(fn($k) => "$k = :$k", $x))
+                |> (fn($x) => implode(' AND ', $x));
+
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM $table WHERE $conditions");
         $stmt->execute($data);
         $count = (int) $stmt->fetchColumn();

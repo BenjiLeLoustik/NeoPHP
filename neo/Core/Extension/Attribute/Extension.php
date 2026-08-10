@@ -11,5 +11,6 @@ final class Extension
 {
     public function __construct(
         public ExtensionTypeEnum $type,
-    ) {}
+    ) {
+    }
 }

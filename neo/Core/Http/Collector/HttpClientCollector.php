@@ -19,8 +19,13 @@ final class HttpClientCollector implements CollectorInterface
     {
         $requests = HttpClientManager::getRequests();
 
-        $totalDuration = array_sum(array_map(static fn (array $r) => $r['duration'], $requests));
-        $errorCount = count(array_filter($requests, static fn (array $r) => $r['error'] !== null));
+        $totalDuration = $requests
+                |> (fn (array $r): array => array_map(static fn (array $x) => $x['duration'], $r))
+                |> array_sum(...);
+
+        $errorCount = $requests
+                |> (fn (array $r): array => array_filter($r, static fn (array $x) => $x['error'] !== null))
+                |> count(...);
 
         return [
             'total' => count($requests),
@@ -155,6 +160,6 @@ final class HttpClientCollector implements CollectorInterface
             return new Dumper()->render([$decoded], false);
         }
 
-        return new Dumper()->render([$body]);
+        return new Dumper()->render([$body], false);
     }
 }

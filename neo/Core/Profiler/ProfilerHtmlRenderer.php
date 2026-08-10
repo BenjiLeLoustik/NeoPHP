@@ -15,8 +15,16 @@ final class ProfilerHtmlRenderer
         $statusMeta = $this->statusMeta($statusCode);
 
         $routeMetrics = [
-            ['label' => 'Duration', 'value' => (string) ($data['duration'] ?? 0), 'unit' => 'ms'],
-            ['label' => 'Peak memory', 'value' => (string) round(($data['memory'] ?? 0) / 1024 / 1024, 2), 'unit' => 'MB'],
+            [
+                'label' => 'Duration',
+                'value' => (string) ($data['duration'] ?? 0),
+                'unit' => 'ms'
+            ],
+            [
+                'label' => 'Peak memory',
+                'value' => (string) round(($data['memory'] ?? 0) / 1024 / 1024, 2),
+                'unit' => 'MB'
+            ],
         ];
 
         [$navHtml, $sectionsHtml] = $this->buildNavAndSections($data['collectors'] ?? [], $routeMetrics);
@@ -38,7 +46,12 @@ final class ProfilerHtmlRenderer
 
     public function renderNotFound(string $token): string
     {
-        return $this->renderTemplate($this->templatesDir() . '/profiler-not-found.template.php', ['token' => $token]);
+        return $this->renderTemplate(
+            $this->templatesDir() . '/profiler-not-found.template.php',
+            [
+                'token' => $token
+            ]
+        );
     }
 
     public function templatesDir(): string
@@ -94,17 +107,23 @@ final class ProfilerHtmlRenderer
         foreach ($coreEntries as $key => $info) {
             $item = $this->prepareItem($info['profiler'], $key === 'route' ? $routeMetrics : [], null);
 
-            $navHtml .= $this->renderTemplate($this->templatesDir() . '/profiler-nav-item.template.php', [
-                'key' => $key,
-                'item' => $item,
-                'active' => $first,
-            ]);
+            $navHtml .= $this->renderTemplate(
+                $this->templatesDir() . '/profiler-nav-item.template.php',
+                [
+                    'key' => $key,
+                    'item' => $item,
+                    'active' => $first,
+                ]
+            );
 
-            $sectionsHtml .= $this->renderTemplate($this->templatesDir() . '/profiler-item.template.php', [
-                'key' => $key,
-                'item' => $item,
-                'active' => $first,
-            ]);
+            $sectionsHtml .= $this->renderTemplate(
+                $this->templatesDir() . '/profiler-item.template.php',
+                [
+                    'key' => $key,
+                    'item' => $item,
+                    'active' => $first,
+                ]
+            );
 
             $first = false;
         }
@@ -143,27 +162,36 @@ final class ProfilerHtmlRenderer
         foreach ($entries as $key => $info) {
             $item = $this->prepareItem($info['profiler'], [], null);
 
-            $childrenNav .= $this->renderTemplate($this->templatesDir() . '/profiler-nav-item.template.php', [
-                'key' => $key,
-                'item' => $item,
-                'active' => $first,
-            ]);
+            $childrenNav .= $this->renderTemplate(
+                $this->templatesDir() . '/profiler-nav-item.template.php',
+                [
+                    'key' => $key,
+                    'item' => $item,
+                    'active' => $first,
+                ]
+            );
 
-            $childrenSections .= $this->renderTemplate($this->templatesDir() . '/profiler-item.template.php', [
-                'key' => $key,
-                'item' => $item,
-                'active' => $first,
-            ]);
+            $childrenSections .= $this->renderTemplate(
+                $this->templatesDir() . '/profiler-item.template.php',
+                [
+                    'key' => $key,
+                    'item' => $item,
+                    'active' => $first,
+                ]
+            );
 
             $first = false;
         }
 
-        $navHtml = $this->renderTemplate($this->templatesDir() . '/profiler-nav-group.template.php', [
-            'title' => $title,
-            'headerHtml' => null,
-            'childrenHtml' => $childrenNav,
-            'hasChildren' => $childrenNav !== '',
-        ]);
+        $navHtml = $this->renderTemplate(
+            $this->templatesDir() . '/profiler-nav-group.template.php',
+            [
+                'title' => $title,
+                'headerHtml' => null,
+                'childrenHtml' => $childrenNav,
+                'hasChildren' => $childrenNav !== '',
+            ]
+        );
 
         return [$navHtml, $childrenSections, $first];
     }
@@ -173,8 +201,11 @@ final class ProfilerHtmlRenderer
      * @param array<string, array<string, array{profiler: array<string, mixed>|null}>> $packageEntries
      * @return array{0: string, 1: string, 2: bool}
      */
-    private function buildPackagesGroup(?array $packagesItemRaw, bool $hasOwnPanel, array $packageEntries, bool $first): array
-    {
+    private function buildPackagesGroup(
+        ?array $packagesItemRaw,
+        bool $hasOwnPanel,
+        array $packageEntries,
+        bool $first): array {
         $childrenNav = '';
         $childrenSections = '';
 
@@ -182,17 +213,23 @@ final class ProfilerHtmlRenderer
             foreach ($entries as $key => $info) {
                 $item = $this->prepareItem($info['profiler'], [], $packageName);
 
-                $childrenNav .= $this->renderTemplate($this->templatesDir() . '/profiler-nav-item.template.php', [
-                    'key' => $key,
-                    'item' => $item,
-                    'active' => $first,
-                ]);
+                $childrenNav .= $this->renderTemplate(
+                    $this->templatesDir() . '/profiler-nav-item.template.php',
+                    [
+                        'key' => $key,
+                        'item' => $item,
+                        'active' => $first,
+                    ]
+                );
 
-                $childrenSections .= $this->renderTemplate($this->templatesDir() . '/profiler-item.template.php', [
-                    'key' => $key,
-                    'item' => $item,
-                    'active' => $first,
-                ]);
+                $childrenSections .= $this->renderTemplate(
+                    $this->templatesDir() . '/profiler-item.template.php',
+                    [
+                        'key' => $key,
+                        'item' => $item,
+                        'active' => $first,
+                    ]
+                );
 
                 $first = false;
             }
@@ -204,27 +241,36 @@ final class ProfilerHtmlRenderer
         if ($hasOwnPanel && $packagesItemRaw !== null) {
             $item = $this->prepareItem($packagesItemRaw, [], null);
 
-            $headerHtml = $this->renderTemplate($this->templatesDir() . '/profiler-nav-item.template.php', [
-                'key' => 'packages',
-                'item' => $item,
-                'active' => $first,
-            ]);
+            $headerHtml = $this->renderTemplate(
+                $this->templatesDir() . '/profiler-nav-item.template.php',
+                [
+                    'key' => 'packages',
+                    'item' => $item,
+                    'active' => $first,
+                ]
+            );
 
-            $ownSectionHtml = $this->renderTemplate($this->templatesDir() . '/profiler-item.template.php', [
-                'key' => 'packages',
-                'item' => $item,
-                'active' => $first,
-            ]);
+            $ownSectionHtml = $this->renderTemplate(
+                $this->templatesDir() . '/profiler-item.template.php',
+                [
+                    'key' => 'packages',
+                    'item' => $item,
+                    'active' => $first,
+                ]
+            );
 
             $first = false;
         }
 
-        $navHtml = $this->renderTemplate($this->templatesDir() . '/profiler-nav-group.template.php', [
-            'title' => 'Packages',
-            'headerHtml' => $headerHtml,
-            'childrenHtml' => $childrenNav,
-            'hasChildren' => $childrenNav !== '',
-        ]);
+        $navHtml = $this->renderTemplate(
+            $this->templatesDir() . '/profiler-nav-group.template.php',
+            [
+                'title' => 'Packages',
+                'headerHtml' => $headerHtml,
+                'childrenHtml' => $childrenNav,
+                'hasChildren' => $childrenNav !== '',
+            ]
+        );
 
         return [$navHtml, $ownSectionHtml . $childrenSections, $first];
     }
@@ -255,7 +301,12 @@ final class ProfilerHtmlRenderer
         $html = '';
 
         foreach ($metrics as $metric) {
-            $html .= $this->renderTemplate($this->templatesDir() . '/block-metric.template.php', ['metric' => $metric]);
+            $html .= $this->renderTemplate(
+                $this->templatesDir() . '/block-metric.template.php',
+                [
+                    'metric' => $metric
+                ]
+            );
         }
 
         return $html;
@@ -288,7 +339,11 @@ final class ProfilerHtmlRenderer
      */
     private function renderTabsBlock(array $block): string
     {
-        $id = 'tabs-' . substr(md5(($block['section'] ?? '') . json_encode(array_column($block['tabs'], 'label'))), 0, 10);
+        $labelsJson = $block['tabs']
+                |> (fn (array $t): array => array_column($t, 'label'))
+                |> (fn (array $l): string => json_encode($l));
+
+        $id = 'tabs-' . substr(md5(($block['section'] ?? '') . $labelsJson), 0, 10);
 
         $tabs = array_map(
             fn (array $tab) => [
@@ -300,10 +355,16 @@ final class ProfilerHtmlRenderer
             $block['tabs']
         );
 
-        return $this->renderTemplate($this->templatesDir() . '/block-tabs.template.php', [
-            'id' => $id,
-            'block' => ['section' => $block['section'] ?? null, 'tabs' => $tabs],
-        ]);
+        return $this->renderTemplate(
+            $this->templatesDir() . '/block-tabs.template.php',
+            [
+                'id' => $id,
+                'block' => [
+                    'section' => $block['section'] ?? null,
+                    'tabs' => $tabs
+                ],
+            ]
+        );
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace Neo\Core\Package;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Package\Interface\PackageInterface;
 use Neo\Core\Translation\Registry\TranslationRegistry;
@@ -33,7 +34,6 @@ class PackageModule implements ModuleInterface
             $packages = [];
 
             foreach ($packageClasses as $packageClass) {
-                /** @var PackageInterface $package */
                 $package = new $packageClass();
                 $package->register($container);
 
@@ -58,6 +58,10 @@ class PackageModule implements ModuleInterface
         });
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     public function init(Container $container): object
     {
         /** @var array<int, PackageInterface> $packages */

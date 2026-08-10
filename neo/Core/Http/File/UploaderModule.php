@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace Neo\Core\Http\File;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Module\Interface\ModuleInterface;
+use ReflectionException;
 
 class UploaderModule implements ModuleInterface
 {
@@ -18,6 +20,10 @@ class UploaderModule implements ModuleInterface
         $container->set(UploaderManager::class, fn(Container $c) => new UploaderManager($c));
     }
 
+    /**
+     * @throws ReflectionException
+     * @throws ContainerException
+     */
     public function init(Container $container): object
     {
         return $container->get(UploaderManager::class);

@@ -56,7 +56,10 @@ class EventManager
         $cacheFile = $this->container->get('storagePath') . '/var/cache/events/listeners.php';
 
         if (!$this->isDebug() && file_exists($cacheFile)) {
-            $decoded = json_decode(file_get_contents($cacheFile), true);
+            $decoded = $cacheFile
+                    |> file_get_contents(...)
+                    |> (fn (string $c): mixed => json_decode($c, true));
+
             $this->listeners = $this->hydrateListeners(is_array($decoded) ? $decoded : []);
             return;
         }
@@ -84,7 +87,10 @@ class EventManager
         }
 
         foreach ($this->listeners as &$list) {
-            usort($list, static fn (ListenerRegistration $a, ListenerRegistration $b): int => $b->getPriority() <=> $a->getPriority());
+            usort(
+                $list,
+                static fn (ListenerRegistration $a, ListenerRegistration $b): int => $b->getPriority() <=> $a->getPriority()
+            );
         }
         unset($list);
 
@@ -167,6 +173,7 @@ class EventManager
     /**
      * @throws EventException
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function dispatch(EventInterface $event): EventInterface
     {

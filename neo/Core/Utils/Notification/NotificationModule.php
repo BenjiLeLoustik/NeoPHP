@@ -26,6 +26,7 @@ class NotificationModule implements ModuleInterface
 
     /**
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function init(Container $container): object
     {

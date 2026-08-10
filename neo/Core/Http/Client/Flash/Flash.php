@@ -26,6 +26,7 @@ class Flash
 
     /**
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function __construct(Container $container)
     {
@@ -50,16 +51,25 @@ class Flash
      */
     public function add(string $type, string $message): void
     {
+
+
         if (!in_array($type, $this->config['types'], true)) {
             throw new FrameworkException(
                 title: 'Flash Error',
-                message: "Type de flash invalide : '{$type}'. Types acceptés : " . implode(', ', $this->config['types']) . '.',
+                message: sprintf(
+                    "Invalid Flash type : %s. Accepted types : %d",
+                    $type,
+                    implode(', ', $this->config['types'])
+                ),
                 code: 500
             );
         }
 
         $messages = $this->session->get($this->flashKey, []);
-        $messages[] = ['type' => $type, 'message' => $message];
+        $messages[] = [
+            'type' => $type,
+            'message' => $message
+        ];
 
         $this->session->set($this->flashKey, $messages);
     }

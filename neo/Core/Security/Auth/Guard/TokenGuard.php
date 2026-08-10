@@ -19,20 +19,20 @@ final class TokenGuard implements GuardInterface
     /** @var array<string, mixed>|null */
     private ?array $payload = null;
 
-    private readonly PropertyAccessor $accessor;
+    private PropertyAccessor $accessor;
 
     /**
      * @param class-string $model
      */
     public function __construct(
-        private readonly Request $request,
-        private readonly JwtManager $jwtManager,
-        private readonly PasswordManager $passwordManager,
-        private readonly EntityManager $em,
-        private readonly string $model,
-        private readonly string $identifier,
-        private readonly string $password,
-        private readonly ?RoleConfig $role = null,
+        private Request $request,
+        private JwtManager $jwtManager,
+        private PasswordManager $passwordManager,
+        private EntityManager $em,
+        private string $model,
+        private string $identifier,
+        private string $password,
+        private ?RoleConfig $role = null,
     ) {
         $this->accessor = new PropertyAccessor();
     }
@@ -47,7 +47,11 @@ final class TokenGuard implements GuardInterface
         if (!isset($credentials[$this->identifier], $credentials[$this->password])) {
             throw new AuthException(
                 title: 'Auth Error',
-                message: sprintf("Credentials must contain '%s' and '%s'.", $this->identifier, $this->password),
+                message: sprintf(
+                    "Credentials must contain '%s' and '%s'.",
+                    $this->identifier,
+                    $this->password
+                ),
                 code: 400
             );
         }
@@ -67,9 +71,7 @@ final class TokenGuard implements GuardInterface
         return $this->passwordManager->verify($credentials[$this->password], $hashedPassword);
     }
 
-    public function login(object $user): void
-    {
-    }
+    public function login(object $user): void {}
 
     public function logout(): void
     {

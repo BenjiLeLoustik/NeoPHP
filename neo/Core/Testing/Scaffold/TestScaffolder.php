@@ -59,7 +59,7 @@ return [
 ];
 PHP;
             file_put_contents($dbConfigPath, $dbConfigContent);
-            echo "Fichier généré : src/$project/Tests/Config/database.config.test.php\n";
+            echo "File generated : src/$project/Tests/Config/database.config.test.php\n";
         }
 
         $content = <<<PHP
@@ -136,7 +136,7 @@ if (is_dir(\$testConfigsPath)) {
 PHP;
 
         file_put_contents($bootstrapPath, $content);
-        echo "Fichier généré : src/$project/Tests/bootstrap.php\n";
+        echo "Generated file : src/$project/Tests/bootstrap.php\n";
     }
 
     public function ensurePhpUnitXml(string $basePath, string $project): void
@@ -187,6 +187,6 @@ PHP;
 XML;
 
         file_put_contents($xmlPath, $content);
-        echo "Fichier généré : src/$project/Tests/phpunit.xml\n";
+        echo "File generated : src/$project/Tests/phpunit.xml\n";
     }
 }

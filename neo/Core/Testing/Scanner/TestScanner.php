@@ -14,6 +14,7 @@ class TestScanner
 {
     /**
      * @return array<int, TestClassContext>
+     * @throws \ReflectionException
      */
     public function scan(string $srcPath): array
     {
@@ -30,7 +31,9 @@ class TestScanner
 
             $filePath = $file->getRealPath();
             $src = file_get_contents($filePath);
-            if ($src === false) continue;
+            if ($src === false) {
+                continue;
+            }
 
             if (!str_contains($src, '#[Test') && !str_contains($src, 'Test(')) {
                 continue;
@@ -42,6 +45,7 @@ class TestScanner
             if (preg_match('/namespace\s+([^;]+);/i', $src, $m)) {
                 $namespace = trim($m[1]);
             }
+
             if (preg_match('/class\s+([A-Za-z0-9_]+)/i', $src, $mc)) {
                 $shortName = $mc[1];
             }
@@ -52,7 +56,9 @@ class TestScanner
 
             require_once $filePath;
 
-            if (!class_exists($fqcn)) continue;
+            if (!class_exists($fqcn)) {
+                continue;
+            }
 
             $results = new ScannerAttributeManager($fqcn)
                 ->onClass()
@@ -70,7 +76,9 @@ class TestScanner
                 if ($entry->getType() === 'class') {
                     $classTest = $test;
                 } elseif ($entry->getType() === 'method') {
-                    if ($test->skip) continue;
+                    if ($test->skip) {
+                        continue;
+                    }
 
                     $refMethod = $entry->getReflection();
 

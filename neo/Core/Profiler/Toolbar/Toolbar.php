@@ -9,8 +9,9 @@ final class Toolbar
 {
     private const string DEFAULT_BADGE_COLOR = '#e2e8f0';
 
-    public function __construct(private readonly ProfilerManager $profiler)
-    {
+    public function __construct(
+        private ProfilerManager $profiler
+    ) {
     }
 
     /**

@@ -10,8 +10,9 @@ use Neo\Core\Profiler\TimelineRecorder;
 
 final class TimelineCollector implements CollectorInterface
 {
-    public function __construct(private readonly ProfilerManager $profiler)
-    {
+    public function __construct(
+        private ProfilerManager $profiler
+    ) {
     }
 
     public function getName(): string

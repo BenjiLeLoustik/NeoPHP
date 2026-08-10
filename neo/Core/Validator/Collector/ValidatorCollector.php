@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Neo\Core\Validator\Collector;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Profiler\Interface\CollectorInterface;
 use Neo\Core\Tools\Debug\Dumper;
 use Neo\Core\Validator\ValidatorManager;
 
 final class ValidatorCollector implements CollectorInterface
 {
-    public function __construct(private readonly Container $container)
-    {
+    public function __construct(
+        private Container $container
+    ) {
     }
 
     public function getName(): string
@@ -20,13 +22,19 @@ final class ValidatorCollector implements CollectorInterface
         return 'validator';
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     public function collect(): array
     {
         /** @var ValidatorManager $validator */
         $validator = $this->container->get(ValidatorManager::class);
         $log = $validator->getValidationLog();
 
-        $failedCount = count(array_filter($log, static fn (array $l) => !$l['passed']));
+        $failedCount = $log
+                |> (fn (array $l): array => array_filter($l, static fn (array $x) => !$x['passed']))
+                |> count(...);
 
         return [
             'total' => count($log),

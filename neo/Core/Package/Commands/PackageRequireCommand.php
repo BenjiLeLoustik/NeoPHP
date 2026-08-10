@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Neo\Core\Package\Commands;
 
+use Composer\Autoload\ClassLoader;
 use Neo\Core\Console\Abstract\AbstractCommand;
 use Neo\Core\Console\Attribute\Command;
 use Neo\Core\Console\Enum\ExitCode;
@@ -204,7 +205,7 @@ class PackageRequireCommand extends AbstractCommand
             return;
         }
 
-        $loaders = \Composer\Autoload\ClassLoader::getRegisteredLoaders();
+        $loaders = ClassLoader::getRegisteredLoaders();
         $loader = array_values($loaders)[0] ?? null;
 
         if ($loader === null) {

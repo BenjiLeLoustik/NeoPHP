@@ -30,6 +30,7 @@ abstract class TestCase extends PHPUnitTestCase
 
     /**
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     protected function get(string $id): mixed
     {

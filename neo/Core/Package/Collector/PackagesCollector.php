@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace Neo\Core\Package\Collector;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Package\Interface\PackageInterface;
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use ReflectionException;
 
 final class PackagesCollector implements CollectorInterface
 {
     /** @var array<string, array{version: string, description: string, source: string}>|null */
     private ?array $installedCache = null;
 
-    public function __construct(private readonly Container $container)
-    {
+    public function __construct(
+        private Container $container
+    ) {
     }
 
     public function getName(): string
@@ -24,6 +27,8 @@ final class PackagesCollector implements CollectorInterface
 
     /**
      * @return list<array{name: string, composerName: string, version: string, description: string, source: string}>
+     * @throws ContainerException
+     * @throws ReflectionException
      */
     public function collect(): array
     {
@@ -104,6 +109,8 @@ final class PackagesCollector implements CollectorInterface
 
     /**
      * @return array<string, array{version: string, description: string, source: string}>
+     * @throws ContainerException
+     * @throws ReflectionException
      */
     private function getInstalledPackages(): array
     {
@@ -118,7 +125,8 @@ final class PackagesCollector implements CollectorInterface
             return $this->installedCache = [];
         }
 
-        $data = json_decode((string) file_get_contents($path), true);
+        $data = (string) file_get_contents($path)
+                |> (fn (string $c): mixed => json_decode($c, true));
 
         $entries = $data['packages'] ?? $data ?? [];
 
@@ -167,7 +175,8 @@ final class PackagesCollector implements CollectorInterface
             return null;
         }
 
-        $data = json_decode((string) file_get_contents($composerFile), true);
+        $data = (string) file_get_contents($composerFile)
+                |> (fn (string $c): mixed => json_decode($c, true));
 
         return $data['name'] ?? null;
     }

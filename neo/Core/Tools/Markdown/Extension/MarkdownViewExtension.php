@@ -37,7 +37,9 @@ class MarkdownViewExtension implements TwigExtensionInterface
         return [
             'md_inline' => [
                 'callable' => fn(string $text) => $this->markdownManager->renderInline($text),
-                'options' => ['is_safe' => ['html']]
+                'options' => [
+                    'is_safe' => ['html']
+                ]
             ]
         ];
     }

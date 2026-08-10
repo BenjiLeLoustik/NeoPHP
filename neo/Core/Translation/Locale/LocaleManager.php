@@ -11,6 +11,7 @@ final class LocaleManager
 {
     /**
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public static function resolve(Container $container): string
     {

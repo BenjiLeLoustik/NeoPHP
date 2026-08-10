@@ -17,8 +17,9 @@ class HttpClientManager implements HttpClientInterface
      * @param array<string, mixed> $defaultOptions
      */
     public function __construct(
-        private readonly array $defaultOptions = []
-    ) {}
+        private array $defaultOptions = []
+    ) {
+    }
 
     public function request(string $method, string $url, array $options = []): Response
     {
@@ -56,7 +57,7 @@ class HttpClientManager implements HttpClientInterface
             CURLOPT_MAXREDIRS => (int) ($options['max_redirects'] ?? 20),
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_TIMEOUT_MS => (int) (((float) ($options['timeout'] ?? 30.0)) * 1000),
-            CURLOPT_ENCODING => '', // accepte gzip/deflate
+            CURLOPT_ENCODING => '',
             CURLOPT_HEADERFUNCTION => static function ($ch, string $line) use (&$responseHeaders): int {
                 $length = strlen($line);
                 $trimmed = trim($line);

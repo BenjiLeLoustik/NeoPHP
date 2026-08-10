@@ -86,19 +86,28 @@ class AuthManager
 
     public function check(): bool
     {
-        if ($this->guard === null) return false;
+        if ($this->guard === null) {
+            return false;
+        }
+
         return $this->guard->check();
     }
 
     public function user(): ?object
     {
-        if ($this->guard === null) return null;
+        if ($this->guard === null) {
+            return null;
+        }
+
         return $this->guard->user();
     }
 
     public function hasRole(string $role): bool
     {
-        if ($this->guard === null) return false;
+        if ($this->guard === null) {
+            return false;
+        }
+
         return $this->guard->hasRole($role);
     }
 
@@ -128,6 +137,7 @@ class AuthManager
     /**
      * @throws ContainerException
      * @throws JwtException
+     * @throws \ReflectionException
      */
     private function resolveGuard(): GuardInterface
     {
@@ -140,28 +150,33 @@ class AuthManager
 
         $em = $this->container->get(EntityManager::class);
 
-        return match($guardType) {
+        $identifier = $this->config['identifier'] ?? 'email';
+        $password = $this->config['password'] ?? 'password';
+        $passwordManager = $this->container->get(PasswordManager::class);
+        $model = $this->config['model'];
+
+        return match ($guardType) {
             'token' => new TokenGuard(
                 $this->container->get(Request::class),
                 new JwtManager(
                     $options['secret'] ?? '',
                     $options['expiration'] ?? 3600,
-                    $options['algorithm']  ?? 'HS256'
+                    $options['algorithm'] ?? 'HS256'
                 ),
-                $this->container->get(PasswordManager::class),
+                $passwordManager,
                 $em,
-                $this->config['model'],
-                $this->config['identifier'] ?? 'email',
-                $this->config['password'] ?? 'password',
+                $model,
+                $identifier,
+                $password,
                 $roleConfig
             ),
             default => new SessionGuard(
                 $this->container->get('auth.clientModule')->session(),
-                $this->container->get(PasswordManager::class),
+                $passwordManager,
                 $em,
-                $this->config['model'],
-                $this->config['identifier'] ?? 'email',
-                $this->config['password'] ?? 'password',
+                $model,
+                $identifier,
+                $password,
                 $roleConfig,
                 (int) ($options['timeout'] ?? 1800)
             ),

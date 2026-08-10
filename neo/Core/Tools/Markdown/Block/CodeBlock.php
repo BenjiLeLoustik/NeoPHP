@@ -7,8 +7,7 @@ class CodeBlock extends AbstractBlock
     public function __construct(
         public string $language,
         public string $content,
-    )
-    {
+    ) {
         parent::__construct('code');
     }
 

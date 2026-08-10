@@ -25,6 +25,7 @@ class TranslationManager implements TranslatorInterface
 
     /**
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function __construct(Container $container)
     {
@@ -84,6 +85,7 @@ class TranslationManager implements TranslatorInterface
     /**
      * @throws TranslationException
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function setLocale(string $locale, int $lifetime = 31536000): void
     {

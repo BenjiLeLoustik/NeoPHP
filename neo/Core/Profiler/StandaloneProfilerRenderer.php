@@ -6,14 +6,19 @@ namespace Neo\Core\Profiler;
 
 use Neo\Core\Application\ApplicationDetector;
 use Neo\Core\Application\ApplicationPaths;
+use Neo\Core\Application\Exception\ApplicationException;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\ContainerRegistry;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Request\Request;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 final class StandaloneProfilerRenderer
 {
-    public function __construct(private readonly ProfilerHtmlRenderer $renderer = new ProfilerHtmlRenderer())
-    {
+    public function __construct(
+        private ProfilerHtmlRenderer $renderer = new ProfilerHtmlRenderer()
+    ) {
     }
 
     public function handle(string $token): void
@@ -46,6 +51,11 @@ final class StandaloneProfilerRenderer
 
     /**
      * @return array{storagePath: string, configsPath: string}
+     * @throws ApplicationException
+     * @throws ContainerException
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     * @throws \ReflectionException
      */
     private function resolveApplicationPaths(): array
     {
@@ -64,10 +74,6 @@ final class StandaloneProfilerRenderer
         ];
     }
 
-    /**
-     * Reads app.config.php directly, without booting ConfigModule, so this
-     * check works even when the application fails to boot entirely.
-     */
     private function isDevEnvironment(string $configsPath): bool
     {
         $file = rtrim($configsPath, '/\\') . '/app.config.php';

@@ -3,6 +3,7 @@
 namespace Neo\Core\Security\Csrf;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Client\ClientModule;
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Module\Interface\ModuleInterface;
@@ -26,6 +27,10 @@ class CsrfModule implements ModuleInterface
         $container->set(CsrfTokenManager::class, fn() => new CsrfTokenManager());
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     public function init(Container $container): object
     {
         if (PHP_SAPI === 'cli') {

@@ -73,9 +73,21 @@ final class RunTestAllCommand extends AbstractCommand
             mkdir($reportsPath, 0777, true);
         }
 
-        $cmd = [ROOT_DIR . '/vendor/bin/phpunit', '--configuration', "$testsPath/phpunit.xml", '--colors=always', '--testdox'];
-        if ($stopOnFailure) $cmd[] = '--stop-on-failure';
-        if (in_array($format, ['html', 'both'], true)) $cmd[] = '--log-junit=' . "$reportsPath/junit.xml";
+        $cmd = [
+            ROOT_DIR . '/vendor/bin/phpunit',
+            '--configuration',
+            "$testsPath/phpunit.xml",
+            '--colors=always',
+            '--testdox'
+        ];
+
+        if ($stopOnFailure) {
+            $cmd[] = '--stop-on-failure';
+        }
+
+        if (in_array($format, ['html', 'both'], true)) {
+            $cmd[] = '--log-junit=' . "$reportsPath/junit.xml";
+        }
 
         if ($withCoverage) {
             if (extension_loaded('xdebug') || extension_loaded('pcov')) {
@@ -87,7 +99,10 @@ final class RunTestAllCommand extends AbstractCommand
 
         Output::title("Running tests for '$project'");
         $start = microtime(true);
-        passthru(implode(' ', array_map('escapeshellarg', $cmd)), $exitCode);
+        array_map('escapeshellarg', $cmd)
+            |> (fn($x) => implode(' ', $x))
+            |> (fn($x) => passthru($x, $exitCode));
+
         $duration = round(microtime(true) - $start, 2);
 
         if (in_array($format, ['html', 'both'], true)) {
@@ -99,7 +114,10 @@ final class RunTestAllCommand extends AbstractCommand
 
     private function generateHtmlSummary(string $path, string $proj, int $code, float $dur): void
     {
-        if (!file_exists("$path/junit.xml")) return;
+        if (!file_exists("$path/junit.xml")) {
+            return;
+        }
+
         $xml = simplexml_load_file("$path/junit.xml");
         $s = $xml->testsuite ?? null;
 
@@ -113,6 +131,7 @@ final class RunTestAllCommand extends AbstractCommand
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

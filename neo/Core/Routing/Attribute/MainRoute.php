@@ -8,12 +8,9 @@ use Attribute;
 #[Attribute(Attribute::TARGET_CLASS)]
 class MainRoute
 {
-    public string $path;
-    public string $name;
-
-    public function __construct(string $path, string $name)
-    {
-        $this->path = rtrim($path, '/');
-        $this->name = $name;
+    public function __construct(
+        public string $path,
+        public string $name,
+    ) {
     }
 }

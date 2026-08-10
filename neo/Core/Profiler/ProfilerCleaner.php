@@ -36,7 +36,10 @@ final class ProfilerCleaner
             return;
         }
 
-        usort($kept, static fn (string $a, string $b) => filemtime($a) <=> filemtime($b));
+        usort(
+            $kept,
+            static fn (string $a, string $b) => filemtime($a) <=> filemtime($b)
+        );
 
         $toRemove = count($kept) - self::MAX_PROFILES;
 

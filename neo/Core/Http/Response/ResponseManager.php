@@ -5,9 +5,11 @@ namespace Neo\Core\Http\Response;
 
 use JsonException;
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Response\Types\JsonResponse;
 use Neo\Core\Http\Response\Types\RedirectResponse;
 use Neo\Core\Http\Response\Types\Response;
+use ReflectionException;
 
 final class ResponseManager
 {
@@ -47,6 +49,10 @@ final class ResponseManager
         return new RedirectResponse($url, $status);
     }
 
+    /**
+     * @throws ReflectionException
+     * @throws ContainerException
+     */
     public function make(): Response
     {
         return $this->container->get(Response::class);

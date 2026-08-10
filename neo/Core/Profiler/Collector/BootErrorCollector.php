@@ -9,8 +9,9 @@ use Neo\Core\Profiler\ProfilerManager;
 
 final class BootErrorCollector implements CollectorInterface
 {
-    public function __construct(private readonly ProfilerManager $profiler)
-    {
+    public function __construct(
+        private ProfilerManager $profiler
+    ) {
     }
 
     public function getName(): string
@@ -70,10 +71,9 @@ final class BootErrorCollector implements CollectorInterface
             ];
         }
 
-        $traceRows = array_values(array_filter(
-            explode("\n", $data['trace']),
-            static fn (string $line) => trim($line) !== ''
-        ));
+        $traceRows = explode("\n", $data['trace'])
+                |> (fn($x) => array_filter($x, static fn(string $line) => trim($line) !== ''))
+                |> array_values(...);
 
         return [
             'title' => 'Boot Error',

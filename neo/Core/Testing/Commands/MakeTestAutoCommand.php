@@ -10,6 +10,7 @@ use Neo\Core\Console\Input\Input;
 use Neo\Core\Console\Input\InputOption;
 use Neo\Core\Console\Output\Output;
 use Neo\Core\DI\Container;
+use Neo\Core\Testing\Exception\TestingException;
 use Neo\Core\Testing\Generator\TestGenerator;
 use Neo\Core\Testing\Scaffold\TestScaffolder;
 
@@ -21,8 +22,9 @@ use Neo\Core\Testing\Scaffold\TestScaffolder;
 final class MakeTestAutoCommand extends AbstractCommand
 {
     public function __construct(
-        private readonly Container $container
-    ) {}
+        private Container $container
+    ) {
+    }
 
     public function configure(): void
     {
@@ -55,6 +57,9 @@ final class MakeTestAutoCommand extends AbstractCommand
         );
     }
 
+    /**
+     * @throws TestingException
+     */
     public function do(Input $input, Output $output): ExitCode
     {
         $project = $input->getOption('project');
@@ -68,7 +73,7 @@ final class MakeTestAutoCommand extends AbstractCommand
             return ExitCode::FAILURE;
         }
 
-        (new TestScaffolder())->ensure($basePath, $project);
+        new TestScaffolder()->ensure($basePath, $project);
 
         Output::title("Scanning #[Test] attributes in '$project'");
 
@@ -107,6 +112,7 @@ final class MakeTestAutoCommand extends AbstractCommand
 
     protected function getAvailableProjects(): array
     {
-        return array_map('basename', glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR));
+        return glob(ROOT_DIR . '/src/*', GLOB_ONLYDIR)
+                |> (fn (array $d): array => array_map(basename(...), $d));
     }
 }

@@ -4,20 +4,27 @@ namespace Neo\Core\Security\Csrf;
 
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\Request\Request;
+use Random\RandomException;
 
 class CsrfManager
 {
     private const string SESSION_KEY = '_csrf_token';
 
     public function __construct(
-        private readonly Session $session,
-        private readonly Request $request
+        private Session $session,
+        private Request $request
     ){}
 
+    /**
+     * @throws RandomException
+     */
     public function generate(): string
     {
         if (!$this->session->has(self::SESSION_KEY)) {
-            $this->session->set(self::SESSION_KEY, bin2hex(random_bytes(32)));
+            $this->session->set(
+                self::SESSION_KEY,
+                random_bytes(32) |> bin2hex(...)
+            );
         }
 
         return $this->session->get(self::SESSION_KEY);
@@ -45,8 +52,14 @@ class CsrfManager
         return hash_equals($sessionToken, $requestToken);
     }
 
+    /**
+     * @throws RandomException
+     */
     public function refresh(): void
     {
-        $this->session->set(self::SESSION_KEY, bin2hex(random_bytes(32)));
+        $this->session->set(
+            self::SESSION_KEY,
+            random_bytes(32) |> bin2hex(...)
+        );
     }
 }

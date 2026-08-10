@@ -11,8 +11,9 @@ final class ConfigurationCollector implements CollectorInterface
 {
     private const string FRAMEWORK_PACKAGE_NAME = 'neo/core';
 
-    public function __construct(private readonly Container $container)
-    {
+    public function __construct(
+        private Container $container
+    ) {
     }
 
     public function getName(): string
@@ -139,7 +140,9 @@ final class ConfigurationCollector implements CollectorInterface
             return null;
         }
 
-        $data = json_decode((string) file_get_contents($installedPath), true);
+        $data = (string) file_get_contents($installedPath)
+                |> (fn (string $c): mixed => json_decode($c, true));
+
         $entries = $data['packages'] ?? $data ?? [];
 
         foreach ($entries as $entry) {
@@ -196,7 +199,9 @@ final class ConfigurationCollector implements CollectorInterface
             return [];
         }
 
-        $data = json_decode((string) file_get_contents($installedPath), true);
+        $data = (string) file_get_contents($installedPath)
+                |> (fn (string $c): mixed => json_decode($c, true));
+
         $entries = $data['packages'] ?? $data ?? [];
 
         $packages = [];
@@ -212,7 +217,10 @@ final class ConfigurationCollector implements CollectorInterface
             ];
         }
 
-        usort($packages, static fn (array $a, array $b) => strcasecmp($a['name'], $b['name']));
+        usort(
+            $packages,
+            static fn (array $a, array $b) => strcasecmp($a['name'], $b['name'])
+        );
 
         return $packages;
     }

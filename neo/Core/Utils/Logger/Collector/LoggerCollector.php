@@ -12,8 +12,9 @@ final class LoggerCollector implements CollectorInterface
 {
     private const array ERROR_LEVELS = ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'];
 
-    public function __construct(private readonly LoggerManager $logger)
-    {
+    public function __construct(
+        private LoggerManager $logger
+    ) {
     }
 
     public function getName(): string

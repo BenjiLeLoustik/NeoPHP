@@ -55,6 +55,7 @@ class ModuleManager
     /**
      * @throws ModuleException
      * @throws ReflectionException
+     * @throws \Throwable
      */
     public function boot(): void
     {
@@ -67,7 +68,6 @@ class ModuleManager
             try {
                 $moduleStart = microtime(true);
 
-                /** @var ModuleInterface $module */
                 $module = new $moduleClass();
 
                 $module->register($this->container);
@@ -116,7 +116,9 @@ class ModuleManager
     private function deriveAlias(string $moduleClass): string
     {
         $shortName = new \ReflectionClass($moduleClass)->getShortName();
-        $stripped = str_ends_with($shortName, 'Module') ? substr($shortName, 0, -6) : $shortName;
+        $stripped = str_ends_with($shortName, 'Module')
+            ? substr($shortName, 0, -6)
+            : $shortName;
         return lcfirst($stripped);
     }
 
@@ -130,7 +132,10 @@ class ModuleManager
         $resolved = [];
         $resolving = [];
 
-        $resolve = function (string $moduleClass, ?string $requiredBy = null) use (&$resolve, &$resolved, &$resolving): void {
+        $resolve = function (
+            string $moduleClass,
+            ?string $requiredBy = null
+        ) use (&$resolve, &$resolved, &$resolving): void {
             if (in_array($moduleClass, $resolved, true)) {
                 return;
             }
@@ -170,7 +175,9 @@ class ModuleManager
             }
 
             $resolved[] = $moduleClass;
-            $resolving = array_values(array_filter($resolving, fn($m) => $m !== $moduleClass));
+            $resolving
+                |> (fn (array $r): array => array_filter($r, fn ($m) => $m !== $moduleClass))
+                |> array_values(...);
         };
 
         foreach ($modules as $moduleClass) {

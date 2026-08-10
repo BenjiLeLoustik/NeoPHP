@@ -23,5 +23,6 @@ readonly class TestClassContext
         public array $dataset = [],
         public bool $skip = false,
         public ?string $customExtends = null,
-    ){}
+    ){
+    }
 }

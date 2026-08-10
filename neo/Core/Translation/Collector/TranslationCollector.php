@@ -9,8 +9,9 @@ use Neo\Core\Translation\TranslationManager;
 
 final class TranslationCollector implements CollectorInterface
 {
-    public function __construct(private readonly TranslationManager $translator)
-    {
+    public function __construct(
+        private TranslationManager $translator
+    ) {
     }
 
     public function getName(): string
@@ -27,7 +28,9 @@ final class TranslationCollector implements CollectorInterface
             $byDomain[$record['domain']][] = $record;
         }
 
-        $missingCount = count(array_filter($records, static fn (array $r) => !$r['found']));
+        $missingCount = $records
+                |> (fn (array $r): array => array_filter($r, static fn (array $x) => !$x['found']))
+                |> count(...);
 
         return [
             'enabled' => $this->translator->isEnabledTranslation(),
@@ -103,7 +106,9 @@ final class TranslationCollector implements CollectorInterface
         $tabs = [];
 
         foreach ($data['byDomain'] as $domain => $records) {
-            $missingInDomain = count(array_filter($records, static fn (array $r) => !$r['found']));
+            $missingInDomain = $records
+                    |> (fn (array $r): array => array_filter($r, static fn (array $x) => !$x['found']))
+                    |> count(...);
 
             $tabs[] = [
                 'label' => $domain,

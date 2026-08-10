@@ -28,6 +28,7 @@ class ConfigManager
     /**
      * @throws ContainerException
      * @throws ConfigException
+     * @throws \ReflectionException
      */
     public function __construct(Container $container)
     {

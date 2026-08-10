@@ -32,6 +32,7 @@ class Session
     /**
      * @throws FrameworkException
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function __construct(Container $container)
     {
@@ -86,31 +87,43 @@ class Session
             }
 
             ini_set('session.save_handler', $this->config['storage']['handler']);
-            ini_set('session.save_path',    $savePath);
+            ini_set('session.save_path', $savePath);
         }
     }
 
     public function set(string $key, mixed $value): void
     {
-        if ($this->isCli) return;
+        if ($this->isCli) {
+            return;
+        }
+
         $_SESSION[$key] = $value;
     }
 
     public function get(string $key, mixed $default = null): mixed
     {
-        if ($this->isCli) return $default;
+        if ($this->isCli) {
+            return $default;
+        }
+
         return $_SESSION[$key] ?? $default;
     }
 
     public function has(string $key): bool
     {
-        if ($this->isCli) return false;
+        if ($this->isCli) {
+            return false;
+        }
+
         return array_key_exists($key, $_SESSION);
     }
 
     public function remove(string $key): void
     {
-        if ($this->isCli) return;
+        if ($this->isCli) {
+            return;
+        }
+
         unset($_SESSION[$key]);
     }
 
@@ -119,25 +132,37 @@ class Session
      */
     public function all(): array
     {
-        if ($this->isCli) return [];
+        if ($this->isCli) {
+            return [];
+        }
+
         return $_SESSION;
     }
 
     public function clear(): void
     {
-        if ($this->isCli) return;
+        if ($this->isCli) {
+            return;
+        }
+
         $_SESSION = [];
     }
 
     public function destroy(): void
     {
-        if ($this->isCli) return;
+        if ($this->isCli) {
+            return;
+        }
+
         session_destroy();
     }
 
     public function regenerate(): void
     {
-        if ($this->isCli) return;
+        if ($this->isCli) {
+            return;
+        }
+
         session_regenerate_id(true);
     }
 }

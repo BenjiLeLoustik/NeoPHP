@@ -12,8 +12,9 @@ use Neo\Core\Validator\ValidationContext;
 final class UniqueValidator implements ConstraintValidatorInterface
 {
     public function __construct(
-        private readonly EntityManager $em,
-    ) {}
+        private EntityManager $em,
+    ) {
+    }
 
     public function validate(mixed $value, ConstraintInterface $constraint, ValidationContext $context): void
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Neo\Core\Profiler;
 
 use Neo\Core\Profiler\Interface\CollectorInterface;
+use Random\RandomException;
 
 final class ProfilerManager
 {
@@ -26,20 +27,28 @@ final class ProfilerManager
         $this->startTime = microtime(true);
     }
 
+    /**
+     * @throws RandomException
+     */
     public static function getInstance(): self
     {
         if (!isset(self::$instance)) {
             self::$instance = new self();
-            self::$token = bin2hex(random_bytes(6));
+            self::$token = random_bytes(6)
+                    |> bin2hex(...);
         }
 
         return self::$instance;
     }
 
+    /**
+     * @throws RandomException
+     */
     public static function reset(): void
     {
         self::$instance = new self();
-        self::$token = bin2hex(random_bytes(6));
+        self::$token = random_bytes(6)
+                |> bin2hex(...);
     }
 
     public static function getToken(): string

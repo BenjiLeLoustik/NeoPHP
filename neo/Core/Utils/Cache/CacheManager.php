@@ -17,12 +17,21 @@ class CacheManager
     private CacheDriverInterface $driver;
     private string $driverName;
 
-    /** @var list<array{action: string, key: string, hit: bool|null, value: string|null, ttl: int|null, duration: float}> */
+    /** @var list<array{
+     *     action: string,
+     *     key: string,
+     *     hit: bool|null,
+     *     value: string|null,
+     *     ttl: int|null,
+     *     duration: float
+     * }>
+     */
     private static array $log = [];
 
     /**
      * @throws CacheException
      * @throws ContainerException
+     * @throws \ReflectionException
      */
     public function __construct(Container $container)
     {

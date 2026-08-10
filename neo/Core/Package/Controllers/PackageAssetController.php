@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Neo\Core\Package\Controllers;
 
 use Neo\Core\Controller\AbstractController;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Package\Interface\PackageInterface;
 use Neo\Core\Routing\Attribute\MainRoute;
@@ -47,7 +48,9 @@ final class PackageAssetController extends AbstractController
 
     private function detectMimeType(string $path): string
     {
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $extension = $path
+                |> (fn (string $p): string => pathinfo($p, PATHINFO_EXTENSION))
+                |> strtolower(...);
 
         return match ($extension) {
             'css' => 'text/css',
@@ -63,6 +66,10 @@ final class PackageAssetController extends AbstractController
         };
     }
 
+    /**
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     private function findPackageAssetsPath(string $packageName): ?string
     {
         if (!$this->container->has('packages')) {

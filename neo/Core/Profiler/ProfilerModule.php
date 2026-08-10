@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Profiler;
 
 use Neo\Core\DI\Container;
+use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\EventModule;
 use Neo\Core\Http\Response\ResponseModule;
 use Neo\Core\Module\Interface\ModuleInterface;
@@ -17,6 +18,7 @@ use Neo\Core\Security\Auth\AuthModule;
 use Neo\Core\Translation\TranslationModule;
 use Neo\Core\Utils\Config\ConfigModule;
 use Neo\Core\Utils\Scanner\ScannerFileManager;
+use Random\RandomException;
 use ReflectionClass;
 
 final class ProfilerModule implements ModuleInterface
@@ -36,6 +38,11 @@ final class ProfilerModule implements ModuleInterface
 
     public function register(Container $container): void {}
 
+    /**
+     * @throws RandomException
+     * @throws \ReflectionException
+     * @throws ContainerException
+     */
     public function init(Container $container): object
     {
         $profiler = ProfilerManager::getInstance();
@@ -78,7 +85,7 @@ final class ProfilerModule implements ModuleInterface
         }
 
         $coreDir = dirname(__DIR__);
-        $targets = (new self())->buildScanTargets($container, $coreDir);
+        $targets = new self()->buildScanTargets($container, $coreDir);
         $paths = array_map(static fn (array $t) => $t['path'], $targets);
 
         $results = new ScannerFileManager()
@@ -107,7 +114,7 @@ final class ProfilerModule implements ModuleInterface
             try {
                 /** @var CollectorInterface $collector */
                 $collector = $container->get($class);
-                $packageName = (new self())->resolvePackageForFile($ref->getFileName() ?: '', $targets);
+                $packageName = new self()->resolvePackageForFile($ref->getFileName() ?: '', $targets);
 
                 $profiler->addCollector($collector, $packageName);
             } catch (\Throwable $ex) {
@@ -119,14 +126,21 @@ final class ProfilerModule implements ModuleInterface
     }
 
     /**
+     * @param Container $container
+     * @param string $coreDir
      * @return list<array{path: string, package: string|null}>
+     * @throws ContainerException
+     * @throws \ReflectionException
      */
     private function buildScanTargets(Container $container, string $coreDir): array
     {
         $targets = [['path' => $coreDir, 'package' => null]];
 
         if ($container->has('appPath')) {
-            $targets[] = ['path' => $container->get('appPath'), 'package' => null];
+            $targets[] = [
+                'path' => $container->get('appPath'),
+                'package' => null
+            ];
         }
 
         if ($container->has('packages')) {

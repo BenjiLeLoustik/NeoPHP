@@ -20,7 +20,10 @@ final class CacheCollector implements CollectorInterface
         $log = CacheManager::getLog();
 
         $gets = array_filter($log, static fn (array $l) => $l['action'] === 'get' || $l['action'] === 'has');
-        $hits = count(array_filter($gets, static fn (array $l) => $l['hit'] === true));
+        $hits = $gets
+                |> (fn (array $g): array => array_filter($g, static fn (array $l) => $l['hit'] === true))
+                |> count(...);
+
         $misses = count($gets) - $hits;
 
         return [

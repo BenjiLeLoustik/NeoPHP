@@ -8,35 +8,16 @@ use Attribute;
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
 class Middleware
 {
-    public string $use;
-
-    public string $message;
-
-    public string $onError;
-
-    public ?string $redirect;
-
-    /** @var array<string, mixed> */
-    public array $params;
-
-    public int $priority;
-
     /**
      * @param array<string, mixed> $params
      */
     public function __construct(
-        string $use,
-        string $message = '',
-        string $onError = 'block',
-        ?string $redirect = null,
-        array $params = [],
-        int $priority = 0
+        public string $use,
+        public string $message = '',
+        public string $onError = 'block',
+        public ?string $redirect = null,
+        public array $params = [],
+        public int $priority = 0
     ) {
-        $this->use = $use;
-        $this->message = $message;
-        $this->onError = $onError;
-        $this->redirect = $redirect;
-        $this->params = $params;
-        $this->priority = $priority;
     }
 }

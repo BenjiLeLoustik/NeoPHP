@@ -20,7 +20,10 @@ class TwilioDriver implements DriverInterface
 
     public function send(string $to, string $body): void
     {
-        $url = sprintf('https://api.twilio.com/2010-04-01/Accounts/%s/Messages.json', $this->config['account_sid']);
+        $url = sprintf(
+            'https://api.twilio.com/2010-04-01/Accounts/%s/Messages.json',
+            $this->config['account_sid']
+        );
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [

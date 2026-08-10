@@ -12,7 +12,8 @@ class ExceptionEvent extends AbstractEvent
 
     public function __construct(
         private FrameworkException $exception
-    ) {}
+    ) {
+    }
 
     public function getException(): FrameworkException
     {
