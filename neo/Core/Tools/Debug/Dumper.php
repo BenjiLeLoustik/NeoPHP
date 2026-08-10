@@ -397,7 +397,7 @@ final class Dumper
         .neo-dd-row {
             padding: 0.1rem 0;
         }
-        
+
         .neo-dd-details {
             display: inline;
         }
@@ -405,7 +405,7 @@ final class Dumper
         .neo-dd-key {
             margin-right: 0.1em;
         }
-        
+
         .neo-dd-details > .neo-dd-brace-close-line {
             display: block;
         }

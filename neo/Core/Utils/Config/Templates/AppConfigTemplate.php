@@ -45,7 +45,7 @@ return [
             'en' => 'Anglais',
         ],
     ],
-    
+
     'packages' => [
         // \Vendor\PackageName\PackageName::class,
     ]

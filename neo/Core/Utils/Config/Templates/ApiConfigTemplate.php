@@ -41,7 +41,7 @@ return [
             'name'    => '',
         ],
     ],
-    
+
     'slack' => [
         'enabled'     => false,
         'webhook_url' => '',
@@ -51,7 +51,7 @@ return [
             'icon'     => '',
         ],
     ],
-    
+
     'sms' => [
         'enabled' => false,
 
@@ -71,7 +71,7 @@ return [
             'log' => [],
         ],
     ],
-    
+
     // Add more API keys
 ];
 PHP;
