@@ -1,3 +1,7 @@
+v4.32.0
+- feat: add DatabaseConnection collector (3534574)
+- feat: add DumperTwigExtension exposing {{ var_dump() }} in Twig templates, using the same Dumper rendering as dd()/dump() (fd8ab9d)
+
 v4.31.1
 - fix: remove command to scan php8.5 codebase (defa3dc)
 - docs: add explanatory comments to intentionally empty catch blocks across the codebase (e05f08f)
