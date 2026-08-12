@@ -1,3 +1,7 @@
+v4.33.0
+- feat: add View extension for Cookie and Session (71ec5e1)
+- feat: add controller extensions for Session/Cookie and Flash and update AbstractController into ide helper (961ce85)
+
 v4.32.0
 - feat: add DatabaseConnection collector (3534574)
 - feat: add DumperTwigExtension exposing {{ var_dump() }} in Twig templates, using the same Dumper rendering as dd()/dump() (fd8ab9d)
