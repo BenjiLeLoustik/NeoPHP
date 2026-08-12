@@ -10,11 +10,16 @@ use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Client\Cookie\Cookie;
 
+/**
+ * @method \Neo\Core\Http\Client\Cookie\Cookie getCookie()
+ */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]
-final class CookieControllerExtension implements ControllerExtensionInterface
+class CookieControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        $controller->registerMethod('getCookie', fn(): Cookie => $container->get(Cookie::class));
+        $controller->registerMethod('getCookie', function () use ($container): Cookie {
+            return $container->get(Cookie::class);
+        });
     }
 }

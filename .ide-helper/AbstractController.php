@@ -9,6 +9,9 @@ namespace Neo\Core\Controller;
 
 /**
  * @method \Neo\Core\Event\Interface\EventInterface dispatch(\Neo\Core\Event\Interface\EventInterface $event)
+ * @method \Neo\Core\Http\Client\Cookie\Cookie getCookie()
+ * @method \Neo\Core\Http\Client\Flash\Flash getFlash()
+ * @method \Neo\Core\Http\Client\Session\Session getSession()
  * @method \Neo\Core\Http\Response\Types\JsonResponse json(array<string, mixed>|object $data, int $status = 200)
  * @method \Neo\Core\Http\Response\Types\JsonResponse jsonError(string $message, int $status = 400, array<string, mixed> $extra = [])
  * @method \Neo\Core\Http\Response\Types\JsonResponse jsonSuccess(array<string, mixed>|object $data = [], int $status = 200)

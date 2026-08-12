@@ -10,11 +10,16 @@ use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Client\Flash\Flash;
 
+/**
+ * @method \Neo\Core\Http\Client\Flash\Flash getFlash()
+ */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]
-final class FlashControllerExtension implements ControllerExtensionInterface
+class FlashControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        $controller->registerMethod('getFlash', fn(): Flash => $container->get(Flash::class));
+        $controller->registerMethod('getFlash', function () use ($container): Flash {
+            return $container->get(Flash::class);
+        });
     }
 }

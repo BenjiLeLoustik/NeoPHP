@@ -10,11 +10,16 @@ use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
 use Neo\Core\Http\Client\Session\Session;
 
+/**
+ * @method \Neo\Core\Http\Client\Session\Session getSession()
+ */
 #[Extension(type: ExtensionTypeEnum::CONTROLLER)]
-final class SessionControllerExtension implements ControllerExtensionInterface
+class SessionControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        $controller->registerMethod('getSession', fn(): Session => $container->get(Session::class));
+        $controller->registerMethod('getSession', function () use ($container): Session {
+            return $container->get(Session::class);
+        });
     }
 }
