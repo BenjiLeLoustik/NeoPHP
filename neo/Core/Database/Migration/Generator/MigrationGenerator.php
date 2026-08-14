@@ -321,6 +321,10 @@ PHP;
             $def .= ' ' . strtoupper($extra);
         }
 
+        if (($col['key'] ?? '') === 'UNI') {
+            $def .= ' UNIQUE';
+        }
+
         return $def;
     }
 
