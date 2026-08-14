@@ -31,6 +31,13 @@ class RouterControllerExtension implements ControllerExtensionInterface
             return $container->get(RouterManager::class)->generateUrl($routeName, $params);
         });
 
+        $controller->registerMethod('generateUrl', function (
+            string $routeName,
+            array $params = []
+        ) use ($container) {
+            return $container->get(RouterManager::class)->generateUrl($routeName, $params);
+        });
+
         $controller->registerMethod('getRedirectBack', function (
             ?string $fallbackRoute = null,
             array $routeParams = []
