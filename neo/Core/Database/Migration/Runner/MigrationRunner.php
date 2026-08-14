@@ -90,7 +90,7 @@ final class MigrationRunner
         $applied = $this->getApplied();
         $files = $this->getMigrationFiles($migrationsPath, $recursive);
 
-        $files
+        return $files
             |> (fn (array $f): array => array_filter($f, fn (string $x) => !isset($applied[basename($x, '.php')])))
             |> array_values(...);
     }
