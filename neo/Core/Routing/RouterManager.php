@@ -331,9 +331,10 @@ class RouterManager
 
     /**
      * @param array<string, string> $params
+     * @param array<string, mixed> $query
      * @throws RouteNotFoundException
      */
-    public function generateUrl(string $name, array $params = []): string
+    public function generateUrl(string $name, array $params = [], array $query = []): string
     {
         foreach ($this->routes->all() as $methodRoutes) {
             foreach ($methodRoutes as $routePath => $info) {
@@ -348,10 +349,14 @@ class RouterManager
                     $url = preg_replace('/\/\{[a-zA-Z0-9_]+\?\}/', '', $url);
                     $url = preg_replace('/\{[a-zA-Z0-9_]+\}/', '', $url);
                     $url = '/' . (
-                        $url
-                            |> (fn (string $u): string => (string) preg_replace('#/+#', '/', $u))
-                            |> (fn (string $u): string => trim($u, '/'))
+                            $url
+                                |> (fn (string $u): string => (string) preg_replace('#/+#', '/', $u))
+                                |> (fn (string $u): string => trim($u, '/'))
                         );
+
+                    if ($query !== []) {
+                        $url .= '?' . http_build_query($query);
+                    }
 
                     return $url;
                 }
