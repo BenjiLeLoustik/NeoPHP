@@ -255,7 +255,7 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
                 Output::warning("  ~ $table: drop column {$col['name']}");
             }
             foreach ($changes['modified'] ?? [] as $col) {
-                Output::info("  ~ $table: modify column {$col['name']}");
+                Output::info("  ~ $table: modify column {$col['after']['name']}");
             }
         }
     }
