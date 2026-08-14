@@ -13,9 +13,10 @@ use Neo\Core\Http\Response\Types\RedirectResponse;
 use Neo\Core\Routing\RouterManager;
 
 /**
- * @method string getRoutePath(string $routeName, array<string, string> $params = [])
+ * @method string getRoutePath(string $routeName, array<string, string> $params = [], array<string, mixed> $query = [])
+ * @method string generateUrl(string $routeName, array<string, string> $params = [], array<string, mixed> $query = [])
  * @method string getRedirectBack(?string $fallbackRoute = null, array<string, string> $routeParams = [])
- * @method \Neo\Core\Http\Response\Types\RedirectResponse redirectToRoute(string $routeName, array<string, string> $params = [])
+ * @method \Neo\Core\Http\Response\Types\RedirectResponse redirectToRoute(string $routeName, array<string, string> $params = [], array<string, mixed> $query = [])
  * @method \Neo\Core\Http\Response\Types\RedirectResponse redirectToPath(string $path, int $code = 302)
  * @method \Neo\Core\Http\Response\Types\RedirectResponse redirectBack(?string $fallbackRoute = null, array<string, string> $routeParams = [], int $code = 302)
  */
@@ -26,16 +27,18 @@ class RouterControllerExtension implements ControllerExtensionInterface
     {
         $controller->registerMethod('getRoutePath', function (
             string $routeName,
-            array $params = []
+            array $params = [],
+            array $query = []
         ) use ($container) {
-            return $container->get(RouterManager::class)->generateUrl($routeName, $params);
+            return $container->get(RouterManager::class)->generateUrl($routeName, $params, $query);
         });
 
         $controller->registerMethod('generateUrl', function (
             string $routeName,
-            array $params = []
+            array $params = [],
+            array $query = []
         ) use ($container) {
-            return $container->get(RouterManager::class)->generateUrl($routeName, $params);
+            return $container->get(RouterManager::class)->generateUrl($routeName, $params, $query);
         });
 
         $controller->registerMethod('getRedirectBack', function (
@@ -53,9 +56,10 @@ class RouterControllerExtension implements ControllerExtensionInterface
 
         $controller->registerMethod('redirectToRoute', function (
             string $routeName,
-            array $params = []
+            array $params = [],
+            array $query = []
         ) use ($container) {
-            $path = $container->get(RouterManager::class)->generateUrl($routeName, $params);
+            $path = $container->get(RouterManager::class)->generateUrl($routeName, $params, $query);
             return new RedirectResponse($path, 302);
         });
 
