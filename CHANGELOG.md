@@ -1,3 +1,6 @@
+v4.33.1
+- fix: return value missing in MigrationRunner::getPending() (e44ae89)
+
 v4.33.0
 - feat: add View extension for Cookie and Session (71ec5e1)
 - feat: add controller extensions for Session/Cookie and Flash and update AbstractController into ide helper (961ce85)
