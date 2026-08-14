@@ -178,9 +178,13 @@ final class Form
     /**
      * @return array<string, mixed>
      */
-    public function getData(): array
+    public function getData(): array|object
     {
-        return array_map(fn ($field) => $field->getValue(), $this->fields);
+        if ($this->entity !== null) {
+            return $this->entity;
+        }
+
+        return array_map(fn($field) => $field->getValue(), $this->fields);
     }
 
     private function mapToEntity(): void
