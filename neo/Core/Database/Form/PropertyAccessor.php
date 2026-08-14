@@ -12,6 +12,8 @@ final class PropertyAccessor
 {
     public function getValue(object $entity, string $property): mixed
     {
+        $property = $this->camelCase($property);
+
         if (property_exists($entity, $property)) {
             $refProp = new ReflectionProperty($entity, $property);
             if (!$refProp->isInitialized($entity)) {
@@ -34,6 +36,7 @@ final class PropertyAccessor
 
     public function setValue(object $entity, string $property, mixed $value): void
     {
+        $property = $this->camelCase($property);
         $coerced = $this->coerce($entity, $property, $value);
 
         $setter = 'set' . ucfirst($property);
@@ -45,6 +48,14 @@ final class PropertyAccessor
         if (property_exists($entity, $property)) {
             new ReflectionProperty($entity, $property)->setValue($entity, $coerced);
         }
+    }
+
+    private function camelCase(string $property): string
+    {
+        return str_replace('_', ' ', $property)
+                |> ucwords(...)
+                |> (fn($x) => str_replace(' ', '', $x))
+                |> lcfirst(...);
     }
 
     private function coerce(object $entity, string $property, mixed $value): mixed
