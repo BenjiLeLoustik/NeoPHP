@@ -1,3 +1,13 @@
+v4.34.0
+- fix: emit UNIQUE constraint in generated column DDL (ce04b2d)
+- fix: resolve snake_case field names to camelCase entity properties (662f862)
+- feat: getData() returns bound entity when one is set via bind() (f85a301)
+- chore: update AbstractController IDE helper (79c895d)
+- feat: propagate $query param through controller helpers (b12b34c)
+- feat: support query string parameters in generateUrl() (2687bd4)
+- fix: correct key access in DatabaseOrmDiffCommand::printSummary() (e3f419c)
+- feat: add generateUrl method int abstract controller (9975dc6)
+
 v4.33.1
 - fix: return value missing in MigrationRunner::getPending() (e44ae89)
 
