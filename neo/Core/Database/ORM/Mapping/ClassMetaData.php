@@ -153,7 +153,7 @@ final class ClassMetaData
         $prop = $this->getReflProperty((string) $this->identifier);
 
         if ($this->reflClass->isUninitializedLazyObject($entity)) {
-            return $prop->getRawValueWithoutLazyInitialization($entity);
+            return $prop->getRawValue($entity);
         }
 
         return $prop->isInitialized($entity) ? $prop->getValue($entity) : null;
