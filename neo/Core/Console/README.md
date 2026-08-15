@@ -29,7 +29,7 @@ The `Console` module is NeoPHP's CLI infrastructure. It provides the command dis
 
 ### Automatic discovery
 
-The manager recursively scans two folders looking for PHP files located inside a `Commands/` subfolder:
+The manager recursively scans two folders looking for PHP files located inside a `Command/` subfolder:
 
 - `neo/` — the framework's native commands
 - `src/` — application projects' commands
@@ -401,7 +401,7 @@ Color::BOLD->apply();               // → "\033[1m" (without automatic reset)
 
 ### `app:make:command`
 
-**File:** `Commands/MakeCommand.php`
+**File:** `Command/MakeCommand.php`
 
 Generates a command skeleton for an application project.
 
@@ -469,7 +469,7 @@ final class CleanLogsCommand extends AbstractCommand
 
 ### `app:serve`
 
-**File:** `Commands/ServeCommand.php`
+**File:** `Command/ServeCommand.php`
 
 Starts PHP's built-in HTTP server for a NeoPHP project. The address and port are read from the `access` key in the project's `app.config.php` file.
 

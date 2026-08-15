@@ -336,7 +336,7 @@ This extension adds two global functions in Twig templates:
 
 ## The debug:router Command
 
-File: `Commands/DebugRouterCommand.php`
+File: `Command/DebugRouterCommand.php`
 
 The `debug:router` command displays every route registered for a project, colorized by HTTP method.
 

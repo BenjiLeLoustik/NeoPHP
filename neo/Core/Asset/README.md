@@ -216,7 +216,7 @@ final readonly class AssetViewExtension implements TwigExtensionInterface
 
 ### `asset:reload`
 
-**File:** `Commands/AssetReloadCommand.php`
+**File:** `Command/AssetReloadCommand.php`
 
 Deletes a project's build folder, forcing recompilation of all assets on the next request.
 

@@ -198,7 +198,7 @@ Extensions are automatically discovered by the `ExtensionManager` when the contr
 
 ### `make:controller`
 
-**File:** `Commands/MakeControllerCommand.php`
+**File:** `Command/MakeControllerCommand.php`
 
 Generates a controller (web or API) for a NeoPHP project, with pre-configured routing attributes.
 

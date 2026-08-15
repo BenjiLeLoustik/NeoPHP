@@ -41,7 +41,7 @@ class ConsoleManager
     {
         $results = new ScannerFileManager()
             ->paths(self::COMMAND_BASE_PATHS)
-            ->withPathSegment('Commands')
+            ->withPathSegment('Command')
             ->scan();
 
         return self::filterCommandClasses($results);
@@ -69,7 +69,7 @@ class ConsoleManager
 
         $results = new ScannerFileManager()
             ->paths($paths)
-            ->withPathSegment('Commands')
+            ->withPathSegment('Command')
             ->scan();
 
         return self::filterCommandClasses($results);

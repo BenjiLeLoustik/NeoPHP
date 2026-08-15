@@ -223,7 +223,7 @@ Every run (success or failure) is logged. The runner attempts to use the framewo
 
 ### `cron:run`
 
-**File:** `Commands/CronRunCommand.php`
+**File:** `Command/CronRunCommand.php`
 
 Scans and runs every due cron job for a given project. This command is meant to be called by the system scheduler (crontab) every minute.
 
@@ -257,7 +257,7 @@ php bin/neo cron:run --project=MyProject
 
 ### `cron:list`
 
-**File:** `Commands/CronListCommand.php`
+**File:** `Command/CronListCommand.php`
 
 Displays the list of every cron job registered for a project, with its expression, class, and description.
 
@@ -281,7 +281,7 @@ Registered Cron Jobs
 
 ### `make:cron`
 
-**File:** `Commands/MakeCronCommand.php`
+**File:** `Command/MakeCronCommand.php`
 
 Generates a Cron class skeleton for a NeoPHP project.
 

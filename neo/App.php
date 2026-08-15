@@ -12,12 +12,14 @@ use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Event\Event\RequestEvent;
 use Neo\Core\Event\Event\ResponseEvent;
 use Neo\Core\Event\EventManager;
+use Neo\Core\Extension\ExtensionManager;
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Module\Exception\ModuleException;
 use Neo\Core\Module\ModuleManager;
 use Neo\Core\Profiler\TimelineRecorder;
 use Neo\Core\Routing\RouterManager;
+use Neo\Core\View\ViewManager;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -62,10 +64,10 @@ class App
 
         $moduleManager->boot();
 
-        $viewManager = $this->container->get(\Neo\Core\View\ViewManager::class);
+        $viewManager = $this->container->get(ViewManager::class);
 
         $extScanStart = microtime(true);
-        $extensions = $this->container->get(\Neo\Core\Extension\ExtensionManager::class)->getViewExtensions();
+        $extensions = $this->container->get(ExtensionManager::class)->getViewExtensions();
         $this->recordTimeline('bootstrap', 'ExtensionManager::getViewExtensions()', $extScanStart);
 
         $extApplyStart = microtime(true);

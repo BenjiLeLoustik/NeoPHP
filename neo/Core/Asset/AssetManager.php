@@ -44,7 +44,9 @@ class AssetManager
         $this->sourcePath = $this->container->get('assetsPath');
         $this->publicPath = $this->container->get('publicPath');
         $this->buildPath = $this->container->get('buildsPath') . $this->currentApplication . '/assets/';
-        $this->manifestPath = $this->container->get('buildsPath') . $this->currentApplication . '/' . $this->container->get('manifestFilename');
+        $this->manifestPath = $this->container->get('buildsPath')
+            . $this->currentApplication . '/'
+            . $this->container->get('manifestFilename');
 
         $this->loadManifest();
     }

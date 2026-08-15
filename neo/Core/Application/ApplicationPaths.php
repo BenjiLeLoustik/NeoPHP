@@ -36,13 +36,13 @@ readonly class ApplicationPaths
         $this->container->set('storagePath', $basePath . '/src/' . $appName . '/Storage');
         $this->container->set('configsPath', $basePath . '/src/' . $appName . '/Config');
         $this->container->set('viewsPath', $basePath . '/src/' . $appName . '/Templates');
-        $this->container->set('controllersPath', $basePath . '/src/' . $appName . '/App/Controllers');
+        $this->container->set('controllersPath', $basePath . '/src/' . $appName . '/App/Controller');
         $this->container->set('assetsPath', $basePath . '/src/' . $appName . '/Assets/');
         $this->container->set('repositoryPath', $basePath . '/src/' . $appName . '/Database/Repository');
         $this->container->set('listenersPath', $basePath . '/src/' . $appName . '/App/Event/Listener');
-        $this->container->set('cronsPath', $basePath . '/src/' . $appName . '/App/Crons');
+        $this->container->set('cronsPath', $basePath . '/src/' . $appName . '/App/Cron');
         $this->container->set('manifestFilename', 'manifest.json');
-        $this->container->set('controllerNamespace', 'Neo\\Src\\' . $appName . '\\App\\Controllers\\');
+        $this->container->set('controllerNamespace', 'Neo\\Src\\' . $appName . '\\App\\Controller\\');
         $this->container->set('repositoryNamespace', 'Neo\\Src\\' . $appName . '\\Database\\Repository');
 
         if (!empty($GLOBALS['_NEO_TEST_CONFIGS_PATH'])) {

@@ -108,7 +108,7 @@ The `resolvePublicPath()` method looks for, in order:
 
 ### `project:create`
 
-**File:** `Commands/ProjectCreateCommand.php`
+**File:** `Command/ProjectCreateCommand.php`
 
 Creates a complete new NeoPHP project inside the `./src/` folder. This command is the framework's main scaffolding tool.
 
@@ -200,7 +200,7 @@ final class MyProjectModule implements ModuleInterface
 
 ### `project:delete`
 
-**File:** `Commands/ProjectDeleteCommand.php`
+**File:** `Command/ProjectDeleteCommand.php`
 
 Completely removes a NeoPHP project: its sources, its builds, and its registration in `composer.json`.
 
@@ -228,7 +228,7 @@ php bin/neo project:delete MonSite
 
 ### `project:sync`
 
-**File:** `Commands/ProjectSyncCommand.php`
+**File:** `Command/ProjectSyncCommand.php`
 
 Synchronizes the root `composer.json` with every project present in `./src/`. Useful after cloning the repository or manually adding a project.
 

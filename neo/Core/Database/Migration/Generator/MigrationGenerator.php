@@ -16,7 +16,14 @@ use Neo\Core\Database\Exception\DatabaseException;
  *     key?: string,
  *     extra?: string
  * }
- * @phpstan-type ForeignKeyDef array{table: string, column: string, referencedTable: string, referencedColumn: string, onDelete: string|null, onUpdate: string|null}
+ * @phpstan-type ForeignKeyDef array{
+ *     table: string,
+ *     column: string,
+ *     referencedTable: string,
+ *     referencedColumn: string,
+ *     onDelete: string|null,
+ *     onUpdate: string|null
+ * }
  */
 final class MigrationGenerator
 {
