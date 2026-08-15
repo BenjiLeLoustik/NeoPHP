@@ -9,7 +9,14 @@ use Neo\Core\Database\ORM\Persistence\EntityManager;
 use Neo\Core\Database\ORM\Type\TypeRegistry;
 
 /**
- * @phpstan-type ColumnDef array{name: string, type: string, nullable: bool, default: string|null, key: string, extra: string}
+ * @phpstan-type ColumnDef array{
+ *     name: string,
+ *     type: string,
+ *     nullable: bool,
+ *     default: string|null,
+ *     key: string,
+ *     extra: string
+ * }
  * @phpstan-type Schema array<string, list<ColumnDef>>
  */
 final class SchemaTool
@@ -22,6 +29,7 @@ final class SchemaTool
     /**
      * @param list<class-string> $entityClasses
      * @return Schema
+     * @throws DatabaseException
      */
     public function getSchema(array $entityClasses): array
     {
@@ -55,20 +63,48 @@ final class SchemaTool
 
         foreach ($entityClasses as $class) {
             $metadata = $this->em->getClassMetadata($class);
+
             foreach ($metadata->associationMappings as $assoc) {
-                if (!$assoc['isOwningSide'] || !($assoc['type'] & ClassMetaData::TO_ONE)) {
+                if ($assoc['isOwningSide'] && ($assoc['type'] & ClassMetaData::TO_ONE)) {
+                    $targetMeta = $this->em->getClassMetadata($assoc['targetEntity']);
+                    foreach ($assoc['joinColumns'] as $jc) {
+                        $fks[] = [
+                            'table' => $metadata->table,
+                            'column' => $jc['name'],
+                            'referencedTable' => $targetMeta->table,
+                            'referencedColumn' => $jc['referencedColumnName'],
+                            'onDelete' => $jc['onDelete'],
+                            'onUpdate' => $jc['onUpdate'] ?? null,
+                        ];
+                    }
                     continue;
                 }
-                $targetMeta = $this->em->getClassMetadata($assoc['targetEntity']);
-                foreach ($assoc['joinColumns'] as $jc) {
-                    $fks[] = [
-                        'table' => $metadata->table,
-                        'column' => $jc['name'],
-                        'referencedTable' => $targetMeta->table,
-                        'referencedColumn' => $jc['referencedColumnName'],
-                        'onDelete' => $jc['onDelete'],
-                        'onUpdate' => $jc['onUpdate'] ?? null,
-                    ];
+
+                if ($assoc['type'] === ClassMetaData::MANY_TO_MANY && $assoc['isOwningSide']) {
+                    $targetMeta = $this->em->getClassMetadata($assoc['targetEntity']);
+                    $pivot = $assoc['joinTable'];
+
+                    foreach ($pivot['joinColumns'] as $jc) {
+                        $fks[] = [
+                            'table' => $pivot['name'],
+                            'column' => $jc['name'],
+                            'referencedTable' => $metadata->table,
+                            'referencedColumn' => $jc['referencedColumnName'],
+                            'onDelete' => $jc['onDelete'] ?? null,
+                            'onUpdate' => $jc['onUpdate'] ?? null,
+                        ];
+                    }
+
+                    foreach ($pivot['inverseJoinColumns'] as $jc) {
+                        $fks[] = [
+                            'table' => $pivot['name'],
+                            'column' => $jc['name'],
+                            'referencedTable' => $targetMeta->table,
+                            'referencedColumn' => $jc['referencedColumnName'],
+                            'onDelete' => $jc['onDelete'] ?? null,
+                            'onUpdate' => $jc['onUpdate'] ?? null,
+                        ];
+                    }
                 }
             }
         }
@@ -154,7 +190,7 @@ final class SchemaTool
                     'type' => $platform->canonicalizeType($type),
                     'nullable' => (bool) $jc['nullable'],
                     'default' => null,
-                    'key' => '',
+                    'key' => 'MUL',
                     'extra' => '',
                 ];
             }
@@ -173,10 +209,10 @@ final class SchemaTool
         foreach ([...$pivot['joinColumns'], ...$pivot['inverseJoinColumns']] as $jc) {
             $columns[] = [
                 'name' => $jc['name'],
-                'type' => 'int',
+                'type' => 'int unsigned',
                 'nullable' => false,
                 'default' => null,
-                'key' => '',
+                'key' => 'MUL',
                 'extra' => '',
             ];
         }
