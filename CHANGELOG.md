@@ -1,3 +1,6 @@
+v4.35.1
+- fix: set directory without "s" char (c3d1197)
+
 v4.35.0
 - fix: correct ReflectionProperty method name for lazy objects (ce9fa36)
 - fix: pass column mapping through to type conversion calls (b33fdd3)
