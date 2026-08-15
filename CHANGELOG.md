@@ -1,3 +1,15 @@
+v4.35.0
+- fix: correct ReflectionProperty method name for lazy objects (ce9fa36)
+- fix: pass column mapping through to type conversion calls (b33fdd3)
+- feat: support enum columns via enumClass, with BackedEnum auto-detection (efc5273)
+- feat: add native ENUM column support via EnumType (d4ef747)
+- chore: update built-in types to match Type's new $column parameter (bd46140)
+- feat: add $column param to convertToPHPValue/convertToDatabaseValue for column-aware type conversion (a1c5fb0)
+- feat: support ManyToMany pivot FKs; fix FK column key (7d44341)
+- feat: add diffForeignKeys() and normalize FK signature (220fb9d)
+- feat: emit FOREIGN KEY constraints in generated migrations (c7816ee)
+- feat: wire foreign key diffing into orm:diff command (6e23a70)
+
 v4.34.0
 - fix: emit UNIQUE constraint in generated column DDL (ce04b2d)
 - fix: resolve snake_case field names to camelCase entity properties (662f862)
