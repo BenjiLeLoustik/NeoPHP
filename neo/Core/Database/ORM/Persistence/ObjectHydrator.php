@@ -53,7 +53,7 @@ final class ObjectHydrator
         foreach ($metadata->fieldMappings as $field => $mapping) {
             $column = $mapping['columnName'];
             $raw = array_key_exists($column, $row) ? $row[$column] : null;
-            $value = TypeRegistry::get($mapping['type'])->convertToPHPValue($raw, $platform);
+            $value = TypeRegistry::get($mapping['type'])->convertToPHPValue($raw, $platform, $mapping);
 
             $this->writeField($metadata, $entity, $field, $value);
             $snapshot[$field] = $value;

@@ -36,7 +36,7 @@ final class EntityPersister
             }
             $columns[] = $mapping['columnName'];
             $values[] = TypeRegistry::get($mapping['type'])
-                ->convertToDatabaseValue($this->metadata->getFieldValue($entity, $field), $platform);
+                ->convertToDatabaseValue($this->metadata->getFieldValue($entity, $field), $platform, $mapping);
         }
 
         foreach ($this->owningToOneAssociations() as $field => $assoc) {
@@ -87,7 +87,8 @@ final class EntityPersister
             if ($this->metadata->hasField($field)) {
                 $mapping = $this->metadata->fieldMappings[$field];
                 $sets[] = $platform->quoteIdentifier($mapping['columnName']) . ' = ?';
-                $values[] = TypeRegistry::get($mapping['type'])->convertToDatabaseValue($new, $platform);
+                $values[] = TypeRegistry::get($mapping['type'])
+                    ->convertToDatabaseValue($new, $platform, $mapping);
                 continue;
             }
 
