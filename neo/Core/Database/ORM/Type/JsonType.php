@@ -19,7 +19,10 @@ final class JsonType extends Type
         return 'json';
     }
 
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): mixed
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform, array $column = []): mixed
     {
         if ($value === null || $value === '') {
             return null;
@@ -27,7 +30,10 @@ final class JsonType extends Type
         return json_decode(is_string($value) ? $value : (string) $value, true);
     }
 
-    public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?string
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform, array $column = []): ?string
     {
         return $value === null ? null : json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }

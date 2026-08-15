@@ -19,7 +19,10 @@ final class FloatType extends Type
         return 'double';
     }
 
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?float
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform, array $column = []): ?float
     {
         return $value === null ? null : (float) $value;
     }

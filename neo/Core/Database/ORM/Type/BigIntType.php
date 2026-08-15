@@ -19,7 +19,10 @@ final class BigIntType extends Type
         return $platform->getBigIntTypeDeclarationSQL($column);
     }
 
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?int
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform, array $column = []): ?int
     {
         return $value === null ? null : (int) $value;
     }

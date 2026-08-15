@@ -20,12 +20,18 @@ final class StringType extends Type
         return $platform->getVarcharTypeDeclarationSQL((int) ($column['length'] ?? 255));
     }
 
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?string
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform, array $column = []): ?string
     {
         return $value === null ? null : (string) $value;
     }
 
-    public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?string
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform, array $column = []): ?string
     {
         return $value === null ? null : (string) $value;
     }

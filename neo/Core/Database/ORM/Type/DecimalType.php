@@ -21,7 +21,10 @@ final class DecimalType extends Type
         return sprintf('decimal(%d, %d)', $precision, $scale);
     }
 
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?string
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform, array $column = []): ?string
     {
         return $value === null ? null : (string) $value;
     }

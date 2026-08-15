@@ -22,9 +22,13 @@ final class DateType extends Type
     }
 
     /**
+     * @param mixed $value
+     * @param AbstractPlatform $platform
+     * @param array<string, mixed> $column
+     * @return DateTime|null
      * @throws \DateMalformedStringException
      */
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?DateTime
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform, array $column = []): ?DateTime
     {
         if ($value === null || $value instanceof DateTime) {
             return $value;
@@ -33,7 +37,10 @@ final class DateType extends Type
         return $dt !== false ? $dt : new DateTime((string) $value);
     }
 
-    public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?string
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform, array $column = []): ?string
     {
         if ($value === null) {
             return null;

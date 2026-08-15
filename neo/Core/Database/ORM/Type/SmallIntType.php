@@ -19,7 +19,10 @@ final class SmallIntType extends Type
         return $platform->getSmallIntTypeDeclarationSQL($column);
     }
 
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?int
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform, array $column = []): ?int
     {
         return $value === null ? null : (int) $value;
     }
