@@ -16,6 +16,7 @@ use Neo\Core\Database\Exception\DatabaseException;
  *     key?: string,
  *     extra?: string
  * }
+ * @phpstan-type ForeignKeyDef array{table: string, column: string, referencedTable: string, referencedColumn: string, onDelete: string|null, onUpdate: string|null}
  */
 final class MigrationGenerator
 {
@@ -43,7 +44,20 @@ final class MigrationGenerator
                 static fn (ColumnMetadata $column): array => $column->toArray(),
                 $this->introspector->getColumns($table)
             );
-            $upLines[] = $this->guardedCreateTable($table, $columns);
+
+            $foreignKeys = array_map(
+                static fn ($fk): array => [
+                    'table' => $table,
+                    'column' => $fk->getColumn(),
+                    'referencedTable' => $fk->getReferencedTable(),
+                    'referencedColumn' => $fk->getReferencedColumn(),
+                    'onDelete' => $fk->getOnDelete(),
+                    'onUpdate' => $fk->getOnUpdate(),
+                ],
+                $this->introspector->getForeignKeys($table)
+            );
+
+            $upLines[] = $this->guardedCreateTable($table, $columns, $foreignKeys);
             $downLines[] = $this->guardedDropTable($table);
         }
 
@@ -74,7 +88,8 @@ final class MigrationGenerator
         }
 
         foreach ($diff['tablesToCreate'] as $table => $columns) {
-            $upLines[] = $this->guardedCreateTable($table, $columns);
+            $foreignKeys = $diff['foreignKeysToAdd'][$table] ?? [];
+            $upLines[] = $this->guardedCreateTable($table, $columns, $foreignKeys);
             $downLines[] = $this->guardedDropTable($table);
         }
 
@@ -107,6 +122,26 @@ final class MigrationGenerator
             }
         }
 
+        $tablesBeingCreated = array_keys($diff['tablesToCreate']);
+
+        foreach ($diff['foreignKeysToAdd'] ?? [] as $table => $fks) {
+            if (in_array($table, $tablesBeingCreated, true)) {
+                continue;
+            }
+
+            foreach ($fks as $fk) {
+                $upLines[] = $this->guardedAddForeignKey($table, $fk);
+                $downLines[] = $this->guardedDropForeignKey($table, $this->foreignKeyName($table, $fk));
+            }
+        }
+
+        foreach ($diff['foreignKeysToDrop'] ?? [] as $table => $fks) {
+            foreach ($fks as $fk) {
+                $upLines[] = $this->guardedDropForeignKey($table, $this->foreignKeyName($table, $fk));
+                $downLines[] = $this->guardedAddForeignKey($table, $fk);
+            }
+        }
+
         $downContent = $downLines
                 |> array_reverse(...)
                 |> (fn (array $l): string => implode("\n", $l));
@@ -122,10 +157,11 @@ final class MigrationGenerator
 
     /**
      * @param list<ColumnDef> $columns
+     * @param list<ForeignKeyDef> $foreignKeys
      */
-    private function guardedCreateTable(string $table, array $columns): string
+    private function guardedCreateTable(string $table, array $columns, array $foreignKeys = []): string
     {
-        $sql = $this->buildCreateTableSql($table, $columns);
+        $sql = $this->buildCreateTableSql($table, $columns, $foreignKeys);
         $escaped = $this->escape($sql);
 
         return <<<PHP
@@ -199,6 +235,47 @@ PHP;
 PHP;
     }
 
+    /**
+     * @param ForeignKeyDef $fk
+     */
+    private function guardedAddForeignKey(string $table, array $fk): string
+    {
+        $name = $this->foreignKeyName($table, $fk);
+        $sql = "ALTER TABLE `{$table}` ADD CONSTRAINT `{$name}` FOREIGN KEY (`{$fk['column']}`) REFERENCES `{$fk['referencedTable']}` (`{$fk['referencedColumn']}`)";
+
+        if (!empty($fk['onDelete'])) {
+            $sql .= " ON DELETE {$fk['onDelete']}";
+        }
+        if (!empty($fk['onUpdate'])) {
+            $sql .= " ON UPDATE {$fk['onUpdate']}";
+        }
+
+        $escaped = $this->escape($sql);
+
+        return <<<PHP
+        if (\$this->columnExists(\$db, '{$table}', '{$fk['column']}') && !\$this->foreignKeyExists(\$db, '{$table}', '{$name}')) {
+            \$db->execute('{$escaped}');
+        }
+PHP;
+    }
+
+    private function guardedDropForeignKey(string $table, string $name): string
+    {
+        return <<<PHP
+        if (\$this->foreignKeyExists(\$db, '{$table}', '{$name}')) {
+            \$db->execute('ALTER TABLE `{$table}` DROP FOREIGN KEY `{$name}`');
+        }
+PHP;
+    }
+
+    /**
+     * @param ForeignKeyDef $fk
+     */
+    private function foreignKeyName(string $table, array $fk): string
+    {
+        return "fk_{$table}_{$fk['column']}";
+    }
+
     private function writeFile(string $migrationsPath, string $name, string $upBody, string $downBody, bool $usesHelpers = false): string
     {
         if (!is_dir($migrationsPath)) {
@@ -263,13 +340,24 @@ PHP;
 
         return $row !== null;
     }
+
+    private function foreignKeyExists(\Neo\Core\Database\DatabaseManager $db, string $table, string $name): bool
+    {
+        $row = $db->fetch(
+            'SELECT 1 FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND CONSTRAINT_NAME = :name AND CONSTRAINT_TYPE = "FOREIGN KEY"',
+            ['table' => $table, 'name' => $name]
+        );
+
+        return $row !== null;
+    }
 PHP;
     }
 
     /**
      * @param list<ColumnDef> $columns
+     * @param list<ForeignKeyDef> $foreignKeys
      */
-    private function buildCreateTableSql(string $table, array $columns): string
+    private function buildCreateTableSql(string $table, array $columns, array $foreignKeys = []): string
     {
         $defs = [];
         $primary = [];
@@ -284,6 +372,20 @@ PHP;
 
         if (!empty($primary)) {
             $defs[] = '        PRIMARY KEY (' . implode(', ', $primary) . ')';
+        }
+
+        foreach ($foreignKeys as $fk) {
+            $name = $this->foreignKeyName($table, $fk);
+            $constraint = "CONSTRAINT `{$name}` FOREIGN KEY (`{$fk['column']}`) REFERENCES `{$fk['referencedTable']}` (`{$fk['referencedColumn']}`)";
+
+            if (!empty($fk['onDelete'])) {
+                $constraint .= " ON DELETE {$fk['onDelete']}";
+            }
+            if (!empty($fk['onUpdate'])) {
+                $constraint .= " ON UPDATE {$fk['onUpdate']}";
+            }
+
+            $defs[] = '        ' . $constraint;
         }
 
         $colsSql = implode(",\n", $defs);
