@@ -19,6 +19,8 @@ final class Column
         public ?int $scale = null,
         public bool $unsigned = false,
         public ?string $columnDefinition = null,
+        public array $values = [],
+        public ?string $enumClass = null,
     ) {
     }
 }

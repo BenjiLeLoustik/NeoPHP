@@ -144,6 +144,8 @@ final class MetadataFactory
             'id' => $isId,
             'generated' => $generated,
             'columnDefinition' => $column->columnDefinition,
+            'values' => $column->values,
+            'enumClass' => $column->enumClass ?? $this->inferEnumClass($prop),
         ];
         $metadata->columnNames[$name] = $columnName;
         $metadata->fieldNames[$columnName] = $name;
@@ -364,6 +366,12 @@ final class MetadataFactory
             return 'string';
         }
 
+        $name = $type->getName();
+
+        if (enum_exists($name) && is_subclass_of($name, \BackedEnum::class)) {
+            return 'enum';
+        }
+
         return match ($type->getName()) {
             'int' => 'integer',
             'float' => 'float',
@@ -372,5 +380,19 @@ final class MetadataFactory
             'DateTime', '\DateTime', \DateTime::class => 'datetime',
             default => 'string',
         };
+    }
+
+    private function inferEnumClass(ReflectionProperty $prop): ?string
+    {
+        $type = $prop->getType();
+        if (!$type instanceof ReflectionNamedType) {
+            return null;
+        }
+
+        $name = $type->getName();
+
+        return enum_exists($name) && is_subclass_of($name, \BackedEnum::class)
+            ? $name
+            : null;
     }
 }
