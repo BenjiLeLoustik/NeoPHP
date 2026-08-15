@@ -6,6 +6,7 @@ namespace Neo\Core\Database\Migration;
 /**
  * @phpstan-type ColumnDef array<string, mixed>
  * @phpstan-type Schema array<string, list<ColumnDef>>
+ * @phpstan-type ForeignKeyDef array{table: string, column: string, referencedTable: string, referencedColumn: string, onDelete: string|null, onUpdate: string|null}
  */
 final class SchemaDiffer
 {
@@ -74,6 +75,41 @@ final class SchemaDiffer
     }
 
     /**
+     * @param array<string, list<ForeignKeyDef>> $previous
+     * @param array<string, list<ForeignKeyDef>> $current
+     * @return array{add: array<string, list<ForeignKeyDef>>, remove: array<string, list<ForeignKeyDef>>}
+     */
+    public function diffForeignKeys(array $previous, array $current): array
+    {
+        $add = [];
+        $remove = [];
+
+        foreach ($current as $table => $fks) {
+            $prevFks = $this->indexByColumn($previous[$table] ?? []);
+            $currFks = $this->indexByColumn($fks);
+
+            foreach ($currFks as $column => $fk) {
+                if (!isset($prevFks[$column]) || $this->fkSignature($prevFks[$column]) !== $this->fkSignature($fk)) {
+                    $add[$table][] = $fk;
+                }
+            }
+        }
+
+        foreach ($previous as $table => $fks) {
+            $prevFks = $this->indexByColumn($fks);
+            $currFks = $this->indexByColumn($current[$table] ?? []);
+
+            foreach ($prevFks as $column => $fk) {
+                if (!isset($currFks[$column]) || $this->fkSignature($currFks[$column]) !== $this->fkSignature($fk)) {
+                    $remove[$table][] = $fk;
+                }
+            }
+        }
+
+        return ['add' => $add, 'remove' => $remove];
+    }
+
+    /**
      * @param array<string, mixed> $diff
      */
     public function isEmpty(array $diff): bool
@@ -82,7 +118,9 @@ final class SchemaDiffer
             && empty($diff['tablesToDrop'])
             && empty($diff['tableChanges'])
             && empty($diff['tableRenames'])
-            && empty($diff['columnRenames']);
+            && empty($diff['columnRenames'])
+            && empty($diff['foreignKeysToAdd'])
+            && empty($diff['foreignKeysToDrop']);
     }
 
     /**
@@ -199,6 +237,32 @@ final class SchemaDiffer
             $indexed[$col['name']] = $col;
         }
         return $indexed;
+    }
+
+    /**
+     * @param list<ForeignKeyDef> $fks
+     * @return array<string, ForeignKeyDef>
+     */
+    private function indexByColumn(array $fks): array
+    {
+        $indexed = [];
+        foreach ($fks as $fk) {
+            $indexed[$fk['column']] = $fk;
+        }
+        return $indexed;
+    }
+
+    /**
+     * @param ForeignKeyDef $fk
+     */
+    private function fkSignature(array $fk): string
+    {
+        return implode('|', [
+            $fk['referencedTable'],
+            $fk['referencedColumn'],
+            strtoupper((string) ($fk['onDelete'] ?? '')) ?: 'RESTRICT',
+            strtoupper((string) ($fk['onUpdate'] ?? '')) ?: 'RESTRICT',
+        ]);
     }
 
     /**
