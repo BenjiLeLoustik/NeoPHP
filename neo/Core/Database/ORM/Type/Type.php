@@ -20,6 +20,7 @@ abstract class Type
     public const string DATE = 'date';
     public const string TIME = 'time';
     public const string JSON = 'json';
+    public const string ENUM = 'enum';
 
     abstract public function getName(): string;
 
@@ -28,12 +29,26 @@ abstract class Type
      */
     abstract public function getSQLDeclaration(array $column, AbstractPlatform $platform): string;
 
-    public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): mixed
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToDatabaseValue(
+        mixed $value,
+        AbstractPlatform $platform,
+        array $column = [],
+    ): mixed
     {
         return $value;
     }
 
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): mixed
+    /**
+     * @param array<string, mixed> $column
+     */
+    public function convertToPHPValue(
+        mixed $value,
+        AbstractPlatform $platform,
+        array $column = []
+    ): mixed
     {
         return $value;
     }
