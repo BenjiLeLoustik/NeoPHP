@@ -19,20 +19,23 @@ final class TypeRegistry
         }
         self::$initialized = true;
 
-        foreach ([
-                     new StringType(),
-                     new TextType(),
-                     new IntegerType(),
-                     new SmallIntType(),
-                     new BigIntType(),
-                     new BooleanType(),
-                     new FloatType(),
-                     new DecimalType(),
-                     new DateTimeType(),
-                     new DateType(),
-                     new TimeType(),
-                     new JsonType(),
-                 ] as $type) {
+        $types = [
+            new StringType(),
+            new TextType(),
+            new IntegerType(),
+            new SmallIntType(),
+            new BigIntType(),
+            new BooleanType(),
+            new FloatType(),
+            new DecimalType(),
+            new DateTimeType(),
+            new DateType(),
+            new TimeType(),
+            new JsonType(),
+            new EnumType(),
+        ];
+
+        foreach ($types as $type) {
             self::$types[$type->getName()] = $type;
         }
     }
