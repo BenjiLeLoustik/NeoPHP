@@ -136,7 +136,28 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
         $diff['tableRenames'] = [];
         $diff['columnRenames'] = [];
 
-        if ($this->isEmptyDiff($diff)) {
+        $desiredForeignKeys = $this->groupForeignKeysByTable($schemaTool->getForeignKeys($entities));
+
+        $existingForeignKeys = [];
+        foreach (array_keys($desired) as $table) {
+            $existingForeignKeys[$table] = array_map(
+                static fn ($fk): array => [
+                    'table' => $table,
+                    'column' => $fk->getColumn(),
+                    'referencedTable' => $fk->getReferencedTable(),
+                    'referencedColumn' => $fk->getReferencedColumn(),
+                    'onDelete' => $fk->getOnDelete(),
+                    'onUpdate' => $fk->getOnUpdate(),
+                ],
+                $introspector->getForeignKeys($table)
+            );
+        }
+
+        $fkDiff = $differ->diffForeignKeys($existingForeignKeys, $desiredForeignKeys);
+        $diff['foreignKeysToAdd'] = $fkDiff['add'];
+        $diff['foreignKeysToDrop'] = $fkDiff['remove'];
+
+        if ($differ->isEmpty($diff)) {
             Output::success('Schema is up to date. Nothing to migrate.');
             return ExitCode::SUCCESS;
         }
@@ -159,6 +180,19 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
         Output::muted('  ' . str_replace(ROOT_DIR, '', $file));
 
         return ExitCode::SUCCESS;
+    }
+
+    /**
+     * @param list<array{table: string, column: string, referencedTable: string, referencedColumn: string, onDelete: string|null, onUpdate: string|null}> $foreignKeys
+     * @return array<string, list<array{table: string, column: string, referencedTable: string, referencedColumn: string, onDelete: string|null, onUpdate: string|null}>>
+     */
+    private function groupForeignKeysByTable(array $foreignKeys): array
+    {
+        $grouped = [];
+        foreach ($foreignKeys as $fk) {
+            $grouped[$fk['table']][] = $fk;
+        }
+        return $grouped;
     }
 
     /**
@@ -228,17 +262,6 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
     /**
      * @param array<string, mixed> $diff
      */
-    private function isEmptyDiff(array $diff): bool
-    {
-        return empty($diff['tablesToCreate'])
-            && empty($diff['tablesToDrop'])
-            && empty(array_filter($diff['tableChanges'] ?? [], static fn($c) =>
-                !empty($c['added']) || !empty($c['removed']) || !empty($c['modified'])));
-    }
-
-    /**
-     * @param array<string, mixed> $diff
-     */
     private function printSummary(array $diff, Output $output): void
     {
         foreach (array_keys($diff['tablesToCreate'] ?? []) as $table) {
@@ -256,6 +279,16 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
             }
             foreach ($changes['modified'] ?? [] as $col) {
                 Output::info("  ~ $table: modify column {$col['after']['name']}");
+            }
+        }
+        foreach ($diff['foreignKeysToAdd'] ?? [] as $table => $fks) {
+            foreach ($fks as $fk) {
+                Output::info("  + $table: add foreign key {$fk['column']} -> {$fk['referencedTable']}.{$fk['referencedColumn']}");
+            }
+        }
+        foreach ($diff['foreignKeysToDrop'] ?? [] as $table => $fks) {
+            foreach ($fks as $fk) {
+                Output::warning("  - $table: drop foreign key {$fk['column']}");
             }
         }
     }
