@@ -176,7 +176,7 @@ class ScannerFileManager
             $namespace = trim($m[1]);
         }
 
-        if (!preg_match('/class\s+([A-Za-z0-9_]+)/i', $src, $mClass)) {
+        if (!preg_match('/^(?:final\s+|abstract\s+)?class\s+([A-Za-z0-9_]+)/im', $src, $mClass)) {
             return null;
         }
 
