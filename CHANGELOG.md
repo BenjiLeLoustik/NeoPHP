@@ -1,3 +1,6 @@
+v4.35.3
+- fix: resolve vendor persistence and windows symlink deletion error when deleting projects (237fd01)
+
 v4.35.2
 - fix: expose raw request body via getRawBody() for signature verification (4604641)
 - fix: correct class name resolution regex in ScannerFileManager (8dcd91a)
