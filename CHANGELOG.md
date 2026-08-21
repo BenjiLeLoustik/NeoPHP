@@ -1,3 +1,8 @@
+v4.35.2
+- fix: expose raw request body via getRawBody() for signature verification (4604641)
+- fix: correct class name resolution regex in ScannerFileManager (8dcd91a)
+- fix: correct class name resolution regex in ScannerFileManager (9363bd1)
+
 v4.35.1
 - fix: set directory without "s" char (c3d1197)
 
