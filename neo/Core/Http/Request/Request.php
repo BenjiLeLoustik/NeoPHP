@@ -30,6 +30,8 @@ class Request
 
     private ?Session $session = null;
 
+    private string $rawBody = '';
+
     /**
      * @param array<string, mixed> $query
      * @param array<string, mixed> $body
@@ -111,7 +113,10 @@ class Request
 
         $files = $_FILES ?? [];
 
-        return new self($method, $path, $query, $body, $headers, $_SERVER, $files);
+        $request = new self($method, $path, $query, $body, $headers, $_SERVER, $files);
+        $request->rawBody = $rawInput;
+
+        return $request;
     }
 
     public static function createEmpty(): self
@@ -379,6 +384,11 @@ class Request
     public function getServer(): array
     {
         return $this->server;
+    }
+
+    public function getRawBody(): string
+    {
+        return $this->rawBody;
     }
 
 }
