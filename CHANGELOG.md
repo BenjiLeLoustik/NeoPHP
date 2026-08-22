@@ -1,3 +1,6 @@
+v4.35.4
+- fix: replace double quotes with simple quotes (9eb393b)
+
 v4.35.3
 - fix: resolve vendor persistence and windows symlink deletion error when deleting projects (237fd01)
 
