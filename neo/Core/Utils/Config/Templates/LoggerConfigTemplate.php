@@ -44,7 +44,7 @@ return [
         'extension' => 'zip',
     ],
 
-    'log_format' => "[{%datetime%}][{%level_name%}][{%level_code%}] [{%origin%}] {%message%} {%context%}",
+    'log_format' => '[{%datetime%}][{%level_name%}][{%level_code%}] [{%origin%}] {%message%} {%context%}',
     'min_level'  => 'DEBUG', // Availables : ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY']
 ];
 PHP;
