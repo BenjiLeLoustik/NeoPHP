@@ -1,3 +1,6 @@
+v4.36.1
+- fix: replace double quotes with simple quote (039330d)
+
 v4.36.0
 - feat: add generate defautl view when generate a new controller (2f1e709)
 
