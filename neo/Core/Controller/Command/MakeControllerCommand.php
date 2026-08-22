@@ -71,14 +71,20 @@ final class MakeControllerCommand extends AbstractCommand
         $force = (bool) $input->getOption('force');
 
         $controller = $this->normalizeControllerName($controller);
-        $basePath = ROOT_DIR . '/src/' . $project;
+        $basePath = ROOT_DIR . 'src/' . $project;
 
         if (!is_dir($basePath)) {
             Output::error("Project '$project' not found.");
             return ExitCode::FAILURE;
         }
 
-        $this->generateController($basePath, $project, $controller, $directory !== '' ? $directory : null, $isApi, $force);
+        $directory = $directory !== '' ? $directory : null;
+
+        $this->generateController($basePath, $project, $controller, $directory, $isApi, $force);
+
+        if (!$isApi) {
+            $this->generateView($basePath, $controller, $directory, $force);
+        }
 
         Output::success("Controller '$controller' generated.");
         return ExitCode::SUCCESS;
@@ -135,6 +141,32 @@ final class $controller extends AbstractController
     }
 }
 PHP;
+        file_put_contents($path, $content);
+    }
+
+    private function generateView(
+        string $basePath,
+        string $controller,
+        ?string $directory,
+        bool $force
+    ): void {
+        $controllerDir = $basePath . '/App/Controller' . ($directory ? '/' . Fs::normalizeDir($directory) : '');
+        $routePath = $this->buildRoutePath($directory, $controller);
+        $viewDir = $basePath . '/Templates/pages/' . $routePath;
+
+        Fs::ensureDir($viewDir);
+        $path = $viewDir . '/index.html.twig';
+
+        if (file_exists($path) && !$force) {
+            return;
+        }
+
+        $content = <<<TWIG
+<h1>Welcome to our $controller() !</h1>
+<p><b>Controller :</b> $controllerDir/$controller.php</p>
+<p><b>Template :</b> $path</p>
+TWIG;
+
         file_put_contents($path, $content);
     }
 
