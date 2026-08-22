@@ -29,21 +29,23 @@ return [
             'name'      => 'framework',
             'extension' => 'log',
         ],
+        
+        // add other channels here
     ],
 
     'rotation' => [
-        'enabled'       => true,
+        'enabled'       => false,
         'type'          => 'daily',
         'max_file_size' => 5 * 1024 * 1024,
     ],
 
     'archive' => [
-        'enabled'   => true,
+        'enabled'   => false,
         'extension' => 'zip',
     ],
 
     'log_format' => "[{%datetime%}][{%level_name%}][{%level_code%}] [{%origin%}] {%message%} {%context%}",
-    'min_level'  => 'DEBUG',
+    'min_level'  => 'DEBUG', // Availables : ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY']
 ];
 PHP;
     }

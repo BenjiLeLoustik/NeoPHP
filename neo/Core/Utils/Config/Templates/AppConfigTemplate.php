@@ -25,13 +25,13 @@ declare(strict_types=1);
 
 return [
     'general' => [
-        'name'        => "$projectName",
-        'description' => "Votre projet NeoPHP",
+        'name'        => '$projectName',
+        'description' => 'Your project description...',
     ],
 
-    'environment' => "dev",
+    'environment' => 'dev', // [dev|prod]
 
-    'access' => "$host:$port",
+    'access' => '$host:$port',
 
     'date' => [
         'timezone' => 'Europe/Paris',
@@ -43,6 +43,7 @@ return [
         'available_locales' => [
             'fr' => 'Français',
             'en' => 'Anglais',
+            // Add more here
         ],
     ],
 

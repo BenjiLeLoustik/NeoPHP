@@ -58,7 +58,7 @@ class ConfigManager
 
             if (!is_array($data)) {
                 throw new ConfigException(
-                    title: "Invalid Config File",
+                    title: 'Invalid Config File',
                     message: sprintf("Config file '%s' must return an array.", $file),
                     code: 500,
                     context: ['file' => $file]
@@ -97,7 +97,7 @@ class ConfigManager
 
                 if (!is_array($data)) {
                     throw new ConfigException(
-                        title: "Invalid Config File",
+                        title: 'Invalid Config File',
                         message: sprintf("Package config file '%s' must return an array.", $file),
                         code: 500,
                         context: ['file' => $file]
@@ -123,7 +123,7 @@ class ConfigManager
 
             if (!is_array($data)) {
                 throw new ConfigException(
-                    title: "Invalid Test Config File",
+                    title: 'Invalid Test Config File',
                     message: sprintf("Test config file '%s' must return an array.", $file),
                     code: 500,
                     context: ['file' => $file]
@@ -162,7 +162,7 @@ class ConfigManager
     {
         if (!isset($this->configs[$key])) {
             throw new ConfigException(
-                title: "Config Not Found",
+                title: 'Config Not Found',
                 message: sprintf("Config '%s' not found.", $key),
                 code: 404,
                 context: ['key' => $key]
@@ -243,8 +243,8 @@ class ConfigManager
     {
         if (!$this->hasSelected) {
             throw new ConfigException(
-                title: "Config Not Selected",
-                message: "Call from() before calling get() or all().",
+                title: 'Config Not Selected',
+                message: 'Call from() before calling get() or all().',
                 code: 500
             );
         }

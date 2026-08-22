@@ -22,18 +22,18 @@ declare(strict_types=1);
 
 return [
     'enabled' => false,
-    'use'     => "default",
+    'use'     => 'default',
 
     'connections' => [
         'default' => [
-            'driver'  => "mysql",
-            'host'    => "127.0.0.1",
+            'driver'  => 'mysql',
+            'host'    => '127.0.0.1',
             'port'    => 3306,
-            'user'    => "",
-            'pass'    => "",
-            'dbname'  => "",
-            'charset' => "utf8mb4",
-            'prefix'  => "",
+            'user'    => '',
+            'pass'    => '',
+            'dbname'  => '',
+            'charset' => 'utf8mb4',
+            'prefix'  => '',
 
             /**
              * Persistent PDO connections (PDO::ATTR_PERSISTENT).
@@ -44,6 +44,8 @@ return [
              */
             'persistent' => false,
         ],
+        
+        // Add others connections here
     ],
 ];
 PHP;

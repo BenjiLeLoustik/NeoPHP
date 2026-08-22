@@ -52,7 +52,13 @@ return [
 
     'flash' => [
         'session_key' => '_flash_{$cookieName}',
-        'types'       => ['success', 'error', 'warning', 'info'],
+        'types'       => [
+            'success', 
+            'error', 
+            'warning', 
+            'info'
+            // Add more types here    
+        ],
         'auto_expire' => true,
     ],
 ];
