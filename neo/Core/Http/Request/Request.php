@@ -6,6 +6,7 @@ namespace Neo\Core\Http\Request;
 
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\File\Model\UploadedFile;
+use Neo\Core\Http\Request\Enum\HttpRequest;
 
 class Request
 {
@@ -389,6 +390,12 @@ class Request
     public function getRawBody(): string
     {
         return $this->rawBody;
+    }
+
+    public function isMethod(HttpRequest|string $method): bool
+    {
+        $expected = $method instanceof HttpRequest ? $method->value : strtoupper($method);
+        return strtoupper($this->method) === $expected;
     }
 
 }
