@@ -54,6 +54,10 @@ final class FormTwigExtension implements TwigExtensionInterface
             'form_errors' => [
                 'callable' => fn(Form $form, string $field): string => $this->render($form, $field, 'errors'),
                 'options' => $html,
+            ],
+            'form_error' => [
+                'callable' => fn(Form $form, string $field): ?string => $form->getField($field)?->getErrors()[0] ?? null,
+                'options' => []
             ]
         ];
     }
