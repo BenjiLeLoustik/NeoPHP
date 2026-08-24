@@ -40,6 +40,11 @@ return [
         'expiration' => 3600,
         'timeout'    => 1800,
         'algorithm'  => 'HS256',
+        'remember'   => [
+            'enabled'    => false,
+            'cookie'     => 'remember_token',
+            'expiration' => 60 * 60 * 24 * 30,
+        ],
     ],
 ];
 PHP;
