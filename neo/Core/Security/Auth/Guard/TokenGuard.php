@@ -42,7 +42,7 @@ final class TokenGuard implements GuardInterface
      * @throws AuthException
      * @throws DatabaseException
      */
-    public function attempt(array $credentials): bool
+    public function attempt(array $credentials, bool $remember = false): bool
     {
         if (!isset($credentials[$this->identifier], $credentials[$this->password])) {
             throw new AuthException(
@@ -71,7 +71,7 @@ final class TokenGuard implements GuardInterface
         return $this->passwordManager->verify($credentials[$this->password], $hashedPassword);
     }
 
-    public function login(object $user): void {}
+    public function login(object $user, bool $remember = false): void {}
 
     public function logout(): void
     {
