@@ -1,3 +1,11 @@
+v4.38.0
+- feat: accept remember parameter in TokenGuard attempt/login (no-op for JWT) (a3e68a0)
+- feat: implement remember-me via cache-backed token cookie in SessionGuard (00cc412)
+- feat: add remember parameter to GuardInterface attempt/login signatures (7e17e07)
+- feat: add CacheModule dependency to AuthModule for remember-me support (3cef285)
+- feat: support remember-me flag in AuthManager attempt/login and guard resolution (2237a86)
+- feat: add remember configuration to AuthConfigTemplate (4bfc78b)
+
 v4.37.0
 - feat: add File case to FieldType enum (4dbf34f)
 - feat: add field_checks/field_failed_rules Twig helpers for Regex-based checklists (452dbfc)
