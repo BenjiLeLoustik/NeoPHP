@@ -47,6 +47,12 @@ class ValidatorManager
 
         foreach ($refClass->getProperties() as $prop) {
             $field = $prop->getName();
+
+            $formField = $form?->getField($field);
+            if ($formField !== null && !$formField->isMapped()) {
+                continue;
+            }
+
             $handled[$field] = true;
 
             $value = $prop->isInitialized($model) ? $prop->getValue($model) : null;
