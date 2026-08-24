@@ -8,9 +8,9 @@ interface GuardInterface
     /**
      * @param array<string, mixed> $credentials
      */
-    public function attempt(array $credentials): bool;
+    public function attempt(array $credentials, bool $remember = false): bool;
 
-    public function login(object $user): void;
+    public function login(object $user, bool $remember = false): void;
 
     public function logout(): void;
 
