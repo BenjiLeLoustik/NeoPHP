@@ -10,6 +10,7 @@ use Neo\Core\Http\Client\ClientModule;
 use Neo\Core\Http\Response\ResponseModule;
 use Neo\Core\Module\Interface\ModuleInterface;
 use Neo\Core\Routing\RouterModule;
+use Neo\Core\Utils\Config\ConfigModule;
 use Neo\Core\View\ViewModule;
 
 class MiddlewareModule implements ModuleInterface
@@ -20,6 +21,7 @@ class MiddlewareModule implements ModuleInterface
     public function dependencies(): array
     {
         return [
+            ConfigModule::class,
             ResponseModule::class,
             ClientModule::class,
             RouterModule::class,
