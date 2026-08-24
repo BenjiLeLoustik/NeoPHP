@@ -1,3 +1,6 @@
+v4.38.1
+- fix: remove "s" caracters from directories (9ad6a5c)
+
 v4.38.0
 - feat: accept remember parameter in TokenGuard attempt/login (no-op for JWT) (a3e68a0)
 - feat: implement remember-me via cache-backed token cookie in SessionGuard (00cc412)
