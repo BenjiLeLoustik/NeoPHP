@@ -9,6 +9,7 @@ final class MiddlewareMeta
     /**
      * @param class-string $class
      * @param array<string, mixed> $params
+     * @param list<string> $exclude
      */
     public function __construct(
         public string $class,
@@ -18,6 +19,8 @@ final class MiddlewareMeta
         public bool $isClass,
         public array $params,
         public int $priority,
+        public bool $isGlobal = false,
+        public array $exclude = [],
     ) {
     }
 
@@ -60,5 +63,18 @@ final class MiddlewareMeta
     public function getPriority(): int
     {
         return $this->priority;
+    }
+
+    public function isGlobal(): bool
+    {
+        return $this->isGlobal;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getExclude(): array
+    {
+        return $this->exclude;
     }
 }
