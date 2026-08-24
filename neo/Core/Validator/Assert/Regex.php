@@ -12,6 +12,7 @@ final class Regex extends AbstractConstraint
     public function __construct(
         public string $pattern,
         string $message = '',
+        public ?string $checklistLabel = null,
     ) {
         parent::__construct($message);
     }

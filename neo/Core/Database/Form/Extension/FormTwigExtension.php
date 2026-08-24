@@ -7,6 +7,8 @@ use Neo\Core\Database\Form\Form;
 use Neo\Core\Database\Form\FormRenderer;
 use Neo\Core\Extension\Attribute\Extension;
 use Neo\Core\Extension\Enum\ExtensionTypeEnum;
+use Neo\Core\Validator\Assert\Length;
+use Neo\Core\Validator\Assert\Regex;
 use Neo\Core\View\Interface\TwigExtensionInterface;
 
 #[Extension(type: ExtensionTypeEnum::VIEW)]
@@ -57,6 +59,24 @@ final class FormTwigExtension implements TwigExtensionInterface
             ],
             'form_error' => [
                 'callable' => fn(Form $form, string $field): ?string => $form->getField($field)?->getErrors()[0] ?? null,
+                'options' => []
+            ],
+            'password_checks' => [
+                'callable' => function (Form $form, string $field): array {
+                    $checks = [];
+
+                    foreach ($form->getAddedConstraints($field) as $constraint) {
+                        if ($constraint instanceof Regex && $constraint->checklistLabel !== null) {
+                            $checks[] = [
+                                'rule' => strtolower(str_replace(' ', '_', $constraint->checklistLabel)),
+                                'label' => $constraint->checklistLabel,
+                                'pattern' => trim($constraint->pattern, '/'),
+                            ];
+                        }
+                    }
+
+                    return $checks;
+                },
                 'options' => []
             ]
         ];
