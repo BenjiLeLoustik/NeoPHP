@@ -6,6 +6,7 @@ namespace Neo\Core\Security\Auth;
 use Neo\Core\Database\ORM\Persistence\EntityManager;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Http\Client\Cookie\Cookie;
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Security\Auth\Config\RoleConfig;
 use Neo\Core\Security\Auth\Exception\AuthException;
@@ -13,6 +14,7 @@ use Neo\Core\Security\Auth\Exception\JwtException;
 use Neo\Core\Security\Auth\Guard\Interface\GuardInterface;
 use Neo\Core\Security\Auth\Guard\SessionGuard;
 use Neo\Core\Security\Auth\Guard\TokenGuard;
+use Neo\Core\Utils\Cache\CacheManager;
 use Neo\Core\Utils\Config\Exception\ConfigException;
 
 class AuthManager
@@ -60,19 +62,19 @@ class AuthManager
      * @param array<string, mixed> $credentials
      * @throws AuthException
      */
-    public function attempt(array $credentials): bool
+    public function attempt(array $credentials, bool $remember = false): bool
     {
         $this->ensureEnabled();
-        return $this->guard->attempt($credentials);
+        return $this->guard->attempt($credentials, $remember);
     }
 
     /**
      * @throws AuthException
      */
-    public function login(object $user): void
+    public function login(object $user, bool $remember = false): void
     {
         $this->ensureEnabled();
-        $this->guard->login($user);
+        $this->guard->login($user, $remember);
     }
 
     /**
@@ -174,13 +176,35 @@ class AuthManager
                 $this->container->get('auth.clientModule')->session(),
                 $passwordManager,
                 $em,
+                $this->container->get(CacheManager::class),
+                $this->container->get(Cookie::class),
                 $model,
                 $identifier,
                 $password,
                 $roleConfig,
-                (int) ($options['timeout'] ?? 1800)
+                (int) ($options['timeout'] ?? 1800),
+                $this->resolveRememberConfig($options)
             ),
         };
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @return array{enabled: bool, cookie: string, expiration: int}
+     */
+    private function resolveRememberConfig(array $options): array
+    {
+        $remember = is_array($options['remember'] ?? null) ? $options['remember'] : [];
+
+        return [
+            'enabled'    => (bool) ($remember['enabled'] ?? false),
+            'cookie'     => is_string($remember['cookie'] ?? null) && $remember['cookie'] !== ''
+                ? $remember['cookie']
+                : 'remember_token',
+            'expiration' => is_int($remember['expiration'] ?? null) && $remember['expiration'] > 0
+                ? $remember['expiration']
+                : 2592000,
+        ];
     }
 
     /**
