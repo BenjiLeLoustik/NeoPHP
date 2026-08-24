@@ -46,6 +46,17 @@ return [
             // Add more here
         ],
     ],
+    
+    'middlewares' => [
+    // \Neo\Src\{$projectName}\App\Middleware\MyMiddleware::class => [
+    //     'onError' => 'block',
+    //     'redirect' => '',
+    //     'message' => '',
+    //     'priority' => 1,
+    //     'params' => [],
+    //     'exclude' => ['route.name', 'xxx.xxx']
+    // ]
+    ],
 
     'packages' => [
         // \Vendor\PackageName\PackageName::class,
