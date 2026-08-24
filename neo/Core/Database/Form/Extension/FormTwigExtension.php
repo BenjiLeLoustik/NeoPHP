@@ -61,7 +61,7 @@ final class FormTwigExtension implements TwigExtensionInterface
                 'callable' => fn(Form $form, string $field): ?string => $form->getField($field)?->getErrors()[0] ?? null,
                 'options' => []
             ],
-            'password_checks' => [
+            'field_checks' => [
                 'callable' => function (Form $form, string $field): array {
                     $checks = [];
 
@@ -78,6 +78,29 @@ final class FormTwigExtension implements TwigExtensionInterface
                     return $checks;
                 },
                 'options' => []
+            ],
+            'field_failed_rules' => [
+                'callable' => function (Form $form, string $field): array {
+                    $formField = $form->getField($field);
+                    if ($formField === null) {
+                        return [];
+                    }
+
+                    $failedMessages = $formField->getErrors();
+                    $failedRules = [];
+
+                    foreach ($form->getAddedConstraints($field) as $constraint) {
+                        if ($constraint instanceof Regex && $constraint->checklistLabel !== null) {
+                            $rule = strtolower(str_replace(' ', '_', $constraint->checklistLabel));
+                            if (in_array($constraint->getMessage(), $failedMessages, true)) {
+                                $failedRules[] = $rule;
+                            }
+                        }
+                    }
+
+                    return $failedRules;
+                },
+                'options' => [],
             ]
         ];
     }
