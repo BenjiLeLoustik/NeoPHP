@@ -40,10 +40,13 @@ class MiddlewareManager
     /** @var array<string, list<MiddlewareMeta>> */
     private array $middlewareCache = [];
 
+    /** @var list<MiddlewareMeta>|null */
+    private ?array $globalMiddlewareCache = null;
+
     /**
      * @var list<array{
      *     class: class-string,
-     *     scope: 'class'|'method',
+     *     scope: 'class'|'method'|'global',
      *     params: array<string, mixed>,
      *     priority: int,
      *     onError: string,
@@ -85,8 +88,13 @@ class MiddlewareManager
         $router = $this->container->get('middleware.routerModule');
         $response = $this->container->get(Response::class);
         $flash = $this->container->get('middleware.clientModule')->flash();
+        $currentRoute = method_exists($router, 'getCurrentRouteName') ? $router->getCurrentRouteName() : null;
 
         foreach ($middlewares as $meta) {
+            if ($meta->isGlobal() && $currentRoute !== null && $this->routeIsExcluded($currentRoute, $meta->getExclude())) {
+                continue;
+            }
+
             $middlewareClass = $meta->getClass();
             $onError = $meta->getOnError();
             $message = $meta->getMessage();
@@ -144,7 +152,7 @@ class MiddlewareManager
     {
         $this->log[] = [
             'class' => $middlewareClass,
-            'scope' => $meta->isClass() ? 'class' : 'method',
+            'scope' => $meta->isGlobal() ? 'global' : ($meta->isClass() ? 'class' : 'method'),
             'params' => $meta->getParams(),
             'priority' => $meta->getPriority(),
             'onError' => $meta->getOnError(),
@@ -163,7 +171,7 @@ class MiddlewareManager
     /**
      * @return list<array{
      *     class: class-string,
-     *     scope: 'class'|'method',
+     *     scope: 'class'|'method'|'global',
      *     params: array<string, mixed>,
      *     priority: int,
      *     onError: string,
@@ -218,6 +226,29 @@ class MiddlewareManager
     }
 
     /**
+     * @param list<string> $exclude
+     */
+    private function routeIsExcluded(string $routeName, array $exclude): bool
+    {
+        foreach ($exclude as $pattern) {
+            if (!str_contains($pattern, '*')) {
+                if ($routeName === $pattern) {
+                    return true;
+                }
+                continue;
+            }
+
+            $regex = '#^' . str_replace('\*', '.*', preg_quote($pattern, '#')) . '$#';
+
+            if (preg_match($regex, $routeName) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @throws MiddlewareException
      * @throws FrameworkException
      * @throws RouteNotFoundException
@@ -265,6 +296,7 @@ class MiddlewareManager
     /**
      * @return list<MiddlewareMeta>
      * @throws ReflectionException
+     * @throws ContainerException
      */
     private function getMiddlewares(string $controller, ?string $method = null): array
     {
@@ -274,7 +306,7 @@ class MiddlewareManager
             return $this->middlewareCache[$cacheKey];
         }
 
-        $all = [];
+        $all = $this->getGlobalMiddlewares();
 
         $classResults = new ScannerAttributeManager($controller)
             ->onClass()
@@ -335,6 +367,46 @@ class MiddlewareManager
         usort($all, static fn(MiddlewareMeta $a, MiddlewareMeta $b): int => $b->getPriority() <=> $a->getPriority());
 
         return $this->middlewareCache[$cacheKey] = $all;
+    }
+
+    /**
+     * @return list<MiddlewareMeta>
+     * @throws ContainerException
+     * @throws ReflectionException
+     */
+    private function getGlobalMiddlewares(): array
+    {
+        if ($this->globalMiddlewareCache !== null) {
+            return $this->globalMiddlewareCache;
+        }
+
+        $configured = $this->container->get('middleware.configModule')->from('app')->get('middlewares') ?? [];
+
+        $result = [];
+
+        if (is_array($configured)) {
+            foreach ($configured as $middlewareClass => $options) {
+                if (!is_string($middlewareClass)) {
+                    continue;
+                }
+
+                $options = is_array($options) ? $options : [];
+
+                $result[] = new MiddlewareMeta(
+                    class: $middlewareClass,
+                    message: is_string($options['message'] ?? null) ? $options['message'] : '',
+                    onError: is_string($options['onError'] ?? null) ? $options['onError'] : 'block',
+                    redirect: is_string($options['redirect'] ?? null) ? $options['redirect'] : null,
+                    isClass: true,
+                    params: is_array($options['params'] ?? null) ? $options['params'] : [],
+                    priority: is_int($options['priority'] ?? null) ? $options['priority'] : 0,
+                    isGlobal: true,
+                    exclude: is_array($options['exclude'] ?? null) ? array_values(array_filter($options['exclude'], 'is_string')) : [],
+                );
+            }
+        }
+
+        return $this->globalMiddlewareCache = $result;
     }
 
     private function buildRateLimitMeta(RateLimit $attr, bool $isClass): MiddlewareMeta
