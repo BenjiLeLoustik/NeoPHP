@@ -1,3 +1,9 @@
+v4.39.0
+- feat: support wildcard patterns in global middleware exclude list (b5653ac)
+- feat: merge app.config.php global middlewares into execution pipeline (9c25e5e)
+- feat: add isGlobal and exclude fields to MiddlewareMeta (c6aa28f)
+- docs: add example for global middleware with exclude in AppConfigTemplate (414c7bf)
+
 v4.38.1
 - fix: remove "s" caracters from directories (9ad6a5c)
 
