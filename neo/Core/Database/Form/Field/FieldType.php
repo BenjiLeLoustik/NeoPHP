@@ -15,6 +15,7 @@ enum FieldType: string
     case Select = 'select';
     case Date = 'date';
     case DateTime = 'datetime-local';
+    case File = 'file';
 
     public static function fromName(string $name): self
     {
