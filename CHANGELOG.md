@@ -1,3 +1,14 @@
+v4.37.0
+- feat: add File case to FieldType enum (4dbf34f)
+- feat: add field_checks/field_failed_rules Twig helpers for Regex-based checklists (452dbfc)
+- feat: derive password checklist from Regex constraints via checklistLabel (fb10ff8)
+- fix: skip unmapped form fields when reflecting entity properties (eba2ec0)
+- fix: stop auto-adding NotBlank from required option in FormBuilder (0e4c5c6)
+- feat: add form_error() Twig helper to get a field's first error message (1e2ba31)
+- feat: add AbstractForm to streamline form build + request handling (7660fb4)
+- feat: add isMethod() to Request for HTTP method checking (2cfd045)
+- feat: add HttpRequest enum for type-safe HTTP method comparison (62cc42d)
+
 v4.36.1
 - fix: replace double quotes with simple quote (039330d)
 
