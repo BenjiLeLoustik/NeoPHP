@@ -22,7 +22,7 @@ class AbstractPackage implements PackageInterface
 
     public function getControllerPath(): ?string
     {
-        return $this->resolve('src/Controllers');
+        return $this->resolve('src/Controller');
     }
 
     public function getViewPath(): ?string
@@ -32,7 +32,7 @@ class AbstractPackage implements PackageInterface
 
     public function getListenersPath(): ?string
     {
-        return $this->resolve('src/Listeners');
+        return $this->resolve('src/Listener');
     }
 
     public function getCronsPath(): ?string
@@ -42,12 +42,12 @@ class AbstractPackage implements PackageInterface
 
     public function getCommandsPath(): ?string
     {
-        return $this->resolve('src/Commands');
+        return $this->resolve('src/Command');
     }
 
     public function getMigrationsPath(): ?string
     {
-        return $this->resolve('database/Migrations');
+        return $this->resolve('database/Migration');
     }
 
     public function getConfigPath(): ?string
