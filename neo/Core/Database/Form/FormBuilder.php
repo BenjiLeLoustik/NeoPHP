@@ -87,10 +87,6 @@ final class FormBuilder
         $fieldType = FieldType::fromName($type);
         $constraints = $options['constraints'] ?? [];
 
-        if (!empty($options['required'])) {
-            $constraints[] = new NotBlank($options['requiredMessage'] ?? 'This field is required.');
-        }
-
         if (isset($options['minLength']) || isset($options['maxLength'])) {
             $constraints[] = new Length(
                 min: $options['minLength'] ?? null,
