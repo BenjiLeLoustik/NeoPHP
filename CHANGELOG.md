@@ -1,3 +1,8 @@
+v4.40.0
+- fix: update ide helper (fb2218f)
+- feat: add get asset path controller extension (56fcaf0)
+- fix: skip raw input reading for multipart requests to avoid false 403 on uploads (7103f6c)
+
 v4.39.0
 - feat: support wildcard patterns in global middleware exclude list (b5653ac)
 - feat: merge app.config.php global middlewares into execution pipeline (9c25e5e)
