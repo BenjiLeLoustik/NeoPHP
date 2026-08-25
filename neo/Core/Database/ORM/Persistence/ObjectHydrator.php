@@ -48,6 +48,8 @@ final class ObjectHydrator
             }
         }
 
+        $uow->registerManaged($entity, $id, []);
+
         $snapshot = [];
 
         foreach ($metadata->fieldMappings as $field => $mapping) {
@@ -73,6 +75,17 @@ final class ObjectHydrator
                     $this->writeField($metadata, $entity, $field, null);
                     $snapshot[$field] = null;
                 }
+                continue;
+            }
+
+            if (!$assoc['isOwningSide'] && $assoc['type'] === ClassMetaData::ONE_TO_ONE) {
+                $target = $this->loadInverseToOne($assoc, $id);
+                $this->writeField($metadata, $entity, $field, $target);
+
+                $snapshot[$field] = $target !== null
+                    ? $this->em->getClassMetadata($assoc['targetEntity'])->getIdentifierValue($target)
+                    : null;
+
                 continue;
             }
 
@@ -119,6 +132,26 @@ final class ObjectHydrator
             // Property type doesn't accept a LazyCollection
             // (e.g. non-typed or incompatible declared type) — skip silently.
         }
+    }
+
+    /**
+     * @param array<string, mixed> $assoc
+     * @throws DatabaseException
+     */
+    private function loadInverseToOne(array $assoc, mixed $ownerId): ?object
+    {
+        $targetMeta = $this->em->getClassMetadata($assoc['targetEntity']);
+        $owningAssoc = $targetMeta->associationMappings[$assoc['mappedBy']] ?? null;
+
+        if ($owningAssoc === null || empty($owningAssoc['joinColumns'])) {
+            return null;
+        }
+
+        $col = $owningAssoc['joinColumns'][0]['name'];
+
+        return $this->em->getUnitOfWork()
+            ->getEntityPersister($assoc['targetEntity'])
+            ->loadById([$col => $ownerId]);
     }
 
     private function writeField(ClassMetaData $metadata, object $entity, string $field, mixed $value): void
