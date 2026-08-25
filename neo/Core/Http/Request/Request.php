@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Neo\Core\Http\Request;
 
 
+use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Client\Session\Session;
 use Neo\Core\Http\File\Model\UploadedFile;
 use Neo\Core\Http\Request\Enum\HttpRequest;
@@ -76,8 +77,10 @@ class Request
         $path = parse_url($uri, PHP_URL_PATH) ?: '/';
         $query = $_GET ?? [];
 
-        $rawInput = self::readRawInput();
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        $isMultipart = stripos($contentType, 'multipart/form-data') !== false;
+
+        $rawInput = $isMultipart ? '' : self::readRawInput();
 
         $body = [];
         if (stripos($contentType, 'application/json') !== false) {
@@ -132,8 +135,16 @@ class Request
             : null;
 
         if ($contentLength !== null && $contentLength > self::INPUT_MAX_SIZE) {
-            http_response_code(413);
-            exit('Request Entity Too Large');
+            throw new FrameworkException(
+                title: 'Request Too Large',
+                message: sprintf(
+                    'The request body (%d bytes) exceeds the maximum allowed size of %d bytes.',
+                    $contentLength,
+                    self::INPUT_MAX_SIZE
+                ),
+                code: 413,
+                context: ['contentLength' => $contentLength, 'maxSize' => self::INPUT_MAX_SIZE]
+            );
         }
 
         $stream = fopen('php://input', 'rb');
@@ -149,8 +160,16 @@ class Request
         }
 
         if (strlen($raw) > self::INPUT_MAX_SIZE) {
-            http_response_code(413);
-            exit('Request Entity Too Large');
+            throw new FrameworkException(
+                title: 'Request Too Large',
+                message: sprintf(
+                    'The request body (%d bytes read) exceeds the maximum allowed size of %d bytes.',
+                    strlen($raw),
+                    self::INPUT_MAX_SIZE
+                ),
+                code: 413,
+                context: ['size' => strlen($raw), 'maxSize' => self::INPUT_MAX_SIZE]
+            );
         }
 
         return $raw;
@@ -281,8 +300,13 @@ class Request
      */
     public function getContent(): string|array
     {
-        $rawInput = self::readRawInput();
         $contentType = $this->header('Content-Type', '');
+
+        if (stripos($contentType, 'multipart/form-data') !== false) {
+            return '';
+        }
+
+        $rawInput = self::readRawInput();
 
         if (stripos($contentType, 'application/json') !== false) {
             try {
