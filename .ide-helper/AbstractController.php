@@ -31,6 +31,7 @@ namespace Neo\Core\Controller;
  * @method \Neo\Core\Utils\Scanner\ScannerAttributeManager getScanner(string $classname)
  * @method \Neo\Core\Utils\Scanner\ScannerFileManager getFileScanner()
  * @method string generateUrl(string $routeName, array<string, string> $params = [], array<string, mixed> $query = [])
+ * @method string getAsset(string $path)
  * @method string getRedirectBack(?string $fallbackRoute = null, array<string, string> $routeParams = [])
  * @method string getRoutePath(string $routeName, array<string, string> $params = [], array<string, mixed> $query = [])
  * @method string template(string $template, array<string, mixed> $params = [])
