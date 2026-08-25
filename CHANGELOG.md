@@ -1,3 +1,8 @@
+v4.41.0
+- feat: add StringViewExtension for slugify access in Twig templates (994f9d1)
+- feat: add StringControllerExtension for slugify access in controllers (bb0378f)
+- feat: add StringHelper with slugify method (061b587)
+
 v4.40.0
 - fix: update ide helper (fb2218f)
 - feat: add get asset path controller extension (56fcaf0)
