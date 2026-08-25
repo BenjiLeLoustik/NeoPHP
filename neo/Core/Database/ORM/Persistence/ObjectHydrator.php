@@ -127,7 +127,14 @@ final class ObjectHydrator
         };
 
         try {
-            $metadata->setFieldValue($entity, $field, new LazyCollection($loader));
+
+            $collection = new LazyCollection($loader);
+
+            if (($assoc['fetch'] ?? 'LAZY') === 'EAGER') {
+                $collection->toArray();
+            }
+
+            $metadata->setFieldValue($entity, $field, $collection);
         } catch (\TypeError) {
             // Property type doesn't accept a LazyCollection
             // (e.g. non-typed or incompatible declared type) — skip silently.
