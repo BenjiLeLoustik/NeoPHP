@@ -18,8 +18,8 @@ class FlashControllerExtension implements ControllerExtensionInterface
 {
     public function extend(AbstractController $controller, Container $container): void
     {
-        $controller->registerMethod('getFlash', function () use ($container): Flash {
-            return $container->get(Flash::class);
-        });
+        $flash = $container->get(Flash::class);
+
+        $controller->registerMethod('getFlash', fn(): Flash => $flash);
     }
 }
