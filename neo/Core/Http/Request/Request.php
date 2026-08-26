@@ -422,4 +422,32 @@ class Request
         return strtoupper($this->method) === $expected;
     }
 
+    /**
+     * @param array<string, mixed> $extraParams
+     * @param string|null $basePath
+     * @return string
+     */
+    public function buildUrlWithParams(array $extraParams = [], ?string $basePath = null): string
+    {
+        $path = $basePath ?? $this->getPath();
+        $params = array_merge($this->allQuery(), $extraParams);
+
+        $pairs = [];
+        foreach ($params as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if (is_scalar($value)) {
+                $pairs[] = rawurlencode((string) $key) . '=' . rawurlencode((string) $value);
+            }
+        }
+
+        if (empty($pairs)) {
+            return $path;
+        }
+
+        return $path . '?' . implode('&', $pairs);
+    }
+
 }
