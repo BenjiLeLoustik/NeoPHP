@@ -1,3 +1,7 @@
+v4.45.0
+- feat: add DateHelper with timeAgo method (af3bf03)
+- feat: add new method to format int/float into decimal string (476b1f0)
+
 v4.44.0
 - feat: add buildUrlWithParams to Request and pagination_link Twig extension (133b26c)
 
