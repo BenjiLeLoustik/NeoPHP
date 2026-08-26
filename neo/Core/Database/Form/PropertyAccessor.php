@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace Neo\Core\Database\Form;
 
+use BackedEnum;
 use DateTime;
-use DateTimeInterface;
 use ReflectionNamedType;
 use ReflectionProperty;
+use UnitEnum;
 
 final class PropertyAccessor
 {
@@ -74,7 +75,25 @@ final class PropertyAccessor
             return null;
         }
 
-        return match ($type->getName()) {
+        $typeName = $type->getName();
+
+        if (enum_exists($typeName)) {
+            if ($value instanceof $typeName) {
+                return $value;
+            }
+
+            if (is_subclass_of($typeName, BackedEnum::class)) {
+                return $typeName::tryFrom((string) $value)
+                    ?? (is_numeric($value) ? $typeName::tryFrom((int) $value) : null)
+                    ?? $this->findEnumCaseByName($typeName, (string) $value);
+            }
+
+            if (is_subclass_of($typeName, UnitEnum::class)) {
+                return $this->findEnumCaseByName($typeName, (string) $value);
+            }
+        }
+
+        return match ($typeName) {
             'int' => $value === '' ? ($nullable ? null : 0) : (int) $value,
             'float' => $value === '' ? ($nullable ? null : 0.0) : (float) $value,
             'bool' => (bool) $value,
@@ -82,6 +101,19 @@ final class PropertyAccessor
             'array' => is_array($value) ? $value : ($value === '' ? [] : [$value]),
             default => (string) $value,
         };
+    }
+
+    /**
+     * @param class-string<UnitEnum> $enumClass
+     */
+    private function findEnumCaseByName(string $enumClass, string $name): ?UnitEnum
+    {
+        foreach ($enumClass::cases() as $case) {
+            if ($case->name === $name) {
+                return $case;
+            }
+        }
+        return null;
     }
 
     /**
