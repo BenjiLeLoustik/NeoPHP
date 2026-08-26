@@ -1,3 +1,6 @@
+v4.42.1
+- fix: add PHP 8.1+ Enum support to PropertyAccessor (cb938a7)
+
 v4.42.0
 - feat: add NumberControllerExtension and NumberViewExtension for slugify access (aa2c906)
 - feat: add NumberHelper with compact method (0c14bac)
