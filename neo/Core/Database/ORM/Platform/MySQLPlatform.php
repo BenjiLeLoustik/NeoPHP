@@ -71,6 +71,10 @@ final class MySQLPlatform extends AbstractPlatform
             $t = 'tinyint(1)';
         }
 
+        if ($t === 'longtext') {
+            $t = 'json';
+        }
+
         return $t
                 |> (fn (string $s): string => str_replace('double precision', 'double', $s))
                 |> (fn (string $s): string => (string) preg_replace('/,\s+/', ',', $s));
