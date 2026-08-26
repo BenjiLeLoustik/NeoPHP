@@ -1,3 +1,6 @@
+v4.44.0
+- feat: add buildUrlWithParams to Request and pagination_link Twig extension (133b26c)
+
 v4.43.0
 - feat: add flexible flash functions to twig view extension (5e02d6d)
 - feat: add flash helper methods to controller extension (2098a5a)
