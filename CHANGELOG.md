@@ -1,3 +1,8 @@
+v4.43.0
+- feat: add flexible flash functions to twig view extension (5e02d6d)
+- feat: add flash helper methods to controller extension (2098a5a)
+- fix: fix html container rendering and message expiration (b69affc)
+
 v4.42.1
 - fix: add PHP 8.1+ Enum support to PropertyAccessor (cb938a7)
 
