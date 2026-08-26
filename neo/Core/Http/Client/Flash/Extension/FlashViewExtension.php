@@ -26,6 +26,18 @@ final readonly class FlashViewExtension implements TwigExtensionInterface
                 'callable' => fn() => $this->flash->render(),
                 'options' => ['is_safe' => ['html']],
             ],
+            'flashes_type' => [
+                'callable' => fn(string $type) => $this->flash->get($type),
+                'options' => [],
+            ],
+            'flashes_raw' => [
+                'callable' => fn() => $this->flash->getAll(),
+                'options' => [],
+            ],
+            'has_flashes' => [
+                'callable' => fn(?string $type = null) => $this->flash->has($type),
+                'options' => [],
+            ]
         ];
     }
 
