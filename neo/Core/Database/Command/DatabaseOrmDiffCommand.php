@@ -23,6 +23,7 @@ use Neo\Core\Database\ORM\Platform\AbstractPlatform;
 use Neo\Core\Database\ORM\Schema\SchemaTool;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Package\Interface\PackageInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
@@ -36,8 +37,9 @@ use ReflectionException;
 final class DatabaseOrmDiffCommand extends AbstractCommand
 {
     public function __construct(
-        private readonly Container $container,
-    ) {}
+        private Container $container,
+    ) {
+    }
 
     public function configure(): void
     {
@@ -75,7 +77,7 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
      * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
      * @throws DatabaseException
-     * @throws ContainerException
+     * @throws ContainerException|ReflectionException
      */
     public function do(Input $input, Output $output): ExitCode
     {
@@ -109,6 +111,19 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
         }
 
         $entities = $this->discoverEntities($entityDir, $project);
+
+        if ($this->container->has('packages')) {
+            /** @var array<int, PackageInterface> $packages */
+            $packages = $this->container->get('packages');
+
+            foreach ($packages as $package) {
+                $packageEntityDir = $package->getPath() . '/Database/Entity';
+                if (is_dir($packageEntityDir)) {
+                    $entities = array_merge($entities, $this->discoverPackageEntities($packageEntityDir));
+                }
+            }
+        }
+
         if ($entities === []) {
             Output::warning('No #[Entity] classes discovered.');
             return ExitCode::SUCCESS;
@@ -128,8 +143,6 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
         $db = $this->container->get(DatabaseManager::class);
         $snapshot = new MigrationSchemaSnapshot($db, $introspector, $connection ?? 'default');
         $current = $this->canonicalizeSchema($snapshot->getCurrentSchema(), $platform);
-
-        $current = array_intersect_key($current, $desired);
 
         $differ = new SchemaDiffer();
         $diff = $differ->diff($current, $desired);
@@ -251,6 +264,43 @@ final class DatabaseOrmDiffCommand extends AbstractCommand
 
             if (new ReflectionClass($fqcn)->getAttributes(Entity::class) !== []) {
                 $classes[] = $fqcn;
+            }
+        }
+
+        return $classes;
+    }
+
+    /**
+     * @return list<class-string>
+     * @throws ReflectionException
+     */
+    private function discoverPackageEntities(string $entityDir): array
+    {
+        $rii = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($entityDir, \FilesystemIterator::SKIP_DOTS)
+        );
+
+        $classes = [];
+
+        foreach ($rii as $file) {
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $beforeClasses = get_declared_classes();
+            require_once $file->getPathname();
+            $afterClasses = get_declared_classes();
+
+            // Calcule le delta exact des classes nouvellement définies par le fichier
+            $newClasses = array_diff($afterClasses, $beforeClasses);
+
+            foreach ($newClasses as $className) {
+                if (class_exists($className, false)) {
+                    $reflector = new ReflectionClass($className);
+                    if ($reflector->getAttributes(Entity::class) !== []) {
+                        $classes[] = $className;
+                    }
+                }
             }
         }
 
