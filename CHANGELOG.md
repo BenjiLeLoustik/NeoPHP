@@ -1,3 +1,7 @@
+v4.42.0
+- feat: add NumberControllerExtension and NumberViewExtension for slugify access (aa2c906)
+- feat: add NumberHelper with compact method (0c14bac)
+
 v4.41.1
 - fix: ignore column key and normalize boolean defaults in column diff (eaf02ce)
 - fix: canonicalize longtext as json in mysql platform (4b9cd8a)
