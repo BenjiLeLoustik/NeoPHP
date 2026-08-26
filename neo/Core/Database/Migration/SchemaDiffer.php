@@ -270,12 +270,18 @@ final class SchemaDiffer
      */
     private function signature(array $col): string
     {
+        $type = (string)($col['type'] ?? '');
+        $default = (string)($col['default'] ?? '');
+
+        if ($type === 'tinyint(1)' && ($default === '0' || $default === '')) {
+            $default = '0';
+        }
+
         return implode('|', [
-            (string)($col['type'] ?? ''),
+            $type,
             !empty($col['nullable']) ? '1' : '0',
-            (string)($col['default'] ?? ''),
-            (string)($col['extra'] ?? ''),
-            (string)($col['key'] ?? ''),
+            $default,
+            (string)($col['extra'] ?? '')
         ]);
     }
 
