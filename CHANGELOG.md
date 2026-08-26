@@ -1,3 +1,10 @@
+v4.41.1
+- fix: ignore column key and normalize boolean defaults in column diff (eaf02ce)
+- fix: canonicalize longtext as json in mysql platform (4b9cd8a)
+- fix: include package entities in ORM diff calculation (22b32ed)
+- fix: make EAGER fetch actually eager-load OneToMany/ManyToMany collections (12637c4)
+- fix: register entity in identity map before resolving associations to support circular references (e793d43)
+
 v4.41.0
 - feat: add StringViewExtension for slugify access in Twig templates (994f9d1)
 - feat: add StringControllerExtension for slugify access in controllers (bb0378f)
