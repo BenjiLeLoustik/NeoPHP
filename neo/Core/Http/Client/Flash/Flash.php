@@ -51,13 +51,11 @@ class Flash
      */
     public function add(string $type, string $message): void
     {
-
-
         if (!in_array($type, $this->config['types'], true)) {
             throw new FrameworkException(
                 title: 'Flash Error',
                 message: sprintf(
-                    "Invalid Flash type : %s. Accepted types : %d",
+                    "Invalid Flash type : %s. Accepted types : %s",
                     $type,
                     implode(', ', $this->config['types'])
                 ),
@@ -89,6 +87,30 @@ class Flash
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function get(string $type): array
+    {
+        $all = $this->session->get($this->flashKey, []);
+        $filtered = [];
+        $remaining = [];
+
+        foreach ($all as $item) {
+            if ($item['type'] === $type) {
+                $filtered[] = $item['message'];
+            } else {
+                $remaining[] = $item;
+            }
+        }
+
+        if ($this->config['auto_expire']) {
+            $this->session->set($this->flashKey, $remaining);
+        }
+
+        return $filtered;
+    }
+
+    /**
      * @return array<int, array{type: string, message: string}>
      */
     public function peek(): array
@@ -96,19 +118,40 @@ class Flash
         return $this->session->get($this->flashKey, []);
     }
 
-    public function has(): bool
+    public function has(?string $type = null): bool
     {
-        return !empty($this->session->get($this->flashKey, []));
+        $messages = $this->session->get($this->flashKey, []);
+        if (empty($messages)) {
+            return false;
+        }
+
+        if ($type === null) {
+            return true;
+        }
+
+        foreach ($messages as $item) {
+            if ($item['type'] === $type) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function render(): string
     {
-        $html = '';
-        foreach ($this->getAll() as $data) {
+        $messages = $this->getAll();
+        if (empty($messages)) {
+            return '';
+        }
+
+        $html = [];
+        foreach ($messages as $data) {
             $type = htmlspecialchars($data['type'], ENT_QUOTES, 'UTF-8');
             $msg = htmlspecialchars($data['message'], ENT_QUOTES, 'UTF-8');
-            $html .= "<span class='flash-message {$type}'>{$msg}</span>";
+            $html[] = "<div class='flash-message {$type}'>{$msg}</div>";
         }
-        return $html;
+
+        return implode("\n", $html);
     }
 }
