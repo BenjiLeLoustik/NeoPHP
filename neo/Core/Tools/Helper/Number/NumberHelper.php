@@ -30,4 +30,9 @@ class NumberHelper
 
         return $sign . $abs;
     }
+
+    public static function formatDecimal(int|float $number, int $precision = 1): string
+    {
+        return number_format((float)$number, $precision, '.', '');
+    }
 }
