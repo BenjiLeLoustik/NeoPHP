@@ -5,6 +5,7 @@ namespace Neo\Core\Database\ORM\Persistence;
 
 use Neo\Core\Database\Exception\DatabaseException;
 use Neo\Core\Database\ORM\Mapping\ClassMetaData;
+use Neo\Core\Database\ORM\Query\QueryBuilder;
 use Neo\Core\Database\Pagination\Paginator;
 
 /**
@@ -123,5 +124,11 @@ class EntityRepository
             $columns[$field] = $value;
         }
         return $columns;
+    }
+
+    protected function createQueryBuilder(?string $table = null): QueryBuilder
+    {
+        $tableName = $table ?? $this->metadata->table;
+        return QueryBuilder::for($this->em->getDatabase(), $tableName);
     }
 }
