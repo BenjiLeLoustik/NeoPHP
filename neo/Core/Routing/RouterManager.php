@@ -443,4 +443,20 @@ class RouterManager
 
         return $pattern;
     }
+
+    public function generateRouteTemplate(string $name, array $paramNames): string
+    {
+        $dummies = [];
+        foreach ($paramNames as $param) {
+            $dummies[$param] = '__' . $param . '__';
+        }
+
+        $url = $this->generateUrl($name, $dummies);
+
+        foreach ($paramNames as $param) {
+            $url = str_replace('__' . $param . '__', '{' . $param . '}', $url);
+        }
+
+        return $url;
+    }
 }

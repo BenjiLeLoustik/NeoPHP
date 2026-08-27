@@ -27,6 +27,10 @@ final readonly class RouterViewExtension implements TwigExtensionInterface
                 'callable' => fn() => $this->router->getCurrentRouteName(),
                 'options' => [],
             ],
+            'routeTemplate' => [
+                'callable' => fn(string $name, array $paramNames = []) => $this->router->generateRouteTemplate($name, $paramNames),
+                'options' => []
+            ]
         ];
     }
 
