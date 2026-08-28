@@ -69,7 +69,7 @@ final class MakeServiceCommand extends AbstractCommand
 
         $service = $this->normalizeServiceName($service);
         $directory = $directory ? Fs::normalizeDir($directory) : null;
-        $basePath = ROOT_DIR . "/src/$project/App/Services";
+        $basePath = ROOT_DIR . "/src/$project/App/Service";
 
         if ($directory) {
             $basePath .= "/$directory";
