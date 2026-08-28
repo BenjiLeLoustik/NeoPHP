@@ -1,3 +1,8 @@
+v4.46.0
+- fix: remove "s" caracter in directory name (02a1eea)
+- feat: add new twig function to get template of route (ed3ac84)
+- fix: add create query builder method (8e8aab6)
+
 v4.45.0
 - feat: add DateHelper with timeAgo method (af3bf03)
 - feat: add new method to format int/float into decimal string (476b1f0)
