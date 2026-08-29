@@ -31,7 +31,7 @@ final class ChoiceValidator implements ConstraintValidatorInterface
                 return true;
             }
             if (is_numeric($value) && array_key_exists((int) $value, $choices)) {
-                return false;
+                return true;
             }
         }
 
