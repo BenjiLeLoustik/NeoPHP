@@ -26,6 +26,12 @@ final class ChoiceValidator implements ConstraintValidatorInterface
      */
     private function isValid(mixed $value, array $choices): bool
     {
+        if ($value instanceof \BackedEnum) {
+            $value = $value->value;
+        } elseif ($value instanceof \UnitEnum) {
+            $value = $value->name;
+        }
+
         if (is_int($value) || is_string($value)) {
             if (array_key_exists($value, $choices)) {
                 return true;
