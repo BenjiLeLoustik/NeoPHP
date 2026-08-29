@@ -22,5 +22,6 @@ final class Column
         public array $values = [],
         public ?string $enumClass = null,
     ) {
+        $this->default = $default instanceof \BackedEnum ? $default->value : $default;
     }
 }
