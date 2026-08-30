@@ -163,24 +163,39 @@ class ErrorManager
         }
 
         $code = $exception->getCode() ?: 500;
-        $viewFile = $this->container->get('viewsPath') . "/errors/{$code}.html.twig";
+        $genericViewFile = $this->container->get('viewsPath') . '/errors/error.html.twig';
+        $specificViewFile = $this->container->get('viewsPath') . "/errors/{$code}.html.twig";
 
         if (!headers_sent()) {
             http_response_code($code);
         }
 
-        if (file_exists($viewFile) && $this->container->has('error.viewModule')) {
+        $templateVars = [
+            'code' => $code,
+            'title' => $exception->getTitle(),
+            'message' => $env === 'dev'
+                ? $exception->getMessage()
+                : 'An error occurred.',
+            'context' => $env === 'dev'
+                ? $exception->getContext()
+                : [],
+        ];
+
+        if (file_exists($genericViewFile) && $this->container->has('error.viewModule')) {
             try {
                 $view = $this->container->get('error.viewModule');
-                $html = $view->render("errors/{$code}.html.twig", [
-                    'title'   => $exception->getTitle(),
-                    'message' => $env === 'dev'
-                        ? $exception->getMessage()
-                        : 'An error occurred.',
-                    'context' => $env === 'dev'
-                        ? $exception->getContext()
-                        : [],
-                ]);
+                $html = $view->render('errors/error.html.twig', $templateVars);
+                echo $this->injectProfilerToolbar($html, $code);
+                exit;
+            } catch (\Throwable) {
+                // fall through to specific/fallback below
+            }
+        }
+
+        if (file_exists($specificViewFile) && $this->container->has('error.viewModule')) {
+            try {
+                $view = $this->container->get('error.viewModule');
+                $html = $view->render("errors/{$code}.html.twig", $templateVars);
                 echo $this->injectProfilerToolbar($html, $code);
             } catch (\Throwable) {
                 $this->renderFallback($exception);
