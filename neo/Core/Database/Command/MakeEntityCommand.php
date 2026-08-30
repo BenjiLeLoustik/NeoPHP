@@ -467,8 +467,8 @@ final class MakeEntityCommand extends AbstractCommand
         $methods = [];
         $ctorLines = [];
 
-        $props[] = "    #[Id]\n    #[GeneratedValue]\n    #[Column(type: 'integer', unsigned: true)]\n    private ?int \$id = null;";
-        $methods[] = "    public function getId(): ?int\n    {\n        return \$this->id;\n    }";
+        $props[] = "    #[Id]\n    #[GeneratedValue]\n    #[Column(type: 'integer', unsigned: true)]\n    private int \$id;";
+        $methods[] = "    public function getId(): int\n    {\n        return \$this->id;\n    }";
 
         foreach ($fields as $field) {
             switch ($field['kind']) {
