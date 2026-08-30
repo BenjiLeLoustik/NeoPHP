@@ -6,6 +6,7 @@ namespace Neo\Core\Routing;
 use JsonException;
 use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
+use Neo\Core\Error\Exception\FrameworkException;
 use Neo\Core\Http\Request\Request;
 use Neo\Core\Http\Response\Types\Response;
 use Neo\Core\Package\Interface\PackageInterface;
@@ -317,7 +318,9 @@ class RouterManager
             return $result;
 
         } catch (Throwable $e) {
-            if ($e instanceof RouterException || $e instanceof RouteNotFoundException) throw $e;
+            if ($e instanceof RouterException || $e instanceof RouteNotFoundException || $e instanceof FrameworkException) {
+                throw $e;
+            }
 
             throw new RouterException(
                 title: "Controller Invocation Error",
