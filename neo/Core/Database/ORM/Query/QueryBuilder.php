@@ -112,6 +112,29 @@ final class QueryBuilder
         return $this;
     }
 
+    /**
+     * @param list<string> $columns
+     */
+    public function whereLike(array $columns, string $value, string $boolean = 'AND'): self
+    {
+        if ($columns === [] || $value === '') {
+            return $this;
+        }
+
+        $this->wheres[] = [
+            'type' => 'like_group',
+            'columns' => $columns,
+            'count' => count($columns),
+            'boolean' => $boolean
+        ];
+
+        foreach ($columns as $column) {
+            $this->bindings[] = '%' . $value . '%';
+        }
+
+        return $this;
+    }
+
     public function groupBy(string ...$columns): self
     {
         foreach ($columns as $column) {
@@ -312,6 +335,7 @@ final class QueryBuilder
                     'null' => $this->quote($where['column']) . ' IS NULL',
                     'in' => $this->quote($where['column']) . ' IN (' . implode(', ', array_fill(0, $where['count'], '?')) . ')',
                     'raw' => $where['sql'],
+                    'like_group' => '(' . implode(' OR ', array_map(fn(string $col) => $this->quote($col) . ' LIKE ?', $where['columns'])) . ')',
                     default => throw new DatabaseException(
                         title: 'Query Builder Error',
                         message: sprintf('Unknown where clause type: %s', is_scalar($where['type']) ? (string) $where['type'] : gettype($where['type'])),
