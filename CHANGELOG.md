@@ -1,3 +1,8 @@
+v4.48.0
+- refactor: use FileHelper for extension extraction and validation in UploaderManager (5c49f01)
+- feat: add FileSizeHelper for human-readable byte formatting (b92ab27)
+- feat: add FileHelper for file inspection and path/URL conversion (72b5002)
+
 v4.47.0
 - fix: add new methods into Twig and Controller extension (9966c10)
 - fix: remove nullable id from generated entity (c2a86fc)
