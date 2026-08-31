@@ -21,6 +21,9 @@ final class NumberViewExtension implements TwigExtensionInterface
                 'callable' => fn(int|float $number, int $precision = 1) => NumberHelper::compact($number, $precision),
                 'options' => [],
             ],
+            'number_format_price' => [
+                'callable' => fn(float $number, int $precision = 2) => NumberHelper::formatDecimal($number, $precision)
+            ]
         ];
     }
 
@@ -34,6 +37,10 @@ final class NumberViewExtension implements TwigExtensionInterface
                 'callable' => fn(int|float $number, int $precision = 1) => NumberHelper::compact($number, $precision),
                 'options' => [],
             ],
+            'number_format_price' => [
+                'callable' => fn(float $number, int $precision = 2) => NumberHelper::formatDecimal($number, $precision),
+                'options' => []
+            ]
         ];
     }
 }

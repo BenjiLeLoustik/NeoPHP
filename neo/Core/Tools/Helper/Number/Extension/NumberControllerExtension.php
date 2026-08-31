@@ -19,5 +19,10 @@ class NumberControllerExtension implements ControllerExtensionInterface
             'compactNumber',
             fn(int|float $number, int $precision = 1) => NumberHelper::compact($number, $precision)
         );
+
+        $controller->registerMethod(
+            'numberFormatPrice',
+            fn(float $number, int $precision = 1) => NumberHelper::formatDecimal($number, $precision)
+        );
     }
 }
