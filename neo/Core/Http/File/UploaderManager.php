@@ -7,6 +7,7 @@ use Neo\Core\DI\Container;
 use Neo\Core\DI\Exception\ContainerException;
 use Neo\Core\Http\File\Exception\UploaderException;
 use Neo\Core\Http\File\Model\UploadedFile;
+use Neo\Core\Tools\Helper\File\FileHelper;
 
 class UploaderManager
 {
@@ -38,10 +39,10 @@ class UploaderManager
             );
         }
 
-        $extension = strtolower(pathinfo($file->getOriginalName(), PATHINFO_EXTENSION));
+        $extension = FileHelper::getExtension($file->getOriginalName());
 
         $forbidden = ['php', 'phtml', 'exe', 'sh', 'js'];
-        if (in_array($extension, $forbidden, true)) {
+        if (FileHelper::hasAllowedExtension($file->getOriginalName(), $forbidden)) {
             throw new UploaderException(
                 title: 'Forbidden File Type',
                 message: sprintf('Forbidden file type : %s.', $extension),
@@ -49,8 +50,7 @@ class UploaderManager
             );
         }
 
-        if (!empty($allowedExtensions) && !in_array($extension, $allowedExtensions, true)) {
-            throw new UploaderException(
+        if (!empty($allowedExtensions) && !FileHelper::hasAllowedExtension($file->getOriginalName(), $allowedExtensions)) {            throw new UploaderException(
                 title: 'Extension Not Allowed',
                 message: sprintf('Extension .%s not allowed.', $extension),
                 code: 500,
