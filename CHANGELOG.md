@@ -1,3 +1,13 @@
+v4.47.0
+- fix: add new methods into Twig and Controller extension (9966c10)
+- fix: remove nullable id from generated entity (c2a86fc)
+- feat: add generic error.html.twig fallback before code-specific templates (6401f47)
+- fix: preserve FrameworkException status code instead of overwriting with 500 (1d2062d)
+- feat: add whereLike into QueryBuilder (c306e7c)
+- fix: unwrap BackedEnum/UnitEnum values before comparing in ChoiceValidator (08b1fc5)
+- fix: correct inverted return value in ChoiceValidator numeric key check (185f760)
+- fix: auto-unwrap BackedEnum default value in Column attribute (063519a)
+
 v4.46.0
 - fix: remove "s" caracter in directory name (02a1eea)
 - feat: add new twig function to get template of route (ed3ac84)
